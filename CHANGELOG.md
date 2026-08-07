@@ -349,8 +349,7 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   own CMake-integrated equivalent of `linuxdeployqt`) to copy the Qt 6.11
   libraries and plugins the built binary actually links against into
   `/usr/lib/x86_64-linux-gnu/antscopez/`, with an `INSTALL_RPATH` target
-  property pointing there so the shipped binary finds them without
-  `LD_LIBRARY_PATH`. `.deb` packaging now happens via the `release` preset
+  property pointing there. `.deb` packaging now happens via the `release` preset
   (Qt 6.11, from `/opt/Qt`) instead of `system-qt`, which is kept only for
   reproducing the Qt-6.4-specific bugs documented in `BUILDINFO.md`.
   Getting there took working around three separate gaps: `qt_deploy_runtime_dependencies()`'s
@@ -370,6 +369,20 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   Qt packages bundling was meant to avoid *and* pins an exact
   `qt6-base-abi (= 6.4.2)` version that could make the `.deb` uninstallable
   on a system with a different distro Qt.
+
+### Fixed
+
+- The bundled `.deb` from the entry above crashed on launch
+  (`qxcb: ... undefined symbol ... version Qt_6_PRIVATE_API`, a
+  `QEventDispatcherGlib` symbol Qt's own glib event-dispatcher support
+  needs) -- `$ORIGIN`-relative `RPATH` alone isn't enough for Qt's plugin
+  loader to reliably resolve it, even though every bundled file is
+  byte-identical to the original Qt 6.11 install and every `RPATH` is
+  correct. `LD_LIBRARY_PATH` fixes it; `CMakeLists.txt` now installs the
+  real binary as `AntScopeZ.bin` and puts a thin wrapper script (from the
+  new `cmake/antscopez-wrapper.sh.in`) at the original `AntScopeZ` path
+  that exports `LD_LIBRARY_PATH` before exec'ing it -- the same fix
+  linuxdeployqt-based AppImages typically ship as an `AppRun` script.
 
 ## [2.1.3]
 

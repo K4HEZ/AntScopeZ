@@ -577,6 +577,43 @@ endforeach()
 ")
     install(SCRIPT ${deploy_script})
 
+    # $ORIGIN-relative RPATH on the binary/plugins (set up above) is not
+    # enough by itself for Qt's plugin loader to reliably resolve every
+    # symbol it needs from the bundled libraries -- confirmed by testing:
+    # running the installed binary as-is reproducibly crashes with
+    # "qxcb: ... undefined symbol ... version Qt_6_PRIVATE_API" (a
+    # QEventDispatcherGlib symbol Qt's own glib event-dispatcher support
+    # needs), even though every individual bundled file resolves to the
+    # exact same bytes as the original Qt 6.11 install (verified by
+    # hashing them) and the RPATH on every one of them correctly points
+    # at LIB_DIR. Explicitly exporting LD_LIBRARY_PATH before exec fixes
+    # it -- LD_LIBRARY_PATH is consulted for *every* library the process
+    # subsequently loads regardless of which object requested it, unlike
+    # RPATH/RUNPATH which (being RUNPATH, not the older always-inherited
+    # RPATH) only applies to each object's own direct dependencies. This
+    # is the same fix linuxdeployqt-based AppImages typically ship as an
+    # AppRun wrapper script, for what appears to be the same class of gap.
+    # So: install(TARGETS) above puts the real binary at ${CMAKE_INSTALL_BINDIR}/AntScopeZ
+    # (also where qt_deploy_runtime_dependencies() above expects to find
+    # it -- this must run after that, not before); rename it to
+    # AntScopeZ.bin and put a wrapper script in its place.
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/antscopez-wrapper.sh.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/AntScopeZ-wrapper.sh"
+        @ONLY
+    )
+    # file(INSTALL DESTINATION ...) -- unlike file(RENAME) -- already
+    # honors $ENV{DESTDIR} on its own; the DESTINATION below deliberately
+    # does *not* include it too, to avoid applying it twice.
+    install(CODE "
+        file(RENAME \"\$ENV{DESTDIR}${CMAKE_INSTALL_FULL_BINDIR}/AntScopeZ\" \"\$ENV{DESTDIR}${CMAKE_INSTALL_FULL_BINDIR}/AntScopeZ.bin\")
+        file(INSTALL \"${CMAKE_CURRENT_BINARY_DIR}/AntScopeZ-wrapper.sh\"
+            DESTINATION \"${CMAKE_INSTALL_FULL_BINDIR}\"
+            RENAME AntScopeZ
+            PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+        )
+    ")
+
     endif()
 endif()
 
