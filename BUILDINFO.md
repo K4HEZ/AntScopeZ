@@ -35,16 +35,12 @@ listed under the installer's *Developer and Designer Tools* section, or the
 
 ## Build options
 
-| Option | Meaning |
-| --- | --- |
-| `ANTSCOPE_OLD_TDR` | Enable legacy TDR support. Default `ON`, matching what the qmake build hardcoded. |
-
-`ANTSCOPE_NEW_CONNECTION` and `ANTSCOPE_NEW_ANALYZER` used to gate the old
-analyzer-connection/selection code paths they replaced; both were always
-`ON`; the flags and the dead OFF-path code are gone. `ANTSCOPE_DEBUG_BLE`'s
-raw TX/RX `qDebug()` calls are commented out at their call sites in
-`analyzer/ble_analyzer.cpp` instead of a build option -- uncomment locally
-when actually debugging Bluetooth.
+None currently -- `ANTSCOPE_NEW_CONNECTION`, `ANTSCOPE_NEW_ANALYZER`, and
+`ANTSCOPE_OLD_TDR` used to gate old code paths they replaced; all three were
+always `ON`, and the flags and their dead OFF-path code are gone.
+`ANTSCOPE_DEBUG_BLE`'s raw TX/RX `qDebug()` calls are commented out at their
+call sites in `analyzer/ble_analyzer.cpp` instead of a build option --
+uncomment locally when actually debugging Bluetooth.
 
 ## macOS packaging
 
@@ -98,8 +94,16 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
 
 - `analyzer/updater/downloader.cpp` uses `QDomDocument::ParseResult`, which is
   Qt 6.5+. A version guard keeps it building on 6.2–6.4.
-- `analyzer/analyzer.{h,cpp}` is the legacy pre-`NEW_CONNECTION` analyzer.
-  `analyzer.cpp` is not compiled, but `analyzer.h` is still included by
-  `selectdevicedialog.h` and `analyzer/com_analyzer.cpp`.
 - `mainwindow.cpp` (~234 KB) and `measurements.cpp` (~192 KB) are very large and
   are the main candidates for being split up.
+- **Build/run against Qt 6.11, not an older system Qt (e.g. distro-packaged
+  6.4.x).** A `.deb` built and run against system Qt 6.4.2 showed real bugs
+  that don't reproduce under Qt 6.11.1: the analyzer sometimes refuses to
+  connect on a fresh install even after several manual attempts (works again
+  after restarting the app once its ini file exists, not yet root-caused),
+  the main window doesn't fully repaint after being resized larger, and
+  plot/paint redraws leave stale artifacts behind until something forces a
+  repaint (e.g. minimize/restore). All three were confirmed to be Qt-version
+  differences, not something wrong with the packaging/install path itself.
+  Packaged releases bundle the Qt 6.11 shared libraries specifically to
+  avoid this.

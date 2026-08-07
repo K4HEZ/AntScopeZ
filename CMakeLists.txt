@@ -292,9 +292,10 @@ if(WIN32)
         ${CMAKE_CURRENT_SOURCE_DIR}/ftdi
     )
 
-    # Equivalent of qmake's RC_ICONS: Qt generates the .rc for us. The checked-in
-    # AntScopeZ_resource.rc is not used -- it hardcodes an absolute path
-    # (C:\Projects\AntScopeZ\AntScopeZ.ico) and qmake never referenced it either.
+    # Equivalent of qmake's RC_ICONS: Qt generates the .rc for us. A checked-in
+    # AntScope2_resource.rc used to sit here unused -- it hardcoded an absolute
+    # path (C:\Projects\AntScope2\AntScope2.ico) and qmake never referenced it
+    # either -- and has been deleted rather than renamed for AntScopeZ.
     set_target_properties(AntScopeZ PROPERTIES
         WIN32_EXECUTABLE      ON
         QT_TARGET_RC_ICONS    "${CMAKE_CURRENT_SOURCE_DIR}/AntScopeZ.ico"

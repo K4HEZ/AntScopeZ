@@ -313,6 +313,33 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   arithmetic with `m_swrWidget->mapToGlobal(QPoint(0, 0))`, which walks the
   full parent chain correctly instead of re-deriving it by hand.
 
+### Changed (docs, following up on the AntScopeZ rename)
+
+- `README.md`/`BUILDINFO.md`: renamed throughout, kept the vendor
+  attribution (this is a fork of RigExpert's AntScope2, not affiliated with
+  or endorsed by them), and added a note that packaged releases bundle Qt
+  6.11's shared libraries and that building from source should target Qt
+  6.11 -- older Qt (e.g. distro-packaged 6.4.x) has shown real bugs (see
+  below) that don't reproduce under 6.11.
+- `BUILDINFO.md`'s "Build options" table still listed `ANTSCOPE_OLD_TDR`
+  (removed earlier this session) and "Known issues" still mentioned
+  `analyzer/analyzer.{h,cpp}` (deleted in a prior session) -- both stale,
+  now fixed. Folded in the Qt-6.4-vs-6.11 rendering/connect bugs found
+  during `.deb` testing (analyzer connect failures on fresh install,
+  incomplete repaint after resizing larger, stale paint artifacts) as a
+  proper "Known issues" entry instead of leaving them only in local notes.
+- `docs/user-guide.md` renamed throughout.
+- `build.sh` (`TARGET=`), `.gitignore` (the ignored ini filename/path
+  comment), and `Info.plist` (macOS bundle name/executable/icon) updated to
+  match. `Info.plist`'s `CFBundleIdentifier` was literally
+  `com.rigexpert.AntScope2` -- changed to `io.github.hz23116.AntScopeZ`;
+  its `CFBundleShortVersionString` was also stale (`1.4.11`) and is now
+  `2.1.4`.
+- Deleted `AntScope2_resource.rc` -- already confirmed unused (Qt generates
+  the real `.rc` via `QT_TARGET_RC_ICONS`; this one hardcoded an absolute
+  path that never matched this repo's layout) rather than renaming a dead
+  file.
+
 ## [2.1.3]
 
 Baseline — changelog tracking starts here. See `git log` for history prior

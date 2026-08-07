@@ -12,7 +12,7 @@ set -e
 
 SRC_DIR=$(cd "$(dirname "$0")" && pwd)
 BUILD_DIR=${1:-"$SRC_DIR/build-cmake"}
-TARGET=AntScope2
+TARGET=AntScopeZ
 
 VERSION=$(sed -n 's/^[[:space:]]*VERSION[[:space:]]\{1,\}\([0-9][0-9.]*\).*/\1/p' \
     "$SRC_DIR/CMakeLists.txt" | head -1)

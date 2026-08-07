@@ -34,9 +34,9 @@ compile_commands.json
 Thumbs.db
 
 # ---- Runtime artifacts written to the per-user data directory (next to
-# ---- the binary pre-2.1.4, now ~/.config/hz23116/AntScope2 on Linux) ----
+# ---- the binary pre-2.1.4, now ~/.config/AntScopeZ on Linux) ----
 HKEY_CLASSES_ROOT
-AntScope2.ini
+AntScopeZ.ini
 
 # Analyzer-specific OSL calibration data (each user must run their own
 # calibration; the app recreates this directory on demand).
