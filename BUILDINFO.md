@@ -51,6 +51,23 @@ uncomment locally when actually debugging Bluetooth.
 ./build.sh [build-dir]
 ```
 
+## Linux packaging (.deb)
+
+```sh
+cmake --preset release
+cmake --build --preset release
+cd build-release && cpack
+```
+
+Produces `antscopez_<version>_amd64.deb`. Uses the `release` preset (Qt 6.11
+from `/opt/Qt`), not `system-qt` -- the CMake install rules bundle that
+build's own Qt 6.11 libraries and plugins into
+`/usr/lib/x86_64-linux-gnu/antscopez/` rather than linking whatever Qt6 the
+target's distro ships, so the package doesn't depend on a system Qt install
+at all (see "Known issues" below for why). The `system-qt` preset still
+exists for reproducing/comparing the system-Qt-specific bugs that motivated
+this.
+
 ## Qt Creator
 
 Open `CMakeLists.txt` as the project. The old `AntScope.pro` has been removed;

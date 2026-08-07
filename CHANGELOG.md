@@ -340,6 +340,37 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   path that never matched this repo's layout) rather than renaming a dead
   file.
 
+### Changed
+
+- The `.deb` now actually bundles its own private copy of Qt 6.11, rather
+  than just documenting that it should (see the "Changed (docs...)" entry
+  above) -- `CMakeLists.txt`'s Linux install rules use
+  `qt6_generate_deploy_script()`/`qt_deploy_runtime_dependencies()` (Qt's
+  own CMake-integrated equivalent of `linuxdeployqt`) to copy the Qt 6.11
+  libraries and plugins the built binary actually links against into
+  `/usr/lib/x86_64-linux-gnu/antscopez/`, with an `INSTALL_RPATH` target
+  property pointing there so the shipped binary finds them without
+  `LD_LIBRARY_PATH`. `.deb` packaging now happens via the `release` preset
+  (Qt 6.11, from `/opt/Qt`) instead of `system-qt`, which is kept only for
+  reproducing the Qt-6.4-specific bugs documented in `BUILDINFO.md`.
+  Getting there took working around three separate gaps: `qt_deploy_runtime_dependencies()`'s
+  `EXECUTABLE` argument needs `${QT_DEPLOY_BIN_DIR}` left unexpanded until
+  the generated deploy script actually runs, which requires calling
+  `qt6_generate_deploy_script()` directly rather than the versionless
+  `qt_generate_deploy_script()` macro (macro-argument forwarding via
+  unquoted `${ARGV}` re-parses and silently empties it); by the time that
+  script runs, `install(TARGETS)` has already rewritten the executable's
+  RPATH away from the build tree's Qt install, so resolving what to bundle
+  needs a temporary `file(RPATH_SET)` to the real Qt 6.11 lib dir first (a
+  bug of omission, otherwise it silently falls back to system search and
+  can bundle the wrong Qt) and back to the real `INSTALL_RPATH` value
+  afterward; and CPack's `dpkg-shlibdeps` integration can't recognize the
+  bundled libraries as self-satisfying without a generated
+  `debian/shlibs.local`, so without one it both requires the very system
+  Qt packages bundling was meant to avoid *and* pins an exact
+  `qt6-base-abi (= 6.4.2)` version that could make the `.deb` uninstallable
+  on a system with a different distro Qt.
+
 ## [2.1.3]
 
 Baseline — changelog tracking starts here. See `git log` for history prior
