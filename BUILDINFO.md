@@ -1,0 +1,105 @@
+# Build Information
+
+Details supplementing the quick-start build steps in [README.md](README.md).
+
+## Qt modules
+
+`core gui widgets printsupport serialport network xml concurrent opengl
+bluetooth` (see the `find_package(Qt6 ...)` call in `CMakeLists.txt` for the
+authoritative list).
+
+`core`, `gui`, `widgets`, `printsupport`, `network`, `xml`, `concurrent`, and
+`opengl` all ship with Qt's base "Desktop" component. **`serialport` and
+`bluetooth` do not** — if you're installing Qt via the official Qt Online
+Installer / Maintenance Tool, you must explicitly check them under your Qt
+version's *Additional Libraries*: **Qt Serial Port** and **Qt Bluetooth**.
+Building will fail at the `find_package(Qt6 ...)` step (missing component)
+if either is skipped. On Linux distro packages (e.g. `apt`), these are
+typically separate packages too — e.g. `qt6-serialport-dev` and
+`qt6-connectivity-dev` (Bluetooth ships under "connectivity") on
+Debian/Ubuntu.
+
+## Qt Linguist tools (for translations only)
+
+Not needed to build the app — the compiled `.qm` translation files are
+checked into the repo and staged as-is (see [Translations](#translations)).
+Only needed if you're regenerating `.qm` files from the `.ts` sources
+yourself: install **Qt Linguist tools** (provides `lrelease`/`lupdate`),
+listed under the installer's *Developer and Designer Tools* section, or the
+`qt6-l10n-tools` distro package.
+
+## Linux-only
+
+- `pkg-config` (used by `CMakeLists.txt` to locate libusb; `find_package(PkgConfig REQUIRED)` fails the configure step without it)
+- `libusb-1.0` development headers (e.g. `libusb-1.0-0-dev` on Debian/Ubuntu)
+
+## Build options
+
+| Option | Meaning |
+| --- | --- |
+| `ANTSCOPE_OLD_TDR` | Enable legacy TDR support. Default `ON`, matching what the qmake build hardcoded. |
+
+`ANTSCOPE_NEW_CONNECTION` and `ANTSCOPE_NEW_ANALYZER` used to gate the old
+analyzer-connection/selection code paths they replaced; both were always
+`ON`; the flags and the dead OFF-path code are gone. `ANTSCOPE_DEBUG_BLE`'s
+raw TX/RX `qDebug()` calls are commented out at their call sites in
+`analyzer/ble_analyzer.cpp` instead of a build option -- uncomment locally
+when actually debugging Bluetooth.
+
+## macOS packaging
+
+`build.sh` compiles the translations, runs a release build and produces a
+`.dmg` via `macdeployqt`:
+
+```sh
+./build.sh [build-dir]
+```
+
+## Qt Creator
+
+Open `CMakeLists.txt` as the project. The old `AntScope.pro` has been removed;
+if Qt Creator still shows the qmake project, delete `.qtcreator/AntScope.pro.user`
+and reopen.
+
+## Translations
+
+Source `.ts` files live in `locales/`. `QTranslator` loads the compiled `.qm`
+files from disk at runtime (via `Settings::languageDataFolder()`), *not* from
+the Qt resource system.
+
+The build copies the `.qm` files from the **repository root** next to the
+binary, but the `.ts` sources are in `locales/` — so a plain `lrelease` writes
+its output where nothing reads it. Until that is reconciled, regenerate with an
+explicit output path:
+
+```sh
+for ts in locales/*.ts; do
+    lrelease "$ts" -qm "$(basename "$ts" .ts).qm"
+done
+```
+
+`build.sh` does this automatically for the macOS package. Note that the CMake
+build does *not* run `lrelease` — the `.qm` files are checked in and staged
+as-is.
+
+## Platform notes
+
+Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
+
+- **Linux** — builds and runs. Uses the `hidapi` Linux backend and `libusb-1.0`.
+  Bluetooth works on Linux.
+- **Windows** — uses the `hidapi` Windows backend, `setupapi`, and the bundled
+  FTDI DLLs in `ftdi/`. OpenSSL link flags are currently *not* applied; see the
+  note in `CMakeLists.txt`.  This project has not been tested on Windows.
+- **macOS** — uses the `hidapi` mac backend; `build.sh` drives `macdeployqt`. 
+  This project has not been tested on macOS due to not owning the hardware.
+
+## Known issues
+
+- `analyzer/updater/downloader.cpp` uses `QDomDocument::ParseResult`, which is
+  Qt 6.5+. A version guard keeps it building on 6.2–6.4.
+- `analyzer/analyzer.{h,cpp}` is the legacy pre-`NEW_CONNECTION` analyzer.
+  `analyzer.cpp` is not compiled, but `analyzer.h` is still included by
+  `selectdevicedialog.h` and `analyzer/com_analyzer.cpp`.
+- `mainwindow.cpp` (~234 KB) and `measurements.cpp` (~192 KB) are very large and
+  are the main candidates for being split up.
