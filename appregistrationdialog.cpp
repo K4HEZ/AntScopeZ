@@ -1,0 +1,88 @@
+#include "appregistrationdialog.h"
+#include "ui_appregistrationdialog.h"
+#include <QMessageBox>
+#include <QRegularExpression>
+#include "style.h"
+extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
+                            QString title, QString text,
+                            QMessageBox::StandardButtons buttons = QMessageBox::Ok,
+                            QMessageBox::StandardButton defaultButton = QMessageBox::NoButton);
+
+AppRegistrationDialog::AppRegistrationDialog(LicenseAgent& agent, QWidget *parent) :
+    QDialog(parent),
+    ui(new Ui::AppRegistrationDialog),
+    m_agent(agent)
+
+{
+    init();
+}
+
+AppRegistrationDialog::AppRegistrationDialog(QString user, QString mail, LicenseAgent& agent, QWidget *parent) :
+    QDialog(parent),
+    ui(new Ui::AppRegistrationDialog),
+    m_agent(agent)
+{
+    init(user, mail);
+}
+
+void AppRegistrationDialog::init(QString user, QString mail)
+{
+    ui->setupUi(this);
+
+    QString style;
+    style = Style::dialog();
+    style += Style::label();
+    style += Style::lineEdit();
+    setStyleSheet(style);
+
+    style = Style::pushButton();
+    ui->pushButtonCancel->setStyleSheet(style);
+    ui->pushButtonOk->setStyleSheet(style);
+
+    connect(&m_agent, &LicenseAgent::registered, this, [=](){
+        accept();
+    });
+    connect(&m_agent, &LicenseAgent::networkTimeout, this, [=](){
+        close();
+    });
+    connect(&m_agent, &LicenseAgent::canceled, this, [=](){
+        reject();
+    });
+    connect(ui->pushButtonOk, &QPushButton::clicked, this, [=](){
+        if (email().isEmpty()) {
+            g_showMessageBox(this, QMessageBox::Warning, tr(""), tr("Email address should be valid"));
+            return;
+        }
+        QRegularExpression mailREX("\\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}\\b");
+        if (!mailREX.match(email().toUpper()).hasMatch()) {
+            g_showMessageBox(this, QMessageBox::Warning, "", tr("Wrong email address"));
+            return;
+        }
+        accept();
+        m_agent.registerApllication(name(), email());
+    });
+    connect(ui->pushButtonCancel, &QPushButton::clicked, this, [=](){
+        reject();
+    });
+
+    if (!mail.isEmpty())
+        ui->lineEditEmail->setText(mail);
+    if (!user.isEmpty())
+        ui->lineEditUserName->setText(user);
+}
+
+AppRegistrationDialog::~AppRegistrationDialog()
+{
+    delete ui;
+}
+
+void AppRegistrationDialog::accept()
+{
+    if (email().isEmpty()) {
+        return;
+    }
+    QDialog::accept();
+}
+
+QString AppRegistrationDialog::name() { return ui->lineEditUserName->text(); }
+QString AppRegistrationDialog::email() { return ui->lineEditEmail->text(); }

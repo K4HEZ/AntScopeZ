@@ -1,0 +1,54 @@
+# ---- Build output (regenerable) ----
+build/
+build-cmake/
+build-*/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+
+# Per-machine preset overrides (e.g. a Qt installed somewhere other than the
+# /opt path CMakePresets.json pins). CMakePresets.json itself is tracked.
+CMakeUserPresets.json
+
+# ---- qmake generated (regenerable via `qmake6 AntScope.pro`) ----
+Makefile
+.qmake.stash
+
+# ---- IDE / tooling caches ----
+.qtcreator/
+.qtc_clangd/
+.qt/
+*.pro.user
+*.pro.user.*
+compile_commands.json
+.vscode/
+.idea/
+
+# ---- Editor / OS ----
+*~
+*.swp
+*.bak
+*.orig
+*.rej
+.DS_Store
+Thumbs.db
+
+# ---- Runtime artifacts written to the per-user data directory (next to
+# ---- the binary pre-2.1.4, now ~/.config/hz23116/AntScope2 on Linux) ----
+HKEY_CLASSES_ROOT
+AntScope2.ini
+
+# Analyzer-specific OSL calibration data (each user must run their own
+# calibration; the app recreates this directory on demand).
+Calibration/
+
+# The user's own band edits (EditBandsDialog); the app recreates this from
+# the read-only itu-regions-defaults.txt template on demand.
+itu-regions.txt
+
+# Scan output files (.s1p) saved by the app at runtime.
+Scan-*.s1p
+
+# NOTE: the compiled *.qm translations at the repo root are deliberately
+# tracked -- the build copies them next to the binary and QTranslator loads
+# them from there. Do not add *.qm here without fixing that first.

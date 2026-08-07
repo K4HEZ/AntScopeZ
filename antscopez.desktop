@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=AntScopeZ
+Comment=AntScopeZ Antenna Analyzer Application
+Exec=AntScopeZ
+Icon=antscopez
+Terminal=false
+Categories=Utility;Electronics;Science;

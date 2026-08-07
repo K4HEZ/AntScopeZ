@@ -1,0 +1,68 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21
+    },
+    "configurePresets": [
+        {
+            "name": "qt-6.11",
+            "hidden": true,
+            "description": "Pins the Qt installed under /opt by the Qt online installer. Without this, find_package(Qt6 6.2) is also satisfied by the distro Qt (6.4.2 in /usr) and the chosen version depends on search order.",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            },
+            "cacheVariables": {
+                "CMAKE_PREFIX_PATH": "/opt/Qt/6.11.1/gcc_64"
+            }
+        },
+        {
+            "name": "debug",
+            "displayName": "Debug (Qt 6.11.1)",
+            "inherits": "qt-6.11",
+            "binaryDir": "${sourceDir}/build-debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "release",
+            "displayName": "Release (Qt 6.11.1)",
+            "inherits": "qt-6.11",
+            "binaryDir": "${sourceDir}/build-release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "system-qt",
+            "displayName": "Release (system Qt)",
+            "description": "Builds against the distro Qt in /usr. Intended for .deb packaging, where linking the system Qt is preferable to bundling the /opt one.",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            },
+            "binaryDir": "${sourceDir}/build-system-qt",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "debug",
+            "configurePreset": "debug"
+        },
+        {
+            "name": "release",
+            "configurePreset": "release"
+        },
+        {
+            "name": "system-qt",
+            "configurePreset": "system-qt"
+        }
+    ]
+}
