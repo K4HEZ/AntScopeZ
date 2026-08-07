@@ -384,6 +384,16 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   that exports `LD_LIBRARY_PATH` before exec'ing it -- the same fix
   linuxdeployqt-based AppImages typically ship as an `AppRun` script.
 
+### Fixed
+
+- The running app fell back to a generic window icon (taskbar, alt-tab,
+  etc.) regardless of `AntScopeZ.png`/`.ico`/`.icns` on disk -- individual
+  dialogs (`screenshot.ui`, `print.ui`, ...) already referenced the `.qrc`
+  icon for themselves, but nothing set `QApplication::setWindowIcon()`.
+  `main.cpp` now does, from the same `:/new/prefix1/AntScopeZ.png`
+  resource, which is also bumped from a blurry 2.5KB placeholder to a
+  proper 64x64 render.
+
 ## [2.1.3]
 
 Baseline — changelog tracking starts here. See `git log` for history prior
