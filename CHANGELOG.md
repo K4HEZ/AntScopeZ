@@ -557,6 +557,27 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   inside a `QTabWidget` page rather than a plain dialog background --
   close enough for now; revisit for an exact match alongside custom
   themes (see memory).
+- Connect Analyzer could end up with two (or more) copies open at once --
+  `MainWindow::on_selectDeviceDialog()` constructs `SelectDeviceDialog` on
+  the stack and calls `exec()`, which is application-modal by default,
+  but this window manager doesn't reliably enforce that (already
+  documented in this function's own comments, from earlier focus-
+  stealing fixes) -- and the function has two independent triggers,
+  Settings' "Connect analyzer" button and a startup timer fallback
+  (`on_refreshConnection()`, when there's no valid saved device to
+  auto-reconnect to), that could race each other or a fast double-click
+  into stacking instances. Now guarded by checking
+  `QApplication::activeModalWidget()` for an existing `SelectDeviceDialog`
+  before constructing another, rather than trusting Qt/the window manager
+  to block it -- the same class of guard `Settings`/`ModelessPopup`
+  already use for their own reuse, reused here instead of a new member
+  flag. A repo-wide survey found several other dialogs opened the same
+  unguarded `new/exec()` way (Screenshot, Print, UpdateDialog,
+  FqSettings, AnalyzerData, Export, EditBandsDialog,
+  AppRegistrationDialog) -- theoretically exposed to the same class of
+  bug, but each only has one trigger (needs an actual fast double-click
+  to reproduce, not a button-plus-startup-race like this one) and none
+  has been reported; left as-is for now.
 
 ## [2.1.3]
 

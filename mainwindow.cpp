@@ -6885,6 +6885,19 @@ void MainWindow::on_selectDeviceDialog()
         return;
     }
 
+    // Guard against a second copy opening on top of one that's already up.
+    // dlg.exec() below is application-modal by default, but this window
+    // manager doesn't reliably enforce that (see the focus-stealing note
+    // further down) -- and this function has two independent triggers,
+    // Settings' "Connect analyzer" button (settings.cpp) and the startup
+    // auto-reconnect-or-prompt fallback (on_refreshConnection(), via a
+    // QTimer::singleShot), which can otherwise race each other or a fast
+    // double-click into stacking two instances. QApplication::
+    // activeModalWidget() is checked instead of a new member/bool flag --
+    // it's already the thing Qt itself tracks for exactly this.
+    if (qobject_cast<SelectDeviceDialog*>(QApplication::activeModalWidget()) != nullptr)
+        return;
+
     // Note which window is actually on top right now (e.g. the Settings
     // dialog, when this is opened via its "Connect analyzer" button) so its
     // WM_TRANSIENT_FOR can point at it below -- otherwise the window manager
