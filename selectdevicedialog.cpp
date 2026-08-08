@@ -38,6 +38,20 @@ SelectDeviceDialog::SelectDeviceDialog(bool silent, QWidget *parent) :
     ui->radioButtonCOM->setStyleSheet(style);
     ui->radioButtonUSB->setStyleSheet(style);
 
+    // EXPERIMENT: the COM/USB/BLE radio buttons sit directly on the dialog's
+    // plain background (Style::dialog()'s QDialog{background-color: ...},
+    // same near-black as everywhere else in Dark) with no fill of their
+    // own between them and it -- Fusion's ring color for an unchecked
+    // radio button is always QPalette::Window darkened further still (see
+    // QFusionStylePrivate::outline(), a private Qt header), so against an
+    // already near-black background the ring all but disappears. Trying:
+    // give just this groupBox the same lighter "chrome" shade the main
+    // window's tabbed control panel already reads as (Style::palette()'s
+    // Button color -- what Fusion's tab pane, buttons, and headers all
+    // paint from), so the ring at least has a lighter backdrop to sit on.
+    ui->groupBox->setStyleSheet("QGroupBox{background-color: " +
+                                 Style::palette().color(QPalette::Button).name() + ";}");
+
     ui->tableWidget->horizontalHeader()->setStyleSheet(Style::headerView());
     ui->tableWidget->setStyleSheet(Style::tableWidget());
     ui->checkBox->setStyleSheet(Style::checkBox());

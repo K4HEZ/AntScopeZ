@@ -539,6 +539,25 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   since `Style::checkBox()` moved to the native/Fusion checkbox indicator;
   the only remaining trace was a comment in `style.cpp` explaining why.
 
+### Fixed
+
+- Connect Analyzer's COM/USB/BLE radio buttons were essentially
+  unreadable in Dark: Fusion always colors an unchecked radio button's
+  ring as `QPalette::Window` darkened by 140% (`QFusionStylePrivate::
+  outline()`, a private Qt header -- not something `Style::palette()`
+  can override), which collapses toward black on top of an
+  already-near-black `Window`. Rather than reimplementing the ring
+  (tried, backed out -- see git history), `SelectDeviceDialog`'s
+  `groupBox` now gets an explicit background of `Style::palette()`'s
+  `Button` color, the same lighter "chrome" shade Fusion already uses
+  for tab panes/buttons/headers elsewhere, giving the ring a lighter
+  backdrop to sit on. Known to be a slightly different shade than
+  Settings' visually-similar "Color theme" groupbox, which picks up an
+  extra layer of Fusion's own internal relightening by virtue of sitting
+  inside a `QTabWidget` page rather than a plain dialog background --
+  close enough for now; revisit for an exact match alongside custom
+  themes (see memory).
+
 ## [2.1.3]
 
 Baseline — changelog tracking starts here. See `git log` for history prior
