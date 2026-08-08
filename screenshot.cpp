@@ -234,7 +234,7 @@ void Screenshot::on_lineEdit_returnPressed()
 {
     QDateTime datetime = QDateTime::currentDateTime();
     QString path = "PDFs/" + datetime.toString("dd.MM.yyyy_hh.mm.ss");
-    QString str = FileDialog::getSaveFileName(this, "Export PDF", path, "*.pdf");
+    QString str = FileDialog::getSaveFileName(this, tr("Export PDF"), path, "*.pdf");
     if(str.isEmpty())
     {
         return;
@@ -646,7 +646,7 @@ void Screenshot::on_saveAsBtn_clicked()
 {
     QDateTime datetime = QDateTime::currentDateTime();
     QString path = "Images/" + datetime.toString("dd.MM.yyyy_hh.mm.ss");
-    QString str = FileDialog::getSaveFileName(this, "Save as BMP", path, "*.pdf");
+    QString str = FileDialog::getSaveFileName(this, tr("Save as BMP"), path, "*.pdf");
     if(str.isEmpty())
     {
         return;
@@ -662,7 +662,7 @@ void Screenshot::on_exportToPdfBtn_clicked()
 {
     QDateTime datetime = QDateTime::currentDateTime();
     QString path = "PDFs/" + datetime.toString("dd.MM.yyyy_hh.mm.ss");
-    QString str = FileDialog::getSaveFileName(this, "Export PDF", path, "*.pdf");
+    QString str = FileDialog::getSaveFileName(this, tr("Export PDF"), path, "*.pdf");
     if (str.isEmpty())
         return;
     if(str.indexOf(".pdf") == -1)

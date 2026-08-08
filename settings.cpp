@@ -556,7 +556,7 @@ void Settings::findBootloader (void)
 void Settings::on_updateBtn_clicked()
 {
     ui->updateBtn->setEnabled(false);
-    ui->updateBtn->setText("Updating...");
+    ui->updateBtn->setText(tr("Updating..."));
     ui->updateProgressBar->show();
     emit updateBtn(m_pathToFw);
 }
@@ -565,7 +565,7 @@ void Settings::on_percentChanged(qint32 percent)
 {
     if(percent == 100)
     {
-        ui->updateBtn->setText("Update");
+        ui->updateBtn->setText(tr("Update"));
         ui->updateBtn->setEnabled(true);
         ui->updateProgressBar->hide();
         ui->updateProgressBar->setValue(0);

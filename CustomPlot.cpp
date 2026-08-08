@@ -24,6 +24,10 @@ QCPGraph *CustomPlot::addGraph(QCPAxis *keyAxis, QCPAxis *valueAxis)
   QCPGraph *newGraph = new CustomGraph(keyAxis, valueAxis);
   if (addPlottable(newGraph))
   {
+    // Needs tr() attention: generic fallback legend name, used only if the
+    // caller doesn't set a real one right after addGraph() (every actual
+    // graph in this app does -- see Measurements::setWidgets()), so this
+    // is rarely if ever what a user actually sees.
     newGraph->setName(QLatin1String("Graph ")+QString::number(mGraphs.size()));
     return newGraph;
   } else

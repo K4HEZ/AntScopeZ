@@ -497,6 +497,32 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   files. `build.sh`'s now-redundant manual `lrelease` pre-step (writing
   into the source tree, the same root-vs-`locales/` mismatch from above)
   is removed -- the CMake build handles it.
+- A repo-wide sweep for user-facing strings not wrapped in `tr()`, wrapped
+  the clear-cut ones: `MainWindow`'s "Screenshot" window title, "Add
+  multi-charts" tooltip, "Create marker" context-menu action, the new band
+  selector's `"%1 (%2 - %3 kHz)"` format string; `Settings`' firmware
+  "Update"/"Updating..." button text; and file-dialog captions
+  ("Export"/"Export PDF"/"Export PNG"/"Save as BMP"/"Save file"/"Open
+  file") across `export.cpp`/`screenshot.cpp`/`print.cpp`/`mainwindow.cpp`
+  that were inconsistent with the ones `settings.cpp`/`analyzerdata.cpp`
+  already wrapped. Also wrapped the print-document header builder
+  (`MainWindow::on_printBtn_clicked()`'s `string += "SWR graph"` etc.,
+  ~10 sites feeding `Print::setHead()`) -- `Print::setName("SWR")`/`("TDR")`
+  right next to two of them looked like the same kind of thing but turned
+  out to be an internal mode discriminator (`if (m_graphName == "SWR")` in
+  `print.cpp`), not display text, so left alone; wrapping it would have
+  silently broken that comparison. `measurements.cpp`'s on-canvas "brief
+  hint" popup text, initially flagged by the same sweep, turned out to
+  already be correctly wrapped throughout (both the static labels and the
+  live `tr("...%1...").arg(...)`-built values) -- the sweep's plain-text
+  scan just couldn't see past `tr()`'s multi-line adjacent-string-literal
+  concatenation to realize every fragment after the first one was already
+  covered by it.
+  A few short EE-abbreviation chart legend names (`measurements.cpp`'s
+  `setName("R")`/`"X"`/`"Rp"`/etc., `CustomPlot.cpp`'s generic "Graph "+N
+  fallback) and three `editbandsdialog.cpp` message-box titles that are
+  actually the function name, not real title text, are left as judgment
+  calls for now, marked `// Needs tr() attention` for the next pass.
 
 ## [2.1.3]
 

@@ -4100,7 +4100,7 @@ void MainWindow::createTabs (QString sequence)
     QToolButton *btn = new QToolButton();
     btn->setStyleSheet(Style::toolButton());
     btn->setText("+");
-    btn->setToolTip("Add multi-charts");
+    btn->setToolTip(tr("Add multi-charts"));
     connect(btn, &QAbstractButton::clicked, this, [=]() {
         showMultiTab();
     });
@@ -4260,7 +4260,7 @@ void MainWindow::on_screenshotAA_clicked()
 
     m_screenshot = new Screenshot(this, m_analyzer->getModel(), ht, wd);
     m_screenshot->setAttribute(Qt::WA_DeleteOnClose);
-    m_screenshot->setWindowTitle("Screenshot");
+    m_screenshot->setWindowTitle(tr("Screenshot"));
 
     connect(m_analyzer,SIGNAL(analyzerScreenshotDataArrived(QByteArray)),m_screenshot,SLOT(on_newData(QByteArray)));
     connect(m_analyzer,SIGNAL(analyzerScreenPaletteArrived(QByteArray, quint8)),m_screenshot,SLOT(on_fillPalette(QByteArray, quint8)));
@@ -5187,7 +5187,7 @@ void MainWindow::on_screenshot_clicked()
 {
     QDateTime datetime = QDateTime::currentDateTime();
     QString path = "Images/" + datetime.toString("dd.MM.yyyy_hh.mm.ss");
-    QString str = FileDialog::getSaveFileName(this, "Export PNG", path, "*.png");
+    QString str = FileDialog::getSaveFileName(this, tr("Export PNG"), path, "*.png");
     if(str.isEmpty())
     {
         return;
@@ -5238,7 +5238,7 @@ void MainWindow::on_printBtn_clicked()
     if(name == "tab_swr")
     {
         m_print->setName("SWR");
-        string += "SWR graph";
+        string += tr("SWR graph");
         m_print->drawBands(bands, MIN_SWR, MAX_SWR);
         //m_print->setRange(m_swrWidget->xAxis->range(),m_swrWidget->yAxis->range());
         m_print->setRange(m_swrWidget);
@@ -5256,7 +5256,7 @@ void MainWindow::on_printBtn_clicked()
         }
     }else if(name == "tab_phase")
     {
-        string += "Phase graph";
+        string += tr("Phase graph");
         m_print->drawBands(bands, m_phaseWidget->yAxis->range().lower, m_phaseWidget->yAxis->range().upper);
         //m_print->setRange(m_phaseWidget->xAxis->range(),m_phaseWidget->yAxis->range());
         m_print->setRange(m_phaseWidget);
@@ -5273,7 +5273,7 @@ void MainWindow::on_printBtn_clicked()
         }
     }else if(name == "tab_rs")
     {
-        string += "RXZ graph";
+        string += tr("RXZ graph");
         m_print->drawBands(bands, m_rsWidget->yAxis->range().lower, m_rsWidget->yAxis->range().upper);
         //m_print->setRange(m_rsWidget->xAxis->range(),m_rsWidget->yAxis->range());
         m_print->setRange(m_rsWidget);
@@ -5290,7 +5290,7 @@ void MainWindow::on_printBtn_clicked()
         }
     }else if(name == "tab_rp")
     {
-        string += "RXZ parallel graph";
+        string += tr("RXZ parallel graph");
         m_print->drawBands(bands, m_rpWidget->yAxis->range().lower, m_rpWidget->yAxis->range().upper);
         //m_print->setRange(m_rpWidget->xAxis->range(),m_rpWidget->yAxis->range());
         m_print->setRange(m_rpWidget);
@@ -5307,7 +5307,7 @@ void MainWindow::on_printBtn_clicked()
         }
     }else if(name == "tab_rl")
     {
-        string += "RL graph";
+        string += tr("RL graph");
         m_print->drawBands(bands, m_rlWidget->yAxis->range().lower, m_rlWidget->yAxis->range().upper);
         //m_print->setRange(m_rlWidget->xAxis->range(),m_rlWidget->yAxis->range());
         m_print->setRange(m_rlWidget);
@@ -5324,7 +5324,7 @@ void MainWindow::on_printBtn_clicked()
         }
     }else if(name == "tab_s21")
     {
-        string += "S21 graph";
+        string += tr("S21 graph");
         m_print->drawBands(bands, m_s21Widget->yAxis->range().lower, m_s21Widget->yAxis->range().upper);
         m_print->setRange(m_s21Widget);
         m_print->setLabel(m_s21Widget->xAxis->label(), m_s21Widget->yAxis->label());
@@ -5341,7 +5341,7 @@ void MainWindow::on_printBtn_clicked()
     }else if(name == "tab_tdr")
     {
         m_print->setName("TDR");
-        string += "TDR graph";
+        string += tr("TDR graph");
         m_print->drawBands(bands, m_tdrWidget->yAxis->range().lower, m_tdrWidget->yAxis->range().upper);
         //m_print->setRange(m_tdrWidget->xAxis->range(),m_tdrWidget->yAxis->range());
         m_print->setRange(m_tdrWidget);
@@ -5359,7 +5359,7 @@ void MainWindow::on_printBtn_clicked()
         }
     }else if(name == "tab_smith")
     {
-        string += "Smith graph";
+        string += tr("Smith graph");
         m_print->drawSmithImage();
         m_print->setRange(m_smithWidget);
         m_print->setLabel(m_smithWidget->xAxis->label(), m_smithWidget->yAxis->label());
@@ -5383,7 +5383,7 @@ void MainWindow::on_printBtn_clicked()
         }
     }else if(name == "tab_user")
     {
-        string += "User defined";
+        string += tr("User defined");
         m_print->drawBands(bands, m_userWidget->yAxis->range().lower, m_userWidget->yAxis->range().upper);
         //m_print->setRange(m_userWidget->xAxis->range(),m_userWidget->yAxis->range());
         m_print->setRange(m_userWidget);
@@ -5395,7 +5395,7 @@ void MainWindow::on_printBtn_clicked()
     }
 #ifndef NO_MULTITAB
     else if(name == "tab_multi") {
-        string += "Multi";
+        string += tr("Multi");
         foreach (auto tab, m_multiTabData.tabs) {
             QCustomPlot* plot = plotForTab(tab);
             if (plot != nullptr) {
@@ -5437,7 +5437,7 @@ void MainWindow::on_measurmentsSaveBtn_clicked()
             m_lastSaveOpenPath.remove(m_lastSaveOpenPath.indexOf('.'),4);
             m_lastSaveOpenPath.append(".asd");
         }
-        QString path = FileDialog::getSaveFileName(this, "Save file", m_lastSaveOpenPath, "AntScopeZ (*.asd )");
+        QString path = FileDialog::getSaveFileName(this, tr("Save file"), m_lastSaveOpenPath, "AntScopeZ (*.asd )");
         if(!path.isEmpty())
         {
             m_lastSaveOpenPath = path;
@@ -5468,7 +5468,7 @@ void MainWindow::on_measurmentsSaveBtn_clicked()
 
 void MainWindow::on_measurementsOpenBtn_clicked()
 {
-    QString path = FileDialog::getOpenFileName(this, "Open file", m_lastSaveOpenPath, "AntScopeZ (*.asd )");
+    QString path = FileDialog::getOpenFileName(this, tr("Open file"), m_lastSaveOpenPath, "AntScopeZ (*.asd )");
     if(!path.isEmpty())
     {
         m_lastSaveOpenPath = path;
@@ -5501,7 +5501,7 @@ void MainWindow::on_importBtn_clicked()
         m_lastExportImportPath = m_lastSaveOpenPath;
     }
 
-    QString path = FileDialog::getOpenFileName(this, "Open file", m_lastExportImportPath,  "S1p (*.s1p);;"
+    QString path = FileDialog::getOpenFileName(this, tr("Open file"), m_lastExportImportPath,  "S1p (*.s1p);;"
                                                                                     "Csv (*.csv);;"
                                                                                     "Nwl (*.nwl);;"
                                                                                     "AntScopeZ (*.asd );;"
@@ -6085,7 +6085,7 @@ void MainWindow::onCustomContextMenuRequested(const QPoint& pos)
     QCustomPlot* plot = getCurrentPlot();
     if (!plot->objectName().contains("smith") && !plot->objectName().contains("tdr"))
     {
-        QAction* action = menu->addAction(QString("Create marker"));
+        QAction* action = menu->addAction(tr("Create marker"));
         action->setData(pos);
         connect(menu, SIGNAL(triggered(QAction*)), this, SLOT(onCreateMarker(QAction*)));
     }
@@ -6176,7 +6176,7 @@ void MainWindow::populateBandSelector(const QString& band)
             QString start = fields[0].trimmed();
             QString stop = fields[1].trimmed();
             ui->presetsBandComboBox->addItem(
-                QString("%1 (%2 - %3 kHz)").arg(name, start, stop),
+                tr("%1 (%2 - %3 kHz)").arg(name, start, stop),
                 QVariant(QStringList{start, stop}));
         }
     }

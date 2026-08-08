@@ -61,6 +61,10 @@ bool EditBandsDialog::loadDefaults()
     bool res = file.open(QFile::ReadOnly);
     if(!res) {
         qDebug() << "load defaults" << file.errorString() << ituPath;
+        // Needs tr() attention: this message box's title is the function
+        // name, not real user-facing text -- wrapping it in tr() as-is
+        // wouldn't actually fix anything; it needs an actual title written
+        // first. Same for the other two g_showMessageBox() calls below.
         g_showMessageBox(this, QMessageBox::Information, "loadDefaults", file.errorString() + ituPath);
         return false;
     }
@@ -85,7 +89,7 @@ bool EditBandsDialog::load()
     bool res = file.open(QFile::ReadOnly);
     if(!res) {
         qDebug() << "load" << file.errorString() << ituPath;
-        g_showMessageBox(this, QMessageBox::Information, "load", file.errorString() + ituPath);
+        g_showMessageBox(this, QMessageBox::Information, "load", file.errorString() + ituPath); // Needs tr() attention (see loadDefaults() above)
         return false;
     }
 
@@ -106,7 +110,7 @@ bool EditBandsDialog::save()
     bool res = file.open(QFile::Truncate|QFile::WriteOnly|QFile::Text);
     if(!res) {
         qDebug() << "save" << file.errorString() << ituPath;
-        g_showMessageBox(this, QMessageBox::Information, "EditBandsDialog::save", file.errorString() + ituPath);
+        g_showMessageBox(this, QMessageBox::Information, "EditBandsDialog::save", file.errorString() + ituPath); // Needs tr() attention (see loadDefaults() above)
         return false;
     }
     QTextStream stream(&file);
