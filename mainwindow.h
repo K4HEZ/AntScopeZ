@@ -216,6 +216,8 @@ private:
     void setFqTo(double to);
     double getFqFrom(void);
     double getFqTo(void);
+    double clampFqKhz(double khz);
+    QString formatFqKhz(double khz);
     bool loadLanguage(QString locale); // locale: en, ukr, ru, jp, etc.
     void saveFile(int row, QString path);
     QCustomPlot* getCurrentPlot();

@@ -4141,8 +4141,11 @@ void MainWindow::on_tableWidget_presets_cellDoubleClicked(int row, int column)
     Q_UNUSED(column)
     QStringList list = m_presets->getRow(row);
     QCPRange range;
-    range.lower = list.at(0).toDouble();
-    range.upper = list.at(1).toDouble();
+    // Clamped, not the raw stored text -- a preset saved before the
+    // Start/Stop clamp existed (or hand-edited into the presets file)
+    // could otherwise still hand the plots/device an out-of-range value.
+    range.lower = clampFqKhz(list.at(0).toDouble());
+    range.upper = clampFqKhz(list.at(1).toDouble());
     m_dotsNumber = list.at(2).toInt();
     ui->spinBoxPoints->setValue(m_dotsNumber);
 
@@ -4152,8 +4155,8 @@ void MainWindow::on_tableWidget_presets_cellDoubleClicked(int row, int column)
         setFqTo(list.at(1));
     }else
     {
-        setFqFrom((list.at(1).toDouble() + list.at(0).toDouble())/2);
-        setFqTo((list.at(1).toDouble() - list.at(0).toDouble())/2);
+        setFqFrom((range.upper + range.lower)/2);
+        setFqTo((range.upper - range.lower)/2);
     }
     m_swrWidget->xAxis->setRange(range);
     m_phaseWidget->xAxis->setRange(range);
@@ -5672,15 +5675,53 @@ void MainWindow::on_rangeBtn_clicked(bool checked)
 }
 
 
+// Lowest frequency (kHz) this app will let Start/Stop request: 1 Hz.
+// ABSOLUTE_MAX_FQ (analyzerparameters.h) is already the matching top end,
+// 10,000,000 kHz = 10 GHz -- this is the same device-range limit, applied
+// earlier, at the point a value is typed/picked rather than where it's
+// finally handed to the device-command layer.
+static constexpr double MIN_FQ_KHZ = 0.001;
+
+double MainWindow::clampFqKhz(double khz)
+{
+    khz = qBound(MIN_FQ_KHZ, khz, (double)ABSOLUTE_MAX_FQ);
+    // Round to the nearest 0.001 kHz (1 Hz): finer than that is beyond any
+    // analyzer's real resolution, and was the direct trigger for a
+    // QCheckedInt "Overflow in operator-" crash further downstream --
+    // entering something like "0.000005" kHz into Start/Stop reached
+    // integer frequency conversions unclamped. qRound64() (not qRound(),
+    // which is only 32-bit) avoids the same class of overflow here, since
+    // khz*1000 can be up to 10 billion.
+    return qRound64(khz * 1000.0) / 1000.0;
+}
+
+QString MainWindow::formatFqKhz(double khz)
+{
+    QString s = QString::number(khz, 'f', 3);
+    if (s.contains('.')) {
+        while (s.endsWith('0'))
+            s.chop(1);
+        if (s.endsWith('.'))
+            s.chop(1);
+    }
+    return s;
+}
+
 void MainWindow::setFqFrom(QString from)
 {
     from.remove(' ');
+    from = formatFqKhz(clampFqKhz(from.toDouble()));
     from = appendSpaces(from);
     ui->lineEdit_fqFrom->setText(from);
 }
 
 void MainWindow::setFqFrom(double from)
 {
+    // No decimal is ever shown below ('f', 0), so the effective floor here
+    // is a whole kHz rather than clampFqKhz()'s 1 Hz -- a value in between
+    // would just display as "0" anyway. See clampFqKhz() for the actual
+    // device-range ceiling.
+    from = qBound(1.0, from, (double)ABSOLUTE_MAX_FQ);
     QString sFrom = QString::number(from,'f', 0);
     sFrom = appendSpaces(sFrom);
     ui->lineEdit_fqFrom->setText(sFrom);
@@ -5689,12 +5730,14 @@ void MainWindow::setFqFrom(double from)
 void MainWindow::setFqTo(QString to)
 {
     to.remove(' ');
+    to = formatFqKhz(clampFqKhz(to.toDouble()));
     to = appendSpaces(to);
     ui->lineEdit_fqTo->setText(to);
 }
 
 void MainWindow::setFqTo(double to)
 {
+    to = qBound(1.0, to, (double)ABSOLUTE_MAX_FQ);
     QString sTo = QString::number(to,'f', 0);
     sTo = appendSpaces(sTo);
     ui->lineEdit_fqTo->setText(sTo);
@@ -6145,8 +6188,11 @@ void MainWindow::on_presetsBandComboBox_currentIndexChanged(int index)
 
     QStringList range = ui->presetsBandComboBox->itemData(index).toStringList();
     if (range.size() == 2) {
-        double start = range.at(0).toDouble();
-        double stop = range.at(1).toDouble();
+        // Clamped, not the raw itu-regions text -- a hand-edited
+        // itu-regions.txt (see EditBandsDialog) could otherwise still hand
+        // the plots an out-of-device-range value.
+        double start = clampFqKhz(range.at(0).toDouble());
+        double stop = clampFqKhz(range.at(1).toDouble());
 
         if (!m_isRange) {
             setFqFrom(range.at(0));
@@ -6260,14 +6306,25 @@ void MainWindow::on_importFinished(double _fqMin_khz, double _fqMax_khz)
 }
 
 QString appendSpaces(const QString& str) {
+    // Thousands-group only the integer part. The naive "group every 3
+    // characters counting from the end of the whole string" this used to
+    // do treated the decimal point and fractional digits as just more
+    // characters to count, so e.g. "135.7" (a valid band edge -- see
+    // itu-regions-defaults.txt's 2200m entry) came out as "13 5.7" instead
+    // of untouched, and anything with more fractional digits than that
+    // came out actively wrong rather than just unnecessarily grouped.
+    int dotIdx = str.indexOf('.');
+    QString intPart = (dotIdx == -1) ? str : str.left(dotIdx);
+    QString fracPart = (dotIdx == -1) ? QString() : str.mid(dotIdx); // includes the '.'
+
     QString tmp;
-    int len = str.length();
+    int len = intPart.length();
     for (int idx=0; idx<len; idx++) {
         if (idx != 0 && (idx % 3) == 0)
             tmp.insert(0, ' ');
-        tmp.insert(0, str[len - 1 - idx]);
+        tmp.insert(0, intPart[len - 1 - idx]);
     }
-    return tmp;
+    return tmp + fracPart;
 }
 
 void MainWindow::onFullRange(bool)

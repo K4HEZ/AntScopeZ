@@ -417,6 +417,28 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   an enabled selector with nothing but the placeholder in it is fine, not
   an error.
 
+### Fixed
+
+- `appendSpaces()` (the Start/Stop thousands-separator helper) counted
+  every character from the end of the whole string, including the decimal
+  point and fractional digits, to decide where to insert a grouping space
+  -- so any Start/Stop value with a fractional kHz part (e.g. picking the
+  new band selector's 2200m entry, `135.7 - 137.8 kHz`) rendered with the
+  separator in the wrong place (`"13 5.7"`). Now groups only the integer
+  part; the fractional part (if any) is left untouched.
+- Typing an extremely small Start/Stop value (e.g. `0.000005`) could crash
+  the app with a `QCheckedInt` "Overflow in operator-" assert once that
+  value reached an integer frequency conversion further downstream --
+  Start/Stop had no lower or upper bound at all before this. `setFqFrom()`/
+  `setFqTo()` (the single choke point every Start/Stop write already goes
+  through -- manual edits, device data, presets, and the new band
+  selector) now clamp to this app's actual supported range, 1 Hz - 10 GHz,
+  and round to the nearest 0.001 kHz (finer than that is beyond any
+  analyzer's real resolution anyway). `on_tableWidget_presets_cellDoubleClicked()`
+  and the band selector's plot-range/redraw path clamp the same way, so a
+  stale or hand-edited out-of-range preset/band entry can't reach the
+  plots unclamped either.
+
 ## [2.1.3]
 
 Baseline — changelog tracking starts here. See `git log` for history prior
