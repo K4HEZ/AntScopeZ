@@ -51,7 +51,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_s21ZoomState(10),
     m_smithZoomState(10),
     m_userZoomState(10),
-    m_languageNumber(0),
+    m_languageCode("en"),
     m_addingMarker(false),
     m_bInterrupted(false)
 {
@@ -522,7 +522,19 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->spinBoxPoints, SIGNAL(valueChanged(int)), this, SLOT(onSpinChanged(int)));
     connect(ui->fullBtn, &QPushButton::clicked, this, &MainWindow::onFullRange);
 
-    m_languageNumber = m_settings->value("languageNumber",0).toInt();
+    if (m_settings->contains("languageCode")) {
+        m_languageCode = m_settings->value("languageCode", "en").toString();
+    } else {
+        // One-time migration from the pre-discovery scheme, where the
+        // Language combo was a fixed 3-entry array (English, Ukrainian,
+        // Japanese, in that order) and this stored an index into it.
+        // Without this, upgrading would silently reset every non-English
+        // installed language back to English.
+        static const QStringList legacyOrder = {"en", "uk", "ja"};
+        int legacyIndex = m_settings->value("languageNumber", 0).toInt();
+        m_languageCode = (legacyIndex >= 0 && legacyIndex < legacyOrder.size())
+            ? legacyOrder[legacyIndex] : "en";
+    }
 
     m_settings->endGroup();
 
@@ -565,7 +577,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_1secTimer, SIGNAL(timeout()), this, SLOT(on_1secTimerTick()));
     m_1secTimer->start(100);
 
-    loadLanguage(languages_small[m_languageNumber]);
+    loadLanguage(m_languageCode);
     ui->tableWidget_presets->horizontalHeader()->show();
     if(!m_isRange)
     {
@@ -697,7 +709,7 @@ MainWindow::~MainWindow()
     m_settings->setValue("smithZoomState", m_smithZoomState);
     m_settings->setValue("userZoomState", m_userZoomState);
 
-    m_settings->setValue("languageNumber", m_languageNumber);
+    m_settings->setValue("languageCode", m_languageCode);
 
     m_settings->endGroup();
 
@@ -4831,12 +4843,7 @@ void MainWindow::on_settingsBtn_clicked()
     m_settingsDialog->setAntScopeVersion(ANTSCOPEZ_VER);
     m_settingsDialog->setRestrictFq(m_fqRestrict);
 
-    QStringList list;
-    for(int i = 0; i < LANGUAGES_QUANTITY; ++i)
-    {
-        list << languages[i];
-    }
-    m_settingsDialog->setLanguages(list, m_languageNumber);
+    m_settingsDialog->setLanguages(m_languageCode);
 
     m_settingsDialog->setBands(m_BandsMap.keys());
 
@@ -4935,7 +4942,7 @@ void MainWindow::on_settingsBtn_clicked()
     connect(m_settingsDialog, &Settings::checkUpdatesBtn,
             m_analyzer, &AnalyzerPro::on_checkUpdatesBtn_clicked);
 
-    connect(m_settingsDialog, SIGNAL(languageChanged(int)), this, SLOT(on_translate(int)));
+    connect(m_settingsDialog, SIGNAL(languageChanged(QString)), this, SLOT(on_translate(QString)));
 
     connect(m_settingsDialog, SIGNAL(bandChanged(QString)), this, SLOT(on_bandChanged(QString)));
 
@@ -5954,7 +5961,18 @@ void MainWindow::on_1secTimerTick()
 bool MainWindow::loadLanguage(QString locale)
 { //locale: en, ukr, ru, ja, etc.
     QString title = windowTitle();
-    bool res = m_qtLanguageTranslator->load("QtLanguage_" + locale, Settings::languageDataFolder());
+    QString fileName = "QtLanguage_" + locale;
+    // Prefer a user-supplied translation over the one shipped with the app
+    // -- the same override convention itu-regions.txt already uses (see
+    // loadBands()): a per-user copy in localDataFolder() is checked first,
+    // and only if it's not there does this fall back to the shared/
+    // installed copy in languageDataFolder(). Lets someone add or replace
+    // a language by dropping a .qm into their own config folder, without
+    // needing write access to the shared install location or a repackage.
+    QString folder = Settings::languageDataFolder();
+    if (QFile::exists(QDir(Settings::localDataFolder()).absoluteFilePath(fileName + ".qm")))
+        folder = Settings::localDataFolder();
+    bool res = m_qtLanguageTranslator->load(fileName, folder);
     qApp->installTranslator(m_qtLanguageTranslator);
     ui->retranslateUi(this);
 
@@ -6009,10 +6027,10 @@ bool MainWindow::loadLanguage(QString locale)
 }
 
 
-void MainWindow::on_translate(int number)
+void MainWindow::on_translate(QString code)
 {
-    m_languageNumber = number;
-    loadLanguage(languages_small[number]);
+    m_languageCode = code;
+    loadLanguage(code);
 }
 
 void MainWindow::on_calibrationChanged()
@@ -6927,9 +6945,11 @@ void MainWindow::on_selectDeviceDialog()
     // actually closing anything for the Settings-originated case.
     // settingsBtn should only re-enable if Settings isn't still open --
     // otherwise a second "Settings" click while it's still up would reuse
-    // the same (non-null) m_settingsDialog and re-run its one-time setup
-    // (e.g. setLanguages()' addItems(), which never clears first) a second
-    // time on top of the first.
+    // the same (non-null) m_settingsDialog and re-run its one-time setup a
+    // second time on top of the first. (setLanguages() itself now clears
+    // its combo box before repopulating, so it's no longer harmed by that
+    // specifically -- but plenty of the rest of this setup isn't as
+    // forgiving.)
     ui->settingsBtn->setEnabled(m_settingsDialog == nullptr);
 }
 

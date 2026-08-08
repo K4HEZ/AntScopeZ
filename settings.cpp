@@ -11,6 +11,9 @@
 #include "filedialog.h"
 #include <QFile>
 #include <QFileInfo>
+#include <QDir>
+#include <QLocale>
+#include <algorithm>
 
 extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
                             QString title, QString text,
@@ -1261,10 +1264,48 @@ void Settings::setAntScopeVersion(QString version)
     ui->antScopeVersion->setText(version);
 }
 
-void Settings::setLanguages(QStringList list, int number)
+void Settings::setLanguages(const QString& currentCode)
 {
-    ui->languageComboBox->addItems(list);
-    ui->languageComboBox->setCurrentIndex(number);
+    ui->languageComboBox->clear();
+    // English is always offered: it's the source language every tr() call
+    // is written in, so there's no QtLanguage_en.qm to discover below.
+    ui->languageComboBox->addItem("English", "en");
+
+    // Every other entry is discovered from whatever QtLanguage_<code>.qm
+    // files actually exist, rather than a fixed compiled-in list -- a
+    // language becomes selectable just by dropping its .qm into either
+    // folder, no rebuild needed. localDataFolder() (per-user, e.g.
+    // ~/.config/AntScopeZ) and languageDataFolder() (shared/installed
+    // copy) are both scanned so an override in the former still shows up
+    // even if the code isn't among the ones shipped in the latter;
+    // loadLanguage() (mainwindow.cpp) is what actually prefers the user
+    // copy at load time if a code exists in both.
+    QStringList codes;
+    for (const QString& folder : {localDataFolder(), languageDataFolder()}) {
+        QDir dir(folder);
+        const QStringList files = dir.entryList(QStringList() << "QtLanguage_*.qm", QDir::Files);
+        for (const QString& fileName : files) {
+            QString code = fileName.mid(QStringLiteral("QtLanguage_").length());
+            code.chop(QStringLiteral(".qm").length());
+            if (!code.isEmpty() && code != "en" && !codes.contains(code))
+                codes << code;
+        }
+    }
+    std::sort(codes.begin(), codes.end());
+
+    for (const QString& code : codes) {
+        // The .qm/.ts format has no human-readable name field of its own
+        // (QTranslator::language() just returns this same code back) --
+        // QLocale supplies the display name instead, in the language's
+        // own script (matching how "English"/"Українська"/"日本語" looked
+        // before this was discovery-based). Falls back to the bare code
+        // for one QLocale doesn't recognize, rather than dropping it.
+        QString name = QLocale(code).nativeLanguageName();
+        ui->languageComboBox->addItem(name.isEmpty() ? code : name, code);
+    }
+
+    int idx = ui->languageComboBox->findData(currentCode);
+    ui->languageComboBox->setCurrentIndex(idx >= 0 ? idx : 0);
 }
 
 void Settings::on_translate()
@@ -1275,7 +1316,7 @@ void Settings::on_translate()
 
 void Settings::on_languageComboBox_currentIndexChanged(int index)
 {
-    emit languageChanged(index);
+    emit languageChanged(ui->languageComboBox->itemData(index).toString());
 }
 
 void Settings::onBandsComboBox_currentIndexChanged(int index)

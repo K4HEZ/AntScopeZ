@@ -66,7 +66,7 @@ public:
 
     void setAntScopeVersion(QString version);
 
-    void setLanguages(QStringList list, int number);
+    void setLanguages(const QString& currentCode);
     void on_translate();
     void showColorDialog();
     LicenseAgent& licenseAgent() { return m_licenseAgent; }
@@ -144,7 +144,7 @@ signals:
 
     void cableActionChanged(int);
 
-    void languageChanged(int);
+    void languageChanged(QString);
     void bandChanged(QString);
     void bandSelectorEnabledChanged(bool);
     void exportCableSettings(QString _description);

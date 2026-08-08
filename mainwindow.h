@@ -43,21 +43,6 @@ enum {
 namespace Ui {
 class MainWindow;
 }
-#define LANGUAGES_QUANTITY 3
-static QString languages[LANGUAGES_QUANTITY]={
-    "English",
-//    "Русский",
-    "Українська",
-    "日本語"
-};
-
-static QString languages_small[LANGUAGES_QUANTITY]={
-    "en",
-//    "ru",
-    "uk",
-    "ja"
-};
-
 
 struct MultiTab {
     QList<QString> tabs;
@@ -189,7 +174,12 @@ private:
 
     QTranslator *m_qtLanguageTranslator;
 
-    int m_languageNumber;
+    // ISO 639 code ("en", "uk", "ja", ...) of the active UI language, e.g.
+    // for building "QtLanguage_<code>.qm" -- not an index into a fixed
+    // list, since the list of available languages is now discovered from
+    // whatever QtLanguage_*.qm files actually exist on disk (see
+    // Settings::setLanguages()) rather than compiled in.
+    QString m_languageCode;
 
     bool m_addingMarker;
     bool m_isMouseClick;
@@ -301,7 +291,7 @@ public slots:
     void on_exportBtn_clicked();
     void on_measurementComplete();
     void on_measurementCompleteNano();
-    void on_translate(int number);
+    void on_translate(QString code);
     void on_startOneFq(quint64 fq, int dots);
     void on_selectDeviceDialog();
     void on_refreshConnection();

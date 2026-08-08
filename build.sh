@@ -27,20 +27,10 @@ echo "  source: $SRC_DIR"
 echo "  build:  $BUILD_DIR"
 echo
 
-# Compile the translations before configuring, so the build copies fresh .qm
-# files into the bundle.
-#
-# NOTE: the sources live in locales/ but the build reads the .qm from the
-# project root, so the output path is given explicitly. Reconciling those two
-# locations properly is still outstanding.
-echo "Preparing translation files..."
-for ts in "$SRC_DIR"/locales/*.ts; do
-    [ -e "$ts" ] || continue
-    base=$(basename "$ts" .ts)
-    lrelease "$ts" -qm "$SRC_DIR/$base.qm"
-done
-echo "Complete"
-echo
+# Translations (locales/*.ts -> QtLanguage_*.qm) are compiled by the CMake
+# build itself now (qt_add_translations() in CMakeLists.txt, target
+# release_translations), including into the .app bundle on this platform --
+# no separate manual lrelease step needed here anymore.
 
 echo "Configuring..."
 cmake -S "$SRC_DIR" -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release

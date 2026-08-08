@@ -438,6 +438,65 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   and the band selector's plot-range/redraw path clamp the same way, so a
   stale or hand-edited out-of-range preset/band entry can't reach the
   plots unclamped either.
+- `Settings::setConnectButtonText()` had the only two user-facing strings
+  in the app still spelled the British "analyser" -- the rest of the UI
+  already said "analyzer" throughout. Also fixed two `mainwindow.cpp`
+  comments quoting that same button text. (Any existing translation keyed
+  off the old "Connect analyser"/"Disconnect analyser" source strings
+  falls back to the now-updated English source until it's revisited --
+  not addressed here.)
+- Translated the Russian comments in `markerspopup.cpp`/`.h` and `popup.h`
+  to English (narration only, e.g. "disable window decoration" -- nothing
+  was hiding logic beyond `markerspopup.cpp`'s `m_mapHeader` column
+  comments, which clarify that the `R||`/`X||`/`Z||`/`L||`/`C||` columns
+  are the parallel-equivalent-circuit-model counterparts to `R`/`X`/`Z`/
+  `L`/`C`'s series model, not just decoration).
+
+### Added
+
+- Settings → General's Language combo box now discovers whatever
+  `QtLanguage_<code>.qm` files actually exist instead of listing a fixed,
+  compiled-in 3-language array (English/Ukrainian/Japanese, with a
+  commented-out, never-actually-available Russian) -- adding a language is
+  now "compile a `.qm` and put it where the app looks," not "edit
+  `mainwindow.h` and rebuild the whole app." `Settings::setLanguages()`
+  scans both `Settings::localDataFolder()` (per-user, e.g.
+  `~/.config/AntScopeZ`) and `languageDataFolder()` (the shared/installed
+  copy) for `QtLanguage_*.qm`, and `MainWindow::loadLanguage()` prefers a
+  user-folder copy over the shared one if both exist for the same code --
+  the same override convention `itu-regions.txt` already uses (see
+  `loadBands()`), so a language can be added or replaced by dropping a
+  `.qm` into the per-user folder, without needing write access to the
+  shared install location or a repackage. Each entry's display name comes
+  from `QLocale(code).nativeLanguageName()` (e.g. "日本語" for `ja`) --
+  the `.ts`/`.qm` format has no display-name field of its own,
+  `QTranslator::language()` just returns the same code back. The active
+  language is now persisted as that code (`Settings/languageCode`)
+  instead of an index into the old fixed array (`languageNumber`), with a
+  one-time migration from the old key so upgrading doesn't silently reset
+  an existing Ukrainian/Japanese install back to English.
+
+### Fixed
+
+- The `.qm` translation files the app actually loads were prebuilt
+  binaries checked into the repository root, completely disconnected from
+  the real `.ts` sources in `locales/` -- a comment in `CMakeLists.txt`
+  already flagged that running `lrelease` on `locales/*.ts` writes its
+  output back to `locales/`, not to the root files the app ships, so
+  editing a translation and regenerating never actually reached the
+  running app. `CMakeLists.txt` now compiles `locales/*.ts` to `.qm` at
+  build time via Qt's `qt_add_translations()` (new `LinguistTools`
+  component dependency), as loose files (not embedded in Qt resources,
+  since loose files are what makes the per-user override above possible)
+  staged/installed the same way `cables.txt`/`itu-regions-defaults.txt`
+  already are. `AntScopeZ` depends on the new `release_translations`
+  target so a parallel build can't race ahead of it. The prebuilt root
+  `QtLanguage_*.qm` (and an orphaned, untranslated `locales/QtLanguage.ts`
+  template with no `language=` attribute -- 360/360 messages still
+  `unfinished`) are deleted; both are now build artifacts, not tracked
+  files. `build.sh`'s now-redundant manual `lrelease` pre-step (writing
+  into the source tree, the same root-vs-`locales/` mismatch from above)
+  is removed -- the CMake build handles it.
 
 ## [2.1.3]
 

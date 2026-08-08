@@ -49,6 +49,8 @@ itu-regions.txt
 # Scan output files (.s1p) saved by the app at runtime.
 Scan-*.s1p
 
-# NOTE: the compiled *.qm translations at the repo root are deliberately
-# tracked -- the build copies them next to the binary and QTranslator loads
-# them from there. Do not add *.qm here without fixing that first.
+# Compiled translations: generated at build time from locales/*.ts (see
+# qt_add_translations() in CMakeLists.txt) into the build-*/ directory
+# already covered above, not checked in. A stray *.qm landing at the repo
+# root instead would mean someone ran lrelease by hand outside the build.
+*.qm
