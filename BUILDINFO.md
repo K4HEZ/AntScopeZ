@@ -135,3 +135,14 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   differences, not something wrong with the packaging/install path itself.
   Packaged releases bundle the Qt 6.11 shared libraries specifically to
   avoid this.
+- **Print dialog (Linux): page size defaults to A4 even when the system's
+  actual default is Letter, and the Properties dialog's Orientation
+  controls render with a layout/alignment glitch.** Confirmed (screenshots,
+  2026-08-08) that this is inside Qt's own `QPrintDialog` "Properties"
+  widget specifically -- the OS's own Printers settings, checking the same
+  printer, correctly shows the real default (Letter); print.cpp/
+  screenshot.cpp don't set a page size for this path at all, so neither is
+  responsible. Root cause not identified (Qt-internal, not something this
+  app's code controls directly); workaround for now is to manually pick
+  the correct paper size in the Properties dialog before printing. See
+  `Print::on_printBtn_clicked()`.

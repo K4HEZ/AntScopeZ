@@ -612,6 +612,19 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   first; the manual "Connect analyzer" button (Settings/toolbar) is
   unaffected either way.
 
+### Known issues
+
+- Print dialog (Linux): page size defaults to A4 even when the system's
+  actual default is Letter, and the Properties dialog's Orientation
+  controls render with a layout/alignment glitch. Confirmed via
+  screenshots to be inside Qt's own `QPrintDialog` "Properties" widget --
+  the OS's own Printers settings, checking the same printer, correctly
+  shows Letter, and neither `print.cpp` nor `screenshot.cpp` sets a page
+  size for this path, so the app isn't responsible for the default shown.
+  Root cause not identified; not something this app's code controls
+  directly. Workaround: manually pick the correct paper size in the
+  Properties dialog before printing. See `BUILDINFO.md`.
+
 ## [2.1.3]
 
 Baseline — changelog tracking starts here. See `git log` for history prior
