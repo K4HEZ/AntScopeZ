@@ -597,6 +597,21 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   explicitly, so it's modal from its very first `show()` instead of
   being upgraded after the fact.
 
+### Added
+
+- Settings -> General: "Open 'Connect Analyzer' on launch" checkbox
+  (default checked, preserving today's behavior). Previously, if there
+  was no valid saved device to silently auto-reconnect to,
+  `MainWindow`'s startup sequence unconditionally popped open Connect
+  Analyzer ~500ms after launch (`setWidgetsSettings()`'s
+  `QTimer::singleShot`, and `on_refreshConnection()`'s own fallback when
+  a silent reconnect attempt fails) -- easy enough to cancel, but someone
+  who only wants to review previously-saved `.s1p` files, with no
+  analyzer connected, shouldn't have to dismiss it every time. Both
+  startup triggers now check `Settings/open-connect-analyzer-at-launch`
+  first; the manual "Connect analyzer" button (Settings/toolbar) is
+  unaffected either way.
+
 ## [2.1.3]
 
 Baseline — changelog tracking starts here. See `git log` for history prior

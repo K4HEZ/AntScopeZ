@@ -465,6 +465,13 @@
                </property>
               </widget>
              </item>
+             <item>
+              <widget class="QCheckBox" name="checkBoxOpenConnectAnalyzerAtLaunch">
+               <property name="text">
+                <string>Open 'Connect Analyzer' on launch</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </item>
            <item>

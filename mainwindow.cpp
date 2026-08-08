@@ -642,9 +642,17 @@ MainWindow::MainWindow(QWidget *parent) :
             on_refreshConnection();
         });
     } else {
+        m_settings->beginGroup("Settings");
+        bool openAtLaunch = m_settings->value("open-connect-analyzer-at-launch", true).toBool();
+        m_settings->endGroup();
+        // Settings -> General's "Open 'Connect Analyzer' on launch" -- someone
+        // who only wants to review saved .s1p files, with no analyzer
+        // connected, shouldn't have to dismiss this every time.
+        if (openAtLaunch) {
             QTimer::singleShot(500, this, [&](){
                 on_selectDeviceDialog();
             });
+        }
     }
 }
 
@@ -6988,9 +6996,19 @@ void MainWindow::on_refreshConnection()
          }
     }
     if (! g_usbOnly) {
-        QTimer::singleShot(100, this, [=](){
-           on_selectDeviceDialog();
-        });
+        m_settings->beginGroup("Settings");
+        bool openAtLaunch = m_settings->value("open-connect-analyzer-at-launch", true).toBool();
+        m_settings->endGroup();
+        // Same "Open 'Connect Analyzer' on launch" setting as the other
+        // startup trigger in setWidgetsSettings() -- this function is only
+        // ever reached from that one startup QTimer::singleShot, so this
+        // fallback is effectively startup-only too, not something a
+        // manual "Connect analyzer" click should ever be gated by.
+        if (openAtLaunch) {
+            QTimer::singleShot(100, this, [=](){
+               on_selectDeviceDialog();
+            });
+        }
     }
 }
 

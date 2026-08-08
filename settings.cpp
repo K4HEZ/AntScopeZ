@@ -102,6 +102,7 @@ void Settings::applyStyles()
     style = Style::checkBox();
     ui->checkBoxBandName->setStyleSheet(style);
     ui->checkBoxBandSelector->setStyleSheet(style);
+    ui->checkBoxOpenConnectAnalyzerAtLaunch->setStyleSheet(style);
     ui->graphBriefHintCheckBox->setStyleSheet(style);
     ui->graphHintCheckBox->setStyleSheet(style);
     ui->markersHintCheckBox->setStyleSheet(style);
@@ -202,6 +203,12 @@ Settings::Settings(QWidget *parent) :
     // region actually has any named bands -- by the time this dialog can
     // be opened, the key already exists.
     ui->checkBoxBandSelector->setChecked(m_settings->value("band-selector-enabled", false).toBool());
+    // Default true (opt-out, not opt-in): preserves today's behavior for
+    // existing installs, since someone who only wants to review saved
+    // .s1p files and never touches a physical analyzer is the exception,
+    // not the rule.
+    ui->checkBoxOpenConnectAnalyzerAtLaunch->setChecked(
+        m_settings->value("open-connect-analyzer-at-launch", true).toBool());
     m_settings->endGroup();
 
     connect(ui->lineEdit_systemImpedance, &QLineEdit::editingFinished, this, &Settings::on_systemImpedance);
@@ -236,6 +243,11 @@ Settings::Settings(QWidget *parent) :
         m_settings->endGroup();
 
         emit bandSelectorEnabledChanged(checked);
+    });
+    connect(ui->checkBoxOpenConnectAnalyzerAtLaunch, &QCheckBox::clicked, [=](bool checked) {
+        m_settings->beginGroup("Settings");
+        m_settings->setValue("open-connect-analyzer-at-launch", checked);
+        m_settings->endGroup();
     });
     //{
     // TODO Bug #2247: update doesn't work from Antscope2
