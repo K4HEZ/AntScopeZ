@@ -1518,9 +1518,9 @@ void Settings::setConnectButtonText(bool _connect)
     m_connectedButton = _connect;
     //ReDeviceInfo::InterfaceType type = m_analyzer->connectionType();
     if (_connect)
-        ui->connectSerialBtn->setText(tr("Connect analyser"));
+        ui->connectSerialBtn->setText(tr("Connect analyzer"));
     else
-        ui->connectSerialBtn->setText(tr("Disconnect analyser"));
+        ui->connectSerialBtn->setText(tr("Disconnect analyzer"));
     ui->connectSerialBtn->update();
 }
 

@@ -6868,7 +6868,7 @@ void MainWindow::on_selectDeviceDialog()
     }
 
     // Note which window is actually on top right now (e.g. the Settings
-    // dialog, when this is opened via its "Connect analyser" button) so its
+    // dialog, when this is opened via its "Connect analyzer" button) so its
     // WM_TRANSIENT_FOR can point at it below -- otherwise the window manager
     // can leave focus on that still-modal window instead of granting it to
     // this one.
@@ -6920,7 +6920,7 @@ void MainWindow::on_selectDeviceDialog()
     }
     // Was: unconditionally closeSettingsDialog() here, which closed the
     // Settings dialog out from under the user just because they selected or
-    // canceled a device from its "Connect analyser" button -- Settings
+    // canceled a device from its "Connect analyzer" button -- Settings
     // should stay open so they can keep working in it (issue #2). This
     // function is also reached from flows where Settings was never open
     // (m_settingsDialog already null there), so that call was only ever
