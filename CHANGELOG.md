@@ -566,12 +566,19 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   Settings' "Connect analyzer" button and a startup timer fallback
   (`on_refreshConnection()`, when there's no valid saved device to
   auto-reconnect to), that could race each other or a fast double-click
-  into stacking instances. Now guarded by checking
-  `QApplication::activeModalWidget()` for an existing `SelectDeviceDialog`
-  before constructing another, rather than trusting Qt/the window manager
-  to block it -- the same class of guard `Settings`/`ModelessPopup`
-  already use for their own reuse, reused here instead of a new member
-  flag. A repo-wide survey found several other dialogs opened the same
+  into stacking instances. Now guarded by a `m_selectDeviceDialogOpen`
+  flag, rather than trusting Qt/the window manager to block it -- the
+  same class of guard `Settings`/`ModelessPopup` already use for their
+  own reuse, just not their exact mechanism: the first attempt checked
+  `QApplication::activeModalWidget()` instead of adding a new member
+  (Qt's own tracked state, so no new state to keep in sync), but that
+  didn't actually work -- `on_selectDeviceDialog()` calls `dlg.show()`
+  before `dlg.exec()` (a deliberate focus-stealing workaround, see the
+  comment below), and `SelectDeviceDialog` never calls `setModal()`/
+  `setWindowModality()` itself, so `exec()`'s modal-widget registration
+  (which happens as part of making the widget visible) found it already
+  visible from that earlier `show()` and never actually ran. A repo-wide
+  survey found several other dialogs opened the same
   unguarded `new/exec()` way (Screenshot, Print, UpdateDialog,
   FqSettings, AnalyzerData, Export, EditBandsDialog,
   AppRegistrationDialog) -- theoretically exposed to the same class of

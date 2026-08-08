@@ -187,6 +187,19 @@ private:
     QMap<QString, QStringList*> m_BandsMap;
     bool m_darkColorTheme = true;
 
+    // Guards on_selectDeviceDialog() against opening a second copy of
+    // SelectDeviceDialog. QApplication::activeModalWidget() looked like
+    // the natural check (Qt's own tracked state, no new member needed),
+    // but doesn't actually work here: on_selectDeviceDialog() calls
+    // dlg.show() before dlg.exec() (a deliberate focus-stealing
+    // workaround), and SelectDeviceDialog never calls setModal()/
+    // setWindowModality() itself -- exec()'s modal-widget registration
+    // happens as part of making the widget visible, which already
+    // happened via that earlier show(), so it likely never properly
+    // registers. An explicit flag sidesteps relying on that Qt-internal
+    // bookkeeping at all.
+    bool m_selectDeviceDialogOpen = false;
+
     void setWidgetsSettings();
     bool loadBands();
     void populateBandSelector(const QString& band);

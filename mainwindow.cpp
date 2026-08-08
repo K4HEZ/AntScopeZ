@@ -6892,11 +6892,20 @@ void MainWindow::on_selectDeviceDialog()
     // Settings' "Connect analyzer" button (settings.cpp) and the startup
     // auto-reconnect-or-prompt fallback (on_refreshConnection(), via a
     // QTimer::singleShot), which can otherwise race each other or a fast
-    // double-click into stacking two instances. QApplication::
-    // activeModalWidget() is checked instead of a new member/bool flag --
-    // it's already the thing Qt itself tracks for exactly this.
-    if (qobject_cast<SelectDeviceDialog*>(QApplication::activeModalWidget()) != nullptr)
+    // double-click into stacking two instances.
+    //
+    // Was: checking QApplication::activeModalWidget() instead of a new
+    // member flag, since that's already the thing Qt itself tracks for
+    // exactly this -- except it doesn't actually get set here. dlg.show()
+    // below runs before dlg.exec(), and SelectDeviceDialog never calls
+    // setModal()/setWindowModality() itself, so exec()'s modal-widget
+    // registration (which happens as part of making the widget visible)
+    // finds it already visible from that earlier show() and likely never
+    // runs. m_selectDeviceDialogOpen sidesteps relying on that Qt-internal
+    // bookkeeping at all.
+    if (m_selectDeviceDialogOpen)
         return;
+    m_selectDeviceDialogOpen = true;
 
     // Note which window is actually on top right now (e.g. the Settings
     // dialog, when this is opened via its "Connect analyzer" button) so its
@@ -6941,7 +6950,9 @@ void MainWindow::on_selectDeviceDialog()
             }
         });
     }
-    if (dlg.exec() == QDialog::Accepted) {
+    int execResult = dlg.exec();
+    m_selectDeviceDialogOpen = false;
+    if (execResult == QDialog::Accepted) {
         SelectionParameters sel_par = SelectionParameters::selected;
         AnalyzerParameters* selected = AnalyzerParameters::current();
         if (selected != nullptr) {
