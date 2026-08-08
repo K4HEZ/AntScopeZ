@@ -585,6 +585,17 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   bug, but each only has one trigger (needs an actual fast double-click
   to reproduce, not a button-plus-startup-race like this one) and none
   has been reported; left as-is for now.
+- Connect Analyzer also wasn't actually blocking other windows while
+  open -- Settings could still be brought to front and interacted with
+  over it, unlike Print/Screenshot/Export, which all behave properly.
+  Root cause is the same `dlg.show()`-before-`dlg.exec()` ordering noted
+  above: `exec()`'s implicit "application modal by default" only takes
+  effect from that point on, but the dialog was already visible (and
+  non-modal) from the earlier `show()`, so window managers/Qt never
+  properly established it as modal to begin with. `SelectDeviceDialog`'s
+  constructor now calls `setWindowModality(Qt::ApplicationModal)`
+  explicitly, so it's modal from its very first `show()` instead of
+  being upgraded after the fact.
 
 ## [2.1.3]
 

@@ -20,6 +20,16 @@ SelectDeviceDialog::SelectDeviceDialog(bool silent, QWidget *parent) :
 {
     ui->setupUi(this);
 
+    // Explicit, rather than relying on exec()'s implicit "application
+    // modal by default" -- MainWindow::on_selectDeviceDialog() calls
+    // dlg.show() before dlg.exec() (a focus-stealing workaround), so this
+    // dialog is already visible, non-modal, by the time exec() would
+    // otherwise establish modality. Setting it here means it's modal from
+    // the very first show() instead of being upgraded after the fact,
+    // which wasn't reliably blocking other windows (e.g. Settings could
+    // still be brought to front over it).
+    setWindowModality(Qt::ApplicationModal);
+
 /* obsolete
     QString style = "QPushButton:disabled{"
             "background-color: rgb(59, 59, 59);"
