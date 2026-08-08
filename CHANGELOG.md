@@ -520,9 +520,18 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   covered by it.
   A few short EE-abbreviation chart legend names (`measurements.cpp`'s
   `setName("R")`/`"X"`/`"Rp"`/etc., `CustomPlot.cpp`'s generic "Graph "+N
-  fallback) and three `editbandsdialog.cpp` message-box titles that are
-  actually the function name, not real title text, are left as judgment
-  calls for now, marked `// Needs tr() attention` for the next pass.
+  fallback) are left as judgment calls for now, marked
+  `// Needs tr() attention` for the next pass.
+- `EditBandsDialog`'s three `g_showMessageBox()` titles turned out not to
+  be dead code, just rare error paths: `"loadDefaults"`/`"load"`/
+  `"EditBandsDialog::save"` (the function names, not real titles) only
+  ever showed up if the shipped `itu-regions-defaults.txt` and/or the
+  user's own `itu-regions.txt` failed to open or save -- the "Restore
+  Defaults"/dialog-open/"Save" paths respectively -- which is why they'd
+  never actually been seen in normal use despite being live code. Now
+  `tr("Couldn't load default bands")`/`tr("Couldn't load bands")`/
+  `tr("Couldn't save bands")`, with a comment at each explaining exactly
+  when it fires.
 
 ## [2.1.3]
 
