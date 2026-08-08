@@ -98,6 +98,7 @@ void Settings::applyStyles()
 
     style = Style::checkBox();
     ui->checkBoxBandName->setStyleSheet(style);
+    ui->checkBoxBandSelector->setStyleSheet(style);
     ui->graphBriefHintCheckBox->setStyleSheet(style);
     ui->graphHintCheckBox->setStyleSheet(style);
     ui->markersHintCheckBox->setStyleSheet(style);
@@ -193,6 +194,11 @@ Settings::Settings(QWidget *parent) :
     }
     // ///
     ui->checkBoxBandName->setChecked(m_settings->value("show-band-name", false).toBool());
+    // No default here: MainWindow::populateBandSelector() seeds this key
+    // once, the first time bands are loaded, based on whether the active
+    // region actually has any named bands -- by the time this dialog can
+    // be opened, the key already exists.
+    ui->checkBoxBandSelector->setChecked(m_settings->value("band-selector-enabled", false).toBool());
     m_settings->endGroup();
 
     connect(ui->lineEdit_systemImpedance, &QLineEdit::editingFinished, this, &Settings::on_systemImpedance);
@@ -220,6 +226,13 @@ Settings::Settings(QWidget *parent) :
         m_settings->endGroup();
 
         emit reloadBands(ui->bandsCombobox->currentText());
+    });
+    connect(ui->checkBoxBandSelector, &QCheckBox::clicked, [=](bool checked) {
+        m_settings->beginGroup("Settings");
+        m_settings->setValue("band-selector-enabled", checked);
+        m_settings->endGroup();
+
+        emit bandSelectorEnabledChanged(checked);
     });
     //{
     // TODO Bug #2247: update doesn't work from Antscope2

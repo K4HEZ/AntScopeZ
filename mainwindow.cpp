@@ -4943,6 +4943,9 @@ void MainWindow::on_settingsBtn_clicked()
         loadBands();
         on_bandChanged(band);
     });
+    connect(m_settingsDialog, &Settings::bandSelectorEnabledChanged, [=](bool checked) {
+        ui->presetsBandComboBox->setVisible(checked);
+    });
     connect(m_settingsDialog, &Settings::chartBackgroundChanged, [=](QColor color) {
         setChartBackground(color);
         getCurrentPlot()->replot();
@@ -6087,6 +6090,89 @@ void MainWindow::on_bandChanged(QString band)
         if (g_developerMode)
             setBands(m_userWidget, bands, MIN_USER_RANGE, MAX_USER_RANGE);
     }
+
+    // Independent of whether the region was found above: keep the Presets
+    // band-selector combo (the per-band, not per-region, dropdown) in sync
+    // with whatever region is actually active now.
+    populateBandSelector(band);
+}
+
+void MainWindow::populateBandSelector(const QString& band)
+{
+    ui->presetsBandComboBox->blockSignals(true);
+    ui->presetsBandComboBox->clear();
+    ui->presetsBandComboBox->addItem(tr("Select a band"));
+
+    QStringList* bands = m_BandsMap.value(band, nullptr);
+    if (bands != nullptr) {
+        foreach (const QString& line, *bands) {
+            QStringList fields = line.split(',');
+            if (fields.size() != 3)
+                continue; // custom 2-field entry (see EditBandsDialog) -- no name to label it with
+            QString name = fields[2].trimmed();
+            if (name.isEmpty())
+                continue;
+            QString start = fields[0].trimmed();
+            QString stop = fields[1].trimmed();
+            ui->presetsBandComboBox->addItem(
+                QString("%1 (%2 - %3 kHz)").arg(name, start, stop),
+                QVariant(QStringList{start, stop}));
+        }
+    }
+    ui->presetsBandComboBox->setCurrentIndex(0);
+    ui->presetsBandComboBox->blockSignals(false);
+
+    // First-run default: seed "enabled" from whether this region actually
+    // has any labeled bands, so a fresh install shows a working control
+    // instead of an enabled-but-empty one. Once a value exists (user choice
+    // or a prior seed), later region switches never touch it again -- an
+    // enabled selector with nothing but "Select a band" in it (e.g. after
+    // switching to a region with no named bands) is fine, not an error.
+    m_settings->beginGroup("Settings");
+    if (!m_settings->contains("band-selector-enabled")) {
+        m_settings->setValue("band-selector-enabled", ui->presetsBandComboBox->count() > 1);
+    }
+    bool enabled = m_settings->value("band-selector-enabled", false).toBool();
+    m_settings->endGroup();
+
+    ui->presetsBandComboBox->setVisible(enabled);
+}
+
+void MainWindow::on_presetsBandComboBox_currentIndexChanged(int index)
+{
+    if (index <= 0)
+        return;
+
+    QStringList range = ui->presetsBandComboBox->itemData(index).toStringList();
+    if (range.size() == 2) {
+        double start = range.at(0).toDouble();
+        double stop = range.at(1).toDouble();
+
+        if (!m_isRange) {
+            setFqFrom(range.at(0));
+            setFqTo(range.at(1));
+        } else {
+            setFqFrom((start + stop) / 2);
+            setFqTo((stop - start) / 2);
+        }
+
+        // Single range-then-redraw pass across every plot, same as picking
+        // a preset row (on_tableWidget_presets_cellDoubleClicked) -- one
+        // updateGraph() call at the end, not one per field.
+        QCPRange plotRange(start, stop);
+        m_swrWidget->xAxis->setRange(plotRange);
+        m_phaseWidget->xAxis->setRange(plotRange);
+        m_rsWidget->xAxis->setRange(plotRange);
+        m_rpWidget->xAxis->setRange(plotRange);
+        m_rlWidget->xAxis->setRange(plotRange);
+        if (g_developerMode)
+            m_userWidget->xAxis->setRange(plotRange);
+        updateGraph();
+    }
+
+    ui->presetsBandComboBox->blockSignals(true);
+    ui->presetsBandComboBox->setCurrentIndex(0);
+    ui->presetsBandComboBox->blockSignals(false);
 }
 
 
@@ -6877,6 +6963,7 @@ void MainWindow::setStyles()
     ui->tableWidget_presets->setStyleSheet(Style::tableWidget());
 
     ui->spinBoxPoints->setStyleSheet(Style::spinBox());
+    ui->presetsBandComboBox->setStyleSheet(Style::comboBox());
 
     setStyleSheet(Style::mainWindow() + Style::tabWidget());
 }

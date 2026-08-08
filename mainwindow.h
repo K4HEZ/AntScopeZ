@@ -199,6 +199,7 @@ private:
 
     void setWidgetsSettings();
     bool loadBands();
+    void populateBandSelector(const QString& band);
     void setBands(QCustomPlot * widget, QStringList* bands, double y1, double y2);
     void setBands(QCustomPlot * widget, double y1, double y2);
     void addBand (QCustomPlot * widget, double x1, double x2, double y1, double y2);
@@ -294,6 +295,7 @@ public slots:
     void on_tableWidget_presets_cellDoubleClicked(int row, int column);
     void on_presetsDeleteBtn_clicked();
     void on_pressetsUpBtn_clicked();
+    void on_presetsBandComboBox_currentIndexChanged(int index);
     void on_exportBtn_clicked();
     void on_measurementComplete();
     void on_measurementCompleteNano();

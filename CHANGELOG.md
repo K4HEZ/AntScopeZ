@@ -394,6 +394,29 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   resource, which is also bumped from a blurry 2.5KB placeholder to a
   proper 64x64 render.
 
+### Added
+
+- A band selector above the Presets list: a combo box (`presetsBandComboBox`)
+  listing every named band in the currently active ITU region, formatted as
+  `<name> (<start> - <stop> kHz)` and derived from the same
+  `itu-regions.txt`/`itu-regions-defaults.txt` data `MainWindow::m_BandsMap`
+  already loads for the plots' shaded band overlays. Picking an entry sets
+  Start/Stop (or Center/Range, matching whichever mode is active), re-ranges
+  every plot in one pass, and reverts the combo to its resting
+  "Select a band" placeholder so it's ready for the next pick. Repopulates
+  automatically whenever the active region changes (`on_bandChanged()`),
+  including on startup and after editing bands via Settings. Region entries
+  without a name (a custom 2-field line in a hand-edited `itu-regions.txt`)
+  are skipped -- nothing to label them with.
+  Settings → General gets a new "Enable band selector" checkbox (under
+  "Show band name") controlling its visibility, persisted as
+  `Settings/band-selector-enabled`. It's seeded once, the first time bands
+  are loaded, to whether the active region actually has any named bands
+  (so a fresh install shows a working control instead of an enabled-but-
+  empty one); after that, region switches never touch the saved choice --
+  an enabled selector with nothing but the placeholder in it is fine, not
+  an error.
+
 ## [2.1.3]
 
 Baseline — changelog tracking starts here. See `git log` for history prior

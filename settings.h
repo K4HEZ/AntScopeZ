@@ -146,6 +146,7 @@ signals:
 
     void languageChanged(int);
     void bandChanged(QString);
+    void bandSelectorEnabledChanged(bool);
     void exportCableSettings(QString _description);
 //    void connectNanoVNA(QString port);
 //    void disconnectNanoVNA();
