@@ -533,6 +533,12 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   `tr("Couldn't save bands")`, with a comment at each explaining exactly
   when it fires.
 
+### Removed
+
+- `checked.png`/`unchecked.png` (and their `res.qrc` entries) -- unused
+  since `Style::checkBox()` moved to the native/Fusion checkbox indicator;
+  the only remaining trace was a comment in `style.cpp` explaining why.
+
 ## [2.1.3]
 
 Baseline — changelog tracking starts here. See `git log` for history prior

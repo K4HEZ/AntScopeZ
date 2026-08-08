@@ -130,7 +130,8 @@ QString Style::tabWidget()
 QString Style::checkBox()
 {
     // Left native: the platform/Fusion indicator off Style::palette() is
-    // fine, no need for the custom checked.png/unchecked.png glyphs anymore.
+    // fine, no need for custom checkbox glyph images anymore (removed --
+    // see git history for the former checked.png/unchecked.png).
     return QString();
 }
 
