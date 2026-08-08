@@ -36,7 +36,7 @@ class MarkersPopUp : public QWidget
 {
     Q_OBJECT
 
-    // Свойство полупрозрачности
+    // Translucency property
     Q_PROPERTY(float popupOpacity READ getPopupOpacity WRITE setPopupOpacity)
 
     void setPopupOpacity(float opacity);
@@ -68,7 +68,7 @@ public:
     void on_translate();
 
 protected:
-    void paintEvent(QPaintEvent *event);    // Фон будет отрисовываться через метод перерисовки
+    void paintEvent(QPaintEvent *event);    // Background will be drawn via the repaint method
     virtual void initLayout();
     virtual void createHeader();
     void createMenu(MarkersHeaderColumn& buttonData);
@@ -77,8 +77,8 @@ protected:
 public slots:
     QList <QStringList> getPopupList(); // print support
 
-//    void show();                            /* Собственный метод показа виджета
-//                                             * Необходимо для преварительной настройки анимации
+//    void show();                            /* Own method for showing the widget
+//                                             * Needed for preliminary animation setup
 //                                             * */
     void focusShow();
     void focusHide();
@@ -92,9 +92,9 @@ public slots:
 
 private slots:
     void show();
-    void hideAnimation();                   // Слот для запуска анимации скрытия
-    void hide();                            /* По окончании анимации, в данном слоте делается проверка,
-                                             * виден ли виджет, или его необходимо скрыть
+    void hideAnimation();                   // Slot to start the hide animation
+    void hide();                            /* When the animation finishes, this slot checks
+                                             * whether the widget is visible, or needs to be hidden
                                              * */
 
 signals:

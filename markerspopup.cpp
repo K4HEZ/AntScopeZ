@@ -20,9 +20,9 @@ MarkersPopUp::MarkersPopUp(QWidget *parent) : QWidget(parent),
       m_penColor(255,255,255,180),
       m_textColor("white")
 {
-      setWindowFlags(Qt::FramelessWindowHint |        // Отключаем оформление окна
-                     Qt::Tool);                       // Отменяем показ в качестве отдельного окна
-      setAttribute(Qt::WA_TranslucentBackground);     // Указываем, что фон будет прозрачным
+      setWindowFlags(Qt::FramelessWindowHint |        // Disable window decoration
+                     Qt::Tool);                       // Don't show it as a separate window
+      setAttribute(Qt::WA_TranslucentBackground);     // Make the background transparent
       // WA_ShowWithoutActivating kept this window from ever becoming the active
       // window, which on this window manager also meant it never received mouse
       // input at all -- clicks on "X" (or anywhere in the popup) were silently
@@ -30,10 +30,10 @@ MarkersPopUp::MarkersPopUp(QWidget *parent) : QWidget(parent),
       // resulting false "main window lost focus" is handled in
       // MainWindow::event() instead.
 
-      animation.setTargetObject(this);                // Устанавливаем целевой объект анимации
-      animation.setPropertyName("popupOpacity");      // Устанавливаем анимируемое свойство
-      connect(&animation, &QAbstractAnimation::finished, this, &MarkersPopUp::hide); /* Подключаем сигнал окончания
-                                                                               * анимации к слоту скрытия                                                                               * */
+      animation.setTargetObject(this);                // Set the animation's target object
+      animation.setPropertyName("popupOpacity");      // Set the animated property
+      connect(&animation, &QAbstractAnimation::finished, this, &MarkersPopUp::hide); // Connect the
+                                                        // animation-finished signal to the hide slot
       QString path = Settings::setIniFile();
       m_settings = new QSettings(path,QSettings::IniFormat);
 
@@ -556,21 +556,21 @@ QMap<int, QString>& MarkersHeaderColumn::headerMap()
         m_mapHeader.insert(i++, "Marker");
         m_mapHeader.insert(i++, " # ");
         m_mapHeader.insert(i++, "FQ, kHz");
-        m_mapHeader.insert(i++, "SWR");        // SWR   - коэф. стоячей волны
-        m_mapHeader.insert(i++, "RL, dB");     // RL   - возвратные потери
-        m_mapHeader.insert(i++, "Phase°");     // phase - фаза
-        m_mapHeader.insert(i++, "R, Ohm");     // R    - активное сопротивление (последовательная модель)
-        m_mapHeader.insert(i++, "X, Ohm");     // X    - реактивное сопротивление (последовательная модель)
-        m_mapHeader.insert(i++, "Z, Ohm");     // Z     - импеданс
-        m_mapHeader.insert(i++, "L, nH");      // L    - индуктивность (последовательная модель)
-        m_mapHeader.insert(i++, "C, pF");      // C    - ёмкость (последовательная модель)
-        m_mapHeader.insert(i++, "rho");        // rho   - магнитуда
-        m_mapHeader.insert(i++, "|Z|, Ohm");   // |Z|  - модуль импеданса
-        m_mapHeader.insert(i++, "R||, Ohm");   // R||  - активное сопротивление (параллельная модель)
-        m_mapHeader.insert(i++, "X||, Ohm");   // X||  - реактивное сопротивление (параллельная модель)
-        m_mapHeader.insert(i++, "Z||, Ohm");   // Z||   - импеданс  (параллельная модель)
-        m_mapHeader.insert(i++, "L||, nH");    // L||  - индуктивность (параллельная модель)
-        m_mapHeader.insert(i++, "C||, pF");    // C||  - ёмкость (параллельная модель)
+        m_mapHeader.insert(i++, "SWR");        // SWR - standing wave ratio
+        m_mapHeader.insert(i++, "RL, dB");     // RL - return loss
+        m_mapHeader.insert(i++, "Phase°");     // phase - phase
+        m_mapHeader.insert(i++, "R, Ohm");     // R - resistance (series model)
+        m_mapHeader.insert(i++, "X, Ohm");     // X - reactance (series model)
+        m_mapHeader.insert(i++, "Z, Ohm");     // Z - impedance
+        m_mapHeader.insert(i++, "L, nH");      // L - inductance (series model)
+        m_mapHeader.insert(i++, "C, pF");      // C - capacitance (series model)
+        m_mapHeader.insert(i++, "rho");        // rho - magnitude
+        m_mapHeader.insert(i++, "|Z|, Ohm");   // |Z| - impedance modulus
+        m_mapHeader.insert(i++, "R||, Ohm");   // R|| - resistance (parallel model)
+        m_mapHeader.insert(i++, "X||, Ohm");   // X|| - reactance (parallel model)
+        m_mapHeader.insert(i++, "Z||, Ohm");   // Z|| - impedance (parallel model)
+        m_mapHeader.insert(i++, "L||, nH");    // L|| - inductance (parallel model)
+        m_mapHeader.insert(i++, "C||, pF");    // C|| - capacitance (parallel model)
 
         m_mapHeader.insert(MarkersHeaderColumn::fieldInsert, "Insert column");
         m_mapHeader.insert(MarkersHeaderColumn::fieldRemove, "Remove column");
