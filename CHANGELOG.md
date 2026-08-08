@@ -70,8 +70,10 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   (`measureSystemMetric`/`measureSystemAmerican`). Behavior and the persisted
   `measureSystemMetric` setting are unchanged.
 - Removed the large RigExpert logo from the main window's right-hand control
-  panel and let the group boxes below it use the freed space; the image
-  asset is untouched for a possible future splash panel.
+  panel and let the group boxes below it use the freed space. (The image
+  asset itself, `rig_logo.png`, was kept at the time for a possible future
+  splash panel -- since deleted, see below; any splash panel will use a
+  logo of our own instead.)
 
 ### Fixed
 
@@ -624,6 +626,14 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   Root cause not identified; not something this app's code controls
   directly. Workaround: manually pick the correct paper size in the
   Properties dialog before printing. See `BUILDINFO.md`.
+
+### Removed
+
+- `rig_logo.png` (the old RigExpert logo banner, 500x97) and its `res.qrc`
+  entry -- orphaned since the logo was pulled from the main window's
+  control panel (see above); nothing in the app has referenced it since.
+  A future splash panel, if one happens, will use a logo of our own
+  rather than reuse this one.
 
 ## [2.1.3]
 
