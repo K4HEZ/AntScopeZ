@@ -1064,30 +1064,28 @@ QString Settings::setIniFile()
     QString newPath = localDataPath("AntScopeZ.ini");
 
 #ifdef Q_OS_LINUX
-    // One-time migrations, checked in order from oldest layout to newest,
-    // into the current AntScopeZ location. Idempotent (each step is guarded
-    // by "does the new copy already exist"), and cheap enough to just always
-    // check since setIniFile() already runs on every Settings/Calibration
-    // construction:
-    //  1. Pre-2.1.4: AntScope2.ini/Calibration/itu-regions.txt sitting next
-    //     to the binary (see the comment on localDataFolder()).
-    //  2. 2.1.4, still under the "AntScope2" name: ~/.config/hz23116/AntScope2
-    //     (QStandardPaths::AppConfigLocation with the old org/app names).
-    //     Both "AntScope2.ini" and "antscope2.ini" are checked at each old
-    //     location -- Settings and Calibration briefly used differently-cased
-    //     filenames that only diverged into two separate files on
-    //     case-sensitive filesystems (issue #43); by this point any surviving
-    //     mismatch is rare enough that a plain first-one-found rename is fine
-    //     rather than the more careful per-key fold this used to do.
+    // One-time migration of the pre-2.1.4 layout -- AntScope2.ini/
+    // Calibration/itu-regions.txt sitting next to the binary (see the
+    // comment on localDataFolder()) -- into the current AntScopeZ location.
+    // Idempotent (guarded by "does the new copy already exist"), and cheap
+    // enough to just always check since setIniFile() already runs on every
+    // Settings/Calibration construction. The 2.1.4-era org-directory layout
+    // (~/.config/<old-org-name>/AntScope2, from when
+    // QCoreApplication::setOrganizationName() was still set) had its own
+    // migration step here too, but that layout's no longer in use by anyone
+    // and was removed rather than kept around as dead code.
+    // Both "AntScope2.ini" and "antscope2.ini" are checked -- Settings and
+    // Calibration briefly used differently-cased filenames that only
+    // diverged into two separate files on case-sensitive filesystems (issue
+    // #43); by this point any surviving mismatch is rare enough that a
+    // plain first-one-found rename is fine rather than the more careful
+    // per-key fold this used to do.
     extern bool g_raspbian;
     if (!g_raspbian) {
         QString newDirPath = localDataFolder();
         QDir legacyBinaryDir(QCoreApplication::applicationDirPath() + "/..");
-        QString legacyOrgDirPath = QDir::homePath() + "/.config/hz23116/AntScope2";
-        const QStringList oldDirs = {legacyBinaryDir.canonicalPath(), legacyOrgDirPath};
-        for (const QString& oldDirPath : oldDirs) {
-            if (oldDirPath.isEmpty() || oldDirPath == newDirPath || !QDir(oldDirPath).exists())
-                continue;
+        QString oldDirPath = legacyBinaryDir.canonicalPath();
+        if (!oldDirPath.isEmpty() && oldDirPath != newDirPath && QDir(oldDirPath).exists()) {
             QDir oldDir(oldDirPath);
             const QStringList legacyFiles = {"AntScope2.ini", "antscope2.ini", "itu-regions.txt"};
             for (const QString& name : legacyFiles) {

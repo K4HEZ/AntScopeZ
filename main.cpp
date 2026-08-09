@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 
     // Used by QStandardPaths (Settings::localDataFolder() et al.) to build
     // the per-user config directory -- ~/.config/AntScopeZ on Linux. No
-    // organization name (previously "hz23116"): AntScopeZ is this fork's own
+    // organization name (previously the old GitHub username): AntScopeZ is this fork's own
     // identity, distinct enough from "AntScope2"/"RigExpert" on its own that
     // a real RigExpert-shipped AntScope2 install can never share -- or get
     // confused with -- this fork's settings/calibration data, without also

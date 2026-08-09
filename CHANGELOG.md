@@ -17,17 +17,17 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   (`AntScope2.ico`/`.icns`/`.png` -> `AntScopeZ.*`), and user-facing strings
   (file-dialog filters, the Windows `.asd` file-association registration,
   the Touchstone-export header comment) all follow.
-  `QCoreApplication::setOrganizationName("hz23116")` is gone entirely (was
-  already deliberately not "RigExpert" -- see below) rather than becoming
-  `"AntScopeZ"`, so `QStandardPaths::AppConfigLocation` no longer adds an
-  extra directory level: settings/calibration move from
-  `~/.config/hz23116/AntScope2/AntScope2.ini` to `~/.config/AntScopeZ/AntScopeZ.ini`.
+  The previous `QCoreApplication::setOrganizationName()` call (set to the old
+  GitHub username, already deliberately not "RigExpert" -- see below) is gone
+  entirely rather than becoming `"AntScopeZ"`, so `QStandardPaths::AppConfigLocation`
+  no longer adds an extra directory level: settings/calibration move from the
+  old per-user org directory to `~/.config/AntScopeZ/AntScopeZ.ini`.
   Also dropped "RigExpert" from the Mac/Windows/Raspbian data-path literals
   (`RigExpert/AntScope2/`), which was a direct use of the vendor's company
   name in our own path -- worse than the Linux org-name issue this
   supersedes. `Settings::setIniFile()`'s one-time migration logic now
   checks both the pre-2.1.4 "next to the binary" layout and the 2.1.4
-  `hz23116/AntScope2` layout and folds either into the new location, so
+  per-user org-directory layout and folds either into the new location, so
   existing local settings/calibration data isn't lost.
   `AnalyzerPro::on_checkUpdatesBtn_clicked()`'s `app=antscope2` query
   parameter to `rigexpert.com` is deliberately left alone -- that identifies
@@ -334,7 +334,8 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 - `build.sh` (`TARGET=`), `.gitignore` (the ignored ini filename/path
   comment), and `Info.plist` (macOS bundle name/executable/icon) updated to
   match. `Info.plist`'s `CFBundleIdentifier` was literally
-  `com.rigexpert.AntScope2` -- changed to `io.github.hz23116.AntScopeZ`;
+  `com.rigexpert.AntScope2` -- changed to an `io.github.*.AntScopeZ`
+  reverse-DNS identifier using the (then-current) GitHub username;
   its `CFBundleShortVersionString` was also stale (`1.4.11`) and is now
   `2.1.4`.
 - Deleted `AntScope2_resource.rc` -- already confirmed unused (Qt generates
@@ -667,14 +668,21 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Changed
 
-- GitHub account renamed from `hz23116` to `k4hez`. Updated the local
-  `origin`/`antscopez` remote URLs, `CMakeLists.txt`'s
-  `CPACK_PACKAGE_CONTACT` and `CPACK_DEBIAN_PACKAGE_HOMEPAGE`, and
-  `Info.plist`'s `CFBundleIdentifier` (`io.github.hz23116.AntScopeZ` ->
-  `io.github.k4hez.AntScopeZ`) to match. The historical
-  `~/.config/hz23116/AntScope2` legacy-settings-migration path in
-  `settings.cpp` is unrelated (predates this account, from the
-  AntScope2->AntScopeZ rename) and was left as-is.
+- GitHub account renamed to `k4hez` (old username scrubbed from source/docs
+  as part of this change). Updated the local `origin`/`antscopez` remote
+  URLs, `CMakeLists.txt`'s `CPACK_PACKAGE_CONTACT` and
+  `CPACK_DEBIAN_PACKAGE_HOMEPAGE`, and `Info.plist`'s `CFBundleIdentifier`
+  (now `io.github.k4hez.AntScopeZ`) to match.
+
+### Removed
+
+- `Settings::setIniFile()`'s one-time migration step for the 2.1.4-era
+  `~/.config/<old-org-name>/AntScope2` layout (from when
+  `QCoreApplication::setOrganizationName()` was still set, before the
+  AntScope2->AntScopeZ rename dropped it). That directory-org-name
+  structure is no longer in use, so there's nothing left to migrate from --
+  the pre-2.1.4 "next to the binary" migration step is unaffected and still
+  runs.
 
 ## [2.1.3]
 
