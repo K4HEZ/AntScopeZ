@@ -6,6 +6,8 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+## [2.1.4] - 2026-08-09
+
 ### Changed
 
 - Renamed the project from AntScope2 to **AntScopeZ**, to stop sharing an
