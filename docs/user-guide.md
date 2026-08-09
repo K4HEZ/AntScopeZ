@@ -212,7 +212,9 @@ the main window.
 | Row pencil icon | Renames the measurement |
 
 **Chart tabs**: SWR, Phase, Z=R+jX, Z=R‖+jX, RL, Smith, TDR, Multi (plus
-a "User defined" tab if launched with `-developer`).
+a "User defined" tab if launched with `-developer`). An S21 tab also
+exists in the code but is currently never made visible -- see
+[Troubleshooting](#troubleshooting).
 
 ### Keyboard shortcuts
 
@@ -312,6 +314,12 @@ Most modern transceivers tolerate up to somewhere around 2:1-3:1 before
 their internal protection kicks in; check your radio's actual spec
 rather than assuming.
 
+The **RL** tab plots this same data on its own chart, in dB instead of
+as a ratio. Worth switching to when comparing two *already-good*
+matches against each other -- SWR's ratio scale compresses everything
+below about 1.3:1 together near the bottom of the chart, where the
+dB scale still spreads it out.
+
 ### Reading the dip: is my antenna too long or too short?
 
 For a simple resonant antenna (a dipole or vertical cut for a specific
@@ -367,6 +375,28 @@ system impedance, commonly 50Ω) is what actually determines how good
 the match is once X is out of the way. See
 [Reading the dip](#reading-the-dip-is-my-antenna-too-long-or-too-short)
 above for what the sign of X tells you off-resonance.
+
+### Z = R ‖ jX: the parallel-equivalent view
+
+Same underlying measurement as `Z = R + jX` above, just recomputed into
+its parallel-equivalent-circuit form (`Rp`/`Xp`) instead of the series
+form (`R`/`X`) -- two different, mathematically-equivalent ways to
+model the same impedance as a simple two-component circuit. Series
+(`R + jX`) is usually the more intuitive one to read for a plain
+series-fed dipole or vertical; the parallel view earns its keep if
+you're working with a parallel matching network or tuner, where
+component values are easier to reason about directly in parallel form.
+
+### Phase
+
+Plots the reflection coefficient's phase angle against frequency -- the
+same "phase" value shown in the Smith chart's cursor readout, in
+degrees. It crosses through (or near) zero around resonance, mirroring
+the same too-long/too-short read that [the sign of
+X](#reading-the-dip-is-my-antenna-too-long-or-too-short) gives. How
+*steep* that crossing is says something about Q: a fast swing across a
+narrow frequency range points to a high-Q (narrowband) antenna or
+match; a gentle, gradual slope points to a broader, lower-Q one.
 
 ## Scan modes: Single vs. Continuous
 
@@ -852,6 +882,11 @@ delete.
   seem to change anything.** Flagged as unverified in
   [the Cable tab reference](#cable-tab) -- it may not currently do
   anything at all; not confirmed either way.
+- **There's no S21 tab anywhere, even though it's mentioned in this
+  guide/the code.** Confirmed (`mainwindow.cpp`): the tab is built at
+  startup but immediately hidden (`setTabVisible(..., false)`), and
+  nothing anywhere ever makes it visible again -- not something you're
+  missing in the UI, it's just not reachable in this build.
 
 ---
 
