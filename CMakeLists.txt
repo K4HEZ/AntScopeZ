@@ -400,16 +400,56 @@ endif()
 # type="unfinished") was a stray lupdate template, not a real locale --
 # deleted rather than wired in here.
 #
+set(ANTSCOPE_TS_FILES
+    locales/QtLanguage_uk.ts
+    locales/QtLanguage_ja.ts
+    locales/QtLanguage_es.ts
+)
 qt_add_translations(
     TARGETS AntScopeZ
     SOURCE_TARGETS AntScopeZ
-    TS_FILES
-        locales/QtLanguage_uk.ts
-        locales/QtLanguage_ja.ts
-        locales/QtLanguage_es.ts
+    TS_FILES ${ANTSCOPE_TS_FILES}
     QM_FILES_OUTPUT_VARIABLE ANTSCOPE_QM_FILES
 )
 add_dependencies(AntScopeZ release_translations)
+
+# Qt's own built-in strings -- QFileDialog's "File name:", QMessageBox's
+# standard button labels, QSerialPort's error strings, etc. -- are a
+# separate catalog from our own tr() calls above (qtbase_<code>.qm, not
+# QtLanguage_<code>.qm), and this app was never loading them: only one
+# QTranslator (m_qtLanguageTranslator) was ever installed. mainwindow.cpp's
+# loadLanguage() now installs a second one (m_qtBaseTranslator) for these,
+# staged/installed the same way as ANTSCOPE_QM_FILES below.
+#
+# Prebuilt by Qt itself -- not something this project builds, just copied
+# out of the Qt install actually in use (same one find_package(Qt6 ...)
+# resolved). QT6_INSTALL_PREFIX/QT6_INSTALL_TRANSLATIONS (from Qt6's own
+# QtInstallPaths.cmake, included by Qt6Config.cmake) is the portable way to
+# find it -- works for both a self-contained installer layout (this
+# project's usual /opt/Qt/6.11.1/gcc_64) and a distro package's, unlike
+# guessing a fixed number of ".." from Qt6_DIR.
+#
+# Language codes are derived from ANTSCOPE_TS_FILES above rather than
+# listed separately, so adding a new locale there automatically picks up
+# its qtbase_*.qm too. Hand-picked per-language rather than letting the
+# .deb bundling step further below (qt_deploy_runtime_dependencies(),
+# NO_TRANSLATIONS) grab Qt's entire translations/ directory, which would
+# pull in every language Qt ships for every Qt module linked -- almost all
+# of it unused by this app.
+set(ANTSCOPE_QT_QM_FILES "")
+foreach(_ts_file IN LISTS ANTSCOPE_TS_FILES)
+    get_filename_component(_ts_name "${_ts_file}" NAME_WE)
+    string(REGEX REPLACE "^QtLanguage_" "" _lang_code "${_ts_name}")
+    set(_qtbase_qm "${QT6_INSTALL_PREFIX}/${QT6_INSTALL_TRANSLATIONS}/qtbase_${_lang_code}.qm")
+    if(EXISTS "${_qtbase_qm}")
+        list(APPEND ANTSCOPE_QT_QM_FILES "${_qtbase_qm}")
+    else()
+        message(WARNING "No qtbase_${_lang_code}.qm found under ${QT6_INSTALL_PREFIX}/${QT6_INSTALL_TRANSLATIONS} -- Qt's own dialog/message-box strings will stay in English for this language.")
+    endif()
+    unset(_qtbase_qm)
+endforeach()
+unset(_ts_name)
+unset(_lang_code)
 
 #
 # Runtime data files
@@ -442,6 +482,15 @@ if(APPLE)
         MACOSX_PACKAGE_LOCATION MacOS
     )
     target_sources(AntScopeZ PRIVATE ${ANTSCOPE_QM_FILES})
+    # Same again for Qt's own qtbase_*.qm (see ANTSCOPE_QT_QM_FILES above)
+    # -- already absolute paths, sourced straight from the Qt install
+    # rather than the build tree.
+    if(ANTSCOPE_QT_QM_FILES)
+        set_source_files_properties(${ANTSCOPE_QT_QM_FILES} PROPERTIES
+            MACOSX_PACKAGE_LOCATION MacOS
+        )
+        target_sources(AntScopeZ PRIVATE ${ANTSCOPE_QT_QM_FILES})
+    endif()
 else()
     foreach(_file IN LISTS ANTSCOPE_RUNTIME_FILES)
         add_custom_command(TARGET AntScopeZ POST_BUILD
@@ -459,6 +508,20 @@ else()
     # -- the same place the binary itself lands. (A multi-config generator,
     # or moving this call into a nested subdirectory, would break that
     # assumption; revisit if either changes.)
+    #
+    # Qt's own qtbase_*.qm (ANTSCOPE_QT_QM_FILES) do need explicit staging
+    # here though, same as ANTSCOPE_RUNTIME_FILES above -- unlike
+    # ANTSCOPE_QM_FILES, they're prebuilt files living elsewhere in the Qt
+    # install, not written into the build tree by anything above.
+    foreach(_qm_file IN LISTS ANTSCOPE_QT_QM_FILES)
+        add_custom_command(TARGET AntScopeZ POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${_qm_file}"
+                "$<TARGET_FILE_DIR:AntScopeZ>"
+            COMMENT "Staging ${_qm_file}"
+            VERBATIM
+        )
+    endforeach()
 endif()
 
 
@@ -479,11 +542,11 @@ install(TARGETS AntScopeZ
 )
 
 if(WIN32)
-    install(FILES ${ANTSCOPE_RUNTIME_FILES} ${ANTSCOPE_QM_FILES}
+    install(FILES ${ANTSCOPE_RUNTIME_FILES} ${ANTSCOPE_QM_FILES} ${ANTSCOPE_QT_QM_FILES}
         DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
 elseif(NOT APPLE) # Linux and other Unix
-    install(FILES ${ANTSCOPE_RUNTIME_FILES} ${ANTSCOPE_QM_FILES}
+    install(FILES ${ANTSCOPE_RUNTIME_FILES} ${ANTSCOPE_QM_FILES} ${ANTSCOPE_QT_QM_FILES}
         DESTINATION ${CMAKE_INSTALL_DATADIR}/antscopez
     )
 
@@ -516,11 +579,17 @@ elseif(NOT APPLE) # Linux and other Unix
     # PLUGINS_DIR, sets $ORIGIN-relative RPATHs so the binary finds them
     # without needing LD_LIBRARY_PATH, and (via GENERATE_QT_CONF) writes a
     # qt.conf next to the executable so Qt's own plugin/resource lookup uses
-    # the bundled copies too instead of the compiled-in /opt/Qt path. Only
-    # the app's own translations are loaded via QTranslator
-    # (mainwindow.cpp's m_qtLanguageTranslator, from the QtLanguage_*.qm
-    # built by qt_add_translations() above) -- Qt's stock qtbase_*.qm are
-    # never used, hence NO_TRANSLATIONS.
+    # the bundled copies too instead of the compiled-in /opt/Qt path.
+    # Translations are loaded via two QTranslators (mainwindow.cpp's
+    # m_qtLanguageTranslator and m_qtBaseTranslator) from QtLanguage_*.qm
+    # and qtbase_*.qm respectively -- both staged into
+    # CMAKE_INSTALL_DATADIR/antscopez by the hand-picked, per-language
+    # install(FILES ...) rule above (see ANTSCOPE_QT_QM_FILES), not by this
+    # deploy step. NO_TRANSLATIONS here just stops
+    # qt_deploy_runtime_dependencies() from *also* bundling Qt's entire
+    # translations/ directory (every language, every linked Qt module) into
+    # LIB_DIR alongside the libraries -- redundant with, and far bigger
+    # than, the few files actually needed.
     #
     # The install(SCRIPT) runs at `cmake --install`/`cpack` time, well after
     # normal `cmake --build` -- this has no effect on the day-to-day

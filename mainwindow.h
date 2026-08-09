@@ -174,6 +174,12 @@ private:
 
     QTranslator *m_qtLanguageTranslator;
 
+    // Qt's own built-in strings (QFileDialog's "File name:", QMessageBox's
+    // standard button labels, QSerialPort's error strings, ...) -- a
+    // separate catalog (qtbase_<code>.qm) from m_qtLanguageTranslator's own
+    // QtLanguage_<code>.qm above. See loadLanguage().
+    QTranslator *m_qtBaseTranslator;
+
     // ISO 639 code ("en", "uk", "ja", ...) of the active UI language, e.g.
     // for building "QtLanguage_<code>.qm" -- not an index into a fixed
     // list, since the list of available languages is now discovered from

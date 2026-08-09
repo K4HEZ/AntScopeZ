@@ -94,6 +94,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     m_qtLanguageTranslator = new QTranslator();
+    m_qtBaseTranslator = new QTranslator();
 
     QString path = Settings::setIniFile();
     m_settings = new QSettings(path, QSettings::IniFormat);
@@ -742,6 +743,10 @@ MainWindow::~MainWindow()
     if(m_qtLanguageTranslator)
     {
         delete m_qtLanguageTranslator;
+    }
+    if(m_qtBaseTranslator)
+    {
+        delete m_qtBaseTranslator;
     }
     delete ui;
 }
@@ -5991,19 +5996,38 @@ void MainWindow::on_1secTimerTick()
 bool MainWindow::loadLanguage(QString locale)
 { //locale: en, ukr, ru, ja, etc.
     QString title = windowTitle();
-    QString fileName = "QtLanguage_" + locale;
+
     // Prefer a user-supplied translation over the one shipped with the app
     // -- the same override convention itu-regions.txt already uses (see
     // loadBands()): a per-user copy in localDataFolder() is checked first,
     // and only if it's not there does this fall back to the shared/
     // installed copy in languageDataFolder(). Lets someone add or replace
-    // a language by dropping a .qm into their own config folder, without
-    // needing write access to the shared install location or a repackage.
-    QString folder = Settings::languageDataFolder();
-    if (QFile::exists(QDir(Settings::localDataFolder()).absoluteFilePath(fileName + ".qm")))
-        folder = Settings::localDataFolder();
-    bool res = m_qtLanguageTranslator->load(fileName, folder);
+    // a language (or just override Qt's own qtbase_*.qm) by dropping a .qm
+    // into their own config folder, without needing write access to the
+    // shared install location or a repackage.
+    auto folderFor = [](const QString& baseFileName) {
+        QString folder = Settings::languageDataFolder();
+        if (QFile::exists(QDir(Settings::localDataFolder()).absoluteFilePath(baseFileName + ".qm")))
+            folder = Settings::localDataFolder();
+        return folder;
+    };
+
+    QString fileName = "QtLanguage_" + locale;
+    bool res = m_qtLanguageTranslator->load(fileName, folderFor(fileName));
     qApp->installTranslator(m_qtLanguageTranslator);
+
+    // Qt's own built-in strings (QFileDialog's "File name:", QMessageBox's
+    // standard buttons, QSerialPort's error strings, ...) live in a
+    // separate catalog from our own tr() calls above -- qtbase_<locale>.qm,
+    // shipped by Qt itself and staged next to QtLanguage_*.qm by
+    // CMakeLists.txt (see ANTSCOPE_QT_QM_FILES there). A failed load() here
+    // (e.g. "en", or a language Qt itself doesn't ship a qtbase_*.qm for)
+    // is silent/harmless, same as m_qtLanguageTranslator above -- it just
+    // leaves Qt's own widgets showing their English source text.
+    QString qtBaseFileName = "qtbase_" + locale;
+    m_qtBaseTranslator->load(qtBaseFileName, folderFor(qtBaseFileName));
+    qApp->installTranslator(m_qtBaseTranslator);
+
     ui->retranslateUi(this);
 
     m_swrWidget->xAxis->setLabel(tr("Frequency, kHz"));

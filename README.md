@@ -11,6 +11,10 @@ AS-IS and I do not accept any responsibility for its use. If doing important
 tasks (such as licensing and firmware updates), you should use the vendor's
 code instead. I have no way of testing those features.
 
+Some of the non-English UI translations are AI-generated and haven't been
+reviewed by a native speaker yet -- expect rough edges until that review
+happens.
+
 ## Requirements
 
 - CMake 3.21+
