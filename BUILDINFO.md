@@ -166,17 +166,3 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   principle; any language where Qt's own catalog has drifted from the
   current `qfiledialog.ui` mnemonics would show the same gap. Nothing to
   fix here -- it's upstream Qt's translation, not this project's.
-- **A few `AntScopeZ.ini` groups are named after a translated string
-  instead of a fixed key.** `PopUp::setName()` (`popup.cpp`) uses
-  whatever's passed to it as the `QSettings` group name directly, and
-  the three call sites that create the Hint/Markers/BriefHint popups
-  (`measurements.cpp`, `markers.cpp`) pass `tr("Hint")`/`tr("Markers")`/
-  `tr("BriefHint")` -- so running under a non-English language creates
-  a *separate* group (e.g. `[Marcadores]` under Spanish) instead of
-  reusing the English one. Confirmed against a real ini from this
-  session's own Spanish-language testing. Cosmetic/low-impact -- the
-  affected keys are just remembered popup position (`x`/`y`/`mainX`/
-  `mainY`/bias offsets), not anything functional, so the only visible
-  effect is a popup occasionally forgetting its position after a
-  language switch and falling back to its default. Fix would be
-  passing a fixed English key to `setName()` instead of a `tr()`'d one.

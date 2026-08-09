@@ -714,14 +714,11 @@ Notes on specific keys:
   individually if something looks stuck -- it just regenerates with
   defaults.
 
-**Known quirk:** a few of those bookkeeping groups (`Hint`, `Markers`,
-`BriefHint`) are actually named after a `tr()`-translated string, not a
-fixed key -- so running AntScopeZ in a non-English language creates
-*separate* groups (e.g. `[Marcadores]` alongside `[Markers]`) instead of
-reusing the English ones. Harmless (worst case, a popup forgets its
-remembered position after a language switch and just uses its default
-again), but if you're wondering why your `.ini` has a group name in
-another language, that's why.
+If your `.ini` has a leftover group named in another language (e.g.
+`[Marcadores]` sitting next to `[Markers]`) from before this was fixed
+(see CHANGELOG.md), it's an orphaned duplicate of the `Hint`/`Markers`/
+`BriefHint` popup-position bookkeeping above -- harmless, safe to
+delete.
 
 ---
 

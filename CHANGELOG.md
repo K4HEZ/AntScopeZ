@@ -11,6 +11,25 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+### Fixed
+
+- `PopUp`/`MarkersPopUp`'s remembered on-screen position (the Hint,
+  BriefHint, and Markers popups) used a `tr()`-translated string as
+  their `AntScopeZ.ini` group name/internal comparison key
+  (`PopUp::setName()`/`MarkersPopUp::setName()`) -- purely an internal
+  identifier, never shown to the user, so translating it was never
+  intentional. Two effects: running under a non-English language wrote
+  the popup's position to a *different* ini group than English did
+  (e.g. `[Marcadores]` instead of `[Markers]` under Spanish), and
+  `setName()`'s own `m_name == "Hint"`/`"Markers"` check silently
+  failed under non-English, skipping loading of both any saved position
+  and that popup's own coded defaults in favor of generic constructor
+  defaults. Found while documenting `AntScopeZ.ini`'s structure. Fixed
+  by passing the fixed English literal at all five call sites
+  (`markers.cpp`, `measurements.cpp`) instead of `tr()`-wrapping it.
+  Cosmetic/low-impact either way -- only affected remembered popup
+  position, not any functional setting.
+
 ## [2.1.4] - 2026-08-09
 
 ### Changed
