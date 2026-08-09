@@ -259,9 +259,13 @@ Please try later.</source>
     </message>
     <message>
         <location filename="../antscopeupdatedialog.ui" line="98"/>
+        <source>New version of AntScopeZ is available!</source>
+        <translation>AntScopeZ の新しいバージョンが利用可能!</translation>
+    </message>
+    <message>
         <source>New version of AntScope 2 is available!</source>
         <oldsource>There are new version of AntScope2 available!</oldsource>
-        <translation>AntScope 2 の新しいバージョンが利用可能!</translation>
+        <translation type="vanished">AntScope 2 の新しいバージョンが利用可能!</translation>
     </message>
     <message>
         <location filename="../antscopeupdatedialog.ui" line="116"/>

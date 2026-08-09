@@ -406,6 +406,7 @@ qt_add_translations(
     TS_FILES
         locales/QtLanguage_uk.ts
         locales/QtLanguage_ja.ts
+        locales/QtLanguage_es.ts
     QM_FILES_OUTPUT_VARIABLE ANTSCOPE_QM_FILES
 )
 add_dependencies(AntScopeZ release_translations)
