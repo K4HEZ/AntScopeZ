@@ -166,3 +166,37 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   principle; any language where Qt's own catalog has drifted from the
   current `qfiledialog.ui` mnemonics would show the same gap. Nothing to
   fix here -- it's upstream Qt's translation, not this project's.
+- **The S21 tab exists but is unconditionally hidden** --
+  `MainWindow`'s own comment above the line says why:
+  `// S21 not implemented yet` (`mainwindow.cpp`, next to the
+  `setTabVisible(..., false)` call). That undersells how much is
+  actually built, though -- this reads as an unfinished feature, not
+  dead code:
+  - A real protocol command exists for it: `BaseAnalyzer::startMeasure()`
+    sends `"FDB<dots>"` instead of the normal `"FRX"`/`"EFRX"` scan
+    command when S21 mode is active (`baseanalyzer.cpp`).
+  - The full signal chain is wired end-to-end:
+    `AnalyzerPro::on_measureS21()` -> `BaseAnalyzer::setIsS21Mode(true)`
+    + `startMeasure()` -> device reply parsed -> `newS21Data` signal ->
+    `Measurements::on_newS21Data()` -> plotted on `m_s21Widget`.
+    `Markers` already fully supports S21 (its own line/label objects,
+    its own branch in `redraw()`). `MainWindow`'s own scan-start
+    handler already branches correctly on the active tab: `if
+    (currentTab == "tab_s21") emit measureS21(...)`.
+  - What's actually missing: **no capability gating exists anywhere.**
+    `AnalyzerParameters` (the model table, `analyzer/analyzerparameters.h`)
+    has no "supports S21 / two-port" flag, and nothing checks the
+    connected device's model before offering S21 -- the tab is just
+    unconditionally hidden instead of conditionally shown, which reads
+    as a placeholder for a detection step that was never built. Also,
+    **response parsing is HID-only**: the `WAIT_S21_DATA` parser state
+    that actually extracts an S21 value from the device's reply is
+    implemented only in `hid_analyzer.cpp`; `com_analyzer.cpp` (serial)
+    and `ble_analyzer.cpp` (Bluetooth) have no S21-handling code at all,
+    even though the command-sending logic they'd inherit from
+    `BaseAnalyzer` is transport-agnostic.
+  - To actually finish this: add a per-model (or runtime-detected)
+    two-port capability flag and call `setTabVisible(..., true)` when
+    connected to a capable device over HID, and add `WAIT_S21_DATA`
+    handling to `com_analyzer.cpp`/`ble_analyzer.cpp` if S21 should
+    also work over serial/BLE.

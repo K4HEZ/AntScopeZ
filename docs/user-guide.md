@@ -213,8 +213,10 @@ the main window.
 
 **Chart tabs**: SWR, Phase, Z=R+jX, Z=R‖+jX, RL, Smith, TDR, Multi (plus
 a "User defined" tab if launched with `-developer`). An S21 tab also
-exists in the code but is currently never made visible -- see
-[Troubleshooting](#troubleshooting).
+exists -- a substantially-built but deliberately unfinished two-port
+insertion-loss measurement -- but is never currently made visible; see
+[Troubleshooting](#troubleshooting) and `BUILDINFO.md`'s Known Issues
+for the full detail.
 
 ### Keyboard shortcuts
 
@@ -883,10 +885,11 @@ delete.
   [the Cable tab reference](#cable-tab) -- it may not currently do
   anything at all; not confirmed either way.
 - **There's no S21 tab anywhere, even though it's mentioned in this
-  guide/the code.** Confirmed (`mainwindow.cpp`): the tab is built at
-  startup but immediately hidden (`setTabVisible(..., false)`), and
-  nothing anywhere ever makes it visible again -- not something you're
-  missing in the UI, it's just not reachable in this build.
+  guide/the code.** The code's own comment says why: `// S21 not
+  implemented yet` (`mainwindow.cpp`). Not something you're missing in
+  the UI -- it's genuinely unfinished (not dead: the measurement
+  pipeline is substantially built already). See `BUILDINFO.md`'s Known
+  Issues for the full detail on what's there and what's still missing.
 
 ---
 

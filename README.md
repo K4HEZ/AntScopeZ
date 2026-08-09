@@ -11,7 +11,9 @@ This project is NOT an official project from RigExpert (see: RigExpert's own
 AntScope2). Do not contact them for support for this project. It is provided
 AS-IS and I do not accept any responsibility for its use. If doing important
 tasks (such as licensing and firmware updates), you should use the vendor's
-code instead. I have no way of testing those features.
+code instead. I have no way of testing those features. The original AntScope2
+software may be obtained directly from RigExpert at
+[rigexpert.com/software/antscope2](https://rigexpert.com/software/antscope2/).
 
 Some of the non-English UI translations are AI-generated and haven't been
 reviewed by a native speaker yet -- expect rough edges until that review

@@ -49,7 +49,9 @@ detail.
 unaffiliated, community effort -- see the disclaimer in
 [README.md](https://github.com/K4HEZ/AntScopeZ#readme) before relying on
 it for anything that matters (licensing, firmware updates, warranty
-support). For those, use RigExpert's own software.
+support). For those, use RigExpert's own software -- the original
+AntScope2 is available directly from RigExpert at
+[rigexpert.com/software/antscope2](https://rigexpert.com/software/antscope2/).
 
 ## Supported devices
 
