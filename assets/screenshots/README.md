@@ -1,16 +1,18 @@
-Drop screenshot PNGs/JPGs here and reference them from `/index.md`'s
-"Screenshots" section, e.g.:
+Screenshots referenced from `/index.md`'s "Screenshots" section.
+
+Current set:
+
+- `Analzer-Connect.png` -- connecting to an analyzer over BLE, Light theme
+- `Scan-2m.png` -- SWR sweep across the 2m band, Light theme
+- `SWRChart.png` -- Smith chart with live cursor readout, Dark theme
+- `TDR-scan.png` -- TDR impulse/step response and impedance vs. cable length
+- `Multiview.png` -- Multi view comparing two saved measurements
+- `Screenshot-AA.png` -- the analyzer's own on-device screen, via "Screenshot from AA"
+
+To add more, drop the file here and reference it from `/index.md` with a
+short caption underneath, e.g.:
 
 ```markdown
-![Main window, dark theme](assets/screenshots/main-window-dark.png)
+![Alt text describing the image](assets/screenshots/your-file.png)
+*Caption.*
 ```
-
-Suggested set to cover the basics:
-
-- Main window, Dark theme
-- Main window, Light theme
-- A plot tab in action (SWR, Smith, or TDR)
-- Settings dialog (General tab, or the OSL Calibration tab)
-
-Keep filenames descriptive and lowercase-with-hyphens
-(`main-window-dark.png`, not `Screenshot 2026-08-09 at 3.42.11 PM.png`).
