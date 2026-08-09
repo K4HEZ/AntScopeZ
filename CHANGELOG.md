@@ -627,12 +627,9 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   Root cause not identified; not something this app's code controls
   directly. Workaround: manually pick the correct paper size in the
   Properties dialog before printing. See `BUILDINFO.md`.
-- Some of Qt's own built-in file-dialog strings (e.g. "Files of type:",
-  "Look in:") stay in English even with `qtbase_<code>.qm` loaded and
-  working -- confirmed to be a stale mnemonic mismatch inside Qt's own
-  shipped translation (it's keyed to source text without the `&`
-  accelerator the current dialog actually uses), not this app's loading
-  of it. Not fixable here. See `BUILDINFO.md`.
+- Some translations are provided by Qt itself and may be incomplete --
+  e.g. "Files of type:" isn't translated on the file dialog under Spanish
+  (`es`). Not something this project controls. See `BUILDINFO.md`.
 
 ### Removed
 
