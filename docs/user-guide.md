@@ -25,7 +25,9 @@ supported analyzer models and brands.
 - [Presets and bands](#presets-and-bands)
 - [Markers](#markers)
 - [Multi view](#multi-view)
+- [Data from AA](#data-from-aa)
 - [Import / Export](#import--export)
+- [Print and screenshots](#print-and-screenshots)
 - [TDR (Time Domain Reflectometry)](#tdr-time-domain-reflectometry)
 - [Customized analyzer parameters](#customized-analyzer-parameters)
 
@@ -84,10 +86,10 @@ the main window.
 | Settings | Opens the Settings dialog (connection, calibration, theme, language, cable settings, and more) |
 | Export | Exports the *selected* measurement to CSV, NWL, or Touchstone (.s1p) -- select a row in Measurements first |
 | Import | Loads an external file: Touchstone (.s1p), CSV, NWL, or AntScopeZ's own `.asd` |
-| Print | Prints (or saves to PDF) the current chart |
-| Screenshot | Saves the AntScopeZ window, chart included, as an image |
-| Screenshot from AA | Captures the *analyzer's own* on-device screen (not every model supports this -- see [Supported Devices](../SUPPORTED_DEVICES.md)) |
-| Data from AA | Loads measurement results already stored in the analyzer's own memory |
+| Print | Opens the [Print dialog](#print-and-screenshots) for the current chart |
+| Screenshot | Saves the *current chart* (not the whole window) straight to a PNG file you pick -- same image Ctrl+C copies, just written to disk instead of the clipboard |
+| Screenshot from AA | Captures the *analyzer's own* on-device screen (not every model supports this -- see [Supported Devices](../SUPPORTED_DEVICES.md)) -- see [Print and screenshots](#print-and-screenshots) |
+| Data from AA | Loads measurement results already stored in the analyzer's own memory -- see [Data from AA](#data-from-aa) |
 
 **Frequency panel**
 
@@ -342,6 +344,29 @@ region picked in Settings → General → "Bands highlighting" (backed by
 `itu-regions.txt`/`itu-regions-defaults.txt`) -- its **...** button
 opens the band editor if you need to add or adjust one for that region.
 
+### Editing band definitions
+
+The band editor is a plain text editor over the region data, not a
+structured form -- each line is
+`start kHz, stop kHz, band name` (a trailing name is optional; an
+unnamed 2-field line still defines a highlighted range, just without a
+label). One `[Region Name]` header line groups the bands under it, e.g.:
+
+```
+[ITU Region 1 - Europe, Africa]
+
+	135.7, 137.8, 2200m
+	1810, 2000, 160m
+	14000, 14350, 20m
+```
+
+**Restore Defaults** reloads the shipped `itu-regions-defaults.txt`
+(discarding your edits in this dialog, not saving over anything until
+you click Save). **Save** writes your edited text to your own
+`itu-regions.txt`, which is what actually gets read from then on --
+the shipped defaults file itself is never modified. **Cancel** discards
+whatever you typed.
+
 ## Markers
 
 Double-click anywhere on a frequency-domain chart (any tab except Smith
@@ -366,6 +391,20 @@ to the tab Multi" (or "Add multi-charts") to populate it.
 
 You can add and remove tabs to Multi View using the "+" button to join charts.
 
+## Data from AA
+
+Loads measurement results that already exist in the *analyzer's own*
+on-device memory (not files on your PC -- see
+[Import / Export](#import--export) for that). The toolbar's **Data from
+AA** button opens a list of everything currently stored on the device;
+double-click an entry (or select it and click OK) to load just that one
+into AntScopeZ as a new measurement.
+
+**Read and Save all** instead walks the *entire* list automatically:
+pick a destination folder, and it loads and saves every stored entry in
+turn as its own `.asd` file (zero-padded index + the device's own name
+for each), with a progress dialog you can Abort partway through.
+
 ## Import / Export
 
 These are two different toolbar buttons, doing related but distinct
@@ -384,6 +423,33 @@ things:
 Separately, the **Measurements panel's own Open/Save** buttons are
 narrower: they only read/write AntScopeZ's native `.asd` format, for one
 measurement at a time.
+
+## Print and screenshots
+
+Three related but different ways to get a chart out of AntScopeZ as an
+image or document:
+
+- **Screenshot** (toolbar) saves the *current chart tab* straight to a
+  PNG file you pick -- the same image Ctrl+C copies to the clipboard,
+  just written to disk instead. Not available for Multi.
+- **Print** (toolbar) opens a dedicated dialog: a preview of the current
+  chart, the markers table beneath it, an auto-generated header (e.g.
+  "SWR graph") that isn't user-editable in this dialog, a free-text
+  Comment box, and a Line width slider affecting the printed/exported
+  trace thickness. From there:
+  - **Print** sends it to your system's print dialog.
+  - **Export PDF** / **Export PNG** save it directly to a file instead,
+    with the same header/chart/markers/comment layout.
+
+  The Print button/dialog isn't available while the Multi tab is
+  active -- clicking it does nothing in that case.
+- **Screenshot from AA** captures the *analyzer's own* on-device screen
+  (not every model supports this -- see
+  [Supported Devices](../SUPPORTED_DEVICES.md)) and opens its own small
+  dialog: add an optional comment, then **Export to PDF**,
+  **Export to BMP**, or **To clipboard**. **Refresh** re-captures the
+  device's screen again without closing the dialog, in case it's
+  changed since it was first captured.
 
 ## TDR (Time Domain Reflectometry)
 
