@@ -665,6 +665,17 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   no longer overlap the buttons regardless of the connected analyzer's
   actual screen shape, and always has visible breathing room around it.
 
+### Changed
+
+- GitHub account renamed from `hz23116` to `k4hez`. Updated the local
+  `origin`/`antscopez` remote URLs, `CMakeLists.txt`'s
+  `CPACK_PACKAGE_CONTACT` and `CPACK_DEBIAN_PACKAGE_HOMEPAGE`, and
+  `Info.plist`'s `CFBundleIdentifier` (`io.github.hz23116.AntScopeZ` ->
+  `io.github.k4hez.AntScopeZ`) to match. The historical
+  `~/.config/hz23116/AntScope2` legacy-settings-migration path in
+  `settings.cpp` is unrelated (predates this account, from the
+  AntScope2->AntScopeZ rename) and was left as-is.
+
 ## [2.1.3]
 
 Baseline — changelog tracking starts here. See `git log` for history prior

@@ -13,7 +13,7 @@
 	<key>CFBundleIconFile</key>
         <string>AntScopeZ</string>
 	<key>CFBundleIdentifier</key>
-	<string>io.github.hz23116.AntScopeZ</string>
+	<string>io.github.k4hez.AntScopeZ</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>

@@ -686,9 +686,9 @@ if(UNIX AND NOT APPLE)
     # TODO: fill in a real maintainer contact before actually distributing
     # this .deb to anyone else -- left as just the GitHub handle for now
     # rather than guessing at what contact info should be public.
-    set(CPACK_PACKAGE_CONTACT "hz23116")
+    set(CPACK_PACKAGE_CONTACT "k4hez")
     set(CPACK_DEBIAN_PACKAGE_SECTION "hamradio")
-    set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/hz23116/AntScopeZ")
+    set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/k4hez/AntScopeZ")
     set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
     set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
     # Matches the CMAKE_INSTALL_PREFIX default set near the top of this file
