@@ -59,8 +59,9 @@ instead of "Analyzer not connected".
    selector") -- pick a ham band from the selector above the Presets
    list, which fills in Start/Stop for you.
 2. **Set the point count.** Type a number into Points directly, or open
-   **Measurement speed...** for a Fast ⟷ Accurately slider that sets it
-   for you. More points = finer resolution across your range, at the
+   **Measurement speed...** for a Fast ⟷ Accurately slider (5–1000
+   points, snapped to the nearest 10) that sets it for you. More points
+   = finer resolution across your range, at the
    cost of a slower sweep.
 3. **Run it.** Click **Single** (or press F9) for one sweep, or
    **Continuous** (F10) to keep sweeping until you stop it -- see
@@ -100,7 +101,7 @@ the main window.
 | Points | Number of measurement points across the range |
 | Calibration (checkbox) | Applies OSL calibration correction to scans -- has no effect until you've actually performed a calibration in Settings (see [Calibration](#calibration-osl)) |
 | Full range | Resets Start/Stop to the connected analyzer's own default range |
-| Measurement speed... | Opens the Fast ⟷ Accurately points slider |
+| Measurement speed... | Opens the Fast ⟷ Accurately points slider (5–1000, snapped to the nearest 10) |
 
 **Presets panel**
 
