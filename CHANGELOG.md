@@ -648,6 +648,23 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   unchanged -- accepting the suggestion as-is now just round-trips back
   to the same (sanitized) name.
 
+### Fixed
+
+- "Screenshot from AA" dialog: the captured device image was flush
+  against the dialog edges with no margin, and could render tall enough
+  to spill down over the buttons below it. `Screenshot::paintEvent()`
+  drew the image directly onto the dialog's own background, hardcoding a
+  "320x240 canvas" assumption with three separate branches and no margin
+  at all -- for anything wider than 320px, the scaled height was computed
+  purely from the *source* aspect ratio, with nothing clamping it to the
+  240px actually available above `screenshot.ui`'s fixed-position button
+  row (`layoutWidget`, placed at y=240), so a device whose screen isn't
+  close to 4:3 could overlap them. Replaced the three branches with one
+  calculation: fit the image within a margined region, preserving aspect
+  ratio, never upscaling past the device's native resolution -- so it can
+  no longer overlap the buttons regardless of the connected analyzer's
+  actual screen shape, and always has visible breathing room around it.
+
 ## [2.1.3]
 
 Baseline — changelog tracking starts here. See `git log` for history prior

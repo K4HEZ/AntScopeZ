@@ -135,33 +135,44 @@ void Screenshot::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
 
-    int biasx,biasy;
     AnalyzerParameters* param = AnalyzerParameters::current();
     QString name = param == nullptr ? "" : param->name();
     QString model = CustomAnalyzer::customized() ?
                 CustomAnalyzer::currentPrototype() : name;
 
-    QRectF r;
-    if(     (model == "AA-30") ||
-            (model == "AA-54")||
-            (model == "AA-170")    )
-    {
-        biasx = (320 - m_lcdWidth*2)/2;
-        biasy = (240 - m_lcdHeight*2)/2;
-        r.setRect(biasx, biasy, m_lcdWidth*2, m_lcdHeight*2);
-    }else if (m_lcdWidth > 320 || m_lcdHeight > 240)
-    {
-        biasx = 0;//(320 - m_lcdWidth/2)/2;
-        biasy = 0;//(240 - m_lcdHeight/2)/2;
-        r.setRect(biasx, biasy, 320, 320*m_lcdHeight/m_lcdWidth);
-    }else
-    {
-        biasx = (320 - m_lcdWidth)/2;
-        biasy = (240 - m_lcdHeight)/2;
-        r.setRect(biasx, biasy, m_lcdWidth, m_lcdHeight);
+    // The image area is the fixed region above layoutWidget (screenshot.ui
+    // places it at y=240) -- reserve a visible margin inside it so the
+    // captured image isn't flush against the dialog edges, and always fit
+    // *within* it, preserving aspect ratio, regardless of the connected
+    // device's actual screen resolution. Was: three branches hardcoding a
+    // "320x240 canvas" assumption with no margin at all, and (for
+    // m_lcdWidth > 320) a height computed from the *source* aspect ratio
+    // that could exceed the 240px budget for anything not close to 4:3 --
+    // spilling the image down over the buttons below instead of ever
+    // being clamped to the space actually available for it.
+    const int margin = 10;
+    QRect area(margin, margin, this->width() - margin*2, 240 - margin*2);
+
+    int srcWidth = m_lcdWidth;
+    int srcHeight = m_lcdHeight;
+    if ((model == "AA-30") || (model == "AA-54") || (model == "AA-170")) {
+        // These report their native (pre-doubled) resolution; m_image itself
+        // was allocated at double that (see the constructor) for visibility.
+        srcWidth *= 2;
+        srcHeight *= 2;
     }
-    //painter.drawImage(biasx, biasy, *m_image);
-    //qDebug() << r;
+
+    qreal scale = 1.0;
+    if (srcWidth > 0 && srcHeight > 0) {
+        scale = qMin(1.0, qMin(area.width() / (qreal)srcWidth, area.height() / (qreal)srcHeight));
+    }
+    int dispWidth = qRound(srcWidth * scale);
+    int dispHeight = qRound(srcHeight * scale);
+
+    QRectF r(area.x() + (area.width() - dispWidth) / 2.0,
+             area.y() + (area.height() - dispHeight) / 2.0,
+             dispWidth, dispHeight);
+
     painter.drawImage(r, *m_image);
 }
 
