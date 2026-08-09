@@ -3,25 +3,304 @@ layout: default
 title: User Guide
 ---
 
-# AntScopeZ User Guide (starter)
+# AntScopeZ User Guide
 
-This is a starting point for real end-user documentation -- AntScopeZ currently
-has none (the root `README.md` is build/developer instructions only). Sections
-below get filled in over time; most of this file is still a stub.
+This is the closest thing AntScopeZ has to real end-user documentation --
+the root `README.md` is build/developer instructions only. It grew out of
+a handful of stub sections into most of what's below; if something's
+missing or wrong, that's more likely this guide being incomplete than the
+app -- open an issue.
 
 See [SUPPORTED_DEVICES.md](../SUPPORTED_DEVICES.md) for the full list of
 supported analyzer models and brands.
 
 ## Table of contents
 
+- [Getting started](#getting-started)
+- [Controls reference](#controls-reference)
+- [Interpreting your data](#interpreting-your-data)
+- [Scan modes: Single vs. Continuous](#scan-modes-single-vs-continuous)
+- [Calibration (OSL)](#calibration-osl)
+- [Presets and bands](#presets-and-bands)
+- [Markers](#markers)
+- [Multi view](#multi-view)
+- [Import / Export](#import--export)
 - [TDR (Time Domain Reflectometry)](#tdr-time-domain-reflectometry)
 - [Customized analyzer parameters](#customized-analyzer-parameters)
-- Scan modes (Single vs. Continuous) -- TODO
-- Calibration -- TODO
-- Markers -- TODO
-- Multi view -- TODO
-- Import / Export -- TODO
-- Presets and bands -- TODO
+
+## Getting started
+
+### Connecting to your analyzer
+
+Settings → General → **Connect analyzer** opens the "Select device"
+dialog. Pick a connection type (USB, COM, or BLE), click **Scan**, select
+your device from the list, and **Connect**. "Use same selection for
+future connections" saves that choice so AntScopeZ can silently
+reconnect on its own next time, instead of asking again.
+
+By default, this dialog also pops up automatically ~500 ms after launch
+if there's no valid saved device to silently reconnect to. If you'd
+rather it not do that -- say, you're just reviewing saved `.s1p`/`.asd`
+files with no analyzer connected -- uncheck Settings → General → "Open
+'Connect Analyzer' on launch". The manual Connect button is unaffected
+either way.
+
+Once connected, the window's title bar shows the device's model/name
+instead of "Analyzer not connected".
+
+### Your first scan
+
+1. **Set a frequency range.** Either type Start/Stop directly into the
+   Frequency panel, switch to Center/Range mode (same panel, different
+   pair of fields), or -- if enabled (Settings → General → "Enable band
+   selector") -- pick a ham band from the selector above the Presets
+   list, which fills in Start/Stop for you.
+2. **Set the point count.** Type a number into Points directly, or open
+   **Measurement speed...** for a Fast ⟷ Accurately slider that sets it
+   for you. More points = finer resolution across your range, at the
+   cost of a slower sweep.
+3. **Run it.** Click **Single** (or press F9) for one sweep, or
+   **Continuous** (F10) to keep sweeping until you stop it -- see
+   [Scan modes](#scan-modes-single-vs-continuous) below for why you'd
+   pick one over the other.
+4. **Watch it draw.** The active chart tab (SWR by default) fills in
+   point by point as data arrives.
+5. Once a sweep finishes, it's already sitting in the **Measurements**
+   list on the right, auto-named with an incrementing `NN>` prefix.
+   Double-click the name to rename it, or use **Save** to write it out
+   as an AntScopeZ `.asd` file if you want to keep it outside the app's
+   own settings storage.
+
+## Controls reference
+
+Brief description of each control, grouped the way they're laid out in
+the main window.
+
+**Top toolbar**
+
+| Control | What it does |
+|---|---|
+| Settings | Opens the Settings dialog (connection, calibration, theme, language, cable settings, and more) |
+| Export | Exports the *selected* measurement to CSV, NWL, or Touchstone (.s1p) -- select a row in Measurements first |
+| Import | Loads an external file: Touchstone (.s1p), CSV, NWL, or AntScopeZ's own `.asd` |
+| Print | Prints (or saves to PDF) the current chart |
+| Screenshot | Saves the AntScopeZ window, chart included, as an image |
+| Screenshot from AA | Captures the *analyzer's own* on-device screen (not every model supports this -- see [Supported Devices](../SUPPORTED_DEVICES.md)) |
+| Data from AA | Loads measurement results already stored in the analyzer's own memory |
+
+**Frequency panel**
+
+| Control | What it does |
+|---|---|
+| Limits / Center / Range | Two ways to define the same swept range -- absolute Start/Stop, or a Center frequency ± a Range |
+| Start, Stop (or Center, Range) | The actual sweep bounds, in kHz |
+| Points | Number of measurement points across the range |
+| Calibration (checkbox) | Applies OSL calibration correction to scans -- has no effect until you've actually performed a calibration in Settings (see [Calibration](#calibration-osl)) |
+| Full range | Resets Start/Stop to the connected analyzer's own default range |
+| Measurement speed... | Opens the Fast ⟷ Accurately points slider |
+
+**Presets panel**
+
+| Control | What it does |
+|---|---|
+| Band selector (if enabled) | Pick a ham band to set Start/Stop instantly |
+| Add | Saves the *current* Start/Stop/Points as a new preset row |
+| Delete | Removes the selected preset |
+| Move up | Reorders the selected preset up one row |
+| (double-click a row) | Applies that preset's Start/Stop/Points and re-ranges every chart |
+
+**Scan buttons**
+
+| Control | What it does |
+|---|---|
+| Single (F9) | Runs one sweep across the current range, then stops |
+| Continuous (F10) | Sweeps repeatedly, updating the same trace in place, until you stop it |
+
+**Measurements panel**
+
+| Control | What it does |
+|---|---|
+| Open / Save | Load or save a single measurement as AntScopeZ's own `.asd` format |
+| Delete | Removes the selected measurement |
+| Clear | Removes *every* measurement in the list |
+| Row checkbox | Shows/hides that measurement's trace on the charts |
+| Row pencil icon | Renames the measurement |
+
+**Chart tabs**: SWR, Phase, Z=R+jX, Z=R‖+jX, RL, Smith, TDR, Multi (plus
+a "User defined" tab if launched with `-developer`).
+
+## Interpreting your data
+
+### SWR and Return Loss: what "good" looks like
+
+SWR and RL (Return Loss) describe the same mismatch, in two different
+units -- RL is logarithmic (dB), SWR is a ratio. Higher RL is better;
+lower SWR is better. Rough conversion, for reference:
+
+| SWR | RL (dB) | Roughly |
+|---|---|---|
+| 1.0 : 1 | ∞ | Perfect match (never actually happens) |
+| 1.5 : 1 | ≈ 14 dB | Very good |
+| 2.0 : 1 | ≈ 9.5 dB | Good, commonly cited as "acceptable" for most rigs |
+| 3.0 : 1 | ≈ 6 dB | Marginal -- many radios start reducing power or refusing to transmit here |
+
+Most modern transceivers tolerate up to somewhere around 2:1-3:1 before
+their internal protection kicks in; check your radio's actual spec
+rather than assuming.
+
+### Reading the dip: is my antenna too long or too short?
+
+For a simple resonant antenna (a dipole or vertical cut for a specific
+band), the SWR curve typically has one clear minimum -- the "dip" -- at
+its actual resonant frequency. Where that dip sits relative to your
+*target* frequency tells you which way to trim:
+
+- **Dip to the left of (below) your target frequency** -- the antenna is
+  resonating lower than you want, which for a simple wire/vertical
+  usually means it's **electrically too long**. Shortening it raises the
+  resonant frequency, moving the dip to the right, toward your target.
+- **Dip to the right of (above) your target frequency** -- the opposite:
+  the antenna is **electrically too short**. Lengthening it (or adding
+  loading) moves the dip left.
+
+The same read is available from `Z = R + jX` at your target frequency,
+without needing to eyeball a chart: a small **positive X (inductive)**
+at your target frequency means the resonant dip is below it (too long);
+a small **negative X (capacitive)** means the dip is above it (too
+short). At the dip itself, X is at or near zero.
+
+This is the classic behavior of a simple resonant dipole/vertical --
+it's a solid starting heuristic, not a universal law. Multi-band,
+loaded, or otherwise non-resonant antenna designs (verticals with
+matching networks, off-center-fed designs, etc.) don't necessarily
+follow it the same way.
+
+Trimming rule of thumb, for a simple dipole/vertical: the percentage
+change in length needed is roughly the percentage change in frequency
+you're trying to achieve (e.g. moving a dip up by 2% typically means
+shortening by roughly 2%) -- treat this as a starting estimate and
+re-measure after each cut, not an exact formula. Cut a little at a time;
+wire you've already cut off doesn't grow back.
+
+### Smith chart basics
+
+The Smith chart plots impedance as a point (or, across a sweep, a
+curve) on a circle. The very center of the chart is a perfect 50Ω match
+(or whatever system impedance you've set in Settings → General →
+"System impedance"); the further a point sits from center, the worse
+the mismatch at that frequency. Points in the upper half are inductive
+(+X), the lower half capacitive (−X). A sweep that traces a tight loop
+close to center across your band of interest is a well-matched antenna
+over that range; a curve that swings wide is not.
+
+### Z = R + jX: resistance and reactance
+
+`R` is the resistive part of impedance -- power delivered here actually
+radiates (or is lost as heat). `X` is the reactive part -- energy
+stored and returned, not radiated. At true resonance, X = 0 and the
+antenna looks purely resistive; R at that point (ideally close to your
+system impedance, commonly 50Ω) is what actually determines how good
+the match is once X is out of the way. See
+[Reading the dip](#reading-the-dip-is-my-antenna-too-long-or-too-short)
+above for what the sign of X tells you off-resonance.
+
+## Scan modes: Single vs. Continuous
+
+**Single (F9)** runs exactly one sweep across the current range and
+stops. Good for a one-off check.
+
+**Continuous (F10)** keeps sweeping the same range repeatedly, updating
+the *same* trace in place each pass rather than adding a new entry to
+Measurements every time. This is the mode to use while physically
+adjusting an antenna (trimming a wire, tuning a matcher) -- start
+Continuous, watch the SWR dip move in real time as you adjust, and stop
+it once you're happy. Only when it's stopped (or you run a fresh Single
+scan) does the result settle as one finished entry in the Measurements
+list.
+
+## Calibration (OSL)
+
+OSL (Open/Short/Load) calibration corrects for the analyzer's own
+measurement error, using three known reference standards. It's
+per-device -- calibration data is stored under the connected analyzer's
+own serial number, so switching analyzers doesn't mix up calibration
+data between them.
+
+Settings → OSL Calibration has two ways to run it:
+
+- **Calibration Wizard** -- one **Start** button walks you through all
+  three standards in order: connect Open and click OK, then Short, then
+  Load, with each step confirmed by a dialog before proceeding.
+- **Individually** -- each of the Open/Short/Load sections has its own
+  "Start _ Calibration" button, for redoing just one standard without
+  repeating all three. Each section also has an "Open file" button, to
+  load a previously-saved calibration standard from disk instead of
+  re-measuring it live.
+
+Once all three standards are captured, check the **Calibration**
+checkbox in the main Frequency panel to actually apply the correction
+to your scans -- performing the calibration and enabling it are two
+separate steps. If you try to scan with calibration enabled before it's
+actually been performed, AntScopeZ will tell you via a "Calibration
+Required" prompt pointing back at this same Settings tab.
+
+## Presets and bands
+
+**Presets** are saved Start/Stop/Points combinations, shown as a table
+above the Measurements list. Click **Add** to save whatever range is
+currently entered, or double-click an existing row to jump straight to
+it (updates Start/Stop/Points and re-ranges every chart in one step).
+**Delete**/**Move up** manage the list from there.
+
+The **band selector** (Settings → General → "Enable band selector") is
+a faster shortcut for the common case: instead of building your own
+preset, pick a named ham band from the dropdown above Presets and
+Start/Stop are set for you immediately, formatted as
+`<name> (<start> - <stop> kHz)`. Which bands show up depends on the
+active ITU region's band data (`itu-regions.txt`/
+`itu-regions-defaults.txt`) -- editable via Settings' band editor if you
+need to add or adjust one.
+
+## Markers
+
+Double-click anywhere on a frequency-domain chart (any tab except Smith
+and TDR, where a marker wouldn't mean the same thing) to drop a
+numbered marker at that frequency -- or right-click and choose **Create
+marker** from the context menu. Markers appear at the same frequency
+across every chart at once (SWR, Phase, Rs, Rp, RL, S21), each labeled
+with a matching number, so you can track one frequency point across
+multiple views simultaneously.
+
+Hovering shows a readout of that marker's values (frequency, SWR, RL,
+R/X/Z, and more, depending on the chart). Settings → General → "Show
+markers hint" controls whether that readout pops up automatically.
+
+## Multi view
+
+The **Multi** tab lets you stack any two charts (RL and SWR by default)
+for the *same* measurement, or compare markers across them, in one
+view -- useful for eyeballing return loss and SWR together instead of
+flipping between tabs. Right-click a chart's tab and choose "Move chart
+to the tab Multi" (or "Add multi-charts") to populate it.
+
+## Import / Export
+
+These are two different toolbar buttons, doing related but distinct
+things:
+
+- **Export** (toolbar) opens a dialog for the measurement currently
+  *selected* in the Measurements list, offering:
+  - **CSV** -- comma-separated values
+  - **NWL** -- APAK-EL format
+  - **Z, RI** / **S, RI** / **S, MA** -- Touchstone (`.s1p`), as
+    impedance or S-parameters, in rectangular (real/imaginary) or polar
+    (magnitude/angle) form
+- **Import** (toolbar) is the general "bring external data in" action --
+  accepts Touchstone (`.s1p`), CSV, NWL, or AntScopeZ's own `.asd`.
+
+Separately, the **Measurements panel's own Open/Save** buttons are
+narrower: they only read/write AntScopeZ's native `.asd` format, for one
+measurement at a time.
 
 ## TDR (Time Domain Reflectometry)
 
