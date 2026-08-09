@@ -16,6 +16,7 @@ supported analyzer models and brands.
 
 ## Table of contents
 
+- [Installing and uninstalling](#installing-and-uninstalling)
 - [Getting started](#getting-started)
 - [Controls reference](#controls-reference)
 - [Settings](#settings)
@@ -31,6 +32,63 @@ supported analyzer models and brands.
 - [TDR (Time Domain Reflectometry)](#tdr-time-domain-reflectometry)
 - [Customized analyzer parameters](#customized-analyzer-parameters)
 - [Files and directories](#files-and-directories)
+
+## Installing and uninstalling
+
+### Linux (`.deb`)
+
+Download `antscopez_<version>_amd64.deb` from the
+[latest release](https://github.com/K4HEZ/AntScopeZ/releases/latest),
+then install it with `apt` so it resolves dependencies automatically:
+
+```sh
+sudo apt install ./antscopez_<version>_amd64.deb
+```
+
+(A plain `sudo dpkg -i antscopez_<version>_amd64.deb` also works, but
+won't pull in anything missing on its own -- run
+`sudo apt --fix-broken install` afterward if it complains about unmet
+dependencies.)
+
+You may notice `antscopez (>= <version>)` listed as one of the
+package's *own* dependencies -- that's a known, harmless cosmetic
+byproduct of how the bundled Qt libraries get their dependency
+declared (see `BUILDINFO.md`'s packaging notes), not a sign of a broken
+build. It doesn't block installation; apt/dpkg treat a package as
+trivially satisfying a dependency on itself.
+
+**Upgrading:** install a newer `.deb` the same way -- it replaces the
+current install in place. Your own settings and calibration data live
+entirely outside what the package touches (see
+[Files and directories](#files-and-directories)), so they're untouched
+by installing, upgrading, or removing the package.
+
+**Uninstalling:**
+
+```sh
+sudo apt remove antscopez
+```
+
+This removes everything the package itself installed -- the binary,
+bundled Qt libraries, shared data, desktop entry, and icon -- but
+deliberately leaves `~/.config/AntScopeZ/` alone. If you want a
+completely clean removal (settings, calibration data, any per-user
+translation/band overrides), delete that folder yourself too:
+
+```sh
+rm -rf ~/.config/AntScopeZ
+```
+
+### Windows, macOS, or other Linux distros
+
+No installer package for Windows or macOS yet, and Linux distributions
+that aren't Debian/Ubuntu-based won't have a native package either --
+build from source instead. See [BUILDINFO.md](../BUILDINFO.md) for
+requirements and build steps. "Uninstalling" a from-source build is
+just deleting the build directory and (if you want a clean slate)
+whatever per-user config folder it wrote to (see
+[Files and directories](#files-and-directories) for the Windows/macOS
+equivalents).
 
 ## Getting started
 
