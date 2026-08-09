@@ -18,6 +18,7 @@ supported analyzer models and brands.
 
 - [Getting started](#getting-started)
 - [Controls reference](#controls-reference)
+- [Settings](#settings)
 - [Interpreting your data](#interpreting-your-data)
 - [Scan modes: Single vs. Continuous](#scan-modes-single-vs-continuous)
 - [Calibration (OSL)](#calibration-osl)
@@ -128,6 +129,81 @@ the main window.
 
 **Chart tabs**: SWR, Phase, Z=R+jX, Z=R‖+jX, RL, Smith, TDR, Multi (plus
 a "User defined" tab if launched with `-developer`).
+
+### Keyboard shortcuts
+
+| Key | What it does |
+|---|---|
+| F1 – F7 | Jump to the SWR / Phase / Z=R+jX / Z=R‖+jX / RL / Smith / TDR tab (Multi has no shortcut of its own) |
+| F9 / F10 | Single / Continuous scan -- same as the toolbar buttons |
+| Esc | Stop/interrupt the current scan |
+| Delete | Delete the selected measurement |
+| `+`, `=`, ↑ | Zoom the current chart's frequency (X) range in |
+| `-`, ↓ | Zoom the current chart's frequency (X) range out |
+| ←, → | Pan the current chart's frequency range left/right |
+| Ctrl + `+` / Ctrl + ↑ | Zoom the Y-axis scale in (same as Ctrl+scroll) |
+| Ctrl + `-` / Ctrl + ↓ | Zoom the Y-axis scale out |
+| Ctrl + 0 | Reset the Y-axis scale to default |
+| Ctrl + C | Copy the current chart to the clipboard as an image |
+
+*(Developer mode only: Ctrl+Alt+Shift+M and Ctrl+Alt+Shift+N trigger
+internal auto-calibration debug routines -- not meant for normal use.)*
+
+## Settings
+
+The Settings dialog normally has three tabs: **General**, **OSL
+Calibration**, and **Cable**. (Two more, Customize and Updates, only
+appear under `-developer` -- see
+[Customized analyzer parameters](#customized-analyzer-parameters). The
+Updates tab is additionally removed unconditionally regardless of that
+flag, due to a known bug (#2247), so "Check for firmware updates" isn't
+currently reachable at all.)
+
+OSL Calibration has its own section -- see
+[Calibration (OSL)](#calibration-osl).
+
+### General tab
+
+| Control | What it does |
+|---|---|
+| Connect analyzer | Opens the device-selection dialog -- see [Connecting to your analyzer](#connecting-to-your-analyzer) |
+| Register application / Match license / Register device / Update license / Device info | RigExpert's own registration and licensing system. This talks to RigExpert's servers and isn't something this fork tests or supports -- see the disclaimer in [README.md](https://github.com/K4HEZ/AntScopeZ#readme). Use the vendor's own software for anything licensing-related. |
+| Measurement system | Metric or Imperial units |
+| Max measurements | Cap on how many measurements can be displayed at once |
+| Chart background | Opens a color picker for the plot background |
+| Theme | Light or Dark -- see [CHANGELOG.md](../CHANGELOG.md) for what it does and doesn't cover |
+| Show graph hint / Show markers hint / Show brief params under cursor | Toggle the various hover/cursor readout popups on the charts |
+| Don't restrict frequency *(developer mode only)* | Disables Start/Stop range clamping entirely -- hidden unless launched with `-developer` |
+| System impedance | The reference impedance (default 50Ω) everything -- SWR, Smith chart center, RL -- is calculated against |
+| Bands highlighting | A dropdown picking which region's band data to shade on the charts, plus a **...** button opening the band editor (add/edit/remove bands for that region) |
+| Show band name | Labels the shaded bands on the charts with their names, not just color |
+| Enable band selector | Shows/hides the band-selector dropdown above the Presets list -- see [Presets and bands](#presets-and-bands) |
+| Open 'Connect Analyzer' on launch | See [Connecting to your analyzer](#connecting-to-your-analyzer) |
+| Language | UI language -- auto-discovered from whatever `QtLanguage_*.qm` files are installed, not a fixed list |
+
+### Cable tab
+
+Lets you tell AntScopeZ about your feedline, so it can account for
+cable loss/length in what it shows you -- useful when your analyzer is
+some distance from the antenna through lossy coax.
+
+| Control | What it does |
+|---|---|
+| Cable dropdown | Pick a built-in ideal cable (50/75/25/37.5Ω), a saved custom one, or "Change parameters or choose from list..." to enter your own |
+| Cable R0, Cable length, Velocity factor | Your feedline's characteristic impedance, physical length, and velocity factor |
+| Conductive loss, Dielectric loss | Loss figures for the cable, in dB/100ft, dB/ft, dB/100m, or dB/m (pick the unit from the dropdown next to them), specified either "at" a given frequency or as "any frequency" |
+| Do nothing / Subtract cable / Add cable | Selects whether cable loss is factored out of, into, or ignored in your readings |
+| Export | Exports the current cable settings |
+| Update graphs | Re-applies the current cable settings to already-plotted data |
+
+**Not independently verified:** while auditing this tab, "Do nothing /
+Subtract cable / Add cable" only appear to toggle each other and
+enable/disable the fields above them -- no code path was found that
+reads which one is selected to actually transform displayed or exported
+data. It may do nothing currently, or it may be wired through a path
+this pass didn't find. Worth confirming against real hardware before
+relying on it; flagging here rather than asserting a behavior that
+wasn't actually confirmed.
 
 ## Interpreting your data
 
@@ -257,9 +333,9 @@ a faster shortcut for the common case: instead of building your own
 preset, pick a named ham band from the dropdown above Presets and
 Start/Stop are set for you immediately, formatted as
 `<name> (<start> - <stop> kHz)`. Which bands show up depends on the
-active ITU region's band data (`itu-regions.txt`/
-`itu-regions-defaults.txt`) -- editable via Settings' band editor if you
-need to add or adjust one.
+region picked in Settings → General → "Bands highlighting" (backed by
+`itu-regions.txt`/`itu-regions-defaults.txt`) -- its **...** button
+opens the band editor if you need to add or adjust one for that region.
 
 ## Markers
 
@@ -277,11 +353,13 @@ markers hint" controls whether that readout pops up automatically.
 
 ## Multi view
 
-The **Multi** tab lets you stack any two charts (RL and SWR by default)
-for the *same* measurement, or compare markers across them, in one
+The **Multi** tab lets you stack two or more charts for the *same* measurement, 
+or compare markers across them, in one 
 view -- useful for eyeballing return loss and SWR together instead of
 flipping between tabs. Right-click a chart's tab and choose "Move chart
 to the tab Multi" (or "Add multi-charts") to populate it.
+
+You can add and remove tabs to Multi View using the "+" button to join charts.
 
 ## Import / Export
 
