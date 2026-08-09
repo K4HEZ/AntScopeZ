@@ -313,12 +313,17 @@ Settings → OSL Calibration has two ways to run it:
   load a previously-saved calibration standard from disk instead of
   re-measuring it live.
 
-Once all three standards are captured, check the **Calibration**
-checkbox in the main Frequency panel to actually apply the correction
-to your scans -- performing the calibration and enabling it are two
-separate steps. If you try to scan with calibration enabled before it's
-actually been performed, AntScopeZ will tell you via a "Calibration
-Required" prompt pointing back at this same Settings tab.
+Performing a calibration and applying it are two separate steps. Each
+standard writes its own file (`cal_open.s1p`, `cal_short.s1p`,
+`cal_load.s1p`) under that analyzer's calibration folder; the
+**Calibration** checkbox in the main Frequency panel applies that
+correction to your scans, but only once all three files actually exist.
+
+If you check that box before all three are present, AntScopeZ shows a
+"Calibration Required" prompt and unchecks it again -- it's literally
+checking for those three files, not tracking calibration status any
+other way. Running the wizard (or the three individual standards) is
+what creates them; once they exist, the checkbox works.
 
 ## Presets and bands
 
