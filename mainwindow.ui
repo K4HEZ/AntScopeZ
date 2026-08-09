@@ -583,6 +583,16 @@ process in the settings menu!</string>
          <item>
           <layout class="QVBoxLayout" name="verticalLayout_3">
            <item>
+            <widget class="QComboBox" name="presetsBandComboBox">
+             <property name="visible">
+              <bool>false</bool>
+             </property>
+             <property name="toolTip">
+              <string>Select a ham band to set the Start/Stop range</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QTableWidget" name="tableWidget_presets">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">

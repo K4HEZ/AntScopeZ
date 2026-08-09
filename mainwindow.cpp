@@ -51,7 +51,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_s21ZoomState(10),
     m_smithZoomState(10),
     m_userZoomState(10),
-    m_languageNumber(0),
+    m_languageCode("en"),
     m_addingMarker(false),
     m_bInterrupted(false)
 {
@@ -94,6 +94,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     m_qtLanguageTranslator = new QTranslator();
+    m_qtBaseTranslator = new QTranslator();
 
     QString path = Settings::setIniFile();
     m_settings = new QSettings(path, QSettings::IniFormat);
@@ -522,7 +523,19 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->spinBoxPoints, SIGNAL(valueChanged(int)), this, SLOT(onSpinChanged(int)));
     connect(ui->fullBtn, &QPushButton::clicked, this, &MainWindow::onFullRange);
 
-    m_languageNumber = m_settings->value("languageNumber",0).toInt();
+    if (m_settings->contains("languageCode")) {
+        m_languageCode = m_settings->value("languageCode", "en").toString();
+    } else {
+        // One-time migration from the pre-discovery scheme, where the
+        // Language combo was a fixed 3-entry array (English, Ukrainian,
+        // Japanese, in that order) and this stored an index into it.
+        // Without this, upgrading would silently reset every non-English
+        // installed language back to English.
+        static const QStringList legacyOrder = {"en", "uk", "ja"};
+        int legacyIndex = m_settings->value("languageNumber", 0).toInt();
+        m_languageCode = (legacyIndex >= 0 && legacyIndex < legacyOrder.size())
+            ? legacyOrder[legacyIndex] : "en";
+    }
 
     m_settings->endGroup();
 
@@ -565,7 +578,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_1secTimer, SIGNAL(timeout()), this, SLOT(on_1secTimerTick()));
     m_1secTimer->start(100);
 
-    loadLanguage(languages_small[m_languageNumber]);
+    loadLanguage(m_languageCode);
     ui->tableWidget_presets->horizontalHeader()->show();
     if(!m_isRange)
     {
@@ -630,9 +643,17 @@ MainWindow::MainWindow(QWidget *parent) :
             on_refreshConnection();
         });
     } else {
+        m_settings->beginGroup("Settings");
+        bool openAtLaunch = m_settings->value("open-connect-analyzer-at-launch", true).toBool();
+        m_settings->endGroup();
+        // Settings -> General's "Open 'Connect Analyzer' on launch" -- someone
+        // who only wants to review saved .s1p files, with no analyzer
+        // connected, shouldn't have to dismiss this every time.
+        if (openAtLaunch) {
             QTimer::singleShot(500, this, [&](){
                 on_selectDeviceDialog();
             });
+        }
     }
 }
 
@@ -697,7 +718,7 @@ MainWindow::~MainWindow()
     m_settings->setValue("smithZoomState", m_smithZoomState);
     m_settings->setValue("userZoomState", m_userZoomState);
 
-    m_settings->setValue("languageNumber", m_languageNumber);
+    m_settings->setValue("languageCode", m_languageCode);
 
     m_settings->endGroup();
 
@@ -722,6 +743,10 @@ MainWindow::~MainWindow()
     if(m_qtLanguageTranslator)
     {
         delete m_qtLanguageTranslator;
+    }
+    if(m_qtBaseTranslator)
+    {
+        delete m_qtBaseTranslator;
     }
     delete ui;
 }
@@ -4088,7 +4113,7 @@ void MainWindow::createTabs (QString sequence)
     QToolButton *btn = new QToolButton();
     btn->setStyleSheet(Style::toolButton());
     btn->setText("+");
-    btn->setToolTip("Add multi-charts");
+    btn->setToolTip(tr("Add multi-charts"));
     connect(btn, &QAbstractButton::clicked, this, [=]() {
         showMultiTab();
     });
@@ -4141,8 +4166,11 @@ void MainWindow::on_tableWidget_presets_cellDoubleClicked(int row, int column)
     Q_UNUSED(column)
     QStringList list = m_presets->getRow(row);
     QCPRange range;
-    range.lower = list.at(0).toDouble();
-    range.upper = list.at(1).toDouble();
+    // Clamped, not the raw stored text -- a preset saved before the
+    // Start/Stop clamp existed (or hand-edited into the presets file)
+    // could otherwise still hand the plots/device an out-of-range value.
+    range.lower = clampFqKhz(list.at(0).toDouble());
+    range.upper = clampFqKhz(list.at(1).toDouble());
     m_dotsNumber = list.at(2).toInt();
     ui->spinBoxPoints->setValue(m_dotsNumber);
 
@@ -4152,8 +4180,8 @@ void MainWindow::on_tableWidget_presets_cellDoubleClicked(int row, int column)
         setFqTo(list.at(1));
     }else
     {
-        setFqFrom((list.at(1).toDouble() + list.at(0).toDouble())/2);
-        setFqTo((list.at(1).toDouble() - list.at(0).toDouble())/2);
+        setFqFrom((range.upper + range.lower)/2);
+        setFqTo((range.upper - range.lower)/2);
     }
     m_swrWidget->xAxis->setRange(range);
     m_phaseWidget->xAxis->setRange(range);
@@ -4245,7 +4273,7 @@ void MainWindow::on_screenshotAA_clicked()
 
     m_screenshot = new Screenshot(this, m_analyzer->getModel(), ht, wd);
     m_screenshot->setAttribute(Qt::WA_DeleteOnClose);
-    m_screenshot->setWindowTitle("Screenshot");
+    m_screenshot->setWindowTitle(tr("Screenshot"));
 
     connect(m_analyzer,SIGNAL(analyzerScreenshotDataArrived(QByteArray)),m_screenshot,SLOT(on_newData(QByteArray)));
     connect(m_analyzer,SIGNAL(analyzerScreenPaletteArrived(QByteArray, quint8)),m_screenshot,SLOT(on_fillPalette(QByteArray, quint8)));
@@ -4828,12 +4856,7 @@ void MainWindow::on_settingsBtn_clicked()
     m_settingsDialog->setAntScopeVersion(ANTSCOPEZ_VER);
     m_settingsDialog->setRestrictFq(m_fqRestrict);
 
-    QStringList list;
-    for(int i = 0; i < LANGUAGES_QUANTITY; ++i)
-    {
-        list << languages[i];
-    }
-    m_settingsDialog->setLanguages(list, m_languageNumber);
+    m_settingsDialog->setLanguages(m_languageCode);
 
     m_settingsDialog->setBands(m_BandsMap.keys());
 
@@ -4932,7 +4955,7 @@ void MainWindow::on_settingsBtn_clicked()
     connect(m_settingsDialog, &Settings::checkUpdatesBtn,
             m_analyzer, &AnalyzerPro::on_checkUpdatesBtn_clicked);
 
-    connect(m_settingsDialog, SIGNAL(languageChanged(int)), this, SLOT(on_translate(int)));
+    connect(m_settingsDialog, SIGNAL(languageChanged(QString)), this, SLOT(on_translate(QString)));
 
     connect(m_settingsDialog, SIGNAL(bandChanged(QString)), this, SLOT(on_bandChanged(QString)));
 
@@ -4942,6 +4965,9 @@ void MainWindow::on_settingsBtn_clicked()
     connect(m_settingsDialog, &Settings::reloadBands, [=](QString band) {
         loadBands();
         on_bandChanged(band);
+    });
+    connect(m_settingsDialog, &Settings::bandSelectorEnabledChanged, [=](bool checked) {
+        ui->presetsBandComboBox->setVisible(checked);
     });
     connect(m_settingsDialog, &Settings::chartBackgroundChanged, [=](QColor color) {
         setChartBackground(color);
@@ -5174,7 +5200,7 @@ void MainWindow::on_screenshot_clicked()
 {
     QDateTime datetime = QDateTime::currentDateTime();
     QString path = "Images/" + datetime.toString("dd.MM.yyyy_hh.mm.ss");
-    QString str = FileDialog::getSaveFileName(this, "Export PNG", path, "*.png");
+    QString str = FileDialog::getSaveFileName(this, tr("Export PNG"), path, "*.png");
     if(str.isEmpty())
     {
         return;
@@ -5225,7 +5251,7 @@ void MainWindow::on_printBtn_clicked()
     if(name == "tab_swr")
     {
         m_print->setName("SWR");
-        string += "SWR graph";
+        string += tr("SWR graph");
         m_print->drawBands(bands, MIN_SWR, MAX_SWR);
         //m_print->setRange(m_swrWidget->xAxis->range(),m_swrWidget->yAxis->range());
         m_print->setRange(m_swrWidget);
@@ -5243,7 +5269,7 @@ void MainWindow::on_printBtn_clicked()
         }
     }else if(name == "tab_phase")
     {
-        string += "Phase graph";
+        string += tr("Phase graph");
         m_print->drawBands(bands, m_phaseWidget->yAxis->range().lower, m_phaseWidget->yAxis->range().upper);
         //m_print->setRange(m_phaseWidget->xAxis->range(),m_phaseWidget->yAxis->range());
         m_print->setRange(m_phaseWidget);
@@ -5260,7 +5286,7 @@ void MainWindow::on_printBtn_clicked()
         }
     }else if(name == "tab_rs")
     {
-        string += "RXZ graph";
+        string += tr("RXZ graph");
         m_print->drawBands(bands, m_rsWidget->yAxis->range().lower, m_rsWidget->yAxis->range().upper);
         //m_print->setRange(m_rsWidget->xAxis->range(),m_rsWidget->yAxis->range());
         m_print->setRange(m_rsWidget);
@@ -5277,7 +5303,7 @@ void MainWindow::on_printBtn_clicked()
         }
     }else if(name == "tab_rp")
     {
-        string += "RXZ parallel graph";
+        string += tr("RXZ parallel graph");
         m_print->drawBands(bands, m_rpWidget->yAxis->range().lower, m_rpWidget->yAxis->range().upper);
         //m_print->setRange(m_rpWidget->xAxis->range(),m_rpWidget->yAxis->range());
         m_print->setRange(m_rpWidget);
@@ -5294,7 +5320,7 @@ void MainWindow::on_printBtn_clicked()
         }
     }else if(name == "tab_rl")
     {
-        string += "RL graph";
+        string += tr("RL graph");
         m_print->drawBands(bands, m_rlWidget->yAxis->range().lower, m_rlWidget->yAxis->range().upper);
         //m_print->setRange(m_rlWidget->xAxis->range(),m_rlWidget->yAxis->range());
         m_print->setRange(m_rlWidget);
@@ -5311,7 +5337,7 @@ void MainWindow::on_printBtn_clicked()
         }
     }else if(name == "tab_s21")
     {
-        string += "S21 graph";
+        string += tr("S21 graph");
         m_print->drawBands(bands, m_s21Widget->yAxis->range().lower, m_s21Widget->yAxis->range().upper);
         m_print->setRange(m_s21Widget);
         m_print->setLabel(m_s21Widget->xAxis->label(), m_s21Widget->yAxis->label());
@@ -5328,7 +5354,7 @@ void MainWindow::on_printBtn_clicked()
     }else if(name == "tab_tdr")
     {
         m_print->setName("TDR");
-        string += "TDR graph";
+        string += tr("TDR graph");
         m_print->drawBands(bands, m_tdrWidget->yAxis->range().lower, m_tdrWidget->yAxis->range().upper);
         //m_print->setRange(m_tdrWidget->xAxis->range(),m_tdrWidget->yAxis->range());
         m_print->setRange(m_tdrWidget);
@@ -5346,7 +5372,7 @@ void MainWindow::on_printBtn_clicked()
         }
     }else if(name == "tab_smith")
     {
-        string += "Smith graph";
+        string += tr("Smith graph");
         m_print->drawSmithImage();
         m_print->setRange(m_smithWidget);
         m_print->setLabel(m_smithWidget->xAxis->label(), m_smithWidget->yAxis->label());
@@ -5370,7 +5396,7 @@ void MainWindow::on_printBtn_clicked()
         }
     }else if(name == "tab_user")
     {
-        string += "User defined";
+        string += tr("User defined");
         m_print->drawBands(bands, m_userWidget->yAxis->range().lower, m_userWidget->yAxis->range().upper);
         //m_print->setRange(m_userWidget->xAxis->range(),m_userWidget->yAxis->range());
         m_print->setRange(m_userWidget);
@@ -5382,7 +5408,7 @@ void MainWindow::on_printBtn_clicked()
     }
 #ifndef NO_MULTITAB
     else if(name == "tab_multi") {
-        string += "Multi";
+        string += tr("Multi");
         foreach (auto tab, m_multiTabData.tabs) {
             QCustomPlot* plot = plotForTab(tab);
             if (plot != nullptr) {
@@ -5424,12 +5450,34 @@ void MainWindow::on_measurmentsSaveBtn_clicked()
             m_lastSaveOpenPath.remove(m_lastSaveOpenPath.indexOf('.'),4);
             m_lastSaveOpenPath.append(".asd");
         }
-        QString path = FileDialog::getSaveFileName(this, "Save file", m_lastSaveOpenPath, "AntScopeZ (*.asd )");
+
+        int row = list.at(0)->row();
+
+        // Suggest the measurement's own name (minus its "NN> " auto-numbering
+        // prefix, with filesystem-unsafe characters swapped for "_" -- the
+        // rename dialog, Measurements::setupUi()'s QInputDialog handler,
+        // accepts any text at all, including "/") as the filename, in the
+        // same folder as the last save/open, instead of just reusing
+        // whatever filename happened to be typed last time.
+        QString suggestedPath = m_lastSaveOpenPath;
+        measurement* selectedMm = m_measurements->getMeasurement(m_measurements->getMeasurementLength()-row-1);
+        if (selectedMm != nullptr) {
+            QString suggestedName = selectedMm->name;
+            int namePos = suggestedName.indexOf("> ");
+            if (namePos != -1)
+                suggestedName = suggestedName.mid(namePos+2);
+            suggestedName.replace(QRegularExpression("[\\\\/:*?\"<>|]"), "_");
+            suggestedName = suggestedName.trimmed();
+            if (!suggestedName.isEmpty()) {
+                QString dir = QFileInfo(m_lastSaveOpenPath).path();
+                suggestedPath = (dir.isEmpty() || dir == ".") ? (suggestedName + ".asd") : (dir + "/" + suggestedName + ".asd");
+            }
+        }
+
+        QString path = FileDialog::getSaveFileName(this, tr("Save file"), suggestedPath, "AntScopeZ (*.asd )");
         if(!path.isEmpty())
         {
             m_lastSaveOpenPath = path;
-            QTableWidgetItem * item = list.at(0);
-            int row = item->row();
             m_measurements->saveData(row, path);
             QFileInfo fi(path);
             QString fname = fi.baseName();
@@ -5455,7 +5503,7 @@ void MainWindow::on_measurmentsSaveBtn_clicked()
 
 void MainWindow::on_measurementsOpenBtn_clicked()
 {
-    QString path = FileDialog::getOpenFileName(this, "Open file", m_lastSaveOpenPath, "AntScopeZ (*.asd )");
+    QString path = FileDialog::getOpenFileName(this, tr("Open file"), m_lastSaveOpenPath, "AntScopeZ (*.asd )");
     if(!path.isEmpty())
     {
         m_lastSaveOpenPath = path;
@@ -5488,7 +5536,7 @@ void MainWindow::on_importBtn_clicked()
         m_lastExportImportPath = m_lastSaveOpenPath;
     }
 
-    QString path = FileDialog::getOpenFileName(this, "Open file", m_lastExportImportPath,  "S1p (*.s1p);;"
+    QString path = FileDialog::getOpenFileName(this, tr("Open file"), m_lastExportImportPath,  "S1p (*.s1p);;"
                                                                                     "Csv (*.csv);;"
                                                                                     "Nwl (*.nwl);;"
                                                                                     "AntScopeZ (*.asd );;"
@@ -5669,15 +5717,53 @@ void MainWindow::on_rangeBtn_clicked(bool checked)
 }
 
 
+// Lowest frequency (kHz) this app will let Start/Stop request: 1 Hz.
+// ABSOLUTE_MAX_FQ (analyzerparameters.h) is already the matching top end,
+// 10,000,000 kHz = 10 GHz -- this is the same device-range limit, applied
+// earlier, at the point a value is typed/picked rather than where it's
+// finally handed to the device-command layer.
+static constexpr double MIN_FQ_KHZ = 0.001;
+
+double MainWindow::clampFqKhz(double khz)
+{
+    khz = qBound(MIN_FQ_KHZ, khz, (double)ABSOLUTE_MAX_FQ);
+    // Round to the nearest 0.001 kHz (1 Hz): finer than that is beyond any
+    // analyzer's real resolution, and was the direct trigger for a
+    // QCheckedInt "Overflow in operator-" crash further downstream --
+    // entering something like "0.000005" kHz into Start/Stop reached
+    // integer frequency conversions unclamped. qRound64() (not qRound(),
+    // which is only 32-bit) avoids the same class of overflow here, since
+    // khz*1000 can be up to 10 billion.
+    return qRound64(khz * 1000.0) / 1000.0;
+}
+
+QString MainWindow::formatFqKhz(double khz)
+{
+    QString s = QString::number(khz, 'f', 3);
+    if (s.contains('.')) {
+        while (s.endsWith('0'))
+            s.chop(1);
+        if (s.endsWith('.'))
+            s.chop(1);
+    }
+    return s;
+}
+
 void MainWindow::setFqFrom(QString from)
 {
     from.remove(' ');
+    from = formatFqKhz(clampFqKhz(from.toDouble()));
     from = appendSpaces(from);
     ui->lineEdit_fqFrom->setText(from);
 }
 
 void MainWindow::setFqFrom(double from)
 {
+    // No decimal is ever shown below ('f', 0), so the effective floor here
+    // is a whole kHz rather than clampFqKhz()'s 1 Hz -- a value in between
+    // would just display as "0" anyway. See clampFqKhz() for the actual
+    // device-range ceiling.
+    from = qBound(1.0, from, (double)ABSOLUTE_MAX_FQ);
     QString sFrom = QString::number(from,'f', 0);
     sFrom = appendSpaces(sFrom);
     ui->lineEdit_fqFrom->setText(sFrom);
@@ -5686,12 +5772,14 @@ void MainWindow::setFqFrom(double from)
 void MainWindow::setFqTo(QString to)
 {
     to.remove(' ');
+    to = formatFqKhz(clampFqKhz(to.toDouble()));
     to = appendSpaces(to);
     ui->lineEdit_fqTo->setText(to);
 }
 
 void MainWindow::setFqTo(double to)
 {
+    to = qBound(1.0, to, (double)ABSOLUTE_MAX_FQ);
     QString sTo = QString::number(to,'f', 0);
     sTo = appendSpaces(sTo);
     ui->lineEdit_fqTo->setText(sTo);
@@ -5908,8 +5996,38 @@ void MainWindow::on_1secTimerTick()
 bool MainWindow::loadLanguage(QString locale)
 { //locale: en, ukr, ru, ja, etc.
     QString title = windowTitle();
-    bool res = m_qtLanguageTranslator->load("QtLanguage_" + locale, Settings::languageDataFolder());
+
+    // Prefer a user-supplied translation over the one shipped with the app
+    // -- the same override convention itu-regions.txt already uses (see
+    // loadBands()): a per-user copy in localDataFolder() is checked first,
+    // and only if it's not there does this fall back to the shared/
+    // installed copy in languageDataFolder(). Lets someone add or replace
+    // a language (or just override Qt's own qtbase_*.qm) by dropping a .qm
+    // into their own config folder, without needing write access to the
+    // shared install location or a repackage.
+    auto folderFor = [](const QString& baseFileName) {
+        QString folder = Settings::languageDataFolder();
+        if (QFile::exists(QDir(Settings::localDataFolder()).absoluteFilePath(baseFileName + ".qm")))
+            folder = Settings::localDataFolder();
+        return folder;
+    };
+
+    QString fileName = "QtLanguage_" + locale;
+    bool res = m_qtLanguageTranslator->load(fileName, folderFor(fileName));
     qApp->installTranslator(m_qtLanguageTranslator);
+
+    // Qt's own built-in strings (QFileDialog's "File name:", QMessageBox's
+    // standard buttons, QSerialPort's error strings, ...) live in a
+    // separate catalog from our own tr() calls above -- qtbase_<locale>.qm,
+    // shipped by Qt itself and staged next to QtLanguage_*.qm by
+    // CMakeLists.txt (see ANTSCOPE_QT_QM_FILES there). A failed load() here
+    // (e.g. "en", or a language Qt itself doesn't ship a qtbase_*.qm for)
+    // is silent/harmless, same as m_qtLanguageTranslator above -- it just
+    // leaves Qt's own widgets showing their English source text.
+    QString qtBaseFileName = "qtbase_" + locale;
+    m_qtBaseTranslator->load(qtBaseFileName, folderFor(qtBaseFileName));
+    qApp->installTranslator(m_qtBaseTranslator);
+
     ui->retranslateUi(this);
 
     m_swrWidget->xAxis->setLabel(tr("Frequency, kHz"));
@@ -5963,10 +6081,10 @@ bool MainWindow::loadLanguage(QString locale)
 }
 
 
-void MainWindow::on_translate(int number)
+void MainWindow::on_translate(QString code)
 {
-    m_languageNumber = number;
-    loadLanguage(languages_small[number]);
+    m_languageCode = code;
+    loadLanguage(code);
 }
 
 void MainWindow::on_calibrationChanged()
@@ -6021,7 +6139,7 @@ void MainWindow::onCustomContextMenuRequested(const QPoint& pos)
     QCustomPlot* plot = getCurrentPlot();
     if (!plot->objectName().contains("smith") && !plot->objectName().contains("tdr"))
     {
-        QAction* action = menu->addAction(QString("Create marker"));
+        QAction* action = menu->addAction(tr("Create marker"));
         action->setData(pos);
         connect(menu, SIGNAL(triggered(QAction*)), this, SLOT(onCreateMarker(QAction*)));
     }
@@ -6087,6 +6205,92 @@ void MainWindow::on_bandChanged(QString band)
         if (g_developerMode)
             setBands(m_userWidget, bands, MIN_USER_RANGE, MAX_USER_RANGE);
     }
+
+    // Independent of whether the region was found above: keep the Presets
+    // band-selector combo (the per-band, not per-region, dropdown) in sync
+    // with whatever region is actually active now.
+    populateBandSelector(band);
+}
+
+void MainWindow::populateBandSelector(const QString& band)
+{
+    ui->presetsBandComboBox->blockSignals(true);
+    ui->presetsBandComboBox->clear();
+    ui->presetsBandComboBox->addItem(tr("Select a band"));
+
+    QStringList* bands = m_BandsMap.value(band, nullptr);
+    if (bands != nullptr) {
+        foreach (const QString& line, *bands) {
+            QStringList fields = line.split(',');
+            if (fields.size() != 3)
+                continue; // custom 2-field entry (see EditBandsDialog) -- no name to label it with
+            QString name = fields[2].trimmed();
+            if (name.isEmpty())
+                continue;
+            QString start = fields[0].trimmed();
+            QString stop = fields[1].trimmed();
+            ui->presetsBandComboBox->addItem(
+                tr("%1 (%2 - %3 kHz)").arg(name, start, stop),
+                QVariant(QStringList{start, stop}));
+        }
+    }
+    ui->presetsBandComboBox->setCurrentIndex(0);
+    ui->presetsBandComboBox->blockSignals(false);
+
+    // First-run default: seed "enabled" from whether this region actually
+    // has any labeled bands, so a fresh install shows a working control
+    // instead of an enabled-but-empty one. Once a value exists (user choice
+    // or a prior seed), later region switches never touch it again -- an
+    // enabled selector with nothing but "Select a band" in it (e.g. after
+    // switching to a region with no named bands) is fine, not an error.
+    m_settings->beginGroup("Settings");
+    if (!m_settings->contains("band-selector-enabled")) {
+        m_settings->setValue("band-selector-enabled", ui->presetsBandComboBox->count() > 1);
+    }
+    bool enabled = m_settings->value("band-selector-enabled", false).toBool();
+    m_settings->endGroup();
+
+    ui->presetsBandComboBox->setVisible(enabled);
+}
+
+void MainWindow::on_presetsBandComboBox_currentIndexChanged(int index)
+{
+    if (index <= 0)
+        return;
+
+    QStringList range = ui->presetsBandComboBox->itemData(index).toStringList();
+    if (range.size() == 2) {
+        // Clamped, not the raw itu-regions text -- a hand-edited
+        // itu-regions.txt (see EditBandsDialog) could otherwise still hand
+        // the plots an out-of-device-range value.
+        double start = clampFqKhz(range.at(0).toDouble());
+        double stop = clampFqKhz(range.at(1).toDouble());
+
+        if (!m_isRange) {
+            setFqFrom(range.at(0));
+            setFqTo(range.at(1));
+        } else {
+            setFqFrom((start + stop) / 2);
+            setFqTo((stop - start) / 2);
+        }
+
+        // Single range-then-redraw pass across every plot, same as picking
+        // a preset row (on_tableWidget_presets_cellDoubleClicked) -- one
+        // updateGraph() call at the end, not one per field.
+        QCPRange plotRange(start, stop);
+        m_swrWidget->xAxis->setRange(plotRange);
+        m_phaseWidget->xAxis->setRange(plotRange);
+        m_rsWidget->xAxis->setRange(plotRange);
+        m_rpWidget->xAxis->setRange(plotRange);
+        m_rlWidget->xAxis->setRange(plotRange);
+        if (g_developerMode)
+            m_userWidget->xAxis->setRange(plotRange);
+        updateGraph();
+    }
+
+    ui->presetsBandComboBox->blockSignals(true);
+    ui->presetsBandComboBox->setCurrentIndex(0);
+    ui->presetsBandComboBox->blockSignals(false);
 }
 
 
@@ -6174,14 +6378,25 @@ void MainWindow::on_importFinished(double _fqMin_khz, double _fqMax_khz)
 }
 
 QString appendSpaces(const QString& str) {
+    // Thousands-group only the integer part. The naive "group every 3
+    // characters counting from the end of the whole string" this used to
+    // do treated the decimal point and fractional digits as just more
+    // characters to count, so e.g. "135.7" (a valid band edge -- see
+    // itu-regions-defaults.txt's 2200m entry) came out as "13 5.7" instead
+    // of untouched, and anything with more fractional digits than that
+    // came out actively wrong rather than just unnecessarily grouped.
+    int dotIdx = str.indexOf('.');
+    QString intPart = (dotIdx == -1) ? str : str.left(dotIdx);
+    QString fracPart = (dotIdx == -1) ? QString() : str.mid(dotIdx); // includes the '.'
+
     QString tmp;
-    int len = str.length();
+    int len = intPart.length();
     for (int idx=0; idx<len; idx++) {
         if (idx != 0 && (idx % 3) == 0)
             tmp.insert(0, ' ');
-        tmp.insert(0, str[len - 1 - idx]);
+        tmp.insert(0, intPart[len - 1 - idx]);
     }
-    return tmp;
+    return tmp + fracPart;
 }
 
 void MainWindow::onFullRange(bool)
@@ -6724,8 +6939,30 @@ void MainWindow::on_selectDeviceDialog()
         return;
     }
 
+    // Guard against a second copy opening on top of one that's already up.
+    // dlg.exec() below is application-modal by default, but this window
+    // manager doesn't reliably enforce that (see the focus-stealing note
+    // further down) -- and this function has two independent triggers,
+    // Settings' "Connect analyzer" button (settings.cpp) and the startup
+    // auto-reconnect-or-prompt fallback (on_refreshConnection(), via a
+    // QTimer::singleShot), which can otherwise race each other or a fast
+    // double-click into stacking two instances.
+    //
+    // Was: checking QApplication::activeModalWidget() instead of a new
+    // member flag, since that's already the thing Qt itself tracks for
+    // exactly this -- except it doesn't actually get set here. dlg.show()
+    // below runs before dlg.exec(), and SelectDeviceDialog never calls
+    // setModal()/setWindowModality() itself, so exec()'s modal-widget
+    // registration (which happens as part of making the widget visible)
+    // finds it already visible from that earlier show() and likely never
+    // runs. m_selectDeviceDialogOpen sidesteps relying on that Qt-internal
+    // bookkeeping at all.
+    if (m_selectDeviceDialogOpen)
+        return;
+    m_selectDeviceDialogOpen = true;
+
     // Note which window is actually on top right now (e.g. the Settings
-    // dialog, when this is opened via its "Connect analyser" button) so its
+    // dialog, when this is opened via its "Connect analyzer" button) so its
     // WM_TRANSIENT_FOR can point at it below -- otherwise the window manager
     // can leave focus on that still-modal window instead of granting it to
     // this one.
@@ -6767,7 +7004,9 @@ void MainWindow::on_selectDeviceDialog()
             }
         });
     }
-    if (dlg.exec() == QDialog::Accepted) {
+    int execResult = dlg.exec();
+    m_selectDeviceDialogOpen = false;
+    if (execResult == QDialog::Accepted) {
         SelectionParameters sel_par = SelectionParameters::selected;
         AnalyzerParameters* selected = AnalyzerParameters::current();
         if (selected != nullptr) {
@@ -6777,16 +7016,18 @@ void MainWindow::on_selectDeviceDialog()
     }
     // Was: unconditionally closeSettingsDialog() here, which closed the
     // Settings dialog out from under the user just because they selected or
-    // canceled a device from its "Connect analyser" button -- Settings
+    // canceled a device from its "Connect analyzer" button -- Settings
     // should stay open so they can keep working in it (issue #2). This
     // function is also reached from flows where Settings was never open
     // (m_settingsDialog already null there), so that call was only ever
     // actually closing anything for the Settings-originated case.
     // settingsBtn should only re-enable if Settings isn't still open --
     // otherwise a second "Settings" click while it's still up would reuse
-    // the same (non-null) m_settingsDialog and re-run its one-time setup
-    // (e.g. setLanguages()' addItems(), which never clears first) a second
-    // time on top of the first.
+    // the same (non-null) m_settingsDialog and re-run its one-time setup a
+    // second time on top of the first. (setLanguages() itself now clears
+    // its combo box before repopulating, so it's no longer harmed by that
+    // specifically -- but plenty of the rest of this setup isn't as
+    // forgiving.)
     ui->settingsBtn->setEnabled(m_settingsDialog == nullptr);
 }
 
@@ -6801,9 +7042,19 @@ void MainWindow::on_refreshConnection()
          }
     }
     if (! g_usbOnly) {
-        QTimer::singleShot(100, this, [=](){
-           on_selectDeviceDialog();
-        });
+        m_settings->beginGroup("Settings");
+        bool openAtLaunch = m_settings->value("open-connect-analyzer-at-launch", true).toBool();
+        m_settings->endGroup();
+        // Same "Open 'Connect Analyzer' on launch" setting as the other
+        // startup trigger in setWidgetsSettings() -- this function is only
+        // ever reached from that one startup QTimer::singleShot, so this
+        // fallback is effectively startup-only too, not something a
+        // manual "Connect analyzer" click should ever be gated by.
+        if (openAtLaunch) {
+            QTimer::singleShot(100, this, [=](){
+               on_selectDeviceDialog();
+            });
+        }
     }
 }
 
@@ -6877,6 +7128,7 @@ void MainWindow::setStyles()
     ui->tableWidget_presets->setStyleSheet(Style::tableWidget());
 
     ui->spinBoxPoints->setStyleSheet(Style::spinBox());
+    ui->presetsBandComboBox->setStyleSheet(Style::comboBox());
 
     setStyleSheet(Style::mainWindow() + Style::tabWidget());
 }

@@ -296,7 +296,7 @@ void Print::on_printBtn_clicked()
 
 void Print::on_pdfPrintBtn_clicked()
 {
-    QString path = FileDialog::getSaveFileName(this, "Export PDF", m_lastPath, "*.pdf");
+    QString path = FileDialog::getSaveFileName(this, tr("Export PDF"), m_lastPath, "*.pdf");
     if(path.isEmpty())
     {
         return;
@@ -346,7 +346,7 @@ void Print::on_pdfPrintBtn_clicked()
 
 void Print::on_pngPrintBtn_clicked()
 {
-    QString path = FileDialog::getSaveFileName(this, "Export PNG", "", "*.png");
+    QString path = FileDialog::getSaveFileName(this, tr("Export PNG"), "", "*.png");
     if(path.isEmpty())
     {
         return;

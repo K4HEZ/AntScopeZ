@@ -4,6 +4,29 @@ bool Style::m_dark = true;
 
 namespace {
 
+/*  HEZ: Themes
+    // Red
+    Theme t;
+    t.windowBackground = QColor(64, 18, 18);
+    t.text             = QColor(255, 240, 240);
+    t.textMuted         = QColor(128, 96, 96);
+    t.border            = QColor(142, 90, 95);
+
+    // Green
+    Theme t;
+    t.windowBackground = QColor(18, 64, 18);
+    t.text             = QColor(240, 255, 240);
+    t.textMuted         = QColor(96, 128, 96);
+    t.border            = QColor(90, 120, 95);
+
+    // Blue
+    Theme t;
+    t.windowBackground = QColor(18, 18, 64);
+    t.text             = QColor(240, 240, 255);
+    t.textMuted         = QColor(96, 96, 128);
+    t.border            = QColor(90, 90, 128);
+*/
+
 Theme darkTheme()
 {
     Theme t;
@@ -130,7 +153,8 @@ QString Style::tabWidget()
 QString Style::checkBox()
 {
     // Left native: the platform/Fusion indicator off Style::palette() is
-    // fine, no need for the custom checked.png/unchecked.png glyphs anymore.
+    // fine, no need for custom checkbox glyph images anymore (removed --
+    // see git history for the former checked.png/unchecked.png).
     return QString();
 }
 

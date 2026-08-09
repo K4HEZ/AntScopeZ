@@ -61,7 +61,10 @@ bool EditBandsDialog::loadDefaults()
     bool res = file.open(QFile::ReadOnly);
     if(!res) {
         qDebug() << "load defaults" << file.errorString() << ituPath;
-        g_showMessageBox(this, QMessageBox::Information, "loadDefaults", file.errorString() + ituPath);
+        // Only reachable if the shipped, read-only itu-regions-defaults.txt
+        // itself can't be opened (missing/unreadable/broken install) --
+        // triggered by the "Restore Defaults" button, not normal use.
+        g_showMessageBox(this, QMessageBox::Information, tr("Couldn't load default bands"), file.errorString() + ituPath);
         return false;
     }
 
@@ -85,7 +88,9 @@ bool EditBandsDialog::load()
     bool res = file.open(QFile::ReadOnly);
     if(!res) {
         qDebug() << "load" << file.errorString() << ituPath;
-        g_showMessageBox(this, QMessageBox::Information, "load", file.errorString() + ituPath);
+        // Only reachable if both itu-regions.txt (the user's own edits, if
+        // any) and the itu-regions-defaults.txt fallback fail to open.
+        g_showMessageBox(this, QMessageBox::Information, tr("Couldn't load bands"), file.errorString() + ituPath);
         return false;
     }
 
@@ -106,7 +111,9 @@ bool EditBandsDialog::save()
     bool res = file.open(QFile::Truncate|QFile::WriteOnly|QFile::Text);
     if(!res) {
         qDebug() << "save" << file.errorString() << ituPath;
-        g_showMessageBox(this, QMessageBox::Information, "EditBandsDialog::save", file.errorString() + ituPath);
+        // Only reachable if writing itu-regions.txt fails (e.g. a
+        // permissions problem), triggered by the "Save" button.
+        g_showMessageBox(this, QMessageBox::Information, tr("Couldn't save bands"), file.errorString() + ituPath);
         return false;
     }
     QTextStream stream(&file);

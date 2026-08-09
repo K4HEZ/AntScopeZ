@@ -30,6 +30,7 @@
         {
             "name": "release",
             "displayName": "Release (Qt 6.11.1)",
+            "description": "This is also the .deb packaging preset: CMakeLists.txt bundles this build's own Qt 6.11 libraries/plugins into the package (see the Install rules section), rather than linking whatever Qt6 the distro ships.",
             "inherits": "qt-6.11",
             "binaryDir": "${sourceDir}/build-release",
             "cacheVariables": {
@@ -39,7 +40,7 @@
         {
             "name": "system-qt",
             "displayName": "Release (system Qt)",
-            "description": "Builds against the distro Qt in /usr. Intended for .deb packaging, where linking the system Qt is preferable to bundling the /opt one.",
+            "description": "Builds against the distro Qt in /usr. No longer used for .deb packaging (see the release preset) -- kept only for reproducing/comparing the system-Qt-specific bugs documented in BUILDINFO.md's Known issues section.",
             "condition": {
                 "type": "equals",
                 "lhs": "${hostSystemName}",

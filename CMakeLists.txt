@@ -47,6 +47,7 @@ find_package(Qt6 6.2 REQUIRED COMPONENTS
     Concurrent
     OpenGL
     Bluetooth
+    LinguistTools
 )
 
 # Enables AUTOMOC / AUTOUIC.
@@ -292,9 +293,10 @@ if(WIN32)
         ${CMAKE_CURRENT_SOURCE_DIR}/ftdi
     )
 
-    # Equivalent of qmake's RC_ICONS: Qt generates the .rc for us. The checked-in
-    # AntScopeZ_resource.rc is not used -- it hardcodes an absolute path
-    # (C:\Projects\AntScopeZ\AntScopeZ.ico) and qmake never referenced it either.
+    # Equivalent of qmake's RC_ICONS: Qt generates the .rc for us. A checked-in
+    # AntScope2_resource.rc used to sit here unused -- it hardcoded an absolute
+    # path (C:\Projects\AntScope2\AntScope2.ico) and qmake never referenced it
+    # either -- and has been deleted rather than renamed for AntScopeZ.
     set_target_properties(AntScopeZ PROPERTIES
         WIN32_EXECUTABLE      ON
         QT_TARGET_RC_ICONS    "${CMAKE_CURRENT_SOURCE_DIR}/AntScopeZ.ico"
@@ -357,8 +359,97 @@ else() # Linux and other Unix
     pkg_check_modules(LIBUSB REQUIRED IMPORTED_TARGET libusb-1.0)
     target_link_libraries(AntScopeZ PRIVATE PkgConfig::LIBUSB)
 
+    # qt_standard_project_setup() (above) points CMAKE_INSTALL_RPATH at
+    # $ORIGIN/../${CMAKE_INSTALL_LIBDIR} -- the *default* Qt lib location.
+    # The Install rules section below bundles Qt into a private
+    # ${CMAKE_INSTALL_LIBDIR}/antscopez subdirectory instead (to avoid
+    # colliding with any distro Qt6 packages actually installed at the
+    # default location), so this target needs its own longer INSTALL_RPATH
+    # to match. Setting it explicitly here, rather than leaving it to be
+    # patched in via file(RPATH_SET) at install time, matters because CMake
+    # only reserves as much space for the RPATH string as the *build-time*
+    # link step asked for -- a later file(RPATH_SET) to a longer string
+    # than that fails outright ("replacement path is too long").
+    set_target_properties(AntScopeZ PROPERTIES
+        INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}/antscopez"
+    )
+
 endif()
 
+
+#
+# Translations
+#
+# .ts sources live in locales/; .qm files are compiled from them at build
+# time (lrelease, via qt_add_translations()) instead of being checked into
+# the repo as prebuilt binaries. QM_FILES_OUTPUT_VARIABLE keeps them as
+# loose files rather than qt_add_translations()'s default of embedding them
+# into AntScopeZ's own resources -- loose is what Settings::languageDataFolder()/
+# localDataFolder() (see mainwindow.cpp's loadLanguage()) actually read, and
+# it's what lets a language be added or overridden by dropping a .qm next to
+# the app without a rebuild.
+#
+# Was: prebuilt QtLanguage_*.qm checked in at the project root, disconnected
+# from locales/*.ts -- lrelease's real output went to locales/, which
+# nothing ever read, so editing a .ts and regenerating silently never
+# reached the running app. release_translations (below) closes that: it's
+# built by default, and AntScopeZ is given an explicit dependency on it so
+# a parallel build can't stage translations before they exist.
+#
+# locales/QtLanguage.ts (no language= attribute, 360/360 messages still
+# type="unfinished") was a stray lupdate template, not a real locale --
+# deleted rather than wired in here.
+#
+set(ANTSCOPE_TS_FILES
+    locales/QtLanguage_uk.ts
+    locales/QtLanguage_ja.ts
+    locales/QtLanguage_es.ts
+)
+qt_add_translations(
+    TARGETS AntScopeZ
+    SOURCE_TARGETS AntScopeZ
+    TS_FILES ${ANTSCOPE_TS_FILES}
+    QM_FILES_OUTPUT_VARIABLE ANTSCOPE_QM_FILES
+)
+add_dependencies(AntScopeZ release_translations)
+
+# Qt's own built-in strings -- QFileDialog's "File name:", QMessageBox's
+# standard button labels, QSerialPort's error strings, etc. -- are a
+# separate catalog from our own tr() calls above (qtbase_<code>.qm, not
+# QtLanguage_<code>.qm), and this app was never loading them: only one
+# QTranslator (m_qtLanguageTranslator) was ever installed. mainwindow.cpp's
+# loadLanguage() now installs a second one (m_qtBaseTranslator) for these,
+# staged/installed the same way as ANTSCOPE_QM_FILES below.
+#
+# Prebuilt by Qt itself -- not something this project builds, just copied
+# out of the Qt install actually in use (same one find_package(Qt6 ...)
+# resolved). QT6_INSTALL_PREFIX/QT6_INSTALL_TRANSLATIONS (from Qt6's own
+# QtInstallPaths.cmake, included by Qt6Config.cmake) is the portable way to
+# find it -- works for both a self-contained installer layout (this
+# project's usual /opt/Qt/6.11.1/gcc_64) and a distro package's, unlike
+# guessing a fixed number of ".." from Qt6_DIR.
+#
+# Language codes are derived from ANTSCOPE_TS_FILES above rather than
+# listed separately, so adding a new locale there automatically picks up
+# its qtbase_*.qm too. Hand-picked per-language rather than letting the
+# .deb bundling step further below (qt_deploy_runtime_dependencies(),
+# NO_TRANSLATIONS) grab Qt's entire translations/ directory, which would
+# pull in every language Qt ships for every Qt module linked -- almost all
+# of it unused by this app.
+set(ANTSCOPE_QT_QM_FILES "")
+foreach(_ts_file IN LISTS ANTSCOPE_TS_FILES)
+    get_filename_component(_ts_name "${_ts_file}" NAME_WE)
+    string(REGEX REPLACE "^QtLanguage_" "" _lang_code "${_ts_name}")
+    set(_qtbase_qm "${QT6_INSTALL_PREFIX}/${QT6_INSTALL_TRANSLATIONS}/qtbase_${_lang_code}.qm")
+    if(EXISTS "${_qtbase_qm}")
+        list(APPEND ANTSCOPE_QT_QM_FILES "${_qtbase_qm}")
+    else()
+        message(WARNING "No qtbase_${_lang_code}.qm found under ${QT6_INSTALL_PREFIX}/${QT6_INSTALL_TRANSLATIONS} -- Qt's own dialog/message-box strings will stay in English for this language.")
+    endif()
+    unset(_qtbase_qm)
+endforeach()
+unset(_ts_name)
+unset(_lang_code)
 
 #
 # Runtime data files
@@ -370,17 +461,10 @@ endif()
 # NOTE: itu-regions.txt is intentionally absent -- the qmake build never copied
 # it either. Whether the non-defaults file is needed at runtime is still open.
 #
-# NOTE: the .qm files are taken from the project root, which is where the qmake
-# build took them from. The .ts sources live in locales/, so `lrelease` writes
-# its output somewhere the build does not read. That mismatch predates this
-# CMake port and is deliberately not changed here.
-#
 
 set(ANTSCOPE_RUNTIME_FILES
     cables.txt
     itu-regions-defaults.txt
-    QtLanguage_ja.qm
-    QtLanguage_uk.qm
 )
 
 if(APPLE)
@@ -391,6 +475,22 @@ if(APPLE)
         )
     endforeach()
     target_sources(AntScopeZ PRIVATE ${ANTSCOPE_RUNTIME_FILES})
+    # ANTSCOPE_QM_FILES are build-tree paths generated by qt_add_translations()
+    # above (not source-tree files like ANTSCOPE_RUNTIME_FILES), but the same
+    # MACOSX_PACKAGE_LOCATION bundling mechanism applies to them.
+    set_source_files_properties(${ANTSCOPE_QM_FILES} PROPERTIES
+        MACOSX_PACKAGE_LOCATION MacOS
+    )
+    target_sources(AntScopeZ PRIVATE ${ANTSCOPE_QM_FILES})
+    # Same again for Qt's own qtbase_*.qm (see ANTSCOPE_QT_QM_FILES above)
+    # -- already absolute paths, sourced straight from the Qt install
+    # rather than the build tree.
+    if(ANTSCOPE_QT_QM_FILES)
+        set_source_files_properties(${ANTSCOPE_QT_QM_FILES} PROPERTIES
+            MACOSX_PACKAGE_LOCATION MacOS
+        )
+        target_sources(AntScopeZ PRIVATE ${ANTSCOPE_QT_QM_FILES})
+    endif()
 else()
     foreach(_file IN LISTS ANTSCOPE_RUNTIME_FILES)
         add_custom_command(TARGET AntScopeZ POST_BUILD
@@ -398,6 +498,27 @@ else()
                 "${CMAKE_CURRENT_SOURCE_DIR}/${_file}"
                 "$<TARGET_FILE_DIR:AntScopeZ>"
             COMMENT "Staging ${_file}"
+            VERBATIM
+        )
+    endforeach()
+    # No staging step needed for ANTSCOPE_QM_FILES here, unlike
+    # ANTSCOPE_RUNTIME_FILES above: qt_add_translations() already writes
+    # them straight into CMAKE_CURRENT_BINARY_DIR, which for this project's
+    # flat, single-config-generator layout is already $<TARGET_FILE_DIR:AntScopeZ>
+    # -- the same place the binary itself lands. (A multi-config generator,
+    # or moving this call into a nested subdirectory, would break that
+    # assumption; revisit if either changes.)
+    #
+    # Qt's own qtbase_*.qm (ANTSCOPE_QT_QM_FILES) do need explicit staging
+    # here though, same as ANTSCOPE_RUNTIME_FILES above -- unlike
+    # ANTSCOPE_QM_FILES, they're prebuilt files living elsewhere in the Qt
+    # install, not written into the build tree by anything above.
+    foreach(_qm_file IN LISTS ANTSCOPE_QT_QM_FILES)
+        add_custom_command(TARGET AntScopeZ POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${_qm_file}"
+                "$<TARGET_FILE_DIR:AntScopeZ>"
+            COMMENT "Staging ${_qm_file}"
             VERBATIM
         )
     endforeach()
@@ -421,11 +542,11 @@ install(TARGETS AntScopeZ
 )
 
 if(WIN32)
-    install(FILES ${ANTSCOPE_RUNTIME_FILES}
+    install(FILES ${ANTSCOPE_RUNTIME_FILES} ${ANTSCOPE_QM_FILES} ${ANTSCOPE_QT_QM_FILES}
         DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
 elseif(NOT APPLE) # Linux and other Unix
-    install(FILES ${ANTSCOPE_RUNTIME_FILES}
+    install(FILES ${ANTSCOPE_RUNTIME_FILES} ${ANTSCOPE_QM_FILES} ${ANTSCOPE_QT_QM_FILES}
         DESTINATION ${CMAKE_INSTALL_DATADIR}/antscopez
     )
 
@@ -437,6 +558,174 @@ elseif(NOT APPLE) # Linux and other Unix
         DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/64x64/apps
         RENAME antscopez.png
     )
+
+    # Bundle Qt privately under ${CMAKE_INSTALL_LIBDIR}/antscopez instead of
+    # linking whatever Qt6 the distro ships. See the "Known issues" section
+    # of BUILDINFO.md: a .deb linked against system Qt 6.4.2 showed real bugs
+    # (analyzer sometimes refuses to connect on a fresh install, main window
+    # doesn't fully repaint after being resized larger, stale paint
+    # artifacts) that don't reproduce under Qt 6.11.1 -- confirmed to be a
+    # Qt-version difference, not a packaging/install-path problem. This is
+    # why the `release` preset (CMakePresets.json) pins CMAKE_PREFIX_PATH at
+    # the Qt 6.11 install under /opt rather than relying on find_package(Qt6)
+    # picking up whatever's on the system -- that binary is what gets bundled
+    # and packaged here.
+    #
+    # qt_generate_deploy_script()/qt_deploy_runtime_dependencies() are Qt's
+    # own CMake-integrated equivalent of linuxdeployqt (introduced Qt 6.3):
+    # it walks the executable's actual linked libraries via
+    # file(GET_RUNTIME_DEPENDENCIES), copies the non-system ones (Qt itself,
+    # plus anything else living under the Qt install) into LIB_DIR/
+    # PLUGINS_DIR, sets $ORIGIN-relative RPATHs so the binary finds them
+    # without needing LD_LIBRARY_PATH, and (via GENERATE_QT_CONF) writes a
+    # qt.conf next to the executable so Qt's own plugin/resource lookup uses
+    # the bundled copies too instead of the compiled-in /opt/Qt path.
+    # Translations are loaded via two QTranslators (mainwindow.cpp's
+    # m_qtLanguageTranslator and m_qtBaseTranslator) from QtLanguage_*.qm
+    # and qtbase_*.qm respectively -- both staged into
+    # CMAKE_INSTALL_DATADIR/antscopez by the hand-picked, per-language
+    # install(FILES ...) rule above (see ANTSCOPE_QT_QM_FILES), not by this
+    # deploy step. NO_TRANSLATIONS here just stops
+    # qt_deploy_runtime_dependencies() from *also* bundling Qt's entire
+    # translations/ directory (every language, every linked Qt module) into
+    # LIB_DIR alongside the libraries -- redundant with, and far bigger
+    # than, the few files actually needed.
+    #
+    # The install(SCRIPT) runs at `cmake --install`/`cpack` time, well after
+    # normal `cmake --build` -- this has no effect on the day-to-day
+    # Creator-driven debug/release build+run loop.
+    #
+    # qt6_generate_deploy_script() (the versioned function) is called
+    # directly here rather than the versionless qt_generate_deploy_script()
+    # macro -- the macro forwards its arguments on to the function via an
+    # unquoted ${ARGV}, and CMake macro-argument substitution is textual, so
+    # that extra hop re-parses (and silently expands to empty)
+    # ${QT_DEPLOY_BIN_DIR} below despite the backslash escaping it to
+    # survive the *first* parse of this CONTENT string. Calling the
+    # function directly skips that second, unwanted expansion pass.
+    #
+    # The pair of file(RPATH_SET) calls bracketing qt_deploy_runtime_dependencies()
+    # below work around a real gap in that command: by the time this script
+    # runs, install(TARGETS) has already set the executable's RPATH to its
+    # final INSTALL_RPATH value (set above, next to LIBUSB) -- but
+    # qt_deploy_runtime_dependencies() resolves what to bundle by running
+    # file(GET_RUNTIME_DEPENDENCIES) against the binary *as currently
+    # installed*, and qt_deploy_runtime_dependencies() only ever rewrites
+    # *plugin* RPATHs afterwards, never the main executable's. Left alone,
+    # that means it looks for the Qt 6.11 libraries via a RPATH that (quite
+    # correctly, for the shipped binary) doesn't mention /opt/Qt at all, and
+    # rather than reporting them unresolved it silently falls through to the
+    # system's default library search path -- on this dev box that finds a
+    # same-SONAME system Qt 6.4 (from the antscope2 package's own Qt
+    # dependency, still installed) and bundles *that* instead, since Qt keeps
+    # SONAMEs (libQt6Core.so.6, ...) compatible across minor versions. So:
+    # point the RPATH at the real Qt 6.11 lib dir first purely so the deploy
+    # step resolves against the right copy, then set it back to the
+    # INSTALL_RPATH value afterwards for the binary as actually shipped. The
+    # swap can't grow the RPATH past what INSTALL_RPATH already reserved
+    # space for at link time (file(RPATH_SET) errors "replacement path is
+    # too long" otherwise) -- true here since the /opt/Qt path is shorter,
+    # but worth knowing if either path ever changes.
+    # qt6_generate_deploy_script() doesn't exist in every Qt6 that satisfies
+    # this project's find_package(Qt6 6.2 ...) floor -- e.g. the system-qt
+    # preset's distro Qt 6.4.2 only provides the higher-level
+    # qt6_generate_deploy_app_script(), not this one, so configuring against
+    # it would otherwise fail outright with "Unknown CMake command" on a
+    # preset that was never meant to bundle Qt in the first place (its whole
+    # point is linking the distro Qt directly -- see its description in
+    # CMakePresets.json). Skip bundling gracefully rather than hard-erroring
+    # when it's unavailable.
+    if(COMMAND qt6_generate_deploy_script)
+
+    # Qt6_DIR (set by find_package(Qt6 ...)) is .../gcc_64/lib/cmake/Qt6 --
+    # two levels up is the lib/ dir actually containing libQt6Core.so.6 etc.
+    get_filename_component(_antscope_qt_lib_dir "${Qt6_DIR}/../.." ABSOLUTE)
+    qt6_generate_deploy_script(
+        TARGET AntScopeZ
+        OUTPUT_SCRIPT deploy_script
+        CONTENT "
+set(exe_path \"\${QT_DEPLOY_PREFIX}/\${QT_DEPLOY_BIN_DIR}/$<TARGET_FILE_NAME:AntScopeZ>\")
+file(RPATH_SET FILE \"\${exe_path}\" NEW_RPATH \"${_antscope_qt_lib_dir}\")
+qt_deploy_runtime_dependencies(
+    EXECUTABLE \"\${QT_DEPLOY_BIN_DIR}/$<TARGET_FILE_NAME:AntScopeZ>\"
+    LIB_DIR ${CMAKE_INSTALL_LIBDIR}/antscopez
+    PLUGINS_DIR ${CMAKE_INSTALL_LIBDIR}/antscopez/plugins
+    GENERATE_QT_CONF
+    NO_TRANSLATIONS
+)
+file(RPATH_SET FILE \"\${exe_path}\" NEW_RPATH \"\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}/antscopez\")
+
+# CPack's dpkg-shlibdeps integration (see the Packaging section below) is
+# only able to recognize the bundled libraries above as satisfying their
+# own SONAMEs via -l<private-dir> if it can find an objdump/shlibs record
+# for them there -- it can't, since they're plain copies with no such
+# metadata, so for each one it silently falls through to whatever *system*
+# package happens to provide the same SONAME instead (Qt SONAMEs are
+# compatible across minor versions, so e.g. this dev machine's system
+# libqt6core6t64 6.4.2 satisfies libQt6Core.so.6 just as well as the 6.11
+# bundled here) -- defeating bundling's whole purpose and, worse, pulling
+# in a qt6-base-abi (= 6.4.2) exact-version pin that could make the .deb
+# uninstallable on a system whose distro Qt is a different version. A
+# debian/shlibs.local file is the standard, documented fix: it tells
+# dpkg-shlibdeps to attribute a given SONAME to a package directly rather
+# than searching for one, without needing real shlibs/symbols metadata.
+# Since debian/control (which dpkg-shlibdeps also consults, to recognize
+# *this* package's own name and drop self-dependencies) is deliberately
+# left blank by CPack, the antscopez entries below can't be recognized as
+# self-references and end up in Depends: too -- but a package trivially
+# satisfies a dependency on its own exact version, so apt/dpkg accept it;
+# it's just a harmless wart, not a functional problem, unlike the
+# alternative (bogus dependency on system Qt) it replaces.
+file(GLOB _antscope_bundled_sonames \"\${QT_DEPLOY_PREFIX}/${CMAKE_INSTALL_LIBDIR}/antscopez/lib*.so.*\")
+file(WRITE \"\$ENV{DESTDIR}/debian/shlibs.local\" \"\")
+foreach(_soname_path IN LISTS _antscope_bundled_sonames)
+    get_filename_component(_soname_file \"\${_soname_path}\" NAME)
+    if(_soname_file MATCHES \"^(lib[^/]+)\\\\.so\\\\.([0-9]+)\$\")
+        file(APPEND \"\$ENV{DESTDIR}/debian/shlibs.local\"
+            \"\${CMAKE_MATCH_1} \${CMAKE_MATCH_2} antscopez (>= ${PROJECT_VERSION})\n\")
+    endif()
+endforeach()
+")
+    install(SCRIPT ${deploy_script})
+
+    # $ORIGIN-relative RPATH on the binary/plugins (set up above) is not
+    # enough by itself for Qt's plugin loader to reliably resolve every
+    # symbol it needs from the bundled libraries -- confirmed by testing:
+    # running the installed binary as-is reproducibly crashes with
+    # "qxcb: ... undefined symbol ... version Qt_6_PRIVATE_API" (a
+    # QEventDispatcherGlib symbol Qt's own glib event-dispatcher support
+    # needs), even though every individual bundled file resolves to the
+    # exact same bytes as the original Qt 6.11 install (verified by
+    # hashing them) and the RPATH on every one of them correctly points
+    # at LIB_DIR. Explicitly exporting LD_LIBRARY_PATH before exec fixes
+    # it -- LD_LIBRARY_PATH is consulted for *every* library the process
+    # subsequently loads regardless of which object requested it, unlike
+    # RPATH/RUNPATH which (being RUNPATH, not the older always-inherited
+    # RPATH) only applies to each object's own direct dependencies. This
+    # is the same fix linuxdeployqt-based AppImages typically ship as an
+    # AppRun wrapper script, for what appears to be the same class of gap.
+    # So: install(TARGETS) above puts the real binary at ${CMAKE_INSTALL_BINDIR}/AntScopeZ
+    # (also where qt_deploy_runtime_dependencies() above expects to find
+    # it -- this must run after that, not before); rename it to
+    # AntScopeZ.bin and put a wrapper script in its place.
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/antscopez-wrapper.sh.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/AntScopeZ-wrapper.sh"
+        @ONLY
+    )
+    # file(INSTALL DESTINATION ...) -- unlike file(RENAME) -- already
+    # honors $ENV{DESTDIR} on its own; the DESTINATION below deliberately
+    # does *not* include it too, to avoid applying it twice.
+    install(CODE "
+        file(RENAME \"\$ENV{DESTDIR}${CMAKE_INSTALL_FULL_BINDIR}/AntScopeZ\" \"\$ENV{DESTDIR}${CMAKE_INSTALL_FULL_BINDIR}/AntScopeZ.bin\")
+        file(INSTALL \"${CMAKE_CURRENT_BINARY_DIR}/AntScopeZ-wrapper.sh\"
+            DESTINATION \"${CMAKE_INSTALL_FULL_BINDIR}\"
+            RENAME AntScopeZ
+            PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+        )
+    ")
+
+    endif()
 endif()
 
 
@@ -444,11 +733,19 @@ endif()
 # Packaging (.deb)
 #
 # CPACK_DEBIAN_PACKAGE_SHLIBDEPS auto-computes Depends: by running
-# dpkg-shlibdeps against the built binary's actual linked libraries -- which
-# only maps to real package names if AntScopeZ was configured against
-# distro-packaged Qt6 (plain find_package(Qt6 ...), no CMAKE_PREFIX_PATH
-# pointing at a separately-installed Qt SDK; dpkg has no package to
-# attribute a private Qt install to).
+# dpkg-shlibdeps against every installed ELF binary -- including the bundled
+# Qt libraries/plugins staged above under ${CMAKE_INSTALL_LIBDIR}/antscopez.
+# Those bundled libs must not turn into Depends: entries on distro Qt
+# packages (the whole point of bundling is to not need them installed), and
+# dpkg-shlibdeps has no distro package to attribute a private Qt install to
+# anyway. This works out automatically: the deploy script above sets
+# $ORIGIN-relative RPATHs on the executable and bundled plugins, and CPack's
+# dpkg-shlibdeps integration (requires dpkg-shlibdeps >= 1.17, which Ubuntu/
+# Debian have shipped since well before this was written) follows those
+# RPATHs and passes the resolved private lib dir to `dpkg-shlibdeps -l`,
+# which excludes symbols it resolves there from Depends: while still
+# correctly computing Depends: for whatever remains dynamically linked from
+# the system (libc, libusb, the X11/Wayland/GL stack, ...).
 #
 
 if(UNIX AND NOT APPLE)
@@ -459,9 +756,9 @@ if(UNIX AND NOT APPLE)
     # TODO: fill in a real maintainer contact before actually distributing
     # this .deb to anyone else -- left as just the GitHub handle for now
     # rather than guessing at what contact info should be public.
-    set(CPACK_PACKAGE_CONTACT "hz23116")
+    set(CPACK_PACKAGE_CONTACT "k4hez")
     set(CPACK_DEBIAN_PACKAGE_SECTION "hamradio")
-    set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/hz23116/AntScopeZ")
+    set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/k4hez/AntScopeZ")
     set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
     set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
     # Matches the CMAKE_INSTALL_PREFIX default set near the top of this file

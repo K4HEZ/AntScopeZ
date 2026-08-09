@@ -399,6 +399,13 @@ void Measurements::on_newMeasurement(QString name)
     m_swrWidget->graph()->setName(name);
     m_phaseWidget->addGraph();
 
+    // Needs tr() attention: these setName() calls are chart legend labels
+    // (real user-facing text), left untranslated for now as a judgment
+    // call -- most of them (R/X/Z/Rp/Xp/Zp/S21) are standard EE
+    // abbreviations, the same category as the already-untranslated
+    // "kHz"/"Ohm"/"dB" units elsewhere, and arguably shouldn't change
+    // across languages. "Stage" is the one outlier below that's an actual
+    // word, not a symbol -- more likely a genuine miss.
     m_rsWidget->setAutoAddPlottableToLegend(m_rsWidget->legend->itemCount() < 3);
     m_rsWidget->addGraph();
     m_rsWidget->graph()->setName("R");
@@ -420,7 +427,7 @@ void Measurements::on_newMeasurement(QString name)
     m_s21Widget->addGraph();
     m_s21Widget->graph()->setName("S21");
     m_s21Widget->addGraph();
-    m_s21Widget->graph()->setName("Stage");
+    m_s21Widget->graph()->setName("Stage"); // Needs tr() attention (see above) -- this one's an actual word, not a symbol
     m_s21Widget->graph()->setValueAxis(m_s21Widget->yAxis2);
 
     m_tdrWidget->setAutoAddPlottableToLegend(m_tdrWidget->legend->itemCount() < 3);

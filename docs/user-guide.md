@@ -1,6 +1,6 @@
-# AntScope2 User Guide (starter)
+# AntScopeZ User Guide (starter)
 
-This is a starting point for real end-user documentation -- AntScope2 currently
+This is a starting point for real end-user documentation -- AntScopeZ currently
 has none (the root `README.md` is build/developer instructions only). Sections
 below get filled in over time; most of this file is still a stub.
 
@@ -19,7 +19,7 @@ below get filled in over time; most of this file is still a stub.
 
 ### What a TDR scan actually measures
 
-A TDR run in AntScope2 is not a separate kind of measurement -- it's a normal
+A TDR run in AntScopeZ is not a separate kind of measurement -- it's a normal
 frequency sweep, just an unusually wide one. When you start a TDR scan, the
 software picks a start frequency near the analyzer's lowest supported
 frequency (close to DC) and a stop frequency computed from your cable-length
@@ -67,17 +67,17 @@ TDR needed, just viewed through a different chart.
 
 ## Customized analyzer parameters
 
-AntScope2 has a hidden "Customize" tab in Settings that lets you define your
+AntScopeZ has a hidden "Customize" tab in Settings that lets you define your
 own named analyzer presets -- a custom minimum/maximum frequency range plus an
 LCD width/height used for screenshot layout. It's aimed at one specific
-situation: you have a unit that AntScope2 already recognizes correctly (a
-clone, or a newer hardware revision of a model AntScope2 knows about), but its
-real frequency range differs from what AntScope2 assumes for that model.
+situation: you have a unit that AntScopeZ already recognizes correctly (a
+clone, or a newer hardware revision of a model AntScopeZ knows about), but its
+real frequency range differs from what AntScopeZ assumes for that model.
 
 ### Enabling the tab
 
 The Customize tab (and the "Updates" tab next to it) are removed from the
-Settings dialog by default. Customize only appears when AntScope2 is launched
+Settings dialog by default. Customize only appears when AntScopeZ is launched
 with the `-developer` command-line flag, which also unlocks a few other
 developer-only controls (see below). There's no in-app toggle for this --
 it's a launch argument. The Updates tab stays hidden unconditionally, in the
@@ -87,15 +87,15 @@ gated by developer mode.
 ### What "prototype" actually means here
 
 When you create a custom analyzer, you first pick a "prototype" from a list
-of AntScope2's built-in models (AA-30, AA-55, AA-230, AA-1500, etc.). Picking
+of AntScopeZ's built-in models (AA-30, AA-55, AA-230, AA-1500, etc.). Picking
 a prototype does **not** select a different communication protocol -- it just
 seeds the new entry's default frequency range and LCD dimensions from that
 model, as a starting point you then edit.
 
-The actual protocol AntScope2 uses to talk to your analyzer is chosen purely
+The actual protocol AntScopeZ uses to talk to your analyzer is chosen purely
 by what the connected device reports about itself during the initial
 handshake (its version string over serial, or its HID identification). If
-your device's firmware reports itself as, say, an AA-55, AntScope2 talks to it
+your device's firmware reports itself as, say, an AA-55, AntScopeZ talks to it
 exactly like a genuine AA-55 -- same commands, same parsing -- regardless of
 any custom analyzer you've defined. Customizing doesn't change *how* commands
 are sent; it only changes *what frequency range* those commands are allowed to
@@ -105,7 +105,7 @@ sweep.
 
 This is the practical use case:
 
-1. Confirm AntScope2 already detects your device correctly (it identifies
+1. Confirm AntScopeZ already detects your device correctly (it identifies
    itself as an existing model during connection).
 2. Open Settings → Customize (requires `-developer`), pick that model as the
    prototype, give the preset an alias, and set the min/max frequency to what
@@ -120,8 +120,8 @@ official spec for that model without any code changes.
 ### It only takes effect when launched with `-developer`, every time
 
 Your custom presets and the "Use customized analyzer" checkbox are saved to
-`AntScope2.ini`, but they are only *loaded back* into the running app when
-AntScope2 is started with `-developer`. Launch it normally and the saved data
+`AntScopeZ.ini`, but they are only *loaded back* into the running app when
+AntScopeZ is started with `-developer`. Launch it normally and the saved data
 just sits there, unread -- the app behaves exactly like stock, with no custom
 range applied and no way to reach the Customize tab to turn it on. Nothing is
 silently overridden in a normal launch.
@@ -135,13 +135,13 @@ non-developer launch either.
 
 ### Limits and things to watch for
 
-- **No capability negotiation happens.** AntScope2 does not ask the device
+- **No capability negotiation happens.** AntScopeZ does not ask the device
   what frequencies it can actually produce -- it just sends whatever range you
   configured, using the same command format as the real model. If you set a
   range your hardware can't actually sweep, you won't get an error; you'll get
   meaningless or garbage results for the out-of-range portion.
 - **Detection still depends on the device's own reported name.** If your
-  clone's firmware reports a version string AntScope2 doesn't recognize at
+  clone's firmware reports a version string AntScopeZ doesn't recognize at
   all, it won't be identified as any model, and a custom analyzer preset can't
   help -- there's nothing to attach it to.
 - **This is a developer-mode feature.** It's not intended as a

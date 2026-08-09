@@ -43,21 +43,6 @@ enum {
 namespace Ui {
 class MainWindow;
 }
-#define LANGUAGES_QUANTITY 3
-static QString languages[LANGUAGES_QUANTITY]={
-    "English",
-//    "Русский",
-    "Українська",
-    "日本語"
-};
-
-static QString languages_small[LANGUAGES_QUANTITY]={
-    "en",
-//    "ru",
-    "uk",
-    "ja"
-};
-
 
 struct MultiTab {
     QList<QString> tabs;
@@ -189,7 +174,18 @@ private:
 
     QTranslator *m_qtLanguageTranslator;
 
-    int m_languageNumber;
+    // Qt's own built-in strings (QFileDialog's "File name:", QMessageBox's
+    // standard button labels, QSerialPort's error strings, ...) -- a
+    // separate catalog (qtbase_<code>.qm) from m_qtLanguageTranslator's own
+    // QtLanguage_<code>.qm above. See loadLanguage().
+    QTranslator *m_qtBaseTranslator;
+
+    // ISO 639 code ("en", "uk", "ja", ...) of the active UI language, e.g.
+    // for building "QtLanguage_<code>.qm" -- not an index into a fixed
+    // list, since the list of available languages is now discovered from
+    // whatever QtLanguage_*.qm files actually exist on disk (see
+    // Settings::setLanguages()) rather than compiled in.
+    QString m_languageCode;
 
     bool m_addingMarker;
     bool m_isMouseClick;
@@ -197,8 +193,22 @@ private:
     QMap<QString, QStringList*> m_BandsMap;
     bool m_darkColorTheme = true;
 
+    // Guards on_selectDeviceDialog() against opening a second copy of
+    // SelectDeviceDialog. QApplication::activeModalWidget() looked like
+    // the natural check (Qt's own tracked state, no new member needed),
+    // but doesn't actually work here: on_selectDeviceDialog() calls
+    // dlg.show() before dlg.exec() (a deliberate focus-stealing
+    // workaround), and SelectDeviceDialog never calls setModal()/
+    // setWindowModality() itself -- exec()'s modal-widget registration
+    // happens as part of making the widget visible, which already
+    // happened via that earlier show(), so it likely never properly
+    // registers. An explicit flag sidesteps relying on that Qt-internal
+    // bookkeeping at all.
+    bool m_selectDeviceDialogOpen = false;
+
     void setWidgetsSettings();
     bool loadBands();
+    void populateBandSelector(const QString& band);
     void setBands(QCustomPlot * widget, QStringList* bands, double y1, double y2);
     void setBands(QCustomPlot * widget, double y1, double y2);
     void addBand (QCustomPlot * widget, double x1, double x2, double y1, double y2);
@@ -215,6 +225,8 @@ private:
     void setFqTo(double to);
     double getFqFrom(void);
     double getFqTo(void);
+    double clampFqKhz(double khz);
+    QString formatFqKhz(double khz);
     bool loadLanguage(QString locale); // locale: en, ukr, ru, jp, etc.
     void saveFile(int row, QString path);
     QCustomPlot* getCurrentPlot();
@@ -294,10 +306,11 @@ public slots:
     void on_tableWidget_presets_cellDoubleClicked(int row, int column);
     void on_presetsDeleteBtn_clicked();
     void on_pressetsUpBtn_clicked();
+    void on_presetsBandComboBox_currentIndexChanged(int index);
     void on_exportBtn_clicked();
     void on_measurementComplete();
     void on_measurementCompleteNano();
-    void on_translate(int number);
+    void on_translate(QString code);
     void on_startOneFq(quint64 fq, int dots);
     void on_selectDeviceDialog();
     void on_refreshConnection();

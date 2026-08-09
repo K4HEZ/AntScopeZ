@@ -11,6 +11,9 @@
 #include "filedialog.h"
 #include <QFile>
 #include <QFileInfo>
+#include <QDir>
+#include <QLocale>
+#include <algorithm>
 
 extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
                             QString title, QString text,
@@ -98,6 +101,8 @@ void Settings::applyStyles()
 
     style = Style::checkBox();
     ui->checkBoxBandName->setStyleSheet(style);
+    ui->checkBoxBandSelector->setStyleSheet(style);
+    ui->checkBoxOpenConnectAnalyzerAtLaunch->setStyleSheet(style);
     ui->graphBriefHintCheckBox->setStyleSheet(style);
     ui->graphHintCheckBox->setStyleSheet(style);
     ui->markersHintCheckBox->setStyleSheet(style);
@@ -193,6 +198,17 @@ Settings::Settings(QWidget *parent) :
     }
     // ///
     ui->checkBoxBandName->setChecked(m_settings->value("show-band-name", false).toBool());
+    // No default here: MainWindow::populateBandSelector() seeds this key
+    // once, the first time bands are loaded, based on whether the active
+    // region actually has any named bands -- by the time this dialog can
+    // be opened, the key already exists.
+    ui->checkBoxBandSelector->setChecked(m_settings->value("band-selector-enabled", false).toBool());
+    // Default true (opt-out, not opt-in): preserves today's behavior for
+    // existing installs, since someone who only wants to review saved
+    // .s1p files and never touches a physical analyzer is the exception,
+    // not the rule.
+    ui->checkBoxOpenConnectAnalyzerAtLaunch->setChecked(
+        m_settings->value("open-connect-analyzer-at-launch", true).toBool());
     m_settings->endGroup();
 
     connect(ui->lineEdit_systemImpedance, &QLineEdit::editingFinished, this, &Settings::on_systemImpedance);
@@ -220,6 +236,18 @@ Settings::Settings(QWidget *parent) :
         m_settings->endGroup();
 
         emit reloadBands(ui->bandsCombobox->currentText());
+    });
+    connect(ui->checkBoxBandSelector, &QCheckBox::clicked, [=](bool checked) {
+        m_settings->beginGroup("Settings");
+        m_settings->setValue("band-selector-enabled", checked);
+        m_settings->endGroup();
+
+        emit bandSelectorEnabledChanged(checked);
+    });
+    connect(ui->checkBoxOpenConnectAnalyzerAtLaunch, &QCheckBox::clicked, [=](bool checked) {
+        m_settings->beginGroup("Settings");
+        m_settings->setValue("open-connect-analyzer-at-launch", checked);
+        m_settings->endGroup();
     });
     //{
     // TODO Bug #2247: update doesn't work from Antscope2
@@ -540,7 +568,7 @@ void Settings::findBootloader (void)
 void Settings::on_updateBtn_clicked()
 {
     ui->updateBtn->setEnabled(false);
-    ui->updateBtn->setText("Updating...");
+    ui->updateBtn->setText(tr("Updating..."));
     ui->updateProgressBar->show();
     emit updateBtn(m_pathToFw);
 }
@@ -549,7 +577,7 @@ void Settings::on_percentChanged(qint32 percent)
 {
     if(percent == 100)
     {
-        ui->updateBtn->setText("Update");
+        ui->updateBtn->setText(tr("Update"));
         ui->updateBtn->setEnabled(true);
         ui->updateProgressBar->hide();
         ui->updateProgressBar->setValue(0);
@@ -1036,30 +1064,28 @@ QString Settings::setIniFile()
     QString newPath = localDataPath("AntScopeZ.ini");
 
 #ifdef Q_OS_LINUX
-    // One-time migrations, checked in order from oldest layout to newest,
-    // into the current AntScopeZ location. Idempotent (each step is guarded
-    // by "does the new copy already exist"), and cheap enough to just always
-    // check since setIniFile() already runs on every Settings/Calibration
-    // construction:
-    //  1. Pre-2.1.4: AntScope2.ini/Calibration/itu-regions.txt sitting next
-    //     to the binary (see the comment on localDataFolder()).
-    //  2. 2.1.4, still under the "AntScope2" name: ~/.config/hz23116/AntScope2
-    //     (QStandardPaths::AppConfigLocation with the old org/app names).
-    //     Both "AntScope2.ini" and "antscope2.ini" are checked at each old
-    //     location -- Settings and Calibration briefly used differently-cased
-    //     filenames that only diverged into two separate files on
-    //     case-sensitive filesystems (issue #43); by this point any surviving
-    //     mismatch is rare enough that a plain first-one-found rename is fine
-    //     rather than the more careful per-key fold this used to do.
+    // One-time migration of the pre-2.1.4 layout -- AntScope2.ini/
+    // Calibration/itu-regions.txt sitting next to the binary (see the
+    // comment on localDataFolder()) -- into the current AntScopeZ location.
+    // Idempotent (guarded by "does the new copy already exist"), and cheap
+    // enough to just always check since setIniFile() already runs on every
+    // Settings/Calibration construction. The 2.1.4-era org-directory layout
+    // (~/.config/<old-org-name>/AntScope2, from when
+    // QCoreApplication::setOrganizationName() was still set) had its own
+    // migration step here too, but that layout's no longer in use by anyone
+    // and was removed rather than kept around as dead code.
+    // Both "AntScope2.ini" and "antscope2.ini" are checked -- Settings and
+    // Calibration briefly used differently-cased filenames that only
+    // diverged into two separate files on case-sensitive filesystems (issue
+    // #43); by this point any surviving mismatch is rare enough that a
+    // plain first-one-found rename is fine rather than the more careful
+    // per-key fold this used to do.
     extern bool g_raspbian;
     if (!g_raspbian) {
         QString newDirPath = localDataFolder();
         QDir legacyBinaryDir(QCoreApplication::applicationDirPath() + "/..");
-        QString legacyOrgDirPath = QDir::homePath() + "/.config/hz23116/AntScope2";
-        const QStringList oldDirs = {legacyBinaryDir.canonicalPath(), legacyOrgDirPath};
-        for (const QString& oldDirPath : oldDirs) {
-            if (oldDirPath.isEmpty() || oldDirPath == newDirPath || !QDir(oldDirPath).exists())
-                continue;
+        QString oldDirPath = legacyBinaryDir.canonicalPath();
+        if (!oldDirPath.isEmpty() && oldDirPath != newDirPath && QDir(oldDirPath).exists()) {
             QDir oldDir(oldDirPath);
             const QStringList legacyFiles = {"AntScope2.ini", "antscope2.ini", "itu-regions.txt"};
             for (const QString& name : legacyFiles) {
@@ -1248,10 +1274,48 @@ void Settings::setAntScopeVersion(QString version)
     ui->antScopeVersion->setText(version);
 }
 
-void Settings::setLanguages(QStringList list, int number)
+void Settings::setLanguages(const QString& currentCode)
 {
-    ui->languageComboBox->addItems(list);
-    ui->languageComboBox->setCurrentIndex(number);
+    ui->languageComboBox->clear();
+    // English is always offered: it's the source language every tr() call
+    // is written in, so there's no QtLanguage_en.qm to discover below.
+    ui->languageComboBox->addItem("English", "en");
+
+    // Every other entry is discovered from whatever QtLanguage_<code>.qm
+    // files actually exist, rather than a fixed compiled-in list -- a
+    // language becomes selectable just by dropping its .qm into either
+    // folder, no rebuild needed. localDataFolder() (per-user, e.g.
+    // ~/.config/AntScopeZ) and languageDataFolder() (shared/installed
+    // copy) are both scanned so an override in the former still shows up
+    // even if the code isn't among the ones shipped in the latter;
+    // loadLanguage() (mainwindow.cpp) is what actually prefers the user
+    // copy at load time if a code exists in both.
+    QStringList codes;
+    for (const QString& folder : {localDataFolder(), languageDataFolder()}) {
+        QDir dir(folder);
+        const QStringList files = dir.entryList(QStringList() << "QtLanguage_*.qm", QDir::Files);
+        for (const QString& fileName : files) {
+            QString code = fileName.mid(QStringLiteral("QtLanguage_").length());
+            code.chop(QStringLiteral(".qm").length());
+            if (!code.isEmpty() && code != "en" && !codes.contains(code))
+                codes << code;
+        }
+    }
+    std::sort(codes.begin(), codes.end());
+
+    for (const QString& code : codes) {
+        // The .qm/.ts format has no human-readable name field of its own
+        // (QTranslator::language() just returns this same code back) --
+        // QLocale supplies the display name instead, in the language's
+        // own script (matching how "English"/"Українська"/"日本語" looked
+        // before this was discovery-based). Falls back to the bare code
+        // for one QLocale doesn't recognize, rather than dropping it.
+        QString name = QLocale(code).nativeLanguageName();
+        ui->languageComboBox->addItem(name.isEmpty() ? code : name, code);
+    }
+
+    int idx = ui->languageComboBox->findData(currentCode);
+    ui->languageComboBox->setCurrentIndex(idx >= 0 ? idx : 0);
 }
 
 void Settings::on_translate()
@@ -1262,7 +1326,7 @@ void Settings::on_translate()
 
 void Settings::on_languageComboBox_currentIndexChanged(int index)
 {
-    emit languageChanged(index);
+    emit languageChanged(ui->languageComboBox->itemData(index).toString());
 }
 
 void Settings::onBandsComboBox_currentIndexChanged(int index)
@@ -1505,9 +1569,9 @@ void Settings::setConnectButtonText(bool _connect)
     m_connectedButton = _connect;
     //ReDeviceInfo::InterfaceType type = m_analyzer->connectionType();
     if (_connect)
-        ui->connectSerialBtn->setText(tr("Connect analyser"));
+        ui->connectSerialBtn->setText(tr("Connect analyzer"));
     else
-        ui->connectSerialBtn->setText(tr("Disconnect analyser"));
+        ui->connectSerialBtn->setText(tr("Disconnect analyzer"));
     ui->connectSerialBtn->update();
 }
 

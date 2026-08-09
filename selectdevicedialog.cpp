@@ -20,6 +20,16 @@ SelectDeviceDialog::SelectDeviceDialog(bool silent, QWidget *parent) :
 {
     ui->setupUi(this);
 
+    // Explicit, rather than relying on exec()'s implicit "application
+    // modal by default" -- MainWindow::on_selectDeviceDialog() calls
+    // dlg.show() before dlg.exec() (a focus-stealing workaround), so this
+    // dialog is already visible, non-modal, by the time exec() would
+    // otherwise establish modality. Setting it here means it's modal from
+    // the very first show() instead of being upgraded after the fact,
+    // which wasn't reliably blocking other windows (e.g. Settings could
+    // still be brought to front over it).
+    setWindowModality(Qt::ApplicationModal);
+
 /* obsolete
     QString style = "QPushButton:disabled{"
             "background-color: rgb(59, 59, 59);"
@@ -37,6 +47,20 @@ SelectDeviceDialog::SelectDeviceDialog(bool silent, QWidget *parent) :
     ui->radioButtonBLE->setStyleSheet(style);
     ui->radioButtonCOM->setStyleSheet(style);
     ui->radioButtonUSB->setStyleSheet(style);
+
+    // EXPERIMENT: the COM/USB/BLE radio buttons sit directly on the dialog's
+    // plain background (Style::dialog()'s QDialog{background-color: ...},
+    // same near-black as everywhere else in Dark) with no fill of their
+    // own between them and it -- Fusion's ring color for an unchecked
+    // radio button is always QPalette::Window darkened further still (see
+    // QFusionStylePrivate::outline(), a private Qt header), so against an
+    // already near-black background the ring all but disappears. Trying:
+    // give just this groupBox the same lighter "chrome" shade the main
+    // window's tabbed control panel already reads as (Style::palette()'s
+    // Button color -- what Fusion's tab pane, buttons, and headers all
+    // paint from), so the ring at least has a lighter backdrop to sit on.
+    ui->groupBox->setStyleSheet("QGroupBox{background-color: " +
+                                 Style::palette().color(QPalette::Button).name() + ";}");
 
     ui->tableWidget->horizontalHeader()->setStyleSheet(Style::headerView());
     ui->tableWidget->setStyleSheet(Style::tableWidget());

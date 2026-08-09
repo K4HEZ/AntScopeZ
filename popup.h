@@ -14,7 +14,7 @@ class PopUp : public QWidget
 {
     Q_OBJECT
 
-    // Свойство полупрозрачности
+    // Translucency property
     Q_PROPERTY(float popupOpacity READ getPopupOpacity WRITE setPopupOpacity)
 
     void setPopupOpacity(float opacity);
@@ -53,24 +53,24 @@ public:
     void MainWindowPos(int x, int y);
 
 protected:
-    void paintEvent(QPaintEvent *event);    // Фон будет отрисовываться через метод перерисовки
+    void paintEvent(QPaintEvent *event);    // Background will be drawn via the repaint method
     void mousePressEvent(QMouseEvent * event);
     void mouseMoveEvent(QMouseEvent *);
 
 public slots:
-    void setPopupText(const QString& text); // Установка текста в уведомление
+    void setPopupText(const QString& text); // Set the notification text
     QString getPopupText();
-    void show();                            /* Собственный метод показа виджета
-                                             * Необходимо для преварительной настройки анимации
+    void show();                            /* Own method for showing the widget
+                                             * Needed for preliminary animation setup
                                              * */
-    void hide();                            /* По окончании анимации, в данном слоте делается проверка,
-                                             * виден ли виджет, или его необходимо скрыть
+    void hide();                            /* When the animation finishes, this slot checks
+                                             * whether the widget is visible, or needs to be hidden
                                              * */
     void focusShow();
     void focusHide();
 
 protected slots:
-    void hideAnimation();                   // Слот для запуска анимации скрытия
+    void hideAnimation();                   // Slot to start the hide animation
 
 signals:
     void canceled();
@@ -81,16 +81,16 @@ protected:
     QString m_textColor;
 
 protected:
-    QLabel label;           // Label с сообщением
+    QLabel label;           // Label with the message
     QPushButton button;
     bool m_showButton = false;
     QString m_buttonName;
-//    QPushButton button;     // Кнопка сворачивания
-//    QGridLayout layout;     // Размещение для лейбла
+//    QPushButton button;     // Collapse button
+//    QGridLayout layout;     // Layout for the label
     QVBoxLayout layout;
-    QPropertyAnimation animation;   // Свойство анимации для всплывающего сообщения
-    float m_popupOpacity;     // Свойства полупрозрачности виджета
-    QTimer *timer;          // Таймер, по которому виджет будет скрыт
+    QPropertyAnimation animation;   // Animation property for the popup message
+    float m_popupOpacity;     // Widget's translucency property
+    QTimer *timer;          // Timer after which the widget will be hidden
     int m_durability;
     bool m_hiding;
     int m_x;

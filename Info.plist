@@ -7,21 +7,21 @@
         <key>CFBundleDevelopmentRegion</key>
 	<string>Ukraine</string>
 	<key>CFBundleDisplayName</key>
-	<string>AntScope2</string>
+	<string>AntScopeZ</string>
 	<key>CFBundleExecutable</key>
-	<string>AntScope2</string>
+	<string>AntScopeZ</string>
 	<key>CFBundleIconFile</key>
-        <string>AntScope2</string>
+        <string>AntScopeZ</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.rigexpert.AntScope2</string>
+	<string>io.github.k4hez.AntScopeZ</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>AntScope2</string>
+	<string>AntScopeZ</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-        <string>1.4.11</string>
+        <string>2.1.4</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>LSApplicationCategoryType</key>
