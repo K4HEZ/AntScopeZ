@@ -17,6 +17,7 @@ supported analyzer models and brands.
 ## Table of contents
 
 - [Installing and uninstalling](#installing-and-uninstalling)
+- [First-time setup checklist](#first-time-setup-checklist)
 - [Getting started](#getting-started)
 - [Controls reference](#controls-reference)
 - [Settings](#settings)
@@ -32,6 +33,7 @@ supported analyzer models and brands.
 - [TDR (Time Domain Reflectometry)](#tdr-time-domain-reflectometry)
 - [Customized analyzer parameters](#customized-analyzer-parameters)
 - [Files and directories](#files-and-directories)
+- [Troubleshooting](#troubleshooting)
 
 ## Installing and uninstalling
 
@@ -89,6 +91,26 @@ just deleting the build directory and (if you want a clean slate)
 whatever per-user config folder it wrote to (see
 [Files and directories](#files-and-directories) for the Windows/macOS
 equivalents).
+
+## First-time setup checklist
+
+A fast path through one-time setup, before your first real scan.
+Everything here is covered in more detail elsewhere -- this is just the
+order to do it in.
+
+1. [Install AntScopeZ](#installing-and-uninstalling).
+2. [Connect your analyzer](#connecting-to-your-analyzer).
+3. Pick your preferences in [Settings → General](#general-tab):
+   measurement units (Metric/Imperial), Light or Dark theme, and
+   language (if not English).
+4. *(Optional but recommended)* [Run OSL calibration](#calibration-osl)
+   -- Open/Short/Load, once per analyzer.
+5. If you want the [band selector](#presets-and-bands) shortcut, enable
+   it in Settings → General too.
+6. Run [your first scan](#your-first-scan).
+
+That's it -- everything past this point in the guide is reference
+material for a specific feature, not more setup.
 
 ## Getting started
 
@@ -226,6 +248,8 @@ OSL Calibration has its own section -- see
 
 ### General tab
 
+<!-- SCREENSHOT: Settings dialog, General tab -->
+
 | Control | What it does |
 |---|---|
 | Connect analyzer | Opens the device-selection dialog -- see [Connecting to your analyzer](#connecting-to-your-analyzer) |
@@ -244,6 +268,8 @@ OSL Calibration has its own section -- see
 | Language | UI language -- auto-discovered from whatever `QtLanguage_*.qm` files are installed, not a fixed list |
 
 ### Cable tab
+
+<!-- SCREENSHOT: Settings dialog, Cable tab -->
 
 Lets you tell AntScopeZ about your feedline, so it can account for
 cable loss/length in what it shows you -- useful when your analyzer is
@@ -358,6 +384,8 @@ list.
 
 ## Calibration (OSL)
 
+<!-- SCREENSHOT: Settings dialog, OSL Calibration tab / Calibration Wizard -->
+
 OSL (Open/Short/Load) calibration corrects for the analyzer's own
 measurement error, using three known reference standards. It's
 per-device -- calibration data is stored under the connected analyzer's
@@ -406,6 +434,8 @@ opens the band editor if you need to add or adjust one for that region.
 
 ### Editing band definitions
 
+<!-- SCREENSHOT: Edit Bands dialog -->
+
 The band editor is a plain text editor over the region data, not a
 structured form -- each line is
 `start kHz, stop kHz, band name` (a trailing name is optional; an
@@ -453,6 +483,8 @@ You can add and remove tabs to Multi View using the "+" button to join charts.
 
 ## Data from AA
 
+<!-- SCREENSHOT: Data from AA dialog (the stored-measurements list) -->
+
 Loads measurement results that already exist in the *analyzer's own*
 on-device memory (not files on your PC -- see
 [Import / Export](#import--export) for that). The toolbar's **Data from
@@ -485,6 +517,9 @@ narrower: they only read/write AntScopeZ's native `.asd` format, for one
 measurement at a time.
 
 ## Print and screenshots
+
+<!-- SCREENSHOT: Print dialog -->
+<!-- SCREENSHOT: Screenshot from AA dialog (the comment/export controls, not just the captured image already on the Pages site) -->
 
 Three related but different ways to get a chart out of AntScopeZ as an
 image or document:
@@ -777,6 +812,46 @@ If your `.ini` has a leftover group named in another language (e.g.
 (see CHANGELOG.md), it's an orphaned duplicate of the `Hint`/`Markers`/
 `BriefHint` popup-position bookkeeping above -- harmless, safe to
 delete.
+
+## Troubleshooting
+
+- **"Calibration Required" pops up, or the Calibration checkbox won't
+  stay checked.** AntScopeZ can't find `cal_open.s1p`/`cal_short.s1p`/
+  `cal_load.s1p` for this analyzer yet -- run the Calibration Wizard (or
+  all three individually) first. See
+  [Calibration (OSL)](#calibration-osl).
+- **Clicking Print does nothing.** Print isn't available while the
+  Multi tab is active -- switch to any other chart tab first. See
+  [Print and screenshots](#print-and-screenshots).
+- **Some file-dialog text (e.g. "Files of type:") stays in English no
+  matter what language is selected.** That's a gap in Qt's own shipped
+  translation, not something this app controls -- see `BUILDINFO.md`'s
+  Known Issues.
+- **The analyzer doesn't reconnect automatically at launch.** Check
+  that Settings → General → "Open 'Connect Analyzer' on launch" is
+  checked, and that "Use same selection for future connections" was
+  checked the last time you connected. See
+  [Connecting to your analyzer](#connecting-to-your-analyzer).
+- **A language `.qm` file was dropped in but isn't showing up in the
+  Language list.** Confirm the filename matches `QtLanguage_<code>.qm`
+  exactly and it's in the right folder -- see
+  [Files and directories](#files-and-directories).
+- **"Check for firmware updates" isn't anywhere in Settings.** It's
+  currently unreachable in the shipped UI (a known bug, #2247 -- not
+  something you're missing). Get firmware updates directly from
+  RigExpert's own site/software instead.
+- **TDR chart is empty after a scan.** TDR only populates from a
+  wideband, near-DC sweep -- a normal band-limited scan (e.g. just 20m)
+  won't show anything there. See
+  [TDR (Time Domain Reflectometry)](#tdr-time-domain-reflectometry).
+- **Customize/Updates tabs aren't in Settings, or a custom analyzer
+  preset isn't taking effect.** Both require launching with the
+  `-developer` flag -- see
+  [Customized analyzer parameters](#customized-analyzer-parameters).
+- **Cable loss compensation ("Subtract cable"/"Add cable") doesn't
+  seem to change anything.** Flagged as unverified in
+  [the Cable tab reference](#cable-tab) -- it may not currently do
+  anything at all; not confirmed either way.
 
 ---
 
