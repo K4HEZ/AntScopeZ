@@ -41,9 +41,9 @@ not just AntScopeZ's chart.*
 
 AntScopeZ is a fork of RigExpert's own AntScope software, renamed and
 rebuilt to give it its own identity, separate from the vendor's. Along the
-way it's had a real Light/Dark theme added, every automatic "phone home"
-to RigExpert's servers removed (see [CHANGELOG.md](CHANGELOG.md) for
-detail), and a steady stream of UI/usability fixes.
+way it's had a real Light/Dark theme added and a steady stream of
+UI/usability fixes -- see [CHANGELOG.md](CHANGELOG.md) for the full
+detail.
 
 **This is not an official RigExpert product.** It's an independent,
 unaffiliated, community effort -- see the disclaimer in
