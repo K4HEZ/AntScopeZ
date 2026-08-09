@@ -28,7 +28,14 @@ Markers::Markers(QObject *parent) : QObject(parent),
         m_markersHint->setHiding(false);
         if(m_markersHintEnabled && !m_markersList.isEmpty())
             m_markersHint->focusShow();
-        m_markersHint->setName(tr("Markers"));
+        // Not tr("Markers") -- this is an internal QSettings group name/
+        // comparison key (MarkersPopUp::setName()), never shown to the
+        // user. Translating it used to fork the ini group per UI language
+        // (e.g. a [Marcadores] group under Spanish instead of reusing
+        // [Markers]) and silently skip loading the saved popup position,
+        // since setName()'s own `m_name == "Markers"` check compares
+        // against the fixed English literal.
+        m_markersHint->setName("Markers");
         connect(m_markersHint, SIGNAL(removeMarker(int)), SLOT(on_removeMarker(int)));
         connect(m_markersHint, &MarkersPopUp::changeColumns, this, [&](){ repaint(); });
         repaint();
@@ -702,7 +709,9 @@ void Markers::on_translate()
 {
     if (m_markersHint != nullptr)
     {
-        m_markersHint->setName(tr("Markers"));
+        // See the comment on the other setName("Markers") call above --
+        // this is a settings-group key, not user-facing text.
+        m_markersHint->setName("Markers");
         m_markersHint->on_translate();
     }
 }

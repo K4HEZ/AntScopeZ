@@ -125,7 +125,10 @@ Measurements::Measurements(QObject *parent) : QObject(parent),
         {
             m_graphHint->show();
         }
-        m_graphHint->setName(tr("Hint"));
+        // Not tr("Hint") -- see the comment on Markers::create()'s
+        // setName("Markers") call for why: this is a QSettings group
+        // name/comparison key (PopUp::setName()), not user-facing text.
+        m_graphHint->setName("Hint");
     }
 
     if(m_graphBriefHint == NULL)
@@ -133,7 +136,7 @@ Measurements::Measurements(QObject *parent) : QObject(parent),
         m_graphBriefHint = new PopUp();
         m_graphBriefHint->setHiding(false);
         //m_graphBriefHint->setPopupText("0\n0");
-        m_graphBriefHint->setName(tr("BriefHint"));
+        m_graphBriefHint->setName("BriefHint");
     }
 }
 
@@ -4363,7 +4366,8 @@ void Measurements::on_translate()
     }
     if (m_graphBriefHint != nullptr)
     {
-        m_graphBriefHint->setName(tr("BriefHint"));
+        // See the comment on the other setName("BriefHint") call above.
+        m_graphBriefHint->setName("BriefHint");
     }
 
     if (m_tdrWidget->xAxis != nullptr)
