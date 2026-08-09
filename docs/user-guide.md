@@ -30,6 +30,7 @@ supported analyzer models and brands.
 - [Print and screenshots](#print-and-screenshots)
 - [TDR (Time Domain Reflectometry)](#tdr-time-domain-reflectometry)
 - [Customized analyzer parameters](#customized-analyzer-parameters)
+- [Files and directories](#files-and-directories)
 
 ## Getting started
 
@@ -588,6 +589,139 @@ non-developer launch either.
   `-developer`), can be unchecked to disable range clamping entirely instead
   of defining a custom preset -- a blunter alternative if you just want to
   type any frequency without setting up an alias.
+
+## Files and directories
+
+Where AntScopeZ actually keeps things, on Linux (the platform this was
+verified against -- see the note at the end of each subsection for
+Windows/macOS). Everything below is either read directly from an
+installed `.deb`, or from a real config file generated during this
+session's own testing.
+
+### What the `.deb` installs
+
+| Path | What's there |
+|---|---|
+| `/usr/bin/AntScopeZ` | A thin wrapper script -- sets `LD_LIBRARY_PATH` to the bundled Qt below, then execs the real binary |
+| `/usr/bin/AntScopeZ.bin` | The actual executable |
+| `/usr/bin/qt.conf` | Points Qt's own plugin/library lookup at the bundled copies instead of any system Qt |
+| `/usr/lib/x86_64-linux-gnu/antscopez/` | AntScopeZ's own private copy of the Qt 6.11 libraries and plugins it was built/packaged against -- see [Qt version](https://github.com/K4HEZ/AntScopeZ#qt-version) for why it's bundled rather than linked against whatever Qt the system has |
+| `/usr/share/antscopez/` | Read-only shared data: `cables.txt`, `itu-regions-defaults.txt`, and every `QtLanguage_<code>.qm` / `qtbase_<code>.qm` translation file |
+| `/usr/share/applications/antscopez.desktop` | The desktop entry (app menu listing) |
+| `/usr/share/icons/hicolor/64x64/apps/antscopez.png` | The app icon |
+
+(Different install prefix than `/usr`? Everything under `/usr/...` above
+follows that prefix instead -- `sharedDataFolder()`/`ANTSCOPE_SHARED_DATA_DIR`
+is computed from it at build time, not hardcoded.)
+
+**Windows/macOS:** no installer package yet, so this table doesn't apply
+-- both keep the simpler "everything sits next to the executable" layout
+a dev build uses on every platform (see the next section for where
+*your own* files still live either way).
+
+### Your own files: `~/.config/AntScopeZ/`
+
+This is the one directory you actually own -- back it up, sync it,
+whatever you like. Nothing the `.deb` installs is ever written to.
+
+| Path | What's there |
+|---|---|
+| `AntScopeZ.ini` | Every setting -- see [AntScopeZ.ini reference](#antscopezini-reference) below |
+| `Calibration/<analyzer serial number>/` | `cal_open.s1p`, `cal_short.s1p`, `cal_load.s1p` -- one subfolder per analyzer, see [Calibration (OSL)](#calibration-osl) |
+| `itu-regions.txt` (only if you've edited bands) | Your own edited band data, created the first time you click Save in the [band editor](#editing-band-definitions) -- overrides the shipped `itu-regions-defaults.txt` entirely, not merged with it |
+| `QtLanguage_<code>.qm` / `qtbase_<code>.qm` (optional) | Drop a `.qm` here to add a language AntScopeZ doesn't ship, or override a shipped one -- picked up automatically, no reinstall needed. See [Language](#general-tab) in the Settings reference. |
+
+**Windows:** the equivalent per-user folder is wherever Qt's
+`GenericConfigLocation` resolves to (typically
+`%APPDATA%\AntScopeZ\`). **macOS:** your home folder directly
+(`QStandardPaths::HomeLocation`), not a dotfile -- look for an
+`AntScopeZ` folder there.
+
+### `AntScopeZ.ini` reference
+
+This is a real, working config from actual use -- not a synthetic
+example -- lightly trimmed of pure window-geometry noise. Groups you'd
+actually want to hand-edit or just recognize:
+
+```ini
+[MainWindow]
+languageCode=es
+measureSystemMetric=true
+rangeLower=143970
+rangeUpper=147970
+systemImpedance=50
+dotsNumber=50
+isRange=false
+
+[Settings]
+band-selector-enabled=true
+chart-background=#505050
+current_band=ITU Region 2 - Americas
+darkColorTheme=true
+maxMeasurements=5
+open-connect-analyzer-at-launch=false
+restrictFq=true
+show-band-name=false
+
+[Connection]
+id=180000756
+name=Match
+same=false
+type=0
+
+[Cable]
+R0=50
+VelFactor=0.66
+ConductiveLoss=0
+DielectricLoss=0
+LossUnits=0
+LossFrequencyMHz=1
+LossAtAnyFrequency=0
+Length=0
+CableIndex=0
+FarEndMeasurement=0
+
+[Calibration]
+Z0=50
+DotsNumber=500
+Performed=false
+Enabled=false
+OpenPath=/home/you/.config/AntScopeZ/Calibration/<serial>/cal_open.s1p
+ShortPath=/home/you/.config/AntScopeZ/Calibration/<serial>/cal_short.s1p
+LoadPath=/home/you/.config/AntScopeZ/Calibration/<serial>/cal_load.s1p
+
+[CustomAnalyzers]
+use_customized=false
+current_alias=
+```
+
+Notes on specific keys:
+
+- **`languageCode`** -- an ISO code (`es`, `ja`, `uk`, ...) matching a
+  `QtLanguage_<code>.qm` filename, not an index. Delete this line (or
+  the whole ini) to fall back to English.
+- **`Connection`** -- the last-connected device, used for silent
+  auto-reconnect at launch (see
+  [Connecting to your analyzer](#connecting-to-your-analyzer)). `same`
+  tracks the "Use same selection for future connections" checkbox.
+- **`Calibration`**'s `Performed`/`Enabled` here are just what gets
+  written back out on exit -- the app's actual live check is whether the
+  three `*Path` files exist on disk, not this flag (see
+  [Calibration (OSL)](#calibration-osl)).
+- Everything else not listed above (`General`, `Hint`, `BriefHint`,
+  `Markers`, per-tab `*ZoomState`, `mainX`/`mainY`/`geometry`, ...) is
+  internal window-position/zoom-state bookkeeping. Harmless to delete
+  individually if something looks stuck -- it just regenerates with
+  defaults.
+
+**Known quirk:** a few of those bookkeeping groups (`Hint`, `Markers`,
+`BriefHint`) are actually named after a `tr()`-translated string, not a
+fixed key -- so running AntScopeZ in a non-English language creates
+*separate* groups (e.g. `[Marcadores]` alongside `[Markers]`) instead of
+reusing the English ones. Harmless (worst case, a popup forgets its
+remembered position after a language switch and just uses its default
+again), but if you're wondering why your `.ini` has a group name in
+another language, that's why.
 
 ---
 
