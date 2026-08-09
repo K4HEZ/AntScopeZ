@@ -4,6 +4,9 @@ This is a starting point for real end-user documentation -- AntScopeZ currently
 has none (the root `README.md` is build/developer instructions only). Sections
 below get filled in over time; most of this file is still a stub.
 
+See [SUPPORTED_DEVICES.md](../SUPPORTED_DEVICES.md) for the full list of
+supported analyzer models and brands.
+
 ## Table of contents
 
 - [TDR (Time Domain Reflectometry)](#tdr-time-domain-reflectometry)

@@ -1,9 +1,11 @@
 # AntScopeZ
 
-AntScopeZ supports various models of RigExpert antenna analyzers across
-Windows, Linux and macOS. It is a fork of RigExpert's own AntScope2 software,
-renamed to keep this project's identity, config files, and installed package
-clearly separate from the vendor's.
+AntScopeZ supports various models of RigExpert antenna analyzers (plus a
+few other brands) across Windows, Linux and macOS -- see
+[SUPPORTED_DEVICES.md](SUPPORTED_DEVICES.md) for the full list. It is a
+fork of RigExpert's own AntScope2 software, renamed to keep this project's
+identity, config files, and installed package clearly separate from the
+vendor's.
 
 This project is NOT an official project from RigExpert (see: RigExpert's own
 AntScope2). Do not contact them for support for this project. It is provided
