@@ -588,3 +588,10 @@ non-developer launch either.
   `-developer`), can be unchecked to disable range clamping entirely instead
   of defining a custom preset -- a blunter alternative if you just want to
   type any frequency without setting up an alias.
+
+---
+
+*This guide was drafted with [Claude](https://www.anthropic.com/claude)
+(Anthropic's AI), grounded in AntScopeZ's actual source code -- not yet
+verified line-by-line against real hardware. Found something wrong?
+[Open an issue](https://github.com/K4HEZ/AntScopeZ/issues).*

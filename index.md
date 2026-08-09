@@ -77,3 +77,8 @@ place to report a bug or ask a question about this fork specifically. For
 anything involving RigExpert's own hardware, firmware, or licensing,
 contact RigExpert directly -- this project has no connection to them and
 no way to help with those.
+
+---
+
+*Built with help from [Claude](https://www.anthropic.com/claude)
+(Anthropic's AI) -- docs, this site, and a fair bit of the code itself.*
