@@ -1,0 +1,18 @@
+title: AntScopeZ
+description: >-
+  A privacy-respecting, community-maintained fork of RigExpert's AntScope2
+  antenna-analyzer software.
+theme: jekyll-theme-cayman
+show_downloads: false
+
+# Cayman's built-in top-nav: additional pages shown alongside "View on GitHub".
+# Paths are relative to the site root and must match real files below.
+header_pages:
+  - docs/user-guide.md
+  - SUPPORTED_DEVICES.md
+  - BUILDINFO.md
+  - CHANGELOG.md
+
+# Markdown files outside these get published as pages too (e.g. README.md,
+# at /README/) since Jekyll converts every .md by default -- harmless, just
+# unlinked from the nav above.

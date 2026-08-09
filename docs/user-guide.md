@@ -1,3 +1,8 @@
+---
+layout: default
+title: User Guide
+---
+
 # AntScopeZ User Guide (starter)
 
 This is a starting point for real end-user documentation -- AntScopeZ currently

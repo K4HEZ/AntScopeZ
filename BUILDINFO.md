@@ -1,3 +1,8 @@
+---
+layout: default
+title: Build Instructions
+---
+
 # Build Information
 
 Details supplementing the quick-start build steps in [README.md](README.md).

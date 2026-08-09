@@ -1,3 +1,8 @@
+---
+layout: default
+title: Supported Devices
+---
+
 # Supported devices *
 
 AntScopeZ's device support isn't limited to RigExpert's own antenna
