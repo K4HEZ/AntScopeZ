@@ -5,9 +5,8 @@ title: AntScopeZ
 
 # AntScopeZ
 
-A modern, privacy-respecting antenna-analyzer application for RigExpert
-hardware (and a few other brands) -- built for, and maintained by, the ham
-radio community.
+A modern antenna-analyzer application for RigExpert hardware (and a few
+other brands) -- built for, and maintained by, the ham radio community.
 
 **[⬇ Download the latest release](https://github.com/K4HEZ/AntScopeZ/releases/latest)**
 &nbsp;·&nbsp;
