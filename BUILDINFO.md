@@ -146,3 +146,18 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   app's code controls directly); workaround for now is to manually pick
   the correct paper size in the Properties dialog before printing. See
   `Print::on_printBtn_clicked()`.
+- **Some of Qt's own built-in dialog strings stay in English even though
+  `qtbase_<code>.qm` is loaded and working.** Confirmed (a headless
+  `QT_QPA_PLATFORM=offscreen` probe against the real `qtbase_es.qm`,
+  2026-08-09) that this is a mismatch inside Qt's own shipped translation,
+  not this app's loading of it: the file dialog's actual live strings are
+  `"File &name:"` / `"Files of &type:"` / `"&Look in:"`, but
+  `qtbase_es.qm` only has translations keyed to `"File &name:"` (matches,
+  hence *that* one does show translated) and the accelerator-less
+  `"Files of type:"` / `"Look in:"` (don't match, so those two silently
+  fall back to English). `QTranslator` lookups are exact-string, mnemonic
+  ampersand included -- whoever last updated Qt's own `.ts` for this
+  translated an older/different source string. Not `es`-specific in
+  principle; any language where Qt's own catalog has drifted from the
+  current `qfiledialog.ui` mnemonics would show the same gap. Nothing to
+  fix here -- it's upstream Qt's translation, not this project's.
