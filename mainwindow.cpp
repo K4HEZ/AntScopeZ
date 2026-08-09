@@ -5445,12 +5445,34 @@ void MainWindow::on_measurmentsSaveBtn_clicked()
             m_lastSaveOpenPath.remove(m_lastSaveOpenPath.indexOf('.'),4);
             m_lastSaveOpenPath.append(".asd");
         }
-        QString path = FileDialog::getSaveFileName(this, tr("Save file"), m_lastSaveOpenPath, "AntScopeZ (*.asd )");
+
+        int row = list.at(0)->row();
+
+        // Suggest the measurement's own name (minus its "NN> " auto-numbering
+        // prefix, with filesystem-unsafe characters swapped for "_" -- the
+        // rename dialog, Measurements::setupUi()'s QInputDialog handler,
+        // accepts any text at all, including "/") as the filename, in the
+        // same folder as the last save/open, instead of just reusing
+        // whatever filename happened to be typed last time.
+        QString suggestedPath = m_lastSaveOpenPath;
+        measurement* selectedMm = m_measurements->getMeasurement(m_measurements->getMeasurementLength()-row-1);
+        if (selectedMm != nullptr) {
+            QString suggestedName = selectedMm->name;
+            int namePos = suggestedName.indexOf("> ");
+            if (namePos != -1)
+                suggestedName = suggestedName.mid(namePos+2);
+            suggestedName.replace(QRegularExpression("[\\\\/:*?\"<>|]"), "_");
+            suggestedName = suggestedName.trimmed();
+            if (!suggestedName.isEmpty()) {
+                QString dir = QFileInfo(m_lastSaveOpenPath).path();
+                suggestedPath = (dir.isEmpty() || dir == ".") ? (suggestedName + ".asd") : (dir + "/" + suggestedName + ".asd");
+            }
+        }
+
+        QString path = FileDialog::getSaveFileName(this, tr("Save file"), suggestedPath, "AntScopeZ (*.asd )");
         if(!path.isEmpty())
         {
             m_lastSaveOpenPath = path;
-            QTableWidgetItem * item = list.at(0);
-            int row = item->row();
             m_measurements->saveData(row, path);
             QFileInfo fi(path);
             QString fname = fi.baseName();

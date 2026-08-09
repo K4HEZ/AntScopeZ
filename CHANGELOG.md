@@ -635,6 +635,19 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   A future splash panel, if one happens, will use a logo of our own
   rather than reuse this one.
 
+### Changed
+
+- `MainWindow::on_measurmentsSaveBtn_clicked()`'s Save dialog now suggests
+  the selected measurement's own name as the filename (minus its "NN> "
+  auto-numbering prefix, with filesystem-unsafe characters swapped for
+  `_` -- the rename dialog, `Measurements::setupUi()`'s `QInputDialog`
+  handler, accepts any text at all, including `/`), in the same folder as
+  the last save/open, instead of just reusing whatever filename happened
+  to be typed last time. The existing after-save behavior (renaming the
+  measurement to match whichever filename was ultimately chosen) is
+  unchanged -- accepting the suggestion as-is now just round-trips back
+  to the same (sanitized) name.
+
 ## [2.1.3]
 
 Baseline — changelog tracking starts here. See `git log` for history prior
