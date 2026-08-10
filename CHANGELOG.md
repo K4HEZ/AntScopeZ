@@ -20,6 +20,12 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   bundled/linked third-party component per platform, including Qt (bundled
   under LGPLv3 -- see `licenses/Qt/`) and the Windows-only FTDI driver
   package.
+- Packaged builds now actually ship the license/attribution files above
+  (`COPYING`, `LICENSE.txt`, `THIRD-PARTY-LICENSES.md`, `licenses/`)
+  instead of leaving them source-tree-only. Verified end-to-end on Linux:
+  rebuilt and `cpack`-packaged, confirmed present under
+  `usr/share/antscopez/` in the resulting `.deb`. Windows/macOS use the
+  same install-rule patterns but are unverified on those platforms.
 
 ### Fixed
 

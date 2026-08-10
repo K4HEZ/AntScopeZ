@@ -588,6 +588,72 @@ install(TARGETS AntScopeZ
     RUNTIME DESTINATION ${ANTSCOPE_RUNTIME_DEST}
 )
 
+#
+# License / attribution files
+#
+# Bundled on every platform so the third-party notices they cover -- Qt's
+# LGPLv3 election, HIDAPI's GPLv3 election, QCustomPlot, the Windows-only
+# FTDI driver package -- travel with the actual distributed binaries
+# instead of staying source-tree-only. See THIRD-PARTY-LICENSES.md for
+# what each component's license covers and why.
+#
+# Only verified end-to-end on Linux (the `release` CMake preset / .deb
+# packaging path); the Windows and macOS branches below follow the same
+# install(FILES/DIRECTORY) and target_sources()/MACOSX_PACKAGE_LOCATION
+# patterns already used elsewhere in this file for the equivalent
+# platform, but haven't been built and inspected on those platforms.
+#
+if(APPLE)
+    # install(TARGETS ... BUNDLE DESTINATION .) above installs the .app as
+    # a single already-assembled unit, so bundle content has to be part of
+    # the target *before* that point rather than added on afterward via
+    # install(FILES/DIRECTORY) -- same mechanism AntScopeZ.icns and the
+    # runtime data files above use, via MACOSX_PACKAGE_LOCATION.
+    set(ANTSCOPE_LICENSE_FILES
+        COPYING
+        LICENSE.txt
+        THIRD-PARTY-LICENSES.md
+        licenses/AntScope2/LICENSE.txt
+        licenses/AntScope2/README.md
+        licenses/FTDI/LICENSE.txt
+        licenses/FTDI/README.md
+        licenses/Qt/GPL-3.0.txt
+        licenses/Qt/LGPL-3.0.txt
+        licenses/Qt/README.md
+    )
+    set_source_files_properties(
+        COPYING LICENSE.txt THIRD-PARTY-LICENSES.md
+        PROPERTIES MACOSX_PACKAGE_LOCATION Resources
+    )
+    set_source_files_properties(
+        licenses/AntScope2/LICENSE.txt licenses/AntScope2/README.md
+        PROPERTIES MACOSX_PACKAGE_LOCATION Resources/licenses/AntScope2
+    )
+    set_source_files_properties(
+        licenses/FTDI/LICENSE.txt licenses/FTDI/README.md
+        PROPERTIES MACOSX_PACKAGE_LOCATION Resources/licenses/FTDI
+    )
+    set_source_files_properties(
+        licenses/Qt/GPL-3.0.txt licenses/Qt/LGPL-3.0.txt licenses/Qt/README.md
+        PROPERTIES MACOSX_PACKAGE_LOCATION Resources/licenses/Qt
+    )
+    target_sources(AntScopeZ PRIVATE ${ANTSCOPE_LICENSE_FILES})
+elseif(WIN32)
+    install(FILES COPYING LICENSE.txt THIRD-PARTY-LICENSES.md
+        DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+    install(DIRECTORY licenses
+        DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+else() # Linux and other Unix
+    install(FILES COPYING LICENSE.txt THIRD-PARTY-LICENSES.md
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/antscopez
+    )
+    install(DIRECTORY licenses
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/antscopez
+    )
+endif()
+
 if(WIN32)
     install(FILES ${ANTSCOPE_RUNTIME_FILES} ${ANTSCOPE_QM_FILES} ${ANTSCOPE_QT_QM_FILES}
         DESTINATION ${CMAKE_INSTALL_BINDIR}

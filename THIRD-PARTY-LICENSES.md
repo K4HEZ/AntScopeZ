@@ -59,22 +59,20 @@ must travel with that build.
 - **License files added to the repo:** `licenses/Qt/LGPL-3.0.txt` and
   `licenses/Qt/GPL-3.0.txt` (LGPLv3 incorporates GPLv3 by reference, so both
   are needed together), fetched verbatim from gnu.org -- see
-  `licenses/Qt/README.md`. These are not yet wired into any `install()`
-  rule in `CMakeLists.txt`, so they don't travel with the packaged output
-  yet; that's a follow-up build-system change, not done here.
-- **Action needed (partially done):** because actual Qt binaries are
-  shipped -- not merely linked against a system package whose own
-  `/usr/share/doc/.../copyright` would normally travel with it via apt --
-  this package is responsible for carrying Qt's own copyright/license
-  notices itself. `CMakeLists.txt` already notes that `dpkg-shlibdeps`
-  cannot attribute the private bundled copies to a system Qt package (hence
-  the `debian/shlibs.local` workaround nearby), which is the same gap:
-  nothing yet actually ships Qt's own `LICENSE`/copyright text alongside the
-  bundled `.so`/framework files. `licenses/Qt/` (added to this repo, see
-  above) is meant to be that text; remaining work is an `install()` rule
-  that copies it into the packaged output (e.g. `lib/antscopez/licenses/Qt/`
-  on Linux, alongside `Frameworks/` in the macOS bundle) so it actually
-  ships with the binaries it covers.
+  `licenses/Qt/README.md`.
+- **Now wired into the actual packaged output:** `CMakeLists.txt`'s
+  "License / attribution files" install-rules section installs `COPYING`,
+  `LICENSE.txt`, `THIRD-PARTY-LICENSES.md`, and the whole `licenses/`
+  directory (preserving its `AntScope2`/`FTDI`/`Qt` structure) into
+  `share/antscopez/` on Linux, `bin/` on Windows, and
+  `AntScopeZ.app/Contents/Resources/` on macOS. **Verified end-to-end on
+  Linux**: rebuilt via the `release` preset, packaged with `cpack`, and
+  confirmed via `dpkg-deb -c` that all of the above lands correctly inside
+  the actual `.deb` under `./usr/share/antscopez/`. The Windows and macOS
+  branches follow the same `install()`/`target_sources()` patterns already
+  used elsewhere in this file for other files on those platforms, but
+  haven't been built and inspected there -- flag it if either turns out to
+  need adjustment.
 
 ---
 
