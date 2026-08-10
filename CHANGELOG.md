@@ -11,6 +11,8 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+## [2.1.5] - 2026-08-10
+
 ### Fixed
 
 - **Installing the `.deb` broke other Qt applications on the system**

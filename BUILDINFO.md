@@ -127,8 +127,18 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
 
 - `analyzer/updater/downloader.cpp` uses `QDomDocument::ParseResult`, which is
   Qt 6.5+. A version guard keeps it building on 6.2–6.4.
-- `mainwindow.cpp` (~234 KB) and `measurements.cpp` (~192 KB) are very large and
-  are the main candidates for being split up.
+- ~~`mainwindow.cpp` (~234 KB) and `measurements.cpp` (~192 KB) are very
+  large and are the main candidates for being split up.~~ **Done
+  (2026-08-10):** both split into topical files sharing the same class
+  (`mainwindow_shortcuts.cpp`, `_mouse.cpp`, `_tabs.cpp`, `_multitab.cpp`,
+  `_analyzer.cpp`, `_scan.cpp`, `_frequency.cpp`, `_measurements_io.cpp`,
+  `_presets_bands.cpp`, `_markers.cpp`, `_settings.cpp`;
+  `measurements_popups.cpp`, `_io.cpp`, `_tdr.cpp`, `_redraw.cpp`,
+  `_farend.cpp`, `_autocal.cpp`, `_onefq.cpp`) -- pure code motion, no
+  behavior change, ~1,200 lines of confirmed-dead code (old
+  `/* */`-commented and `#if 0`'d implementations, found interleaved with
+  live code during the split) removed at the same time. `mainwindow.cpp`
+  itself is down to ~1,200 lines, `measurements.cpp` to ~1,600.
 - **Build/run against Qt 6.11, not an older system Qt (e.g. distro-packaged
   6.4.x).** A `.deb` built and run against system Qt 6.4.2 showed real bugs
   that don't reproduce under Qt 6.11.1: the analyzer sometimes refuses to
