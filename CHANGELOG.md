@@ -13,6 +13,28 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Fixed
 
+- **Installing the `.deb` broke other Qt applications on the system**
+  (e.g. `qpdfview` failing with `Could not find the Qt platform plugin
+  "xcb"` and aborting). Root cause: the Qt-6.11-bundling deploy step
+  (`GENERATE_QT_CONF`, see `CMakeLists.txt`) writes `qt.conf` "next to the
+  executable" -- but the real `AntScopeZ` binary lived directly in the
+  shared `/usr/bin`, same as every other installed program, so `qt.conf`
+  landed at plain `/usr/bin/qt.conf`. Qt's `qt.conf` lookup isn't scoped
+  to a specific app, it's just "whichever `qt.conf` sits in the directory
+  the running executable is in" -- so *every* Qt app launched from
+  `/usr/bin` inherited it too, and got redirected to this package's
+  bundled (and likely ABI-incompatible) Qt 6.11 plugins instead of their
+  own. Fixed by moving the real binary (renamed `AntScopeZ.bin`, as
+  before) out of `/usr/bin` entirely, into the already-private
+  `/usr/lib/x86_64-linux-gnu/antscopez/` directory alongside the bundled
+  Qt libraries themselves -- `qt.conf` now lands there too, fully isolated
+  from every other program's Qt. Only the thin `LD_LIBRARY_PATH` wrapper
+  script (unchanged otherwise) is still installed at `/usr/bin/AntScopeZ`,
+  since that's the one thing that actually needs to be on `PATH`. Verified
+  with a real `cpack` build: `/usr/bin/` now contains only the wrapper,
+  `qt.conf`/the real binary sit privately under `lib/x86_64-linux-gnu/antscopez/`,
+  and the package's dependency list is unaffected.
+
 - Fresh `.deb` install crashed on launch (SIGSEGV in `QCustomPlot::replot()`
   from inside `MainWindow`'s constructor, before the window was even shown).
   Root cause, found via `coredumpctl`: leaving the app on the "User Defined"
