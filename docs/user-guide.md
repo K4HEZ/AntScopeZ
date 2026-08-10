@@ -211,12 +211,11 @@ the main window.
 | Row checkbox | Shows/hides that measurement's trace on the charts |
 | Row pencil icon | Renames the measurement |
 
-**Chart tabs**: SWR, Phase, Z=R+jX, Z=R‖+jX, RL, Smith, TDR, Multi (plus
-a "User defined" tab if launched with `-developer`). An S21 tab also
-exists -- a substantially-built but deliberately unfinished two-port
-insertion-loss measurement -- but is never currently made visible; see
-[Troubleshooting](#troubleshooting) and `BUILDINFO.md`'s Known Issues
-for the full detail.
+**Chart tabs**: SWR, Phase, Z=R+jX, Z=R‖+jX, RL, Smith, TDR, Multi. A
+"User defined" tab and an S21 tab also exist in the code but aren't
+currently reachable -- both are unfinished/disabled features, not
+something you're missing in the UI; see `BUILDINFO.md`'s Known Issues
+for the full detail on either.
 
 ### Keyboard shortcuts
 
@@ -234,18 +233,20 @@ for the full detail.
 | Ctrl + 0 | Reset the Y-axis scale to default |
 | Ctrl + C | Copy the current chart to the clipboard as an image |
 
-*(Developer mode only: Ctrl+Alt+Shift+M and Ctrl+Alt+Shift+N trigger
-internal auto-calibration debug routines -- not meant for normal use.)*
+*(Ctrl+Alt+Shift+M and Ctrl+Alt+Shift+N trigger internal auto-calibration
+debug routines gated behind an internal developer flag that's currently
+disabled in the shipped build -- not reachable, and not meant for normal
+use even when it is.)*
 
 ## Settings
 
-The Settings dialog normally has three tabs: **General**, **OSL
-Calibration**, and **Cable**. (Two more, Customize and Updates, only
-appear under `-developer` -- see
-[Customized analyzer parameters](#customized-analyzer-parameters). The
-Updates tab is additionally removed unconditionally regardless of that
-flag, due to a known bug (#2247), so "Check for firmware updates" isn't
-currently reachable at all.)
+The Settings dialog has three tabs: **General**, **OSL Calibration**, and
+**Cable**. Two more, Customize and Updates, exist in the code but are
+currently disabled -- see `BUILDINFO.md`'s Known Issues for why (Customize,
+which lets you define a custom analyzer preset, turned out to have enough
+problems that it's not safe to expose yet; Updates is unrelated, blocked by
+a known bug, #2247, so "Check for firmware updates" isn't reachable at
+all).
 
 OSL Calibration has its own section -- see
 [Calibration (OSL)](#calibration-osl).
@@ -263,7 +264,7 @@ OSL Calibration has its own section -- see
 | Chart background | Opens a color picker for the plot background |
 | Theme | Light or Dark -- see [CHANGELOG.md](../CHANGELOG.md) for what it does and doesn't cover |
 | Show graph hint / Show markers hint / Show brief params under cursor | Toggle the various hover/cursor readout popups on the charts |
-| Don't restrict frequency *(developer mode only)* | Disables Start/Stop range clamping entirely -- hidden unless launched with `-developer` |
+| Don't restrict frequency | Would disable Start/Stop range clamping entirely -- currently hidden, gated behind the disabled internal developer flag (see `BUILDINFO.md`'s Known Issues) |
 | System impedance | The reference impedance (default 50Ω) everything -- SWR, Smith chart center, RL -- is calculated against |
 | Bands highlighting | A dropdown picking which region's band data to shade on the charts, plus a **...** button opening the band editor (add/edit/remove bands for that region) |
 | Show band name | Labels the shaded bands on the charts with their names, not just color |
@@ -630,90 +631,21 @@ TDR needed, just viewed through a different chart.
 
 ## Customized analyzer parameters
 
-AntScopeZ has a hidden "Customize" tab in Settings that lets you define your
-own named analyzer presets -- a custom minimum/maximum frequency range plus an
-LCD width/height used for screenshot layout. It's aimed at one specific
-situation: you have a unit that AntScopeZ already recognizes correctly (a
-clone, or a newer hardware revision of a model AntScopeZ knows about), but its
-real frequency range differs from what AntScopeZ assumes for that model.
+AntScopeZ has an unfinished "Customize" tab in Settings, intended to let you
+define a named analyzer preset -- a custom minimum/maximum frequency range
+plus an LCD width/height -- for a unit AntScopeZ already recognizes correctly
+(a clone, or a newer hardware revision of a known model) whose real frequency
+range differs from what AntScopeZ assumes for that model.
 
-### Enabling the tab
-
-The Customize tab (and the "Updates" tab next to it) are removed from the
-Settings dialog by default. Customize only appears when AntScopeZ is launched
-with the `-developer` command-line flag, which also unlocks a few other
-developer-only controls (see below). There's no in-app toggle for this --
-it's a launch argument. The Updates tab stays hidden unconditionally, in the
-current build; it's disabled outright due to a known bug (#2247) rather than
-gated by developer mode.
-
-### What "prototype" actually means here
-
-When you create a custom analyzer, you first pick a "prototype" from a list
-of AntScopeZ's built-in models (AA-30, AA-55, AA-230, AA-1500, etc.). Picking
-a prototype does **not** select a different communication protocol -- it just
-seeds the new entry's default frequency range and LCD dimensions from that
-model, as a starting point you then edit.
-
-The actual protocol AntScopeZ uses to talk to your analyzer is chosen purely
-by what the connected device reports about itself during the initial
-handshake (its version string over serial, or its HID identification). If
-your device's firmware reports itself as, say, an AA-55, AntScopeZ talks to it
-exactly like a genuine AA-55 -- same commands, same parsing -- regardless of
-any custom analyzer you've defined. Customizing doesn't change *how* commands
-are sent; it only changes *what frequency range* those commands are allowed to
-sweep.
-
-### Using it for a clone or an updated-range unit
-
-This is the practical use case:
-
-1. Confirm AntScopeZ already detects your device correctly (it identifies
-   itself as an existing model during connection).
-2. Open Settings → Customize (requires `-developer`), pick that model as the
-   prototype, give the preset an alias, and set the min/max frequency to what
-   your actual hardware supports.
-3. Check "Use customized analyzer."
-
-From that point on, the custom min/max frequency you entered is used as the
-sweep bounds for Single/Continuous scans on every chart tab, instead of the
-stock model's built-in range -- so you can sweep wider (or narrower) than the
-official spec for that model without any code changes.
-
-### It only takes effect when launched with `-developer`, every time
-
-Your custom presets and the "Use customized analyzer" checkbox are saved to
-`AntScopeZ.ini`, but they are only *loaded back* into the running app when
-AntScopeZ is started with `-developer`. Launch it normally and the saved data
-just sits there, unread -- the app behaves exactly like stock, with no custom
-range applied and no way to reach the Customize tab to turn it on. Nothing is
-silently overridden in a normal launch.
-
-Conversely, the reverse is also true: relaunching with `-developer` brings the
-override straight back automatically, using whatever was last saved, even if
-you don't open Settings or touch the checkbox that session. So the flag alone
-fully controls whether the customization is live -- it isn't something you
-have to re-enable by hand each time, and it isn't something that leaks into a
-non-developer launch either.
-
-### Limits and things to watch for
-
-- **No capability negotiation happens.** AntScopeZ does not ask the device
-  what frequencies it can actually produce -- it just sends whatever range you
-  configured, using the same command format as the real model. If you set a
-  range your hardware can't actually sweep, you won't get an error; you'll get
-  meaningless or garbage results for the out-of-range portion.
-- **Detection still depends on the device's own reported name.** If your
-  clone's firmware reports a version string AntScopeZ doesn't recognize at
-  all, it won't be identified as any model, and a custom analyzer preset can't
-  help -- there's nothing to attach it to.
-- **This is a developer-mode feature.** It's not intended as a
-  polished end-user workflow, and settings entered here are not validated
-  against real hardware limits the way the built-in model list is.
-- A related developer-only control, "Restrict frequency" (also gated by
-  `-developer`), can be unchecked to disable range clamping entirely instead
-  of defining a custom preset -- a blunter alternative if you just want to
-  type any frequency without setting up an alias.
+It's currently **disabled in the code**, not just hidden behind a launch
+flag: an internal developer-mode switch that used to unlock this tab (among a
+few smaller debug controls) is now permanently off regardless of any
+command-line argument, because exercising the feature turned up real
+problems -- a crash on some paths, a silently-ignored custom range on others,
+and an outright device-protocol rejection when actually scanning with it
+enabled. See `BUILDINFO.md`'s Known Issues for the full technical writeup
+(what's fixed, what's still broken, and where in the code) if you're looking
+to pick this back up.
 
 ## Files and directories
 
@@ -876,10 +808,11 @@ delete.
   wideband, near-DC sweep -- a normal band-limited scan (e.g. just 20m)
   won't show anything there. See
   [TDR (Time Domain Reflectometry)](#tdr-time-domain-reflectometry).
-- **Customize/Updates tabs aren't in Settings, or a custom analyzer
-  preset isn't taking effect.** Both require launching with the
-  `-developer` flag -- see
-  [Customized analyzer parameters](#customized-analyzer-parameters).
+- **Customize/Updates tabs aren't in Settings.** Both are unreachable in
+  the current build -- Customize is disabled outright (unfinished, see
+  [Customized analyzer parameters](#customized-analyzer-parameters)),
+  Updates is blocked by a known bug (#2247). Neither is something you're
+  missing; there's no flag or setting that brings them back right now.
 - **Cable loss compensation ("Subtract cable"/"Add cable") doesn't
   seem to change anything.** Flagged as unverified in
   [the Cable tab reference](#cable-tab) -- it may not currently do

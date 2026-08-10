@@ -747,7 +747,20 @@ void AnalyzerPro::slotFullInfo(const QString& _info)
 {
     int index = _info.indexOf("LIC");
     if (index != -1) {
-        AnalyzerParameters* par = AnalyzerParameters::byName(getModelString());
+        // The license level ("LIC1"/"LIC2"/"LIC3") describes the physically
+        // connected device's own capability, unrelated to CustomAnalyzer's
+        // user-picked "prototype" override -- which is what getModelString()
+        // returns while "Use customized analyzer" is checked (see
+        // AnalyzerPro::getModelString()). That prototype string is never a
+        // real model name (defaults to placeholders like "Custom"), so
+        // byName() reliably returned nullptr here whenever a custom analyzer
+        // was active, crashing on the very next line. The device was already
+        // identified by its serial-number prefix at connection time
+        // (SelectDeviceDialog::onApply() -> AnalyzerParameters::setCurrent()),
+        // so use that directly instead.
+        AnalyzerParameters* par = AnalyzerParameters::current();
+        if (par == nullptr)
+            return;
         QString _name = _info.mid(index, 4);
         qInfo() << "AnalyzerPro::slotFullInfo" << _name;
         if (_name == "LIC1") {

@@ -1358,9 +1358,6 @@ void Settings::initCustomizeTab()
     ui->comboBoxName->blockSignals(true);
     ui->comboBoxPrototype->blockSignals(true);
 
-    ui->comboBoxPrototype->hide();
-    ui->label_19->hide();
-
     ui->comboBoxPrototype->clear();
     ui->comboBoxName->clear();
 

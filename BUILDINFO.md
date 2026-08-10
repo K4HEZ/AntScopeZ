@@ -200,3 +200,99 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
     connected to a capable device over HID, and add `WAIT_S21_DATA`
     handling to `com_analyzer.cpp`/`ble_analyzer.cpp` if S21 should
     also work over serial/BLE.
+- **Developer mode (`-developer` flag) is intentionally disabled as of
+  2026-08-10 -- `main.cpp` no longer sets `g_developerMode` even when the
+  flag is passed (the `args.contains("-developer")` check itself is left in
+  place, so re-enabling is a one-line change once the items below are
+  fixed).** It gates the Settings > Customize tab (Custom Analyzer / the
+  "User Defined" chart tab), plus a few smaller things: the "Don't restrict
+  frequency" checkbox, the Ctrl+Alt+Shift+M/N auto-calibration debug
+  shortcuts, and a higher `MAX_DOTS`/`spinBoxPoints` ceiling. Custom
+  Analyzer is the reason it's off: a "User Defined" tab crash (fixed
+  separately, see `CHANGELOG.md`) led to actually exercising this feature
+  for what looks like the first time in a while, and it turned up enough
+  problems that shipping it live to anyone who passes `-developer` isn't
+  safe yet.
+  - **What it's for:** define a named preset that overrides a real,
+    already-detected model's min/max frequency and LCD width/height --
+    aimed at a clone or updated-range unit that AntScopeZ already
+    identifies correctly (via the device's own reported version string)
+    but whose real frequency range differs from what AntScopeZ assumes for
+    that model. Picking a "prototype" only seeds sensible defaults; it
+    never changes which protocol/commands are used to talk to the device.
+  - **Architecture:** `CustomAnalyzer` (`analyzer/customanalyzer.h/.cpp`)
+    holds the persisted presets (`m_map` of alias -> preset,
+    `m_currentAlias`, `m_useCustomized`) and saves/loads them under the
+    `AntScopeZ.ini` `[CustomAnalyzers]` group. `Settings::initCustomizeTab()`
+    (`settings.cpp`) wires up the Customize tab UI. Three
+    `AnalyzerPro` methods -- `getModelString()`, `getMinFq()`, `getMaxFq()`
+    (`analyzerpro.cpp`) -- are the actual integration points: each checks
+    `CustomAnalyzer::customized()` and substitutes the custom value in place
+    of the real device's `AnalyzerParameters` entry (the fixed table of
+    ~35 real RigExpert models, `analyzer/analyzerparameters.h`).
+  - **FIXED:** `AnalyzerPro::slotFullInfo()` (`analyzerpro.cpp`) null-derefed
+    `AnalyzerParameters::byName(getModelString())` -- `getModelString()`
+    returns `CustomAnalyzer::currentPrototype()` while customized, which is
+    never a real model name (defaults to the literal placeholder
+    `"Custom"`), so `byName()` reliably returned `nullptr` and the very next
+    line crashed on it (confirmed via `coredumpctl`: SIGSEGV, null `this` +
+    member offset, on a RigExpert Match RFE reporting its license level
+    mid-scan). Now reads `AnalyzerParameters::current()` instead -- the
+    real, physically connected device, already resolved by serial-number
+    prefix at connection time
+    (`SelectDeviceDialog::onApply()` -> `AnalyzerParameters::setCurrent()`).
+    License-level bookkeeping describes the real hardware, not whatever
+    override is configured for display/range purposes.
+  - **FIXED:** `Settings::initCustomizeTab()` unconditionally `.hide()`'d
+    `comboBoxPrototype` and its label, despite correctly populating it with
+    every `AnalyzerParameters` model name right below -- so the one control
+    that lets you pick a valid reference model literally couldn't be used.
+    Unhidden; confirmed it populates.
+  - **STILL BROKEN:** the custom min/max frequency override doesn't survive
+    a scan even with a valid prototype picked. `AnalyzerParameters::
+    normalizeFq()`/`normalizeFqRange()` (`analyzerparameters.h`)
+    unconditionally clamp to `AnalyzerParameters::current()`'s real stock
+    range and have no concept of `CustomAnalyzer` at all;
+    `MainWindow::on_dataChanged()` calls `normalizeFqRange()` on every range
+    change, so both "Full Range" and a typed Stop value get silently
+    clamped straight back down to the real device's limit. Called from
+    roughly 8 sites total in `mainwindow.cpp`, not just the one -- fixing
+    this means making those two static methods customization-aware (same
+    `CustomAnalyzer::customized() ? ... : ...` pattern
+    `AnalyzerPro::getMinFq()/getMaxFq()` already use), not patching call
+    sites individually.
+  - **STILL BROKEN, not diagnosed:** running an actual scan against a real
+    device (RigExpert Match RFE) with "Use customized analyzer" checked
+    gets the outgoing command rejected at the protocol level --
+    `HidAnalyzer::sendData()` logs
+    `***** ERROR:  "Error.Not recognized"` in response to sending
+    `07046f66660d0000...` (zero-padded to the fixed HID report size).
+    Root cause not chased this pass -- worth checking whether the command
+    encodes a frequency value that becomes malformed once it's built from a
+    custom range instead of a real model's, but that's a guess, not a
+    finding.
+  - `Settings::on_addButton()` ("New") sets the (no longer hidden)
+    `comboBoxPrototype`'s current text to the literal string `"names[0]"`
+    -- dead placeholder, never actually indexed into a real list. Harmless
+    now that the combo box is visible and user-selectable (you can just
+    pick a real entry yourself), but still wrong and worth fixing properly.
+  - Reported, not yet diagnosed: the Customize tab's controls looking "not
+    laid out cleanly" at runtime -- no screenshot yet to compare against
+    the `.ui` markup, which looks like a structurally normal form layout
+    on its own.
+  - Separate feature living on the same tab, not part of Custom Analyzer
+    itself: the six "Auto-calibration" length/resistance fields
+    (`cable_length_min/max/steps`, `cable_res_min/max/steps`) feed
+    `Measurements::autoCalibrate()` (`measurements.cpp`), a brute-force
+    grid search for the best-fit cable length + characteristic resistance
+    against a reference measurement, whose result gets pushed to the
+    analyzer firmware as a `calrl<R>,<L>` calibration command
+    (`MainWindow::autoCalibrate()`, `mainwindow.cpp`). `measurements.h`'s
+    own comment says what it's for: `// 0-NONE, 1-R,L(old AA-1400),
+    2-C,L(new AA-230 ZOOM)` -- a legacy calibration routine for the AA-1400
+    specifically (only the R,L path is actually implemented). Only reachable
+    via the developer-only Ctrl+Alt+Shift+M shortcut
+    (`MainWindow::on_presssCtrlAltShiftM()`); both real trigger sites
+    (`on_measurementComplete()`, `on_measurementCompleteNano()`) have an
+    `#if 0`-disabled older variant sitting right next to the live one,
+    suggesting this was left mid-refactor.
