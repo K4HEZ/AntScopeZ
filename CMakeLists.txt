@@ -1,10 +1,22 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(AntScopeZ
-    VERSION 2.1.4
+    VERSION 2.1.5
     DESCRIPTION "AntScopeZ Antenna Analyzer Application"
     LANGUAGES C CXX
 )
+
+# PROJECT_VERSION itself has to stay strictly numeric (major.minor.patch) --
+# CMake's project(VERSION ...) rejects anything else, and CPACK_PACKAGE_VERSION
+# / the .deb filename both derive from it, where a suffix would just fight
+# Debian's own version-format rules. This suffix is for humans instead: it
+# only feeds ANTSCOPEZ_VER (About box, title bar, startup log line -- see
+# target_compile_definitions() below), so an in-progress build reads
+# "2.1.5-dev" instead of silently claiming to be the exact 2.1.5 release.
+# Clear it to an empty string right when 2.1.5 actually ships (matching
+# commit + `v2.1.5` tag, same pattern as `v2.1.4`), then bump PROJECT_VERSION
+# and set this back to "-dev" to start the next cycle.
+set(ANTSCOPEZ_VER_SUFFIX "-dev")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -238,7 +250,7 @@ qt_add_executable(AntScopeZ
 #
 
 target_compile_definitions(AntScopeZ PRIVATE
-    ANTSCOPEZ_VER="${PROJECT_VERSION}"
+    ANTSCOPEZ_VER="${PROJECT_VERSION}${ANTSCOPEZ_VER_SUFFIX}"
 )
 
 # The qmake build defined _DEBUG in debug configurations.

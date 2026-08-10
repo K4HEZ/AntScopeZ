@@ -33,6 +33,29 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   result before calling `replot()` on it, matching the pattern already used
   by the print path.
 
+- Custom Analyzer crashed the moment a real device sent its license level
+  during a scan (`AnalyzerPro::slotFullInfo()`, `analyzerpro.cpp`), whenever
+  "Use customized analyzer" was checked. Root cause, found via
+  `coredumpctl` on a RigExpert Match RFE: `slotFullInfo()` looked up the
+  license bookkeeping target via `AnalyzerParameters::byName(getModelString())`,
+  and `getModelString()` returns `CustomAnalyzer::currentPrototype()` while
+  customized -- which is never a real model name (defaults to the literal
+  placeholder `"Custom"`), so `byName()` reliably returned `nullptr` and the
+  next line dereferenced it. Fixed by reading
+  `AnalyzerParameters::current()` instead -- the real, physically connected
+  device, already resolved by serial-number prefix at connection time --
+  since license level describes the actual hardware, not whatever
+  display/range override is configured. Also unhid `comboBoxPrototype` in
+  `Settings::initCustomizeTab()` (`settings.cpp`), which was correctly
+  populated with every known model name but unconditionally `.hide()`'d, so
+  there was previously no way to pick a valid reference model at all.
+  Custom Analyzer still has open problems beyond this (the custom frequency
+  range doesn't survive a scan, and a real scan with it enabled gets
+  rejected at the protocol level) -- see `BUILDINFO.md`'s Known Issues for
+  the full writeup. Given that, `-developer` (which gates this feature,
+  among a few smaller debug controls) is disabled outright in `main.cpp`
+  for this release, regardless of the command-line flag.
+
 - `PopUp`/`MarkersPopUp`'s remembered on-screen position (the Hint,
   BriefHint, and Markers popups) used a `tr()`-translated string as
   their `AntScopeZ.ini` group name/internal comparison key
@@ -85,6 +108,26 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   Unchecking it did nothing to stop analyzer traffic at launch once a
   device had ever been saved that way. Fixed in `mainwindow.cpp`: one
   gate now covers both paths.
+
+### Changed
+
+- Bumped `CMakeLists.txt`'s `project(VERSION ...)` to 2.1.5 immediately
+  rather than waiting until release, since `develop`/`master` had already
+  diverged from the 2.1.4 tag -- a build from source was otherwise
+  claiming to *be* the exact release it wasn't. `PROJECT_VERSION` itself
+  stays strictly numeric (CMake requires that, and `CPACK_PACKAGE_VERSION`/
+  the `.deb` filename both derive from it), so a separate
+  `ANTSCOPEZ_VER_SUFFIX` CMake variable (currently `"-dev"`) feeds only the
+  human-visible `ANTSCOPEZ_VER` string (About box, title bar, startup log
+  line) -- reads "AntScopeZ v.2.1.5-dev" until release, when the suffix
+  gets cleared and the commit tagged `v2.1.5`, matching the existing
+  `v2.1.4` tag pattern.
+- `-developer` no longer does anything (`main.cpp`) -- the command-line
+  flag is still parsed but no longer sets `g_developerMode`, so the
+  Settings "Customize"/Updates tabs, the "Don't restrict frequency"
+  checkbox, and the Ctrl+Alt+Shift+M/N auto-calibration debug shortcuts are
+  all unreachable regardless of launch arguments. See the Custom Analyzer
+  entry above and `BUILDINFO.md`'s Known Issues for why.
 
 ## [2.1.4] - 2026-08-09
 
