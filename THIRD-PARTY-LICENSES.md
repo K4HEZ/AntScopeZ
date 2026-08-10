@@ -1,10 +1,13 @@
 # Third-Party Components
 
 AntScopeZ's own code is Copyright 2016-2020 Rig Expert Ukraine Ltd., licensed
-under the MIT terms in `LICENSE.txt`. The AntScopeZ *application*, as
-compiled and distributed, is licensed as a whole under the GNU General
-Public License v3 or later (`COPYING`) because it statically incorporates
-GPLv3 components listed below.
+under the MIT terms in `LICENSE.txt` (also mirrored standalone at
+`licenses/AntScope2/`, alongside the other component license folders below,
+since this is the license of the AntScope2 codebase AntScopeZ was forked
+from). The AntScopeZ *application*, as compiled and distributed, is
+licensed as a whole under the GNU General Public License v3 or later
+(`COPYING`) because it statically incorporates GPLv3 components listed
+below.
 
 This file lists every third-party component that ends up inside the
 distributed AntScopeZ package -- whether its source lives in this
