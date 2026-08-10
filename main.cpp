@@ -112,32 +112,9 @@ int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
 int main(int argc, char *argv[])
 {
     qputenv("QT_ACCESSIBILITY", "0");
-/*
-    QString title = windowTitle();
-    bool res = m_qtLanguageTranslator->load("QtLanguage_" + locale, Settings::languageDataFolder());
-    qApp->installTranslator(m_qtLanguageTranslator);
-    ui->retranslateUi(this);
-*/
 
-
-// deprecated
-//    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-
-// Fix for 4K Display Issues Disabled
-#ifdef DUMB_Q_OS_WIN
-    char** params;
-    params = new char*[argc+2];
-    int ip=0;
-    for (; ip<argc; ip++) {
-        params[ip] = argv[ip];
-    }
-    params[ip++] = (char*)"--platform";
-    params[ip] = (char*)"windows:dpiawareness=0";
-    int cntp = argc + 2;
-    QApplication a(cntp, params);
-#else
+    // Fix for 4K Display Issues Disabled
     QApplication a(argc, argv);
-#endif
 
     // Used by QStandardPaths (Settings::localDataFolder() et al.) to build
     // the per-user config directory -- ~/.config/AntScopeZ on Linux. No
@@ -171,9 +148,66 @@ int main(int argc, char *argv[])
     //a.eventDispatcher()->installNativeEventFilter(&myEventfilter);
 #endif
 
+    // -developer is intentionally inert as of 2026-08-10, regardless of
+    // whether it's passed on the command line. This flag gates the
+    // Settings > Customize tab (Custom Analyzer / "User Defined" chart tab),
+    // among a few smaller things (the "Don't restrict frequency" checkbox,
+    // Ctrl+Alt+Shift+M/N auto-calibration debug shortcuts, a higher
+    // MAX_DOTS/spinBoxPoints ceiling). Investigating a "User Defined" tab
+    // crash led to actually exercising Custom Analyzer for the first time in
+    // a while, which turned up enough problems that shipping it live to
+    // anyone who happens to pass -developer isn't safe:
+    //
+    //   - FIXED this session: AnalyzerPro::slotFullInfo() (analyzerpro.cpp)
+    //     null-derefed AnalyzerParameters::byName(getModelString()) --
+    //     getModelString() returns CustomAnalyzer::currentPrototype() while
+    //     customized, which is never a real model name (defaults to the
+    //     literal placeholder "Custom"), so byName() reliably returned
+    //     nullptr and the very next line crashed on it. Now reads
+    //     AnalyzerParameters::current() instead (the real, physically
+    //     connected device, already resolved by serial-number prefix at
+    //     connection time) -- license-level bookkeeping is about the real
+    //     hardware, not whatever custom override is configured for display.
+    //   - FIXED this session: Settings::initCustomizeTab() (settings.cpp)
+    //     unconditionally .hide()'d comboBoxPrototype and its label, despite
+    //     correctly populating it with every AnalyzerParameters model name
+    //     right below -- so the one control that lets you pick a valid
+    //     reference model literally couldn't be used. Unhidden.
+    //   - STILL BROKEN: the custom min/max frequency override doesn't
+    //     survive a scan even once a valid prototype is picked.
+    //     AnalyzerParameters::normalizeFq()/normalizeFqRange()
+    //     (analyzerparameters.h) unconditionally clamp to
+    //     AnalyzerParameters::current()'s real stock range and have no idea
+    //     CustomAnalyzer exists; on_dataChanged() (mainwindow.cpp) calls
+    //     normalizeFqRange() on every range change, so "Full Range" and a
+    //     typed Stop value both get silently clamped straight back down to
+    //     the real device's limit. Called from ~8 sites total
+    //     (mainwindow.cpp), not just the one -- needs those made
+    //     customization-aware, not a single call-site patch.
+    //   - STILL BROKEN, not diagnosed: running an actual scan against a real
+    //     device (RigExpert Match RFE, this session) with "Use customized
+    //     analyzer" checked gets the command rejected at the protocol level
+    //     -- HidAnalyzer::sendData() qDebug()s
+    //     `***** ERROR:  "Error.Not recognized"` in response to
+    //     `07046f66660d0000...` (zero-padded to the fixed HID report size).
+    //     Root cause unknown; deliberately not chased this pass.
+    //   - Settings::on_addButton() ("New") sets the (no longer hidden)
+    //     comboBoxPrototype's current text to the literal string
+    //     `"names[0]"` -- dead placeholder, never indexed into a real list.
+    //     Harmless now that the combo box is visible and user-selectable,
+    //     but still worth fixing properly.
+    //   - Reported, not yet diagnosed: Customize tab's controls "not laid
+    //     out cleanly" at runtime (no screenshot yet to compare against the
+    //     .ui markup, which looks structurally normal on its own).
+    //
+    // See BUILDINFO.md's "Known issues" for the full writeup (matching the
+    // S21-tab entry's depth) -- this comment is the short version. Flip
+    // g_developerMode back to `true` here once the two STILL BROKEN items
+    // above are actually fixed, not before; the args.contains() check itself
+    // is left in place so that's a one-line change.
     if (args.contains("-developer")) {
-        g_developerMode = true;
-        MAX_DOTS = 1000000;
+        //g_developerMode = true;
+        //MAX_DOTS = 1000000;
     }
     if (args.contains("-usb-only")) {
         g_usbOnly = true;

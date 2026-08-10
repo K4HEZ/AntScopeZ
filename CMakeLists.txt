@@ -1,10 +1,22 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(AntScopeZ
-    VERSION 2.1.4
+    VERSION 2.1.5
     DESCRIPTION "AntScopeZ Antenna Analyzer Application"
     LANGUAGES C CXX
 )
+
+# PROJECT_VERSION itself has to stay strictly numeric (major.minor.patch) --
+# CMake's project(VERSION ...) rejects anything else, and CPACK_PACKAGE_VERSION
+# / the .deb filename both derive from it, where a suffix would just fight
+# Debian's own version-format rules. This suffix is for humans instead: it
+# only feeds ANTSCOPEZ_VER (About box, title bar, startup log line -- see
+# target_compile_definitions() below), so an in-progress build reads
+# "2.1.5-dev" instead of silently claiming to be the exact 2.1.5 release.
+# Clear it to an empty string right when 2.1.5 actually ships (matching
+# commit + `v2.1.5` tag, same pattern as `v2.1.4`), then bump PROJECT_VERSION
+# and set this back to "-dev" to start the next cycle.
+set(ANTSCOPEZ_VER_SUFFIX "")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -100,9 +112,27 @@ set(ANTSCOPE_SOURCES
     licenseagent.cpp
     main.cpp
     mainwindow.cpp
+    mainwindow_analyzer.cpp
+    mainwindow_frequency.cpp
+    mainwindow_markers.cpp
+    mainwindow_measurements_io.cpp
+    mainwindow_mouse.cpp
+    mainwindow_multitab.cpp
+    mainwindow_presets_bands.cpp
+    mainwindow_scan.cpp
+    mainwindow_settings.cpp
+    mainwindow_shortcuts.cpp
+    mainwindow_tabs.cpp
     markers.cpp
     markerspopup.cpp
     measurements.cpp
+    measurements_autocal.cpp
+    measurements_farend.cpp
+    measurements_io.cpp
+    measurements_onefq.cpp
+    measurements_popups.cpp
+    measurements_redraw.cpp
+    measurements_tdr.cpp
     modelesspopup.cpp
     Notification.cpp
     onefqwidget.cpp
@@ -238,7 +268,7 @@ qt_add_executable(AntScopeZ
 #
 
 target_compile_definitions(AntScopeZ PRIVATE
-    ANTSCOPEZ_VER="${PROJECT_VERSION}"
+    ANTSCOPEZ_VER="${PROJECT_VERSION}${ANTSCOPEZ_VER_SUFFIX}"
 )
 
 # The qmake build defined _DEBUG in debug configurations.
@@ -364,14 +394,20 @@ else() # Linux and other Unix
     # The Install rules section below bundles Qt into a private
     # ${CMAKE_INSTALL_LIBDIR}/antscopez subdirectory instead (to avoid
     # colliding with any distro Qt6 packages actually installed at the
-    # default location), so this target needs its own longer INSTALL_RPATH
-    # to match. Setting it explicitly here, rather than leaving it to be
-    # patched in via file(RPATH_SET) at install time, matters because CMake
-    # only reserves as much space for the RPATH string as the *build-time*
-    # link step asked for -- a later file(RPATH_SET) to a longer string
-    # than that fails outright ("replacement path is too long").
+    # default location), so this target needs its own INSTALL_RPATH to
+    # match. The real binary is installed directly *inside* that same
+    # antscopez subdirectory (ANTSCOPE_RUNTIME_DEST, Install rules section
+    # -- keeping it out of bindir avoids a qt.conf collision with other
+    # system Qt apps, see the comment next to GENERATE_QT_CONF), sitting
+    # right alongside the bundled libraries rather than one level up in
+    # bindir, so plain $ORIGIN (no ../ traversal) is correct here. Setting
+    # it explicitly, rather than leaving it to be patched in via
+    # file(RPATH_SET) at install time, matters because CMake only reserves
+    # as much space for the RPATH string as the *build-time* link step
+    # asked for -- a later file(RPATH_SET) to a longer string than that
+    # fails outright ("replacement path is too long").
     set_target_properties(AntScopeZ PROPERTIES
-        INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}/antscopez"
+        INSTALL_RPATH "$ORIGIN"
     )
 
 endif()
@@ -530,15 +566,26 @@ endif()
 #
 # macOS/Windows keep the original "everything next to the binary" layout
 # (Settings::programDataPath()/languageDataFolder() still look there on
-# those platforms). Linux gets a real FHS layout: binary in bindir, shared
-# read-only data in datadir/antscopez (see ANTSCOPE_SHARED_DATA_DIR above
-# and Settings::sharedDataFolder()), plus a .desktop file and icon so it
-# shows up in application menus.
+# those platforms). Linux gets a real FHS layout: shared read-only data in
+# datadir/antscopez (see ANTSCOPE_SHARED_DATA_DIR above and
+# Settings::sharedDataFolder()), plus a .desktop file and icon so it shows
+# up in application menus.
 #
+# The real Linux binary does NOT go in bindir, unlike Windows/macOS --
+# see the qt.conf comment further down (next to GENERATE_QT_CONF) for why.
+# Only a thin wrapper script ends up at bindir/AntScopeZ (installed by the
+# install(CODE) block near the bottom of the "Bundle Qt privately" section
+# below).
+#
+if(WIN32 OR APPLE)
+    set(ANTSCOPE_RUNTIME_DEST "${CMAKE_INSTALL_BINDIR}")
+else()
+    set(ANTSCOPE_RUNTIME_DEST "${CMAKE_INSTALL_LIBDIR}/antscopez")
+endif()
 
 install(TARGETS AntScopeZ
     BUNDLE  DESTINATION .
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    RUNTIME DESTINATION ${ANTSCOPE_RUNTIME_DEST}
 )
 
 if(WIN32)
@@ -580,6 +627,24 @@ elseif(NOT APPLE) # Linux and other Unix
     # without needing LD_LIBRARY_PATH, and (via GENERATE_QT_CONF) writes a
     # qt.conf next to the executable so Qt's own plugin/resource lookup uses
     # the bundled copies too instead of the compiled-in /opt/Qt path.
+    #
+    # "Next to the executable" is exactly why ANTSCOPE_RUNTIME_DEST above
+    # points the real binary at libdir/antscopez instead of bindir on Linux:
+    # Qt's qt.conf lookup isn't scoped to this app at all, it's just
+    # "whatever qt.conf sits in the same directory as the running
+    # executable" -- global per-directory, not per-binary. A real install
+    # (2026-08-10) confirmed this the hard way: qt.conf landed at plain
+    # /usr/bin/qt.conf (since bindir used to be where the binary lived),
+    # and every *other* Qt application on the system launched from
+    # /usr/bin -- e.g. qpdfview -- inherited it too, sending them off to
+    # load this package's bundled (and likely ABI-incompatible) Qt 6.11
+    # plugins instead of their own, breaking them outright ("Could not
+    # find the Qt platform plugin 'xcb'"). Keeping the real binary (and
+    # thus qt.conf) inside the private libdir/antscopez directory, with
+    # only the wrapper script (which has no qt.conf-sensitive behavior of
+    # its own) at bindir, keeps this package's Qt override from leaking
+    # into every other Qt app that happens to share /usr/bin.
+    #
     # Translations are loaded via two QTranslators (mainwindow.cpp's
     # m_qtLanguageTranslator and m_qtBaseTranslator) from QtLanguage_*.qm
     # and qtbase_*.qm respectively -- both staged into
@@ -644,6 +709,18 @@ elseif(NOT APPLE) # Linux and other Unix
         TARGET AntScopeZ
         OUTPUT_SCRIPT deploy_script
         CONTENT "
+# QT_DEPLOY_BIN_DIR is NOT actually derived from install(TARGETS)'s real
+# RUNTIME DESTINATION -- QtDeploySupport.cmake just hardcodes it to the
+# literal string \"bin\" unless something else sets it first (confirmed by
+# reading the generated .qt/QtDeploySupport.cmake; easy to assume
+# otherwise, since it happened to match ANTSCOPE_RUNTIME_DEST back when
+# that was plain bindir). Override it here to match
+# ANTSCOPE_RUNTIME_DEST (Install rules section, top of this file) --
+# without this, qt_deploy_runtime_dependencies() below and the RPATH_SET
+# calls both still look for the binary at bindir, which is empty (the
+# real binary is deliberately kept out of bindir now -- see the qt.conf
+# comment above GENERATE_QT_CONF below for why).
+set(QT_DEPLOY_BIN_DIR \"${ANTSCOPE_RUNTIME_DEST}\")
 set(exe_path \"\${QT_DEPLOY_PREFIX}/\${QT_DEPLOY_BIN_DIR}/$<TARGET_FILE_NAME:AntScopeZ>\")
 file(RPATH_SET FILE \"\${exe_path}\" NEW_RPATH \"${_antscope_qt_lib_dir}\")
 qt_deploy_runtime_dependencies(
@@ -653,7 +730,7 @@ qt_deploy_runtime_dependencies(
     GENERATE_QT_CONF
     NO_TRANSLATIONS
 )
-file(RPATH_SET FILE \"\${exe_path}\" NEW_RPATH \"\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}/antscopez\")
+file(RPATH_SET FILE \"\${exe_path}\" NEW_RPATH \"\$ORIGIN\")
 
 # CPack's dpkg-shlibdeps integration (see the Packaging section below) is
 # only able to recognize the bundled libraries above as satisfying their
@@ -704,10 +781,14 @@ endforeach()
     # RPATH) only applies to each object's own direct dependencies. This
     # is the same fix linuxdeployqt-based AppImages typically ship as an
     # AppRun wrapper script, for what appears to be the same class of gap.
-    # So: install(TARGETS) above puts the real binary at ${CMAKE_INSTALL_BINDIR}/AntScopeZ
-    # (also where qt_deploy_runtime_dependencies() above expects to find
-    # it -- this must run after that, not before); rename it to
-    # AntScopeZ.bin and put a wrapper script in its place.
+    # So: install(TARGETS) above puts the real binary at
+    # ${CMAKE_INSTALL_LIBDIR}/antscopez/AntScopeZ (ANTSCOPE_RUNTIME_DEST --
+    # also where qt_deploy_runtime_dependencies() above expects to find it,
+    # this must run after that, not before); rename it to AntScopeZ.bin and
+    # put a wrapper script at bindir/AntScopeZ in its place -- the only
+    # thing this package puts in the shared bindir at all, see the
+    # qt.conf comment next to GENERATE_QT_CONF for why the real binary
+    # itself doesn't live there.
     configure_file(
         "${CMAKE_CURRENT_SOURCE_DIR}/cmake/antscopez-wrapper.sh.in"
         "${CMAKE_CURRENT_BINARY_DIR}/AntScopeZ-wrapper.sh"
@@ -717,7 +798,7 @@ endforeach()
     # honors $ENV{DESTDIR} on its own; the DESTINATION below deliberately
     # does *not* include it too, to avoid applying it twice.
     install(CODE "
-        file(RENAME \"\$ENV{DESTDIR}${CMAKE_INSTALL_FULL_BINDIR}/AntScopeZ\" \"\$ENV{DESTDIR}${CMAKE_INSTALL_FULL_BINDIR}/AntScopeZ.bin\")
+        file(RENAME \"\$ENV{DESTDIR}${CMAKE_INSTALL_FULL_LIBDIR}/antscopez/AntScopeZ\" \"\$ENV{DESTDIR}${CMAKE_INSTALL_FULL_LIBDIR}/antscopez/AntScopeZ.bin\")
         file(INSTALL \"${CMAKE_CURRENT_BINARY_DIR}/AntScopeZ-wrapper.sh\"
             DESTINATION \"${CMAKE_INSTALL_FULL_BINDIR}\"
             RENAME AntScopeZ

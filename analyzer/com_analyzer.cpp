@@ -38,7 +38,6 @@ static const unsigned char crc8_table[256] = {
     0xE8, 0xEF, 0xFA, 0xFD, 0xF4, 0xF3};
 
 
-
 ComAnalyzer::ComAnalyzer(QObject *parent) : BaseAnalyzer(parent),
     m_chartTimer(NULL),
     //m_ok(false),
@@ -376,85 +375,6 @@ qint64 ComAnalyzer::sendCommand(const QString& data)
     return res;
 }
 
-/*
-void ComAnalyzer::startMeasureOneFq(qint64 fqFrom, int dotsNumber, bool frx)
-{
-    startMeasure(fqFrom, fqFrom, dotsNumber, frx);
-}
-
-
-void ComAnalyzer::startMeasure(qint64 fqFrom, qint64 fqTo, int dotsNumber, bool frx)
-{
-    Q_UNUSED (frx)
-
-    static qint32 state = 1;
-    static QString FQ;
-    static QString SW;
-    static QString FRX;
-
-    qint64 center;
-    qint64 band;
-
-    if(dotsNumber > 0)
-    {
-        state = 1;
-    }
-
-    switch(state)
-    {
-    case 1:
-        setIsMeasuring(true);
-        m_parseState = WAIT_DATA;
-        if(dotsNumber != 0)
-        {
-            band = fqTo - fqFrom;
-            center = band/2 + fqFrom;
-
-            //qDebug() << "ComAnalyzer::startMeasure: " << band << dotsNumber << (band / dotsNumber);
-            AA55BTPacket::start(fqFrom, band / dotsNumber);
-        }else
-        {
-            band = 0;
-            center = fqFrom;
-        }
-        FQ  = "FQ"  + QString::number(center) + 0x0D;
-        SW  = "SW"  + QString::number(band) + 0x0D;
-        FRX = (m_isFRX ? "FRX" : "EFRX") + QString::number(dotsNumber) + 0x0D;
-        m_ok = false;
-
-        sendData(FQ);
-        m_sendTimer->start(10);
-        state++;
-        break;
-    case 2:
-        if(m_ok)
-        {
-            m_ok = false;
-            sendData(SW);
-            state++;
-        }
-        break;
-    case 3:
-        if(m_ok)
-        {
-            m_ok = false;
-            sendData(FRX);
-            m_parseState = m_isFRX ? WAIT_DATA : WAIT_USER_DATA;
-            state = 1;
-            m_sendTimer->stop();
-        }
-        break;
-    default:
-        break;
-    }
-}
-
-void ComAnalyzer::stopMeasure()
-{
-    sendData("off\r");
-    m_isMeasuring = false;
-}
-*/
 void ComAnalyzer::timeoutChart()
 {
     QStringList stringList;
@@ -584,30 +504,6 @@ void ComAnalyzer::timeoutChartUser()
     }
 }
 
-/*
-void ComAnalyzer::continueMeasurement()
-{
-    startMeasure(0,0,0);
-}
-
-void ComAnalyzer::getAnalyzerData()
-{
-    setTakeData(true);
-    setIsMeasuring(true);
-    m_parseState = WAIT_ANALYZER_DATA;
-    m_incomingBuffer.clear();
-    sendData("FLASHH\r");
-}
-
-void ComAnalyzer::getAnalyzerData(QString number)
-{
-    setTakeData(true);
-    m_parseState = WAIT_DATA;
-    m_incomingBuffer.clear();
-    QString str = "FLASHFRX" + number + "\r";
-    sendData(str);
-}
-*/
 void ComAnalyzer::makeScreenshot()
 {
     setIsMeasuring(true);
@@ -620,21 +516,6 @@ void ComAnalyzer::makeScreenshot()
         sendData(str.toLocal8Bit());
     }
 }
-/*
-void ComAnalyzer::on_screenshotComplete()
-{
-    m_parseState = WAIT_NO;
-    setIsMeasuring(false);
-}
-
-void ComAnalyzer::on_measurementComplete()
-{
-    if(!m_isContinuos)
-    {
-        setIsMeasuring(false);
-    }
-}
-*/
 bool ComAnalyzer::waitAnswer()
 {
     int times = 1;

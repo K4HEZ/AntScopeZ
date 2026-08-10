@@ -245,20 +245,6 @@ void BleAnalyzer::setDevice(BleDeviceInfo *device)
                 this, &BleAnalyzer::serviceDiscovered);
         connect(m_control, &QLowEnergyController::discoveryFinished,
                 this, &BleAnalyzer::serviceScanDone, Qt::QueuedConnection);
-/*
-        connect(m_control,
-                &QLowEnergyController::errorOccurred,
-                this,
-                [this](QLowEnergyController::Error error) {
-                    qInfo()
-                    << "BLE controller error:"
-                    << error
-                    << m_control->errorString();
-
-                    setError("Cannot connect to remote device.");
-                });
-
-*/
         connect(m_control, &QLowEnergyController::errorOccurred, this,
                 [this](QLowEnergyController::Error error) {
                     Q_UNUSED(error);
@@ -380,28 +366,6 @@ void BleAnalyzer::sendPing()
     ping[BLE_PACKET_SIZE - 1] = CRC32::crc8(ping);
     write(ping);
 }
-/*
-void BleAnalyzer::handlePing() //1sec timer
-{
-    long cur = QDateTime::currentMSecsSinceEpoch();
-    if ((cur - m_lastReadTimeMS) >= PING_TIMEOUT_MS) {
-        if (m_bWaitingPing) {
-            // error
-            // TODO...
-            AnalyzerParameters::setCurrent(nullptr);
-
-            m_pingTimer->stop();
-            QString err = tr("Analyzer disconnected");
-            setError(err);
-            emit analyzerDisconnected();
-        } else {
-            sendPing();
-        }
-    } else {
-        m_bWaitingPing = false;
-    }
-}
-*/
 void BleAnalyzer::handlePing() //vnn_05 1sec timer
 {
     long cur = QDateTime::currentMSecsSinceEpoch();
@@ -433,7 +397,6 @@ void BleAnalyzer::handlePing() //vnn_05 1sec timer
         m_bWaitingPing = false;
     }
 }
-
 
 
 void BleAnalyzer::write(QByteArray& arr)

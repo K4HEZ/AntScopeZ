@@ -11,6 +11,28 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+## [2.1.5] - 2026-08-10
+
+### Fixed
+
+- Fixed a `.deb` install issue that could break other installed Qt
+  applications.
+- Fixed a crash on first launch after leaving the app on a hidden
+  developer-mode tab.
+- Fixed a crash when using a custom analyzer profile with a connected
+  device.
+- Fixed popup positions not saving correctly under non-English languages.
+- Fixed the plot occasionally not responding to mouse input right after
+  launch.
+- Fixed Start/Delete/Clear occasionally becoming unresponsive after
+  placing a marker.
+- Fixed "Open 'Connect Analyzer' on launch" not fully disabling
+  auto-connect when unchecked.
+
+### Changed
+
+- Development builds between releases now report a `-dev` version suffix.
+
 ## [2.1.4] - 2026-08-09
 
 ### Changed

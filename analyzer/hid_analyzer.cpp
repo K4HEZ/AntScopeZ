@@ -797,13 +797,6 @@ bool HidAnalyzer::update (QIODevice *fw)
     return res;
 }
 
-/*
-void HidAnalyzer::stopMeasure()
-{
-    sendData("off\r");
-    m_isMeasuring = false;
-}
-*/
 struct hid_device_info* HidAnalyzer::refreshThreadStarted()
 {
     struct hid_device_info *devs = hid_enumerate(0x0, 0x0);

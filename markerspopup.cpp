@@ -182,9 +182,20 @@ void MarkersPopUp::show()
 void MarkersPopUp::focusShow()
 {
     //qDebug() << "MarkersPopUp::focusShow()" << m_menuVisible;
+    // Was: also called activateWindow() here, unconditionally -- and this
+    // runs synchronously every time a marker is added (Markers::add() calls
+    // straight into this, no deferral), forcing MainWindow to lose real WM
+    // activation to this popup on every single marker placed. That's the
+    // same class of activation race that was making the plot's wheel/drag
+    // look "stuck" (see the graphBriefHint fix), just hitting the
+    // Start/Delete buttons instead here. show()+raise() alone still makes
+    // this window visible and topmost; WA_ShowWithoutActivating is already
+    // off (see the constructor comment), so the WM still grants it real
+    // activation if the user actually clicks on it -- that's what needed
+    // fixing originally, not forcing activation proactively every time it's
+    // shown/refreshed.
     QWidget::show();
     raise();
-    activateWindow();
 }
 
 void MarkersPopUp::focusHide()

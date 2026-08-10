@@ -95,16 +95,6 @@ void LicenseAgent::registerDevice(QString device_name, QString serial, QString l
     requestInfo();
 }
 
-#if 0
-void LicenseAgent::updateLicense()
-{
-    QString key = QInputDialog::getText((QWidget*)MainWindow::m_mainWindow, tr("Update license"), tr("Enter key"));
-    if (key.isNull())
-        return;
-    setState(Finished);
-    requestLicense(key);
-}
-#endif
 void LicenseAgent::updateLicense()
 {
 //    QString key = QInputDialog::getText((QWidget*)MainWindow::m_mainWindow, tr("Update license"), tr("Enter key"));
@@ -192,32 +182,6 @@ void LicenseAgent::timeout()
         reset();
     }
 }
-#if 0
-void LicenseAgent::updateUserData()
-{
-    ManualInfoWeb infoWeb;
-    infoWeb.email = m_unitWeb.email.isEmpty() ? m_email : m_unitWeb.email;
-    infoWeb.purchargeDate = m_unitWeb.purchargeDate.isEmpty() ? QDate::currentDate().toString("dd.MM.yyyy") : m_unitWeb.purchargeDate;
-    infoWeb.serialNumber = m_unitWeb.serialNumber.isEmpty() ? MainWindow::m_mainWindow->analyzer()->getSerialNumber() : m_unitWeb.serialNumber;
-    infoWeb.userName = m_unitWeb.userName.isEmpty() ? m_userName : m_unitWeb.userName;
-    infoWeb.licenseName = MainWindow::m_mainWindow->analyzer()->getLicense();
-
-    UnitRequestDialog dlg(infoWeb);
-    if (dlg.exec() == QDialog::Rejected) {
-        qInfo() << "LicenseAgent::updateUserData   Rejected";
-        emit canceled();
-        return;
-    }
-    m_unitRequest.email = dlg.infoWeb().email;
-    m_unitRequest.purchargeDate = dlg.infoWeb().purchargeDate;
-    m_unitRequest.serialNumber = dlg.infoWeb().serialNumber;
-    m_unitRequest.userName = dlg.infoWeb().userName;
-
-    qInfo() << "LicenseAgent::updateUserData: ";
-    requestUnit();
-
-}
-#endif
 void LicenseAgent::updateUserData()
 {
     qInfo() << "LicenseAgent::updateuserdata";

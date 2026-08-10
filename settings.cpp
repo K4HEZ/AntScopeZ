@@ -411,28 +411,6 @@ void Settings::setZ0(double _Z0)
 void Settings::on_browseBtn_clicked()
 {
     // TODO obsolete
-    /*
-    QFileInfo info;
-    QString path;
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open firmware file"),
-                                                 "","*.bin");
-    m_path = fileName;
-    ui->browseLine->setText(fileName);
-
-    if (!fileName.isEmpty()) {
-
-        info.setFile(fileName);
-        path = info.absolutePath();
-        m_isComplete = m_analyzer->checkFile(m_path);
-        if (m_isComplete) {
-            m_pathToFw = fileName;
-            ui->updateBtn->setEnabled(true);
-        }
-    } else {
-        ui->browseLine->setText(tr("Choose file"));
-        m_isComplete = false;
-    }
-    */
 }
 
 void Settings::on_checkUpdatesBtn_clicked()
@@ -1358,9 +1336,6 @@ void Settings::initCustomizeTab()
     ui->comboBoxName->blockSignals(true);
     ui->comboBoxPrototype->blockSignals(true);
 
-    ui->comboBoxPrototype->hide();
-    ui->label_19->hide();
-
     ui->comboBoxPrototype->clear();
     ui->comboBoxName->clear();
 
@@ -1575,23 +1550,6 @@ void Settings::setConnectButtonText(bool _connect)
     ui->connectSerialBtn->update();
 }
 
-#if 0
-void Settings::showColorDialog()
-{
-    m_settings->beginGroup("Settings");
-    QString strColor = m_settings->value("chart-background", "#ffffff").toString();
-    QColor color;
-    color.fromString(strColor);
-    color = QColorDialog::getColor(color, this );
-    if (color.isValid()) {
-        strColor = color.name();
-        m_settings->setValue("chart-background", strColor);
-        ui->bkgButton->setStyleSheet("QToolButton{background-color: " + strColor + ";}");
-        emit chartBackgroundChanged(color);
-    }
-    m_settings->endGroup();
-}
-#endif
 void Settings::showColorDialog()
 {
     m_settings->beginGroup("Settings");

@@ -280,24 +280,6 @@ void Calibration::clearCalibration(void)
     m_shortData.clear();
     m_loadData.clear();
 }
-/*
-void Calibration::on_startCalibration()
-{
-    m_dotsCount = 0;
-    if(m_state == CALIB_NONE)
-    {
-        clearCalibration();
-        connect(m_analyzer,SIGNAL(newData(rawData)),
-                this, SLOT(on_newData(rawData)));
-    }
-    m_state++;
-
-    if(m_analyzer != NULL)
-    {
-        emit setCalibrationMode(true);
-        m_analyzer->on_measureCalib(dotsNumber());
-    }
-}*/
 void Calibration::on_startCalibration()
 {
     m_dotsCount = 0;
