@@ -1,8 +1,10 @@
 NOTE ON SCOPE
 =============
-This file states the license for the AntScopeZ / Rig Expert Ukraine Ltd.
-original source code only. It does NOT describe the terms under which the
-compiled AntScopeZ application, as a whole, may be distributed.
+This file states the license for AntScopeZ's own source code only -- both
+the original Rig Expert Ukraine Ltd. AntScope2 code this project is forked
+from, and everything written or modified by the AntScopeZ project since.
+It does NOT describe the terms under which the compiled AntScopeZ
+application, as a whole, may be distributed.
 
 AntScopeZ statically incorporates third-party components licensed under the
 GNU General Public License v3 (or later) -- most notably QCustomPlot and
@@ -11,14 +13,16 @@ notes). Because of this, the combined, distributable AntScopeZ application
 is licensed as a whole under the GNU General Public License v3 or later.
 The full text of that license is in COPYING.
 
-The MIT terms below apply to the original Rig Expert Ukraine Ltd. source
-files considered on their own (for example, if reused outside of this
-combined GPLv3 distribution); they do not relax or override the GPLv3
-obligations that apply to AntScopeZ as distributed.
+The MIT terms below apply to AntScopeZ's own source files considered on
+their own (for example, if reused outside of this combined GPLv3
+distribution); they do not relax or override the GPLv3 obligations that
+apply to AntScopeZ as distributed. The original AntScope2 codebase's MIT
+license, on its own, is also mirrored standalone at licenses/AntScope2/.
 
 ============================================================================
 
-Copyright 2016-2020 Rig Expert Ukraine Ltd.
+Copyright 2016-2020 Rig Expert Ukraine Ltd. (original AntScope2 codebase)
+Copyright 2026 K4HEZ (AntScopeZ additions and modifications)
 
 Permission is hereby granted, free of charge,
 to any person obtaining a copy of this software and associated documentation files (the "Software"),

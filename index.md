@@ -76,8 +76,9 @@ this fork.
 
 AntScopeZ is licensed under the **GNU General Public License v3.0 or
 later** ([COPYING](COPYING)) as a whole, since it bundles GPLv3-licensed
-components (QCustomPlot, HIDAPI). The original RigExpert-authored code
-remains separately available under the MIT license
+components (QCustomPlot, HIDAPI). AntScopeZ's own code -- both the original
+RigExpert AntScope2 codebase it's forked from and everything added or
+modified since -- remains separately available under the MIT license
 ([LICENSE.txt](LICENSE.txt)). Qt and libusb are used under their LGPL
 terms, and a Windows-only FTDI driver package is bundled under FTDI's own
 proprietary redistribution terms -- see

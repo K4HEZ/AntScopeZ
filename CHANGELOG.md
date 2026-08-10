@@ -26,6 +26,12 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   rebuilt and `cpack`-packaged, confirmed present under
   `usr/share/antscopez/` in the resulting `.deb`. Windows/macOS use the
   same install-rule patterns but are unverified on those platforms.
+- `LICENSE.txt` previously credited only Rig Expert Ukraine Ltd., which
+  understated how much of AntScopeZ is now original/modified work rather
+  than the AntScope2 codebase it was forked from. Added a second copyright
+  line (Copyright 2026 K4HEZ) alongside RigExpert's for AntScopeZ's own
+  additions and modifications, consistent with `THIRD-PARTY-LICENSES.md`,
+  `README.md`, and the GitHub Pages site.
 
 ### Fixed
 
