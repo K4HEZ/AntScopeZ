@@ -11,6 +11,16 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+### Changed
+
+- Clarified the project's licensing. AntScopeZ as distributed is GPLv3-or-later
+  (`COPYING`), since it bundles GPLv3-licensed QCustomPlot and HIDAPI; the
+  original RigExpert code remains separately available under MIT
+  (`LICENSE.txt`). Added `THIRD-PARTY-LICENSES.md` documenting every
+  bundled/linked third-party component per platform, including Qt (bundled
+  under LGPLv3 -- see `licenses/Qt/`) and the Windows-only FTDI driver
+  package.
+
 ### Fixed
 
 - Saving a measurement suggested a filename ending `.asd.asd`. The
