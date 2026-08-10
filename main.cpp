@@ -112,32 +112,9 @@ int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
 int main(int argc, char *argv[])
 {
     qputenv("QT_ACCESSIBILITY", "0");
-/*
-    QString title = windowTitle();
-    bool res = m_qtLanguageTranslator->load("QtLanguage_" + locale, Settings::languageDataFolder());
-    qApp->installTranslator(m_qtLanguageTranslator);
-    ui->retranslateUi(this);
-*/
 
-
-// deprecated
-//    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-
-// Fix for 4K Display Issues Disabled
-#ifdef DUMB_Q_OS_WIN
-    char** params;
-    params = new char*[argc+2];
-    int ip=0;
-    for (; ip<argc; ip++) {
-        params[ip] = argv[ip];
-    }
-    params[ip++] = (char*)"--platform";
-    params[ip] = (char*)"windows:dpiawareness=0";
-    int cntp = argc + 2;
-    QApplication a(cntp, params);
-#else
+    // Fix for 4K Display Issues Disabled
     QApplication a(argc, argv);
-#endif
 
     // Used by QStandardPaths (Settings::localDataFolder() et al.) to build
     // the per-user config directory -- ~/.config/AntScopeZ on Linux. No

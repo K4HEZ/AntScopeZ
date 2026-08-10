@@ -30,15 +30,6 @@ SelectDeviceDialog::SelectDeviceDialog(bool silent, QWidget *parent) :
     // still be brought to front over it).
     setWindowModality(Qt::ApplicationModal);
 
-/* obsolete
-    QString style = "QPushButton:disabled{"
-            "background-color: rgb(59, 59, 59);"
-            "color: rgb(119, 119, 119);}"
-            "QPushButton:checked{"
-            "background-color: rgb(1, 178, 255);}";
-    ui->pushButtonConnect->setStyleSheet(style);
-    ui->pushButtonScan->setStyleSheet(style);
-*/
     QString style = Style::dialog();
     style += Style::pushButton();
     setStyleSheet(style);

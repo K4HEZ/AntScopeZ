@@ -112,9 +112,27 @@ set(ANTSCOPE_SOURCES
     licenseagent.cpp
     main.cpp
     mainwindow.cpp
+    mainwindow_analyzer.cpp
+    mainwindow_frequency.cpp
+    mainwindow_markers.cpp
+    mainwindow_measurements_io.cpp
+    mainwindow_mouse.cpp
+    mainwindow_multitab.cpp
+    mainwindow_presets_bands.cpp
+    mainwindow_scan.cpp
+    mainwindow_settings.cpp
+    mainwindow_shortcuts.cpp
+    mainwindow_tabs.cpp
     markers.cpp
     markerspopup.cpp
     measurements.cpp
+    measurements_autocal.cpp
+    measurements_farend.cpp
+    measurements_io.cpp
+    measurements_onefq.cpp
+    measurements_popups.cpp
+    measurements_redraw.cpp
+    measurements_tdr.cpp
     modelesspopup.cpp
     Notification.cpp
     onefqwidget.cpp

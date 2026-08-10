@@ -205,50 +205,6 @@ void NanovnaAnalyzer::searchAnalyzer()
     }
 }
 
-/*
-void NanovnaAnalyzer::checkAnalyzer()
-{
-    static qint32 state = 0;
-    if(!m_isMeasuring)
-    {
-        if(state == 0)
-        {
-            m_analyzerPresent = false;
-            m_parseState = WAIT_VER;
-            versionRequest();
-            state++;
-            QTimer::singleShot(1000, this, SLOT(checkAnalyzer()));
-        }else if(state == 1)
-        {
-            if(m_analyzerPresent == false)
-            {
-                m_parseState = WAIT_VER;
-                versionRequest();
-                //sendData("FULLINFO\r\n");
-                state++;
-            }else
-            {
-                state--;
-            }
-            QTimer::singleShot(1000, this, SLOT(checkAnalyzer()));
-        }else if(state == 2)
-        {
-            state = 0;
-            if(m_analyzerPresent == false)
-            {
-                //m_analyzerModel = 0;
-                emit analyzerDisconnected();
-            }else
-            {
-                QTimer::singleShot(1000, this, SLOT(checkAnalyzer()));
-            }
-        }
-    }else
-    {
-        state = 0;
-    }
-}
-*/
 void NanovnaAnalyzer::checkAnalyzer()
 {
     QTimer::singleShot(2000, this, [this](){ versionRequest(); });

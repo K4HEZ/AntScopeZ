@@ -55,67 +55,6 @@ Screenshot::Screenshot(QWidget *parent, int _model, int height, int width) :
     m_image->fill(Qt::black);
     connect(&m_errorTimer,SIGNAL(timeout()), this, SLOT(on_errorTimerTick()));
     m_errorTimer.start(5000);
-/*
-    //{ debug
-    QFile file("sbb.txt");
-    if(!file.open(QIODevice::ReadOnly)) {
-        QMessageBox::information(0, "error", file.errorString());
-    }
-    QTextStream in(&file);
-    while(!in.atEnd()) {
-        QString line = in.readLine();
-        QStringList fields = line.split(",");
-        bool ok;
-        for (int i=0; i<fields.size(); i++) {
-            quint8 val = quint8(fields.at(i).toUInt(&ok, 16));
-            m_inputDataDebug.append(val);
-        }
-    }
-    file.close();
-    m_emulate = true;
-    m_palette.append(qRgb(0x00, 0x00, 0x00));
-    m_palette.append(qRgb(0x00, 0x00, 0xFF));
-    m_palette.append(qRgb(0xFF, 0x00, 0x00));
-    m_palette.append(qRgb(0x00, 0x96, 0x63));
-    m_palette.append(qRgb(0xC5, 0x00, 0x00));
-    m_palette.append(qRgb(0x10, 0x31, 0x94));
-    m_palette.append(qRgb(0x7B, 0x9A, 0xC5));
-    m_palette.append(qRgb(0xFF, 0xFF, 0xFF));
-    m_palette.append(qRgb(0x33, 0x33, 0x33));
-    m_palette.append(qRgb(0x77, 0x77, 0x77));
-    m_palette.append(qRgb(0x90, 0xBE, 0xFF));
-    m_palette.append(qRgb(0x2A, 0x6D, 0xFF));
-    m_palette.append(qRgb(0x00, 0x00, 0x00));
-    m_palette.append(qRgb(0x00, 0x00, 0x00));
-    m_palette.append(qRgb(0x00, 0x00, 0x00));
-    m_palette.append(qRgb(0x00, 0x00, 0x00));
-    m_imageVector.clear();
-    while (!m_inputDataDebug.isEmpty()) {
-        quint8 data = m_inputDataDebug.takeFirst();
-        int num = (data >> 4) & 0x0F;
-        num++; // 0-based
-        int idx = data & 0x0F;
-        QRgb color = m_palette.at(idx);
-        for (int ii=0; ii<num; ii++) {
-            m_imageVector.append(color);
-        }
-    }
-    int x,y;
-    int i = 0;
-    for (y = 0; y < 240; ++y)
-    {
-        for (x = 0; x < 232; ++x)
-        {
-            m_image->setPixel (x, y, m_imageVector.at(i));
-            i++;
-        }
-    }
-    m_inputDataDebug.clear();
-    m_imageVector.clear();
-//    ui->progressBar->hide();
-    repaint();
-    //} debug
-*/
 }
 
 Screenshot::~Screenshot()
