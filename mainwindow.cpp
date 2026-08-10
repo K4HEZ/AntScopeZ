@@ -129,13 +129,18 @@ MainWindow::MainWindow(QWidget *parent) :
 #ifndef NO_MULTITAB
     restoreMultitab(multi_tab);
 
-    if (!ui->tabWidget->widget(cur_index)->isVisible()) {
-        for(int i=0; i<ui->tabWidget->count(); i++) {
-            if (ui->tabWidget->widget(i)->isVisible()) {
-                cur_index = i;
-                break;
-            }
-        }
+    // QWidget::isVisible() is unreliable here: the window hasn't been shown
+    // yet (still inside the constructor), so every tab page reports
+    // invisible regardless of QTabWidget::setTabVisible() state -- which is
+    // what actually hides tab_user outside developer mode, a few lines down
+    // in createTabs(). That made this check always fail to find a "visible"
+    // tab and silently leave cur_index pointed at the hidden one, e.g. a
+    // saved tab_user selection from a prior -developer run crashing
+    // Measurements::replot() on a plain restart. Check the tab widget's own
+    // visibility flag instead, and fall back to SWR specifically.
+    if (cur_index < 0 || cur_index >= ui->tabWidget->count() ||
+        !ui->tabWidget->isTabVisible(cur_index)) {
+        cur_index = ui->tabWidget->indexOf(m_tab_swr);
     }
 #endif
 
@@ -6926,6 +6931,15 @@ void MainWindow::restoreMultitab(const QString& tabs)
             if (tab_name == "tab_user" && !g_developerMode)
                 continue;
             if (tab_name == "tab_s21")
+                continue;
+            // A stale/corrupted "multiTab" setting could list "tab_multi"
+            // itself. menuMultiTab() never offers it as a Join target (it's
+            // excluded from tab_title), but restoreMultitab() matched it by
+            // objectName like any other tab and self-inserted it into
+            // m_multiTabData.tabs -- plotForTab("tab_multi") then has no
+            // g_mapTabPlotNames entry and returns nullptr, which crashed
+            // Measurements::replot()'s tab_multi loop on startup.
+            if (tab_name == "tab_multi")
                 continue;
             // Don't restore a previously-saved TDR join either -- see the
             // matching exclusion (and explanation) in menuMultiTab().

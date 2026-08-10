@@ -13,6 +13,26 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Fixed
 
+- Fresh `.deb` install crashed on launch (SIGSEGV in `QCustomPlot::replot()`
+  from inside `MainWindow`'s constructor, before the window was even shown).
+  Root cause, found via `coredumpctl`: leaving the app on the "User Defined"
+  tab while running with `-developer` and then relaunching normally saved a
+  `currentTab` index that pointed at a now-hidden tab (`tab_user` is only
+  visible in developer mode). The startup fallback meant to catch "the saved
+  tab isn't available anymore" used `QWidget::isVisible()`, which is always
+  `false` for every tab at that point in the constructor (the window hasn't
+  been shown yet), so the fallback silently never fired and the hidden tab
+  stayed selected -- which then fed a bad/self-referential entry into
+  `Measurements::replot()`'s "Multi" tab branch and dereferenced a null
+  `QCustomPlot*` returned by `MainWindow::plotForTab()`. Fixed in three
+  places: the startup check now asks the tab widget's own
+  `isTabVisible()` instead and falls back to SWR specifically
+  (`mainwindow.cpp`); `restoreMultitab()` no longer lets a stale
+  `"tab_multi"` entry re-insert itself into its own multi-tab list; and
+  `Measurements::replot()`'s Multi-tab loop now null-checks `plotForTab()`'s
+  result before calling `replot()` on it, matching the pattern already used
+  by the print path.
+
 - `PopUp`/`MarkersPopUp`'s remembered on-screen position (the Hint,
   BriefHint, and Markers popups) used a `tr()`-translated string as
   their `AntScopeZ.ini` group name/internal comparison key

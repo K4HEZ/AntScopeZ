@@ -3686,8 +3686,15 @@ void Measurements::replot()
         QString old_m_currentTab = m_currentTab;
         const QList<QString>& tabs = MainWindow::m_mainWindow->multiTabs();
         foreach (const QString& tab, tabs) {
+            // plotForTab() returns nullptr for a tab name it doesn't recognize
+            // (e.g. a stale/self-referential "tab_multi" entry that slipped into
+            // the persisted multi-tab list -- see restoreMultitab()). Guard here
+            // the same way the Printmulti path already does at mainwindow.cpp's
+            // MainWindow::print() tab_multi branch, instead of crashing.
             QCustomPlot* plot = MainWindow::m_mainWindow->plotForTab(tab);
-            plot->replot();
+            if (plot != nullptr) {
+                plot->replot();
+            }
         }
         m_currentTab = old_m_currentTab;
     }
