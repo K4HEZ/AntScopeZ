@@ -116,11 +116,14 @@ must travel with that build.
   `ftdi/amd64/ftcserco.dll`, `ftdi/amd64/ftlang.dll`
 - **Copyright:** 2001-2011 Future Technology Devices International Limited
   (FTDI)
-- **License:** FTDI's own proprietary redistribution terms (embedded in
-  `ftd2xx.h`), **not GPL-compatible and not part of the GPLv3 grant above**.
-  Key conditions: usable only in conjunction with FTDI-chip-based products;
-  redistributable in any form as long as the license text is not modified;
-  no warranty.
+- **License:** FTDI's own proprietary redistribution terms, embedded in
+  `ftd2xx.h` and now also extracted verbatim to
+  `licenses/FTDI/LICENSE.txt` (see `licenses/FTDI/README.md`) for the same
+  reason `licenses/Qt/` exists -- so the notice travels as its own file
+  rather than only inline in a header. **Not GPL-compatible and not part of
+  the GPLv3 grant above.** Key conditions: usable only in conjunction with
+  FTDI-chip-based products; redistributable in any form as long as the
+  license text is not modified; no warranty.
 - **Why this doesn't conflict with GPLv3:** none of this is linked into the
   AntScopeZ binary at compile or link time. `ftdiinfo.cpp` loads
   `ftd2xx.dll` at runtime via `QLibrary`/`GetProcAddress`, and the driver
