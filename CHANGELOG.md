@@ -11,6 +11,8 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+## [2.1.6] - 2026-08-10
+
 ### Changed
 
 - Clarified the project's licensing. AntScopeZ as distributed is GPLv3-or-later
