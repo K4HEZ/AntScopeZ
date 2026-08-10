@@ -631,25 +631,36 @@ MainWindow::MainWindow(QWidget *parent) :
     SelectionParameters::selected.name = device_name;
     SelectionParameters::selected.id = device_address;
 
-    if (start && SelectionParameters::selected.valid() && !device_name.isEmpty() && !device_address.isEmpty()) {
-//        SelectDeviceDialog dlg(true, this);
-//        if (dlg.connectSilent(_type, device_name)) {
-//            AnalyzerParameters* selected = AnalyzerParameters::current();
-//            if (selected != nullptr) {
-//                m_analyzer->on_connectDevice();
-//            }
-//        }
-        QTimer::singleShot(500, this, [&](){
-            on_refreshConnection();
-        });
-    } else {
-        m_settings->beginGroup("Settings");
-        bool openAtLaunch = m_settings->value("open-connect-analyzer-at-launch", true).toBool();
-        m_settings->endGroup();
-        // Settings -> General's "Open 'Connect Analyzer' on launch" -- someone
-        // who only wants to review saved .s1p files, with no analyzer
-        // connected, shouldn't have to dismiss this every time.
-        if (openAtLaunch) {
+    m_settings->beginGroup("Settings");
+    bool openAtLaunch = m_settings->value("open-connect-analyzer-at-launch", true).toBool();
+    m_settings->endGroup();
+
+    // Settings -> General's "Open 'Connect Analyzer' on launch" -- someone
+    // who only wants to review saved .s1p files, with no analyzer connected,
+    // shouldn't have to deal with this every time.
+    //
+    // Was: this only gated the dialog-popup branch below (the `else`), not
+    // the silent auto-reconnect branch above it -- so unchecking it still
+    // triggered a real HID scan + connect on every launch, with no dialog
+    // and no way to tell it was happening, as long as "Use same selection
+    // for future connections" had ever been checked in the connect dialog
+    // (SelectDeviceDialog's `Connection/same` setting is independent of this
+    // one). That's the opposite of what the checkbox promises. Both
+    // branches are startup analyzer activity and both belong under the same
+    // gate.
+    if (openAtLaunch) {
+        if (start && SelectionParameters::selected.valid() && !device_name.isEmpty() && !device_address.isEmpty()) {
+    //        SelectDeviceDialog dlg(true, this);
+    //        if (dlg.connectSilent(_type, device_name)) {
+    //            AnalyzerParameters* selected = AnalyzerParameters::current();
+    //            if (selected != nullptr) {
+    //                m_analyzer->on_connectDevice();
+    //            }
+    //        }
+            QTimer::singleShot(500, this, [&](){
+                on_refreshConnection();
+            });
+        } else {
             QTimer::singleShot(500, this, [&](){
                 on_selectDeviceDialog();
             });

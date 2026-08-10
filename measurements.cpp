@@ -1310,7 +1310,21 @@ void Measurements::setGraphBriefHintEnabled(bool enabled)
 void Measurements::on_focus(bool focus)
 {
     m_focus = focus;
-    showHideHints();
+    // Deferred, not called inline: this runs from inside MainWindow::event()
+    // handling QEvent::WindowActivate. showHideHints() QWidget::show()s
+    // m_graphHint/m_graphBriefHint -- separate top-level Qt::Tool windows
+    // (see popup.cpp) that were deliberately made activatable so they can be
+    // dragged on this window manager. Doing that show() synchronously,
+    // nested inside MainWindow's own WindowActivate handling, races
+    // MainWindow's activation against the popup's on window managers like
+    // Cinnamon/Muffin -- most visibly on cold start, when m_graphBriefHint
+    // (never shown before this point) and MainWindow both request
+    // activation for the first time within the same event. Symptom: the
+    // plot's mouse wheel/drag stop responding until something else (e.g.
+    // opening/closing the modal "Connect analyzer" dialog) forces a fresh
+    // activation cycle. Letting MainWindow's own activation finish settling
+    // first, by deferring showHideHints() a tick, avoids the race.
+    QTimer::singleShot(50, this, &Measurements::showHideHints);
 }
 
 void Measurements::hideGraphBriefHint()
@@ -1335,10 +1349,24 @@ void Measurements::showHideHints()
     }
     if(m_graphBriefHint)
     {
-        if(m_graphBriefHintEnabled && m_focus)
-        {
-            m_graphBriefHint->focusShow();
-        }else
+        // Unlike m_graphHint, m_graphBriefHint is never proactively shown
+        // here. It starts with no text and, because PopUp::setName() only
+        // restores a persisted position for the name "Hint" (not
+        // "BriefHint"), it always sits at PopUp's hardcoded construction
+        // default (850,130) on every launch -- which lands right on top of
+        // the plot. It only gets real text/position once the cursor is
+        // actually over a plot with a measurement selected (see
+        // on_newCursorFq() below, and the ->show() call where a measurement
+        // is named). Showing it here, on window activate, before any of
+        // that has happened made it an invisible-but-fully-interactive
+        // window sitting on top of the plot from the moment the app
+        // activates -- silently eating mouse/wheel input for whatever
+        // screen region it covered, which looked exactly like the plot's
+        // wheel/drag being "stuck" until something else (switching
+        // windows, then back; selecting an analyzer) happened to hide or
+        // move it out of the way. Still fine -- correct, even -- to hide it
+        // eagerly here on focus loss/disable.
+        if(!(m_graphBriefHintEnabled && m_focus))
         {
             m_graphBriefHint->focusHide();
         }

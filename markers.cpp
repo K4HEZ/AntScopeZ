@@ -266,19 +266,26 @@ void Markers::add()
 }
 
 void Markers::on_focus(bool focus)
-{    
+{
     m_focus = focus;
 
-    if(m_markersHint)
-    {
-        if(m_markersHintEnabled && m_focus && !m_markersList.isEmpty())
+    // Deferred for the same reason as Measurements::on_focus()'s identical
+    // guard -- see the comment there. m_markersHint is the same kind of
+    // activatable top-level Qt::Tool popup (MarkersPopUp), shown inline here
+    // from inside MainWindow's own WindowActivate handling, which can race
+    // MainWindow for the WM's activation on cold start.
+    QTimer::singleShot(50, this, [this]() {
+        if(m_markersHint)
         {
-            m_markersHint->focusShow();
-        }else
-        {
-            m_markersHint->focusHide();
+            if(m_markersHintEnabled && m_focus && !m_markersList.isEmpty())
+            {
+                m_markersHint->focusShow();
+            }else
+            {
+                m_markersHint->focusHide();
+            }
         }
-    }
+    });
 }
 
 void Markers::repaint()

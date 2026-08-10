@@ -30,6 +30,42 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   Cosmetic/low-impact either way -- only affected remembered popup
   position, not any functional setting.
 
+- The SWR/Phase/etc. plot's mouse wheel and drag looked "stuck" right
+  after launch, until an analyzer happened to be connected.
+  `Measurements::showHideHints()` was proactively `show()`-ing the
+  "brief params under cursor" popup (`m_graphBriefHint`) on every
+  `MainWindow` activation, before it had any real content -- and since
+  `PopUp::setName()` never restores a saved position for that popup
+  (only `"Hint"` does), it always opened at a hardcoded default screen
+  position that happens to land on top of the plot. Net effect: an
+  invisible, fully-interactive window sitting on the plot from the
+  moment the app activates, silently eating wheel/click input for
+  whatever it covered. Fixed in `measurements.cpp`: only ever shown
+  reactively, once it actually has data to display.
+
+- Start/Delete/Clear could intermittently stop responding once one or
+  more markers were placed. `MarkersPopUp::focusShow()` called
+  `activateWindow()` unconditionally, and `Markers::add()` (i.e. every
+  marker placed) calls straight into it, synchronously -- forcing
+  `MainWindow` to lose real window-manager activation each time.
+  Same root cause as the plot fix above, different popup. Fixed in
+  `markerspopup.cpp`: `show()`/`raise()` still make it visible and
+  topmost; the forced `activateWindow()` is gone.
+
+- `Measurements::on_focus()`/`Markers::on_focus()` -- driven by
+  `MainWindow`'s own `WindowActivate`/`WindowDeactivate` handling --
+  now defer their popup show/hide by 50ms instead of running inline,
+  avoiding a first-activation race with `MainWindow` itself on cold
+  start.
+
+- Settings -> General's "Open 'Connect Analyzer' on launch" only gated
+  the auto-popup dialog path, not the separate silent
+  auto-reconnect-to-saved-device path (`Connection/same`, set via
+  "Use same selection for future connections" in the connect dialog).
+  Unchecking it did nothing to stop analyzer traffic at launch once a
+  device had ever been saved that way. Fixed in `mainwindow.cpp`: one
+  gate now covers both paths.
+
 ## [2.1.4] - 2026-08-09
 
 ### Changed
