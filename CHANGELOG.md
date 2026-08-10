@@ -11,6 +11,21 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+## [2.1.6] - 2026-08-10
+
+### Changed
+
+- Clarified project licensing: AntScopeZ is distributed under GPLv3-or-later
+  overall; added `THIRD-PARTY-LICENSES.md` covering every bundled/linked
+  third-party component, and credited AntScopeZ's own copyright in
+  `LICENSE.txt` alongside RigExpert's original.
+- Packaged builds now ship the license/attribution files above instead of
+  leaving them source-tree-only.
+
+### Fixed
+
+- Save dialog no longer suggests a double `.asd.asd` filename.
+
 ## [2.1.5] - 2026-08-10
 
 ### Fixed
