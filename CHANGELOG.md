@@ -11,6 +11,21 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+### Fixed
+
+- Saving a measurement suggested a filename ending `.asd.asd`. The
+  "Save file" dialog's name filter (`FileDialog::getSaveFileName()` call
+  in `mainwindow_measurements_io.cpp`) was `"AntScopeZ (*.asd )"` -- a
+  stray trailing space before the closing paren, present at all three
+  `.asd` filter call sites. `QFileDialog` (Save mode) appends its
+  filter's extension to the typed/suggested filename whenever that name
+  doesn't already satisfy the filter; with the space baked into the
+  parsed wildcard, a normal `foo.asd` name (no trailing space) never
+  matched, so Qt appended `.asd` a second time on top of the one this
+  code already adds itself when building the suggested name. Fixed by
+  dropping the stray space from all three `.asd` filter strings (save,
+  open, and the multi-format import dialog).
+
 ## [2.1.5] - 2026-08-10
 
 ### Fixed

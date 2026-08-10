@@ -505,7 +505,13 @@ void MainWindow::on_measurmentsSaveBtn_clicked()
             }
         }
 
-        QString path = FileDialog::getSaveFileName(this, tr("Save file"), suggestedPath, "AntScopeZ (*.asd )");
+        // The filter string must exactly match "*.asd" -- a stray trailing
+        // space before the closing paren here used to make QFileDialog's
+        // own "does the typed name already satisfy the filter" check fail
+        // for every normal ".asd" name, so it appended ".asd" again on top
+        // of the one suggestedPath/suggestedName already added above,
+        // producing "...asd.asd" (issue reported 2026-08-10).
+        QString path = FileDialog::getSaveFileName(this, tr("Save file"), suggestedPath, "AntScopeZ (*.asd)");
         if(!path.isEmpty())
         {
             m_lastSaveOpenPath = path;
@@ -534,7 +540,7 @@ void MainWindow::on_measurmentsSaveBtn_clicked()
 
 void MainWindow::on_measurementsOpenBtn_clicked()
 {
-    QString path = FileDialog::getOpenFileName(this, tr("Open file"), m_lastSaveOpenPath, "AntScopeZ (*.asd )");
+    QString path = FileDialog::getOpenFileName(this, tr("Open file"), m_lastSaveOpenPath, "AntScopeZ (*.asd)");
     if(!path.isEmpty())
     {
         m_lastSaveOpenPath = path;
@@ -570,7 +576,7 @@ void MainWindow::on_importBtn_clicked()
     QString path = FileDialog::getOpenFileName(this, tr("Open file"), m_lastExportImportPath,  "S1p (*.s1p);;"
                                                                                     "Csv (*.csv);;"
                                                                                     "Nwl (*.nwl);;"
-                                                                                    "AntScopeZ (*.asd );;"
+                                                                                    "AntScopeZ (*.asd);;"
 
                                                                                     "All files (*.*)");
     if (path.isEmpty())
