@@ -152,8 +152,8 @@ int main(int argc, char *argv[])
     // whether it's passed on the command line. This flag gates the
     // Settings > Customize tab (Custom Analyzer / "User Defined" chart tab),
     // among a few smaller things (the "Don't restrict frequency" checkbox,
-    // Ctrl+Alt+Shift+M/N auto-calibration debug shortcuts, a higher
-    // MAX_DOTS/spinBoxPoints ceiling). Investigating a "User Defined" tab
+    // Ctrl+Alt+Shift+M/N auto-calibration debug shortcuts). Investigating
+    // a "User Defined" tab
     // crash led to actually exercising Custom Analyzer for the first time in
     // a while, which turned up enough problems that shipping it live to
     // anyone who happens to pass -developer isn't safe:
@@ -207,7 +207,6 @@ int main(int argc, char *argv[])
     // is left in place so that's a one-line change.
     if (args.contains("-developer")) {
         //g_developerMode = true;
-        //MAX_DOTS = 1000000;
     }
     if (args.contains("-usb-only")) {
         g_usbOnly = true;

@@ -28,15 +28,29 @@ extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
 // mainwindow.cpp itself for the pieces left behind) -- pure code motion,
 // no behavior change. All pieces still define methods of MainWindow.
 
-void MainWindow::on_limitsBtn_clicked(bool checked)
+void MainWindow::applyScanModeLabels(bool isRange)
 {
-    if( !checked )
+    if (!isRange)
     {
-        if(!m_isRange)
-        {
-            ui->limitsBtn->setChecked(true);
-        }
-    }else
+        ui->startLabel->setText(tr("Start"));
+        ui->stopLabel->setText(tr("Stop"));
+        ui->groupBox_Presets->setTitle(tr("Presets (limits), kHz"));
+        ui->tableWidget_presets->horizontalHeaderItem(0)->setText(tr("Start"));
+        ui->tableWidget_presets->horizontalHeaderItem(1)->setText(tr("Stop"));
+    }
+    else
+    {
+        ui->startLabel->setText(tr("Center"));
+        ui->stopLabel->setText(tr("Range (+/-)"));
+        ui->groupBox_Presets->setTitle(tr("Presets (center, range), kHz"));
+        ui->tableWidget_presets->horizontalHeaderItem(0)->setText(tr("Center"));
+        ui->tableWidget_presets->horizontalHeaderItem(1)->setText(tr("Range(+/-)"));
+    }
+}
+
+void MainWindow::applyScanMode(bool isRange)
+{
+    if (!isRange)
     {
         double from;
         double to;
@@ -44,28 +58,11 @@ void MainWindow::on_limitsBtn_clicked(bool checked)
         AnalyzerParameters::normalizeFq(from, to);
 
         m_isRange = false;
-        ui->rangeBtn->setChecked(false);
-        ui->startLabel->setText(tr("Start"));
-        ui->stopLabel->setText(tr("Stop"));
-        ui->groupBox_Presets->setTitle(tr("Presets (limits), kHz"));
-        ui->tableWidget_presets->horizontalHeaderItem(0)->setText(tr("Start"));
-        ui->tableWidget_presets->horizontalHeaderItem(1)->setText(tr("Stop"));
-
+        applyScanModeLabels(false);
         setFqFrom(from);
         setFqTo(to);
-        emit isRangeChanged(m_isRange);
     }
-}
-
-void MainWindow::on_rangeBtn_clicked(bool checked)
-{
-    if( !checked )
-    {
-        if(m_isRange)
-        {
-            ui->rangeBtn->setChecked(true);
-        }
-    }else
+    else
     {
         double start;
         double stop;
@@ -75,19 +72,16 @@ void MainWindow::on_rangeBtn_clicked(bool checked)
         AnalyzerParameters::normalizeFqRange(center, range);
 
         m_isRange = true;
-        ui->limitsBtn->setChecked(false);
-        ui->startLabel->setText(tr("Center"));
-        ui->stopLabel->setText(tr("Range (+/-)"));
-        ui->groupBox_Presets->setTitle(tr("Presets (center, range), kHz"));
-        ui->tableWidget_presets->horizontalHeaderItem(0)->setText(tr("Center"));
-        ui->tableWidget_presets->horizontalHeaderItem(1)->setText(tr("Range(+/-)"));
-        // 20210423
-        //double from = getFqFrom();
-        //double to = getFqTo();
+        applyScanModeLabels(true);
         setFqFrom(center);
         setFqTo(range);
-        emit isRangeChanged(m_isRange);
     }
+    emit isRangeChanged(m_isRange);
+}
+
+void MainWindow::on_scanModeCombo_currentIndexChanged(int index)
+{
+    applyScanMode(index == 1);
 }
 
 
@@ -340,7 +334,7 @@ void MainWindow::on_dataChanged(qint64 _center_khz, qint64 _range_khz, qint32 _d
     _center_khz = (qint64)center_khz;
     _range_khz = (qint64)range_khz;
 
-    ui->spinBoxPoints->setValue(_dots);
+    setDotsNumber(_dots);
     if (m_isRange) {
         ui->lineEdit_fqFrom->setText(QString::number(_center_khz));
         ui->lineEdit_fqTo->setText(QString::number(_range_khz));

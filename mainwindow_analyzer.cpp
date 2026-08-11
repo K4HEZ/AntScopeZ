@@ -75,10 +75,12 @@ void MainWindow::on_analyzerNameFound(QString name)
     // wired up below).
 
     if (name.contains("NanoVNA", Qt::CaseInsensitive)) {
-        ui->spinBoxPoints->setEnabled(false);
-        ui->spinBoxPoints->setValue(100);
+        ui->lineEdit_points->setEnabled(false);
+        ui->speedAccuracySlider->setEnabled(false);
+        setDotsNumber(100);
     } else {
-        ui->spinBoxPoints->setEnabled(true);
+        ui->lineEdit_points->setEnabled(true);
+        ui->speedAccuracySlider->setEnabled(true);
     }
     m_calibration->init(m_analyzer->getSerialNumber());
 }
@@ -93,7 +95,8 @@ void MainWindow::on_deviceDisconnected()
     ui->continuousStartBtn->setEnabled(false);
     ui->analyzerDataBtn->setEnabled(false);
     ui->screenshotAA->setEnabled(false);
-    ui->spinBoxPoints->setEnabled(true);
+    ui->lineEdit_points->setEnabled(true);
+    ui->speedAccuracySlider->setEnabled(true);
     ui->fullBtn->setEnabled(false);
     ui->fullBtn->setChecked(false);
 

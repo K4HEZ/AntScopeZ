@@ -11,8 +11,39 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+### Added
+
+- "Scan Mode" combo box (Start/Stop / Center/Range) replaces the old
+  Limits/Center-Range toggle buttons.
+- A "Speed/Accuracy" slider now sits directly under Points; the separate
+  "Measurement speed..." dialog is gone.
+
+### Changed
+
+- Points is now a plain text field instead of a spinner, capped at 1000 to
+  match the Speed/Accuracy slider.
+- Reworked keyboard tab order across the main window to follow the visual
+  layout (tabs, toolbar buttons, Frequency/Presets/Measurements groups in
+  order, ending at Clear).
+
 ### Fixed
 
+- Single/Continuous/Full range buttons' disabled state was a hardcoded
+  dark gray that ignored the Light/Dark theme; now theme-correct like
+  every other disabled control.
+- Some fields (e.g. Save dialogs' "File name" box) had zero fill contrast
+  against their own dialog background in Dark mode -- `QPalette::Base` was
+  identical to `Window`.
+- Speed/Accuracy slider couldn't be adjusted by keyboard -- arrow keys
+  were being intercepted by the chart pan/zoom shortcuts first.
+- Presets/Measurements tables trapped Tab-key focus inside instead of
+  moving to the next control; added Enter as a keyboard equivalent for
+  the double-click-to-load-a-row action.
+- Presets table columns now auto-size to content instead of allowing a
+  horizontal scrollbar.
+- `.asd` file-type registration wrote a literal `HKEY_CLASSES_ROOT` junk
+  file on non-Windows platforms instead of being skipped -- now guarded
+  with `#ifdef Q_OS_WIN`.
 - PDF export (Print dialog's "Save as .pdf", the "Screenshot from AA"
   dialog's "Export to PDF", and Print dialog's "Print" &rarr; "Print to
   File (PDF)") was silently coming out as A4 even where the page size was

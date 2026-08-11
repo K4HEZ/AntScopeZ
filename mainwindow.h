@@ -15,7 +15,6 @@
 #include <screenshot.h>
 #include <QTimer>
 #include <settings.h>
-#include <fqsettings.h>
 #include <markers.h>
 #include <QSettings>
 //#include <QQuickItem>
@@ -122,7 +121,6 @@ private:
     Measurements *m_measurements = nullptr;
     Settings *m_settingsDialog = nullptr;
     Export *m_exportDialog = nullptr;
-    FqSettings *m_fqSettings = nullptr;
     Markers *m_markers = nullptr;
     QSettings *m_settings = nullptr;
     Calibration *m_calibration = nullptr;
@@ -219,6 +217,12 @@ private:
     void moveEvent(QMoveEvent *);
     void resizeEvent(QResizeEvent *e);
     bool event(QEvent *event);
+    // Lets speedAccuracySlider claim Left/Right/Up/Down for itself while
+    // focused, instead of the window-wide chart pan/zoom QShortcuts (see
+    // ctor, Qt::Key_Up/Down/Left/Right) intercepting them first -- those
+    // shortcuts have no widget-scoped context, so without this a focused
+    // slider can't be adjusted from the keyboard at all.
+    bool eventFilter(QObject *obj, QEvent *event) override;
 
     void setFqFrom(QString from);
     void setFqFrom(double from);
@@ -238,6 +242,23 @@ private:
     void changeMeasurmentsColor(int _row, QColor& _color);
     void changeColorTheme(bool _dark);
     void getEnteredFq(double& start, double& stop);
+    // Switches scan mode (Start/Stop vs Center/Range): converts the
+    // currently-entered frequency values into the new representation,
+    // updates m_isRange, relabels startLabel/stopLabel and the presets
+    // table headers, and emits isRangeChanged(). Used by both
+    // on_scanModeCombo_currentIndexChanged() (interactive) and the
+    // programmatic sites that restore a persisted mode (startup, and the
+    // post-loadLanguage() relabel-after-retranslateUi() correction).
+    void applyScanMode(bool isRange);
+    void applyScanModeLabels(bool isRange);
+    // Single source of truth for the measurement points count: clamps to
+    // [10, 999999], updates lineEdit_points and speedAccuracySlider (each
+    // with the other's signals blocked, to avoid feedback loops), sets
+    // m_dotsNumber, and notifies Measurements. Every call site that used
+    // to call spinBoxPoints->setValue() directly (relying on its
+    // valueChanged signal to cascade the same updates) now calls this
+    // instead, since QLineEdit::setText() has no equivalent signal.
+    void setDotsNumber(int value);
     void setChartBackground(QColor color);
     void setStyles();
 
@@ -302,9 +323,8 @@ public slots:
  //   void on_mouseWheel_s21(QWheelEvent *e);
     void on_singleStart_clicked();
     void on_continuousStartBtn_clicked(bool checked);
-    void on_fqSettingsBtn_clicked();
     void on_presetsAddBtn_clicked();
-    void on_tableWidget_presets_cellDoubleClicked(int row, int column);
+    void on_tableWidget_presets_cellActivated(int row, int column);
     void on_presetsDeleteBtn_clicked();
     void on_pressetsUpBtn_clicked();
     void on_presetsBandComboBox_currentIndexChanged(int index);
@@ -321,10 +341,9 @@ private slots:
     void on_tabWidget_currentChanged(int index);
     void on_screenshotAA_clicked();
     void on_settingsBtn_clicked();
-    void on_dotsNumberChanged(int number);
     void on_measurmentsDeleteBtn_clicked();
     void on_tableWidget_measurments_cellClicked(int row, int column);
-    void on_tableWidget_measurments_cellDoubleClicked(int row, int column);
+    void on_tableWidget_measurments_cellActivated(int row, int column);
     void on_screenshot_clicked();
     void on_printBtn_clicked();
     void on_measurmentsSaveBtn_clicked();
@@ -336,8 +355,7 @@ private slots:
     void on_Z0Changed(double _Z0);
     void updateGraph ();
     void on_settingsParamsChanged();
-    void on_limitsBtn_clicked(bool checked);
-    void on_rangeBtn_clicked(bool checked);
+    void on_scanModeCombo_currentIndexChanged(int index);
     void on_lineEdit_fqFrom_editingFinished();
     void on_lineEdit_fqTo_editingFinished();
     void resizeWnd(void);
@@ -350,7 +368,8 @@ private slots:
     void onCreateMarker(const QPoint& pos);
     void onCreateMarker(QAction*);
     void on_bandChanged(QString);
-    void onSpinChanged(int value);
+    void on_lineEdit_points_editingFinished();
+    void on_speedAccuracySlider_valueChanged(int value);
     void calibrationToggled(bool checked);
     void on_dataChanged(qint64 _center_khz, qint64 _range_khz, qint32 _dots);
     void on_importFinished(double _fqMin, double _fqMax);

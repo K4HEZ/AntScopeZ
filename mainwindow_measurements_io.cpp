@@ -175,7 +175,10 @@ void MainWindow::on_tableWidget_measurments_cellClicked(int row, int column)
     }
 }
 
-void MainWindow::on_tableWidget_measurments_cellDoubleClicked(int row, int column)
+// Autoconnects to cellActivated (not cellDoubleClicked) so this also fires
+// on Return/Enter when a row is current, not just on double-click -- see
+// QAbstractItemView::activated().
+void MainWindow::on_tableWidget_measurments_cellActivated(int row, int column)
 {
     Q_UNUSED(column);
 
@@ -611,7 +614,7 @@ void MainWindow::on_importFinished(double _fqMin_khz, double _fqMax_khz)
 //    if (mm != nullptr)
 //        mm->set(_center*1000, _range*1000, mm->dataRX.size()-1);
 
-    on_dataChanged((qint64)_center, (qint64)_range/2, ui->spinBoxPoints->value());
+    on_dataChanged((qint64)_center, (qint64)_range/2, ui->lineEdit_points->text().toInt());
 
     ui->measurmentsSaveBtn->setEnabled(true);
     ui->exportBtn->setEnabled(true);

@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QTableWidget>
+#include <QHeaderView>
 #include <QSettings>
 #include <analyzer/analyzerparameters.h>
 #include <settings.h>

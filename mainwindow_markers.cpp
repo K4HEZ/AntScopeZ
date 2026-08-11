@@ -66,15 +66,33 @@ void MainWindow::onCustomContextMenuRequested(const QPoint& pos)
     menu->popup(plot->mapToGlobal(pos));
 }
 
-void MainWindow::onSpinChanged(int value)
+// Single source of truth for the measurement points count -- see the
+// declaration in mainwindow.h for why this replaced spinBoxPoints's
+// implicit valueChanged-signal cascade.
+void MainWindow::setDotsNumber(int value)
 {
-    if (!g_developerMode) {
-        if (value > MAX_DOTS) {
-            value = MAX_DOTS;
-            ui->spinBoxPoints->setValue(value);
-        }
-    }
+    if (value < 10)
+        value = 10;
+    if (value > 1000)
+        value = 1000;
+
+    ui->lineEdit_points->setText(QString::number(value));
+
+    ui->speedAccuracySlider->blockSignals(true);
+    ui->speedAccuracySlider->setValue(value);
+    ui->speedAccuracySlider->blockSignals(false);
+
     m_dotsNumber = value;
     m_measurements->on_dotsNumberChanged(value);
+}
+
+void MainWindow::on_lineEdit_points_editingFinished()
+{
+    setDotsNumber(ui->lineEdit_points->text().toInt());
+}
+
+void MainWindow::on_speedAccuracySlider_valueChanged(int value)
+{
+    setDotsNumber(value);
 }
 

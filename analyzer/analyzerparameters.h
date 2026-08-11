@@ -26,7 +26,6 @@ static double MAX_USER_RANGE = 2000;
 
 static int ABSOLUTE_MIN_FQ = 0;
 static int ABSOLUTE_MAX_FQ = 10000000;
-static int MAX_DOTS = 2000;
 
 static double VALUE_LIMIT = 9999; // VALUE_LIMIT +- jVALUE_LIMIT
 

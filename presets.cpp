@@ -28,9 +28,21 @@ Presets::~Presets()
 
 void Presets::setTable (QTableWidget * table)
 {
-    m_tableWidget = table;    
+    m_tableWidget = table;
     m_tableWidget->setColumnCount(3);
     m_tableWidget->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+
+    // Tab/Backtab move focus out of the table (to the next widget in the
+    // main window's tab order) instead of just cycling between cells --
+    // default QAbstractItemView behavior traps keyboard focus inside.
+    m_tableWidget->setTabKeyNavigation(false);
+
+    // Columns always sized to fit their own content, never wider than the
+    // table itself needs, and not user-resizable -- no horizontal
+    // scrollbar should ever be necessary since the widest possible value
+    // in each column already fits.
+    m_tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    m_tableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     m_settings->beginGroup("Presets");
     int count = m_settings->value("Quantity",0).toInt();

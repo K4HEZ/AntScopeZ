@@ -28,17 +28,6 @@ extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
 // mainwindow.cpp itself for the pieces left behind) -- pure code motion,
 // no behavior change. All pieces still define methods of MainWindow.
 
-void MainWindow::on_fqSettingsBtn_clicked()
-{
-    m_fqSettings = new FqSettings(this);
-    m_fqSettings->setAttribute(Qt::WA_DeleteOnClose);
-    m_fqSettings->setWindowTitle(tr("Frequency settings"));
-    m_fqSettings->setDotsNumber(m_dotsNumber);
-    connect(m_fqSettings, SIGNAL(dotsNumber(int)), this, SLOT(on_dotsNumberChanged(int)));
-    connect(m_fqSettings, SIGNAL(dotsNumber(int)), m_measurements, SLOT(on_dotsNumberChanged(int)));
-    m_fqSettings->exec();
-}
-
 void MainWindow::on_presetsAddBtn_clicked()
 {
     QString from = QString::number(getFqFrom(),'f',0);
@@ -46,7 +35,10 @@ void MainWindow::on_presetsAddBtn_clicked()
     m_presets->addNewRow(from, to, QString::number(m_dotsNumber));
 }
 
-void MainWindow::on_tableWidget_presets_cellDoubleClicked(int row, int column)
+// Autoconnects to cellActivated (not cellDoubleClicked) so this also fires
+// on Return/Enter when a row is current, not just on double-click -- see
+// QAbstractItemView::activated().
+void MainWindow::on_tableWidget_presets_cellActivated(int row, int column)
 {
     Q_UNUSED(column)
     QStringList list = m_presets->getRow(row);
@@ -56,8 +48,7 @@ void MainWindow::on_tableWidget_presets_cellDoubleClicked(int row, int column)
     // could otherwise still hand the plots/device an out-of-range value.
     range.lower = clampFqKhz(list.at(0).toDouble());
     range.upper = clampFqKhz(list.at(1).toDouble());
-    m_dotsNumber = list.at(2).toInt();
-    ui->spinBoxPoints->setValue(m_dotsNumber);
+    setDotsNumber(list.at(2).toInt());
 
     if(!m_isRange)
     {
@@ -220,7 +211,7 @@ void MainWindow::on_presetsBandComboBox_currentIndexChanged(int index)
         }
 
         // Single range-then-redraw pass across every plot, same as picking
-        // a preset row (on_tableWidget_presets_cellDoubleClicked) -- one
+        // a preset row (on_tableWidget_presets_cellActivated) -- one
         // updateGraph() call at the end, not one per field.
         QCPRange plotRange(start, stop);
         m_swrWidget->xAxis->setRange(plotRange);

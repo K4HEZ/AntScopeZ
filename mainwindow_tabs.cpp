@@ -428,6 +428,12 @@ void MainWindow::createTabs (QString sequence)
         }
     });
     ui->tabWidget->setCornerWidget(btn, Qt::TopRightCorner);
+    // btn is created here at runtime, not in mainwindow.ui, so it can't be
+    // placed via <tabstops> -- splice it into the chain setupUi() already
+    // established (tabWidget -> settingsBtn) instead, right after the tab
+    // widget and before Settings.
+    setTabOrder(ui->tabWidget, btn);
+    setTabOrder(btn, ui->settingsBtn);
 #endif
 }
 
@@ -454,18 +460,21 @@ void MainWindow::changeColorTheme(bool _dark)
     m_darkColorTheme = _dark;
     Style::setDarkMode(_dark);
 
-    // Native/Fusion rendering off Style::palette() for everything except the
-    // few controls that carry actual functional meaning in their color:
-    // Single/Continuous/Full's checked (running, green) and disabled
-    // states. That's state, not decoration, so it applies the same in both
-    // themes -- unlike before, when it was only ever wired up for Dark.
+    // Native/Fusion rendering off Style::palette() for everything except
+    // Single/Continuous/Full's checked (running, green) state, which
+    // carries actual functional meaning in its color -- that's state, not
+    // decoration, so it applies the same in both themes. The disabled
+    // state used to get the same hardcoded-both-themes treatment (a fixed
+    // dark gray, rgb(59,59,59)/rgb(119,119,119)) but that only ever read
+    // correctly against the Dark canvas -- on Light it painted a dark
+    // charcoal island that clashed with everything else. Left native now,
+    // same as every other disabled control in the app: Fusion derives a
+    // theme-correct disabled look from Style::palette()'s own Button/
+    // ButtonText colors (already set below), no per-widget override needed.
     qApp->setStyle(QStyleFactory::create("fusion"));
     qApp->setPalette(Style::palette());
 
-    QString style = "QPushButton:disabled{"
-            "background-color: rgb(59, 59, 59);"
-            "color: rgb(119, 119, 119);}"
-            "QPushButton:checked{"
+    QString style = "QPushButton:checked{"
             "background-color: rgb(0, 178, 90);}";
     ui->singleStart->setStyleSheet(style);
     ui->continuousStartBtn->setStyleSheet(style);

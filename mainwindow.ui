@@ -262,35 +262,20 @@
           <number>20</number>
          </property>
          <item row="0" column="0">
-          <widget class="QPushButton" name="limitsBtn">
+          <widget class="QLabel" name="scanModeLabel">
            <property name="minimumSize">
             <size>
              <width>0</width>
              <height>24</height>
             </size>
            </property>
-           <property name="toolTip">
-            <string>Entering the initial and final measurement frequency</string>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">limitsBtn:pressed
-{
-	background-color: rgb(1,178,255);
-}</string>
-           </property>
            <property name="text">
-            <string>Limits</string>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
+            <string>Scan Mode</string>
            </property>
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QPushButton" name="rangeBtn">
+          <widget class="QComboBox" name="scanModeCombo">
            <property name="minimumSize">
             <size>
              <width>0</width>
@@ -298,20 +283,18 @@
             </size>
            </property>
            <property name="toolTip">
-            <string>Setting the central measurement frequency and range</string>
+            <string>Choose how measurement frequency is entered: initial/final, or center/range</string>
            </property>
-           <property name="statusTip">
-            <string/>
-           </property>
-           <property name="whatsThis">
-            <string/>
-           </property>
-           <property name="text">
-            <string>Center / Range</string>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
-           </property>
+           <item>
+            <property name="text">
+             <string>Start/Stop</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Center/Range</string>
+            </property>
+           </item>
           </widget>
          </item>
          <item row="1" column="0">
@@ -390,7 +373,7 @@
           </widget>
          </item>
          <item row="3" column="1">
-          <widget class="QSpinBox" name="spinBoxPoints">
+          <widget class="QLineEdit" name="lineEdit_points">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -408,27 +391,59 @@
              <pointsize>10</pointsize>
             </font>
            </property>
+           <property name="text">
+            <string notr="true">100</string>
+           </property>
            <property name="alignment">
             <set>Qt::AlignmentFlag::AlignCenter</set>
            </property>
-           <property name="accelerated">
-            <bool>true</bool>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="speedAccuracyLabel">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Speed/Accuracy</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QSlider" name="speedAccuracySlider">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>Fast (fewer points) to Accurate (more points)</string>
            </property>
            <property name="minimum">
             <number>10</number>
            </property>
            <property name="maximum">
-            <number>999999</number>
+            <number>1000</number>
            </property>
            <property name="singleStep">
             <number>10</number>
            </property>
+           <property name="pageStep">
+            <number>100</number>
+           </property>
            <property name="value">
             <number>100</number>
            </property>
+           <property name="orientation">
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
           </widget>
          </item>
-         <item row="4" column="0">
+         <item row="5" column="0">
           <widget class="QCheckBox" name="checkBoxCalibration">
            <property name="toolTip">
             <string>Enable calibration OSL. Attention!
@@ -440,7 +455,7 @@ process in the settings menu!</string>
            </property>
           </widget>
          </item>
-         <item row="4" column="1">
+         <item row="5" column="1">
           <widget class="QPushButton" name="fullBtn">
            <property name="minimumSize">
             <size>
@@ -453,22 +468,6 @@ process in the settings menu!</string>
            </property>
            <property name="text">
             <string>Full range</string>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="1">
-          <widget class="QPushButton" name="fqSettingsBtn">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>28</height>
-            </size>
-           </property>
-           <property name="toolTip">
-            <string>Set the number of measurement points via a Fast/Accurately speed slider</string>
-           </property>
-           <property name="text">
-            <string>Measurement speed...</string>
            </property>
           </widget>
          </item>
@@ -939,15 +938,7 @@ process in the settings menu!</string>
   </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>lineEdit_fqFrom</tabstop>
-  <tabstop>lineEdit_fqTo</tabstop>
-  <tabstop>limitsBtn</tabstop>
-  <tabstop>rangeBtn</tabstop>
-  <tabstop>tableWidget_presets</tabstop>
-  <tabstop>presetsAddBtn</tabstop>
-  <tabstop>presetsDeleteBtn</tabstop>
-  <tabstop>pressetsUpBtn</tabstop>
-  <tabstop>tableWidget_measurments</tabstop>
+  <tabstop>tabWidget</tabstop>
   <tabstop>settingsBtn</tabstop>
   <tabstop>exportBtn</tabstop>
   <tabstop>importBtn</tabstop>
@@ -955,10 +946,25 @@ process in the settings menu!</string>
   <tabstop>screenshot</tabstop>
   <tabstop>screenshotAA</tabstop>
   <tabstop>analyzerDataBtn</tabstop>
+  <tabstop>scanModeCombo</tabstop>
+  <tabstop>lineEdit_fqFrom</tabstop>
+  <tabstop>lineEdit_fqTo</tabstop>
+  <tabstop>lineEdit_points</tabstop>
+  <tabstop>speedAccuracySlider</tabstop>
+  <tabstop>checkBoxCalibration</tabstop>
+  <tabstop>fullBtn</tabstop>
+  <tabstop>singleStart</tabstop>
+  <tabstop>continuousStartBtn</tabstop>
+  <tabstop>presetsBandComboBox</tabstop>
+  <tabstop>tableWidget_presets</tabstop>
+  <tabstop>presetsAddBtn</tabstop>
+  <tabstop>presetsDeleteBtn</tabstop>
+  <tabstop>pressetsUpBtn</tabstop>
+  <tabstop>tableWidget_measurments</tabstop>
   <tabstop>measurementsOpenBtn</tabstop>
   <tabstop>measurmentsSaveBtn</tabstop>
   <tabstop>measurmentsDeleteBtn</tabstop>
-  <tabstop>tabWidget</tabstop>
+  <tabstop>measurmentsClearBtn</tabstop>
  </tabstops>
  <resources>
   <include location="res.qrc"/>

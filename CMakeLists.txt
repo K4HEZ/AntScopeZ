@@ -106,7 +106,6 @@ set(ANTSCOPE_SOURCES
     encodinghelpers.cpp
     export.cpp
     filedialog.cpp
-    fqsettings.cpp
     glwidget.cpp
     inforequestdialog.cpp
     licenseagent.cpp
@@ -184,7 +183,6 @@ set(ANTSCOPE_HEADERS
     export.h
     filedialog.h
     fqinputvalidator.h
-    fqsettings.h
     glwidget.h
     inforequestdialog.h
     licenseagent.h
@@ -237,7 +235,6 @@ set(ANTSCOPE_FORMS
     appregistrationdialog.ui
     editbandsdialog.ui
     export.ui
-    fqsettings.ui
     inforequestdialog.ui
     mainwindow.ui
     modelesspopup.ui

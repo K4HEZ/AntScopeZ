@@ -343,8 +343,6 @@ bool MainWindow::loadLanguage(QString locale)
         m_measurements->on_translate();
     if (m_markers != nullptr)
         m_markers->on_translate();
-    if (m_fqSettings != nullptr)
-        m_fqSettings->setWindowTitle(tr("Frequency settings"));
     if (m_exportDialog != nullptr)
         m_exportDialog->setWindowTitle(tr("Export"));
     if (m_screenshot != nullptr)

@@ -71,13 +71,27 @@ QPalette Style::palette()
 
     const bool canvasIsLight = t.windowBackground.lightness() > 128;
 
+    // QColor::lighter()/darker() scale multiplicatively, which is nearly a
+    // no-op on a canvas color this close to black -- e.g. lighter(115) on
+    // rgb(18,18,18) (the Dark theme's windowBackground) only reaches
+    // (21,21,21). Nudge by a fixed absolute amount instead, so Base/
+    // AlternateBase stay visibly distinct from Window regardless of how
+    // dark/light the theme's canvas is.
+    auto nudge = [canvasIsLight](const QColor& c, int amount) {
+        int delta = canvasIsLight ? -amount : amount;
+        return QColor(qBound(0, c.red() + delta, 255),
+                       qBound(0, c.green() + delta, 255),
+                       qBound(0, c.blue() + delta, 255));
+    };
+
     p.setColor(QPalette::Window, t.windowBackground);
     p.setColor(QPalette::WindowText, t.text);
-    p.setColor(QPalette::Base, t.windowBackground);
-    // A subtle alternating-row tint -- nudge toward white on a light canvas,
-    // toward black on a dark one, whichever direction "toward" is.
-    p.setColor(QPalette::AlternateBase, canvasIsLight
-               ? t.windowBackground.darker(104) : t.windowBackground.lighter(115));
+    // Previously identical to Window (zero contrast) -- most visible in a
+    // DontUseNativeDialog QFileDialog's "File name" field, which was
+    // indistinguishable from the dialog background on the Dark canvas.
+    p.setColor(QPalette::Base, nudge(t.windowBackground, 22));
+    // A subtle alternating-row tint, distinct from Base too.
+    p.setColor(QPalette::AlternateBase, nudge(t.windowBackground, 34));
     p.setColor(QPalette::Text, t.text);
     // Neutral gray, not a branded color -- this is what native (unstyled)
     // buttons/tabs/headers actually render with, so they read as "plain

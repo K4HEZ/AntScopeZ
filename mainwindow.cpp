@@ -34,7 +34,6 @@ MainWindow::MainWindow(QWidget *parent) :
     m_measurements(NULL),
     m_settingsDialog(NULL),
     m_exportDialog(NULL),
-    m_fqSettings(NULL),
     m_markers(NULL),
     m_settings(NULL),
     m_calibration(NULL),
@@ -58,6 +57,15 @@ MainWindow::MainWindow(QWidget *parent) :
     m_mainWindow = this;
 
     ui->setupUi(this);
+
+    // QComboBox has no direct alignment property for its closed-box
+    // current-text display; setEditable()+a read-only QLineEdit is the
+    // standard Qt technique to right-align it without otherwise changing
+    // its non-editable combo-box behavior.
+    ui->scanModeCombo->setEditable(true);
+    ui->scanModeCombo->lineEdit()->setReadOnly(true);
+    ui->scanModeCombo->lineEdit()->setAlignment(Qt::AlignRight);
+
     setStyles();
 
     qInfo() << "* 1 sslLibraryBuildVersion: " << QSslSocket::sslLibraryBuildVersionString();
@@ -76,10 +84,6 @@ MainWindow::MainWindow(QWidget *parent) :
     g_mapTabPlotNames["tab_s21"] = "s21_widget";
     g_mapTabPlotNames["tab_smith"] = "smith_widget";
     g_mapTabPlotNames["tab_user"] = "user_widget";
-
-    if (g_developerMode) {
-        ui->spinBoxPoints->setRange(1, 1000000);
-    }
 
 //    QRegExp re("^[\d\s]*$");
 //    QRegExpValidator *validator = new QRegExpValidator(re, this);
@@ -194,6 +198,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->tableWidget_measurments->setColumnCount(MEASUREMENTS_TABLE_COLUMNS);
     ui->tableWidget_measurments->setSelectionBehavior(QAbstractItemView::SelectRows );
+    // Same Tab-traps-focus-inside default as tableWidget_presets -- see
+    // Presets::setTable() for the full explanation.
+    ui->tableWidget_measurments->setTabKeyNavigation(false);
     //ui->tableWidget_measurments->setToolTip(tr("Double-click an item to rescale the chart.\nRight-click an item to change color"));
     ui->tableWidget_measurments->setToolTip("");
     ui->tableWidget_measurments->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -331,6 +338,13 @@ MainWindow::MainWindow(QWidget *parent) :
     QShortcut *shortRight = new QShortcut(QKeySequence(Qt::Key_Right),this);
     connect(shortRight,SIGNAL(activated()),this,SLOT(on_pressRight()));
 
+    // shortUp/shortDoun/shortLeft/shortRight above are QShortcuts with no
+    // explicit context (default Qt::WindowShortcut), so they fire from
+    // anywhere in the window for chart pan/zoom -- including while
+    // speedAccuracySlider has focus and wants those same keys for itself.
+    // This filter lets the slider claim them first; see eventFilter().
+    ui->speedAccuracySlider->installEventFilter(this);
+
     QShortcut *shortCtrlC = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_C),this);
     connect(shortCtrlC,SIGNAL(activated()),this,SLOT(on_pressCtrlC()));
 
@@ -449,12 +463,23 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->measurmentsClearBtn, &QPushButton::clicked, this, &MainWindow::measurementsClearBtn_clicked);
 
+#ifdef Q_OS_WIN
+    // Registers .asd as a AntScopeZ-associated file type via the real
+    // Windows registry -- QSettings::NativeFormat only recognizes the
+    // "HKEY_CLASSES_ROOT" prefix specially on Windows. Without this guard,
+    // every other platform's QSettings just treats that string as a
+    // literal relative filename and creates a plain text file called
+    // "HKEY_CLASSES_ROOT" wherever the CWD happens to be -- confirmed
+    // (2026-08-11): stray copies turned up in the project source dir,
+    // build-debug/, and ~/.config/AntScopeZ/ on Linux. Inherited unguarded
+    // from the original pre-fork codebase (present in the earliest
+    // baseline commit); not a regression introduced by this project.
     QSettings settings1 ("HKEY_CLASSES_ROOT", QSettings::NativeFormat);
     settings1.setValue (".asd/.", "AntScopeZ.file");
     settings1.setValue ("AntScopeZ.file/.", tr("File of AntScopeZ"));
     settings1.setValue ("AntScopeZ.file/shell/open/command/.",
                         "\"" + QDir::toNativeSeparators (QCoreApplication::applicationFilePath()) + "\"" + " \"%1\"");
-
+#endif
 
     m_settings->beginGroup("MainWindow");
     m_lastSaveOpenPath = m_settings->value("lastSavePath", "").toString();
@@ -491,7 +516,6 @@ MainWindow::MainWindow(QWidget *parent) :
     m_Z0 = m_settings->value("systemImpedance", 50).toDouble();
     m_calibration->setZ0(m_Z0);
     m_measurements->setZ0(m_Z0);
-    m_measurements->on_dotsNumberChanged(m_dotsNumber);
     m_measurements->on_changeMeasureSystemMetric(m_measureSystemMetric);
     QCPRange range(m_settings->value("rangeLower",0).toDouble(), m_settings->value("rangeUpper",1400000).toDouble());
     m_swrWidget->xAxis->setRange(range);
@@ -507,27 +531,27 @@ MainWindow::MainWindow(QWidget *parent) :
 
     if(!m_isRange)
     {
-        ui->limitsBtn->setChecked(true);
-        on_limitsBtn_clicked(true);
-//        ui->rangeBtn->setChecked(false);
+        ui->scanModeCombo->blockSignals(true);
+        ui->scanModeCombo->setCurrentIndex(0);
+        ui->scanModeCombo->blockSignals(false);
+        applyScanMode(false);
         m_lastEnteredFqFrom = range.lower;
         m_lastEnteredFqTo = range.upper;
         setFqFrom(range.lower);
         setFqTo(range.upper);
     }else
     {
-        ui->rangeBtn->setChecked(true);
-        on_rangeBtn_clicked(true);
-//        ui->rangeBtn->setChecked(true);
-//        ui->limitsBtn->setChecked(false);
+        ui->scanModeCombo->blockSignals(true);
+        ui->scanModeCombo->setCurrentIndex(1);
+        ui->scanModeCombo->blockSignals(false);
+        applyScanMode(true);
         m_lastEnteredFqFrom = (range.upper + range.lower)/2;
         m_lastEnteredFqTo = (range.upper - range.lower)/2;
         setFqFrom((range.upper + range.lower)/2);
         setFqTo((range.upper - range.lower)/2);
     }
 
-    ui->spinBoxPoints->setValue(m_dotsNumber);
-    connect(ui->spinBoxPoints, SIGNAL(valueChanged(int)), this, SLOT(onSpinChanged(int)));
+    setDotsNumber(m_dotsNumber);
     connect(ui->fullBtn, &QPushButton::clicked, this, &MainWindow::onFullRange);
 
     if (m_settings->contains("languageCode")) {
@@ -609,22 +633,13 @@ MainWindow::MainWindow(QWidget *parent) :
     });
 
     QTimer::singleShot(100, [this]() {
-        // force labels' text changing
-        if(this->m_isRange) {
-            this->ui->limitsBtn->setChecked(false);
-            this->ui->startLabel->setText(tr("Center"));
-            this->ui->stopLabel->setText(tr("Range (+/-)"));
-            this->ui->groupBox_Presets->setTitle(tr("Presets (center, range), kHz"));
-            this->ui->tableWidget_presets->horizontalHeaderItem(0)->setText(tr("Center"));
-            this->ui->tableWidget_presets->horizontalHeaderItem(1)->setText(tr("Range(+/-)"));
-        } else {
-            this->ui->rangeBtn->setChecked(false);
-            this->ui->startLabel->setText(tr("Start"));
-            this->ui->stopLabel->setText(tr("Stop"));
-            this->ui->groupBox_Presets->setTitle(tr("Presets (limits), kHz"));
-            this->ui->tableWidget_presets->horizontalHeaderItem(0)->setText(tr("Start"));
-            this->ui->tableWidget_presets->horizontalHeaderItem(1)->setText(tr("Stop"));
-        }
+        // force labels' text changing -- retranslateUi() from
+        // loadLanguage() above resets startLabel/stopLabel back to their
+        // .ui-authored default text, so re-apply whatever the current
+        // scan mode's labels actually are. Labels only, deliberately not
+        // the full applyScanMode() -- this must not re-run the frequency
+        // value conversion.
+        applyScanModeLabels(m_isRange);
     });
 
     m_settings->beginGroup("Connection");
@@ -832,6 +847,24 @@ bool MainWindow::event(QEvent * e)
         emit focus(!isMinimized());
     }
     return QMainWindow::event(e) ;
+}
+
+bool MainWindow::eventFilter(QObject *obj, QEvent *event)
+{
+    if (obj == ui->speedAccuracySlider && event->type() == QEvent::ShortcutOverride)
+    {
+        QKeyEvent *ke = static_cast<QKeyEvent*>(event);
+        if (ke->key() == Qt::Key_Left || ke->key() == Qt::Key_Right ||
+            ke->key() == Qt::Key_Up || ke->key() == Qt::Key_Down)
+        {
+            // Claim these before the window-wide chart pan/zoom QShortcuts
+            // (see ctor) get a chance to -- QSlider handles them itself in
+            // its own keyPressEvent() once the shortcut system backs off.
+            event->accept();
+            return true;
+        }
+    }
+    return QMainWindow::eventFilter(obj, event);
 }
 
 void MainWindow::setWidgetsSettings()
@@ -1161,15 +1194,13 @@ void MainWindow::setStyles()
     style = Style::lineEdit();
     ui->lineEdit_fqTo->setStyleSheet(style);
     ui->lineEdit_fqFrom->setStyleSheet(style);
+    ui->lineEdit_points->setStyleSheet(style);
 
     style = Style::checkBox();
     ui->checkBoxCalibration->setStyleSheet(style);
 
     style = Style::label();
     ui->centralWidget->setStyleSheet(style);
-
-    style = Style::spinBox();
-    ui->spinBoxPoints->setStyleSheet(style);
 
     // Each of these used to be its own qApp->setStyleSheet(style) call --
     // since that replaces rather than adds to the app-wide stylesheet, only
@@ -1190,7 +1221,6 @@ void MainWindow::setStyles()
     ui->tableWidget_measurments->setStyleSheet(Style::tableWidget());
     ui->tableWidget_presets->setStyleSheet(Style::tableWidget());
 
-    ui->spinBoxPoints->setStyleSheet(Style::spinBox());
     ui->presetsBandComboBox->setStyleSheet(Style::comboBox());
 
     setStyleSheet(Style::mainWindow() + Style::tabWidget());

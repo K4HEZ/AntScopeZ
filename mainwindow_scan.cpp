@@ -496,12 +496,6 @@ void MainWindow::on_measurementCompleteNano()
     }
 }
 
-void MainWindow::on_dotsNumberChanged(int number)
-{
-    m_dotsNumber = number;
-    ui->spinBoxPoints->setValue(number);
-}
-
 void MainWindow::updateGraph ()
 {
     QCustomPlot* plot = nullptr;
