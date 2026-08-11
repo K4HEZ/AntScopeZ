@@ -376,7 +376,7 @@ void Print::on_pdfPrintBtn_clicked()
 
 void Print::on_pngPrintBtn_clicked()
 {
-    QString path = FileDialog::getSaveFileName(this, tr("Export PNG"), "", "*.png");
+    QString path = FileDialog::getSaveFileName(this, tr("Export PNG"), m_lastPath, "*.png");
     if(path.isEmpty())
     {
         return;
@@ -412,6 +412,7 @@ void Print::on_pngPrintBtn_clicked()
     {
         path.append(".png");
     }
+    m_lastPath = path;
     file.save(path,"PNG",80);
 }
 

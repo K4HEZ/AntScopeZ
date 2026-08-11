@@ -229,8 +229,11 @@ void MainWindow::on_tableWidget_measurments_cellDoubleClicked(int row, int colum
 
 void MainWindow::on_screenshot_clicked()
 {
-    QDateTime datetime = QDateTime::currentDateTime();
-    QString path = "Images/" + datetime.toString("dd.MM.yyyy_hh.mm.ss");
+    QString path = m_lastScreenshotPath;
+    if (path.isEmpty()) {
+        QDateTime datetime = QDateTime::currentDateTime();
+        path = "Images/" + datetime.toString("dd.MM.yyyy_hh.mm.ss");
+    }
     QString str = FileDialog::getSaveFileName(this, tr("Export PNG"), path, "*.png");
     if(str.isEmpty())
     {
@@ -240,6 +243,7 @@ void MainWindow::on_screenshot_clicked()
     {
         str += ".png";
     }
+    m_lastScreenshotPath = str;
 
     on_pressCtrlC();
     QPixmap pixmap = QApplication::clipboard()->pixmap();
@@ -476,11 +480,7 @@ void MainWindow::on_measurmentsSaveBtn_clicked()
 
     if(!list.isEmpty())
     {
-        if(m_lastSaveOpenPath.indexOf('.') >= 0)
-        {
-            m_lastSaveOpenPath.remove(m_lastSaveOpenPath.indexOf('.'),4);
-            m_lastSaveOpenPath.append(".asd");
-        }
+        m_lastSaveOpenPath = FileDialog::withExtension(m_lastSaveOpenPath, "asd");
 
         int row = list.at(0)->row();
 

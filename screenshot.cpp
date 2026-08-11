@@ -4,6 +4,7 @@
 #include"style.h"
 #include "filedialog.h"
 #include "printutils.h"
+#include "settings.h"
 #include "analyzer/ble_analyzer.h"
 
 extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
@@ -37,6 +38,15 @@ Screenshot::Screenshot(QWidget *parent, int _model, int height, int width) :
 
     m_popUp = new PopUp();
 
+    // Remember the last folder used for this dialog's PDF/BMP exports
+    // across restarts, same QSettings-in-ctor/dtor mechanism as
+    // Print::m_lastPath and Export::m_lastExportPath.
+    QString settingsPath = Settings::setIniFile();
+    m_settings = new QSettings(settingsPath, QSettings::IniFormat);
+    m_settings->beginGroup("Screenshot");
+    m_lastPath = m_settings->value("lastPath", "").toString();
+    m_settings->endGroup();
+
     AnalyzerParameters* param = AnalyzerParameters::current();
     QString name = param == nullptr ? "" : param->name();
     QString model = CustomAnalyzer::customized() ?
@@ -60,6 +70,10 @@ Screenshot::Screenshot(QWidget *parent, int _model, int height, int width) :
 
 Screenshot::~Screenshot()
 {
+    m_settings->beginGroup("Screenshot");
+    m_settings->setValue("lastPath", m_lastPath);
+    m_settings->endGroup();
+
     if(m_image)
     {
         delete m_image;
@@ -202,8 +216,11 @@ void Screenshot::savePDF(QString path, QString comment)
 
 void Screenshot::on_lineEdit_returnPressed()
 {
-    QDateTime datetime = QDateTime::currentDateTime();
-    QString path = "PDFs/" + datetime.toString("dd.MM.yyyy_hh.mm.ss");
+    QString path = m_lastPath;
+    if (path.isEmpty()) {
+        QDateTime datetime = QDateTime::currentDateTime();
+        path = "PDFs/" + datetime.toString("dd.MM.yyyy_hh.mm.ss");
+    }
     QString str = FileDialog::getSaveFileName(this, tr("Export PDF"), path, "*.pdf");
     if(str.isEmpty())
     {
@@ -213,6 +230,7 @@ void Screenshot::on_lineEdit_returnPressed()
     {
         str += ".pdf";
     }
+    m_lastPath = str;
     savePDF(str, ui->lineEdit->text());
 }
 
@@ -614,8 +632,11 @@ void Screenshot::on_newData(QByteArray data)
 
 void Screenshot::on_saveAsBtn_clicked()
 {
-    QDateTime datetime = QDateTime::currentDateTime();
-    QString path = "Images/" + datetime.toString("dd.MM.yyyy_hh.mm.ss");
+    QString path = m_lastPath;
+    if (path.isEmpty()) {
+        QDateTime datetime = QDateTime::currentDateTime();
+        path = "Images/" + datetime.toString("dd.MM.yyyy_hh.mm.ss");
+    }
     QString str = FileDialog::getSaveFileName(this, tr("Save as BMP"), path, "*.bmp");
     if(str.isEmpty())
     {
@@ -625,13 +646,17 @@ void Screenshot::on_saveAsBtn_clicked()
     {
         str += ".bmp";
     }
+    m_lastPath = str;
     saveBMP(str);
 }
 
 void Screenshot::on_exportToPdfBtn_clicked()
 {
-    QDateTime datetime = QDateTime::currentDateTime();
-    QString path = "PDFs/" + datetime.toString("dd.MM.yyyy_hh.mm.ss");
+    QString path = m_lastPath;
+    if (path.isEmpty()) {
+        QDateTime datetime = QDateTime::currentDateTime();
+        path = "PDFs/" + datetime.toString("dd.MM.yyyy_hh.mm.ss");
+    }
     QString str = FileDialog::getSaveFileName(this, tr("Export PDF"), path, "*.pdf");
     if (str.isEmpty())
         return;
@@ -639,6 +664,7 @@ void Screenshot::on_exportToPdfBtn_clicked()
     {
         str += ".pdf";
     }
+    m_lastPath = str;
     savePDF(str, ui->lineEdit->text());
 }
 

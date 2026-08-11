@@ -83,3 +83,17 @@ QString FileDialog::getExistingDirectory(QWidget *parent,
     return name;
 }
 
+QString FileDialog::withExtension(const QString &path, const QString &ext)
+{
+    if (path.isEmpty())
+        return path;
+
+    QFileInfo fi(path);
+    QString dir = fi.path();
+    QString base = fi.completeBaseName();
+    while (base.endsWith("." + ext, Qt::CaseInsensitive))
+        base.chop(ext.length() + 1);
+
+    QString result = (dir.isEmpty() || dir == ".") ? base : dir + "/" + base;
+    return result + "." + ext;
+}

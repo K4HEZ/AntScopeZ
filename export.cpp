@@ -56,11 +56,7 @@ void Export::on_csvBtn_clicked()
 {
     if(m_measurements != NULL)
     {
-        if(m_lastExportPath.indexOf('.') >= 0)
-        {
-            m_lastExportPath.remove(m_lastExportPath.indexOf('.'),4);
-            m_lastExportPath.append(".csv");
-        }
+        m_lastExportPath = FileDialog::withExtension(m_lastExportPath, "csv");
         QString path = FileDialog::getSaveFileName(this, tr("Export"), m_lastExportPath, "Comma Separated Values (*.csv)");
         if(!path.isEmpty())
         {
@@ -74,11 +70,7 @@ void Export::on_nwlBtn_clicked()
 {
     if(m_measurements != NULL)
     {
-        if(m_lastExportPath.indexOf('.') >= 0)
-        {
-            m_lastExportPath.remove(m_lastExportPath.indexOf('.'),4);
-            m_lastExportPath.append(".nwl");
-        }
+        m_lastExportPath = FileDialog::withExtension(m_lastExportPath, "nwl");
         QString path = FileDialog::getSaveFileName(this, tr("Export"), m_lastExportPath, "APAK-EL (*.nwl)");
 
         if(!path.isEmpty())
@@ -94,11 +86,7 @@ void Export::on_zRiBtn_clicked()
         qInfo() << "Touchstone button clicked";
     if(m_measurements != NULL)
     {
-        if(m_lastExportPath.indexOf('.') >= 0)
-        {
-            m_lastExportPath.remove(m_lastExportPath.indexOf('.'),4);
-            m_lastExportPath.append(".s1p");
-        }
+        m_lastExportPath = FileDialog::withExtension(m_lastExportPath, "s1p");
         QString path = FileDialog::getSaveFileName(this, tr("Export"), m_lastExportPath, "Touchstone (*.s1p)");
 
         if(!path.isEmpty())
@@ -117,11 +105,7 @@ void Export::on_sRiBtn_clicked()
 {
     if(m_measurements != NULL)
     {
-        if(m_lastExportPath.indexOf('.') >= 0)
-        {
-            m_lastExportPath.remove(m_lastExportPath.indexOf('.'),4);
-            m_lastExportPath.append(".s1p");
-        }
+        m_lastExportPath = FileDialog::withExtension(m_lastExportPath, "s1p");
         QString path = FileDialog::getSaveFileName(this, tr("Export"), m_lastExportPath, "Touchstone (*.s1p)");
 
         if(!path.isEmpty())
@@ -136,11 +120,7 @@ void Export::on_sMaBtn_clicked()
 {
     if(m_measurements != NULL)
     {
-        if(m_lastExportPath.indexOf('.') >= 0)
-        {
-            m_lastExportPath.remove(m_lastExportPath.indexOf('.'),4);
-            m_lastExportPath.append(".s1p");
-        }
+        m_lastExportPath = FileDialog::withExtension(m_lastExportPath, "s1p");
         QString path = FileDialog::getSaveFileName(this, tr("Export"), m_lastExportPath, "Touchstone (*.s1p)");
 
         if(!path.isEmpty())

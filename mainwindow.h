@@ -137,6 +137,7 @@ private:
 
     QString m_lastSaveOpenPath;
     QString m_lastExportImportPath;
+    QString m_lastScreenshotPath;
 
     bool m_measureSystemMetric;
     double m_Z0;
