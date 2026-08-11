@@ -2,7 +2,7 @@
 #include "ui_print.h"
 #include "style.h"
 #include "filedialog.h"
-#include <QPrinterInfo>
+#include "printutils.h"
 #include <QPdfWriter>
 #include <QPagedPaintDevice>
 #include <QScopedPointer>
@@ -269,16 +269,14 @@ void Print::on_printBtn_clicked()
 
     QPrinter printer;
 
-    // Seed the page size from the actual default printer (queried straight
-    // from CUPS/the OS) instead of leaving it to QPrinter's own internal
+    // See PrintUtils::defaultPageSize() -- queried from the actual default
+    // printer instead of hardcoded/left to QPrinter's own internal
     // default-resolution logic, which is what was showing A4 in this
     // dialog's Properties widget even when the OS's own Printers settings
     // correctly show Letter. See BUILDINFO.md known issues.
-    QPrinterInfo defaultPrinterInfo = QPrinterInfo::defaultPrinter();
-    QPageSize defaultPageSize = (!defaultPrinterInfo.isNull() && defaultPrinterInfo.defaultPageSize().isValid())
-            ? defaultPrinterInfo.defaultPageSize() : QPageSize(QPageSize::Letter);
+    QPageSize pageSize = PrintUtils::defaultPageSize();
     QPageLayout defaultLayout = printer.pageLayout();
-    defaultLayout.setPageSize(defaultPageSize);
+    defaultLayout.setPageSize(pageSize);
     printer.setPageLayout(defaultLayout);
 
     QPrintDialog *dlg = new QPrintDialog(&printer,0);
@@ -295,14 +293,14 @@ void Print::on_printBtn_clicked()
         // page size for the rerouted writer -- it's the same QPrinter
         // state that gets silently reset by the format switch, so it may
         // already have reverted to the wrong default by this point. The
-        // writer gets our own known-good defaultPageSize instead.
+        // writer gets our own known-good pageSize instead.
         QScopedPointer<QPdfWriter> pdfWriter;
         QPagedPaintDevice *device = &printer;
         if (printer.outputFormat() == QPrinter::PdfFormat) {
             pdfWriter.reset(new QPdfWriter(printer.outputFileName()));
             pdfWriter->setResolution(printer.resolution());
             QPageLayout writerLayout = pdfWriter->pageLayout();
-            writerLayout.setPageSize(defaultPageSize);
+            writerLayout.setPageSize(pageSize);
             writerLayout.setOrientation(QPageLayout::Portrait);
             pdfWriter->setPageLayout(writerLayout);
             device = pdfWriter.data();
@@ -350,12 +348,13 @@ void Print::on_pdfPrintBtn_clicked()
     // Pure file export, no printer/driver involved -- QPdfWriter writes PDF
     // directly, so it doesn't inherit QPrinter's driver-default-resolution
     // behavior (see the A4/Letter known issue in BUILDINFO.md and
-    // Screenshot::savePDF()). Letter to match screenshot.cpp's existing
-    // hardcoded default for this app's PDF exports.
+    // Screenshot::savePDF()). Same default-printer-derived page size as
+    // on_printBtn_clicked(), not a hardcoded one -- see
+    // PrintUtils::defaultPageSize().
     QPdfWriter writer(path);
     writer.setResolution(qRound(QGuiApplication::primaryScreen()->logicalDotsPerInch()));
     QPageLayout layout = writer.pageLayout();
-    layout.setPageSize(QPageSize(QPageSize::Letter));
+    layout.setPageSize(PrintUtils::defaultPageSize());
     layout.setOrientation(QPageLayout::Portrait);
     writer.setPageLayout(layout);
 

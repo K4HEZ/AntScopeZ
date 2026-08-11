@@ -142,6 +142,7 @@ set(ANTSCOPE_SOURCES
     print.cpp
     printmarkers.cpp
     printmulti.cpp
+    printutils.cpp
     ProgressDlg.cpp
     qcustomplot.cpp
     screenshot.cpp
@@ -200,6 +201,7 @@ set(ANTSCOPE_HEADERS
     print.h
     printmarkers.h
     printmulti.h
+    printutils.h
     ProgressDlg.h
     qcustomplot.h
     screenshot.h

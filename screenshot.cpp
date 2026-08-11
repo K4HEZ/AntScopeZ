@@ -3,6 +3,7 @@
 #include "analyzer/customanalyzer.h"
 #include"style.h"
 #include "filedialog.h"
+#include "printutils.h"
 #include "analyzer/ble_analyzer.h"
 
 extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
@@ -142,12 +143,14 @@ void Screenshot::savePDF(QString path, QString comment)
     // This writes straight to a PDF file, so QPdfWriter (no printer/driver
     // involved) is used instead of QPrinter+PdfFormat. QPrinter simulates a
     // physical printer, and its own driver-default resolution logic was
-    // silently overriding this function's explicit setPageSize(Letter) with
-    // A4 on Linux -- QPdfWriter has no such default to fight with.
+    // silently overriding this function's previous hardcoded
+    // setPageSize(Letter) with A4 on Linux -- QPdfWriter has no such
+    // default to fight with. Page size itself is no longer hardcoded
+    // either -- see PrintUtils::defaultPageSize().
     QPdfWriter writer(path);
     writer.setResolution(qRound(QGuiApplication::primaryScreen()->logicalDotsPerInch()));
     QPageLayout layout = writer.pageLayout();
-    layout.setPageSize(QPageSize(QPageSize::Letter));
+    layout.setPageSize(PrintUtils::defaultPageSize());
     layout.setOrientation(QPageLayout::Portrait);
     writer.setPageLayout(layout);
 
@@ -613,7 +616,7 @@ void Screenshot::on_saveAsBtn_clicked()
 {
     QDateTime datetime = QDateTime::currentDateTime();
     QString path = "Images/" + datetime.toString("dd.MM.yyyy_hh.mm.ss");
-    QString str = FileDialog::getSaveFileName(this, tr("Save as BMP"), path, "*.pdf");
+    QString str = FileDialog::getSaveFileName(this, tr("Save as BMP"), path, "*.bmp");
     if(str.isEmpty())
     {
         return;

@@ -2,6 +2,7 @@
 #define PRINT_H
 
 #include <QDialog>
+#include <QPageSize>
 #include <analyzer/analyzerparameters.h>
 #include <markers.h>
 #include <QSettings>
