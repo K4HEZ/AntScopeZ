@@ -16,26 +16,20 @@ other brands) -- built for, and maintained by, the ham radio community.
 
 ## Screenshots
 
-![Connecting to an analyzer over BLE, Light theme](assets/screenshots/Analzer-Connect.png)
-*Connecting to an analyzer (here, a RigExpert Match, over BLE) -- Light theme.*
+![Select device dialog, connecting to a RigExpert Match over USB, Dark theme](assets/screenshots/Select-Device.png)
+*Connecting to an analyzer (here, a RigExpert Match, over USB), Settings
+open behind it -- Dark theme.*
 
-![SWR sweep across the 2m band, Light theme](assets/screenshots/Scan-2m.png)
-*An SWR sweep across the 2m band, with the band shaded on the chart -- Light theme.*
-
-![Smith chart with live cursor readout, Dark theme](assets/screenshots/SWRChart.png)
+![Smith chart with live cursor readout, Dark theme](assets/screenshots/SmithChart.png)
 *Smith chart with a live cursor readout (Z, SWR, RL, and more) -- Dark theme.*
 
-![TDR scan showing impulse/step response and impedance vs. cable length](assets/screenshots/TDR-scan.png)
+![SWR sweep across the 2m band with live cursor readout, Dark theme](assets/screenshots/SWR-Chart.png)
+*An SWR sweep across the 2m band, with a live cursor readout -- Dark theme.*
+
+![TDR scan showing impulse/step response and impedance vs. cable length, Dark theme](assets/screenshots/TDR-Chart.png)
 *TDR (Time Domain Reflectometry): impulse/step response and impedance
-along the cable, useful for finding a fault's approximate distance.*
-
-![Multi view comparing two saved measurements with markers](assets/screenshots/Multiview.png)
-*Multi view: compare RL/SWR (or any pair of charts) across saved
-measurements side by side, with markers.*
-
-![The analyzer's own on-device screen, captured via Screenshot from AA](assets/screenshots/Screenshot-AA.png)
-*"Screenshot from AA" -- captures the analyzer's own on-device display,
-not just AntScopeZ's chart.*
+along the cable, useful for finding a fault's approximate distance --
+Dark theme.*
 
 ## Why AntScopeZ?
 

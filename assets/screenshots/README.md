@@ -2,12 +2,10 @@ Screenshots referenced from `/index.md`'s "Screenshots" section.
 
 Current set:
 
-- `Analzer-Connect.png` -- connecting to an analyzer over BLE, Light theme
-- `Scan-2m.png` -- SWR sweep across the 2m band, Light theme
-- `SWRChart.png` -- Smith chart with live cursor readout, Dark theme
-- `TDR-scan.png` -- TDR impulse/step response and impedance vs. cable length
-- `Multiview.png` -- Multi view comparing two saved measurements
-- `Screenshot-AA.png` -- the analyzer's own on-device screen, via "Screenshot from AA"
+- `Select-Device.png` -- connecting to an analyzer (RigExpert Match) over USB, Dark theme
+- `SmithChart.png` -- Smith chart with live cursor readout, Dark theme
+- `SWR-Chart.png` -- SWR sweep across the 2m band with live cursor readout, Dark theme
+- `TDR-Chart.png` -- TDR impulse/step response and impedance vs. cable length, Dark theme
 
 To add more, drop the file here and reference it from `/index.md` with a
 short caption underneath, e.g.:
