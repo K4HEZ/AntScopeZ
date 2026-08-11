@@ -139,12 +139,17 @@ void Screenshot::on_clipboardBtn_clicked()
 
 void Screenshot::savePDF(QString path, QString comment)
 {
-    QPrinter printer(QPrinter::ScreenResolution);
-    printer.setOutputFormat(QPrinter::PdfFormat);
-    printer.setColorMode(QPrinter::Color);
-    printer.setOutputFileName(path);
-    printer.setPageSize(QPageSize::Letter);
-    printer.setPageOrientation(QPageLayout::Portrait);
+    // This writes straight to a PDF file, so QPdfWriter (no printer/driver
+    // involved) is used instead of QPrinter+PdfFormat. QPrinter simulates a
+    // physical printer, and its own driver-default resolution logic was
+    // silently overriding this function's explicit setPageSize(Letter) with
+    // A4 on Linux -- QPdfWriter has no such default to fight with.
+    QPdfWriter writer(path);
+    writer.setResolution(qRound(QGuiApplication::primaryScreen()->logicalDotsPerInch()));
+    QPageLayout layout = writer.pageLayout();
+    layout.setPageSize(QPageSize(QPageSize::Letter));
+    layout.setOrientation(QPageLayout::Portrait);
+    writer.setPageLayout(layout);
 
     AnalyzerParameters* param = AnalyzerParameters::current();
     QString name = param == nullptr ? "" : param->name();
@@ -154,19 +159,31 @@ void Screenshot::savePDF(QString path, QString comment)
                 CustomAnalyzer::currentPrototype() : name;
     bool full = (model == "AA-2000 ZOOM") || (model == "AA-3000 ZOOM") || (model == "AA-1500 ZOOM SE");
 
-    QRectF rect = printer.paperRect(QPrinter::DevicePixel);
+    QRect rect = writer.pageLayout().fullRectPixels(writer.resolution());
+    // Matches the 50px margin used elsewhere on this page (see the
+    // drawText() calls below).
+    const int margin = 50;
 
-    QPainter painter(&printer);
+    QPainter painter(&writer);
     int iwd = m_image->width();
     int iht = m_image->height();
-    int wd = rect.width() - 2*rect.left();
-    int ht = wd * iht / iwd - 2*rect.top();
-    QRect rr(rect.left(), rect.top(), wd, ht);
+    // Scale to fit the page width minus margins on both sides, preserving
+    // aspect ratio, then center horizontally -- previously this stretched
+    // the image flush to all four page edges with 0 margin.
+    int wd = rect.width() - 2*margin;
+    int ht = wd * iht / iwd;
+    QRect rr(rect.left() + margin, rect.top() + margin, wd, ht);
 
     if (full)
         painter.drawImage(rr, *m_image);
-    else
-        painter.drawImage(QPoint(m_lcdWidth*0.7, m_lcdWidth/4), *m_image);
+    else {
+        // Center horizontally on the page; vertical position (m_lcdWidth/4)
+        // is unchanged from before. Computed from the image's actual
+        // current width rather than a fixed offset, so this stays centered
+        // if the image ends up scaled before drawing here in the future.
+        int x = rect.left() + (rect.width() - iwd) / 2;
+        painter.drawImage(QPoint(x, m_lcdWidth/4), *m_image);
+    }
 
     QFont font = painter.font() ;
     font.setPointSize (14);

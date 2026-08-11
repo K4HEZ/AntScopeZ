@@ -11,6 +11,30 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+### Fixed
+
+- PDF export (Print dialog's "Save as .pdf", the "Screenshot from AA"
+  dialog's "Export to PDF", and Print dialog's "Print" &rarr; "Print to
+  File (PDF)") was silently coming out as A4 even where the page size was
+  explicitly set to Letter in code. All three were routed through
+  `QPrinter`, which simulates a physical printer/driver and was overriding
+  the explicit page size; switched to `QPdfWriter` (writes PDF directly, no
+  driver involved) for the actual PDF-producing case in each. Verified via
+  `pdfinfo` on real exported files (confirmed Letter); the A4 that still
+  showed up afterward in one PDF viewer (qpdfview) turned out to be that
+  viewer mis-displaying page size generally, confirmed by it also
+  mislabeling an unrelated third-party PDF as A4. A genuine physical-
+  printer job (as opposed to a PDF file) is unaffected by this fix and
+  still goes through `QPrinter` as before -- see `BUILDINFO.md` for the
+  still-open question of whether that path's own Properties dialog is
+  affected by the same underlying default-page-size issue.
+- "Screenshot from AA"'s "Export to PDF" was positioning the device
+  screenshot image off-center (small/square-LCD models) or stretching it
+  edge-to-edge with no margin (the large-landscape-LCD `AA-2000 ZOOM`/
+  `AA-3000 ZOOM`/`AA-1500 ZOOM SE` models). Both now center the image
+  properly, the latter with a 50px margin instead of 0. See `BUILDINFO.md`
+  -- the large-LCD fix couldn't be tested against real hardware.
+
 ## [2.1.6] - 2026-08-10
 
 ### Changed

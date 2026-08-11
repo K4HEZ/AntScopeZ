@@ -2,6 +2,12 @@
 #include "ui_print.h"
 #include "style.h"
 #include "filedialog.h"
+#include <QPrinterInfo>
+#include <QPdfWriter>
+#include <QPagedPaintDevice>
+#include <QScopedPointer>
+#include <QGuiApplication>
+#include <QScreen>
 
 Print::Print(QWidget *parent) :
     QDialog(parent),
@@ -263,10 +269,46 @@ void Print::on_printBtn_clicked()
 
     QPrinter printer;
 
+    // Seed the page size from the actual default printer (queried straight
+    // from CUPS/the OS) instead of leaving it to QPrinter's own internal
+    // default-resolution logic, which is what was showing A4 in this
+    // dialog's Properties widget even when the OS's own Printers settings
+    // correctly show Letter. See BUILDINFO.md known issues.
+    QPrinterInfo defaultPrinterInfo = QPrinterInfo::defaultPrinter();
+    QPageSize defaultPageSize = (!defaultPrinterInfo.isNull() && defaultPrinterInfo.defaultPageSize().isValid())
+            ? defaultPrinterInfo.defaultPageSize() : QPageSize(QPageSize::Letter);
+    QPageLayout defaultLayout = printer.pageLayout();
+    defaultLayout.setPageSize(defaultPageSize);
+    printer.setPageLayout(defaultLayout);
+
     QPrintDialog *dlg = new QPrintDialog(&printer,0);
     if(dlg->exec() == QDialog::Accepted)
     {
-        QPainter painter(&printer);
+        // If the user picked "Print to File (PDF)" in the dialog, QPrinter
+        // switches itself to PdfFormat and renders through its own PDF
+        // engine -- the same engine that was silently overriding an
+        // explicit page size with A4 in on_pdfPrintBtn_clicked()/
+        // Screenshot::savePDF() before those were switched to QPdfWriter.
+        // Reroute that case the same way here; a real physical-printer job
+        // (still NativeFormat) is untouched and goes to `printer` as before.
+        // Note: printer.pageLayout() is NOT trusted as the source of the
+        // page size for the rerouted writer -- it's the same QPrinter
+        // state that gets silently reset by the format switch, so it may
+        // already have reverted to the wrong default by this point. The
+        // writer gets our own known-good defaultPageSize instead.
+        QScopedPointer<QPdfWriter> pdfWriter;
+        QPagedPaintDevice *device = &printer;
+        if (printer.outputFormat() == QPrinter::PdfFormat) {
+            pdfWriter.reset(new QPdfWriter(printer.outputFileName()));
+            pdfWriter->setResolution(printer.resolution());
+            QPageLayout writerLayout = pdfWriter->pageLayout();
+            writerLayout.setPageSize(defaultPageSize);
+            writerLayout.setOrientation(QPageLayout::Portrait);
+            pdfWriter->setPageLayout(writerLayout);
+            device = pdfWriter.data();
+        }
+
+        QPainter painter(device);
         QFont font = painter.font() ;
         font.setPointSize (10);
         painter.setFont(font);
@@ -299,20 +341,25 @@ void Print::on_pdfPrintBtn_clicked()
     QPixmap markersMap(ui->markersWidget->size());
     ui->markersWidget->render(&markersMap);
 
-    QPrinter printer;
-
-    printer.setOutputFormat(QPrinter::PdfFormat);
-    printer.setColorMode(QPrinter::Color);
-
     if(path.indexOf(".pdf") < 0)
     {
         path.append(".pdf");
     }
     m_lastPath = path;
 
-    printer.setOutputFileName(path);
+    // Pure file export, no printer/driver involved -- QPdfWriter writes PDF
+    // directly, so it doesn't inherit QPrinter's driver-default-resolution
+    // behavior (see the A4/Letter known issue in BUILDINFO.md and
+    // Screenshot::savePDF()). Letter to match screenshot.cpp's existing
+    // hardcoded default for this app's PDF exports.
+    QPdfWriter writer(path);
+    writer.setResolution(qRound(QGuiApplication::primaryScreen()->logicalDotsPerInch()));
+    QPageLayout layout = writer.pageLayout();
+    layout.setPageSize(QPageSize(QPageSize::Letter));
+    layout.setOrientation(QPageLayout::Portrait);
+    writer.setPageLayout(layout);
 
-    QPainter painter(&printer);
+    QPainter painter(&writer);
     QFont font = ui->widgetGraph->xAxis->tickLabelFont();
     font.setPointSize (13);
     painter.setFont(font);

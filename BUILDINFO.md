@@ -150,17 +150,51 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   differences, not something wrong with the packaging/install path itself.
   Packaged releases bundle the Qt 6.11 shared libraries specifically to
   avoid this.
-- **Print dialog (Linux): page size defaults to A4 even when the system's
-  actual default is Letter, and the Properties dialog's Orientation
-  controls render with a layout/alignment glitch.** Confirmed (screenshots,
-  2026-08-08) that this is inside Qt's own `QPrintDialog` "Properties"
-  widget specifically -- the OS's own Printers settings, checking the same
-  printer, correctly shows the real default (Letter); print.cpp/
-  screenshot.cpp don't set a page size for this path at all, so neither is
-  responsible. Root cause not identified (Qt-internal, not something this
-  app's code controls directly); workaround for now is to manually pick
-  the correct paper size in the Properties dialog before printing. See
-  `Print::on_printBtn_clicked()`.
+- **PDF output (all three paths) was silently coming out as A4 regardless
+  of an explicit Letter page size in code -- fixed 2026-08-11.** Affected:
+  Print dialog's "Save as .pdf" (`Print::on_pdfPrintBtn_clicked()`), the
+  "Screenshot from AA" dialog's "Export to PDF" (`Screenshot::savePDF()`),
+  and Print dialog's "Print" &rarr; "Print to File (PDF)"
+  (`Print::on_printBtn_clicked()`). Root cause: all three rendered through
+  `QPrinter`, which simulates a physical printer/driver -- its own
+  driver-default resolution logic was silently overriding an explicitly-set
+  page size even when nothing else touched it afterward. Fixed by switching
+  actual PDF-file output to `QPdfWriter` (a direct `QPagedPaintDevice` for
+  PDF, no driver emulation) in all three, with the page size set via the
+  `QPageLayout` round-trip form (`layout = device.pageLayout();
+  layout.setPageSize(...); device.setPageLayout(layout);`) rather than the
+  bare `setPageSize()` shorthand. A genuine physical-printer job from
+  `on_printBtn_clicked()` (still `QPrinter::NativeFormat`) is untouched and
+  still goes through `QPrinter` as before -- whether *that* specific case's
+  `QPrintDialog` "Properties" widget correctly shows Letter (it was
+  originally seen defaulting to A4 there too, screenshots 2026-08-08) is
+  still unverified against real printer hardware, separately from the now-
+  fixed PDF-file case. **Verified 2026-08-11** via `pdfinfo` (reads the
+  file's actual `MediaBox`, not a viewer's guess) on real exported files:
+  confirmed `612 x 792 pts (letter)`. Note: qpdfview (a PDF viewer,
+  unrelated to this app) displays every PDF checked as A4 regardless of its
+  actual size, confirmed by it mislabeling an unrelated third-party PDF
+  (a RigExpert manual made by Acrobat Distiller) the same way -- that's a
+  qpdfview bug/quirk, not this app's output; use `pdfinfo` or a different
+  viewer to actually check a PDF's page size.
+- **`Screenshot::savePDF()`'s device-screenshot image placement was
+  off-center or flush against the page edges -- fixed 2026-08-11.** Two
+  separate device-size branches, both wrong in different ways: the small/
+  square-LCD branch (e.g. the RigExpert Match/MATCH U used for day-to-day
+  testing here, 480x480) drew the image at a fixed offset
+  (`m_lcdWidth*0.7`) that happened to sit flush against the right page
+  edge with a large empty gap on the left; now centered horizontally using
+  the image's actual current width, so it stays correct if the image is
+  scaled before drawing here in the future. The large-landscape-LCD branch
+  (`AA-2000 ZOOM`/`AA-3000 ZOOM`/`AA-1500 ZOOM SE`, 746x480 declared in
+  `AnalyzerParameters::fill()`) stretched the image to fill the entire page
+  width with 0 margin on any side; now scaled to fit within a 50px margin
+  on all sides, preserving aspect ratio. The small-LCD fix was confirmed
+  against a real exported PDF (`pdfinfo`/rendered preview); the large-LCD
+  fix was confirmed only via a standalone repro using the declared 746x480
+  geometry (offscreen `QPdfWriter` + rendered preview) -- none of those
+  three models are available to test against here, so this needs
+  re-checking against real hardware if one becomes available.
 - **Some of Qt's own built-in dialog strings stay in English even though
   `qtbase_<code>.qm` is loaded and working.** Confirmed (a headless
   `QT_QPA_PLATFORM=offscreen` probe against the real `qtbase_es.qm`,

@@ -5,7 +5,9 @@
 #include <QPainter>
 #include <QFileDialog>
 #include <QDebug>
-#include <QPrinter>
+#include <QPdfWriter>
+#include <QGuiApplication>
+#include <QScreen>
 #include <QTextDocument>
 #include <QDateTime>
 #include <analyzer/analyzerparameters.h>
