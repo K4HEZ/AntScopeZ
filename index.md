@@ -19,8 +19,9 @@ other brands) -- built for, and maintained by, the ham radio community.
 ![Connecting to an analyzer over BLE, Light theme](assets/screenshots/Analzer-Connect.png)
 *Connecting to an analyzer (here, a RigExpert Match, over BLE) -- Light theme.*
 
-![SWR sweep across the 2m band, Light theme](assets/screenshots/Scan-2m.png)
-*An SWR sweep across the 2m band, with the band shaded on the chart -- Light theme.*
+![SWR sweep across the 20m band with the menu bar, docked Cursor Details panel, and band highlighting, Light theme](assets/screenshots/Scan-20m.png)
+*An SWR sweep across the 20m band -- menu bar, docked Cursor Details
+panel, and band highlighting -- Light theme.*
 
 ![Smith chart with live cursor readout, Dark theme](assets/screenshots/SWRChart.png)
 *Smith chart with a live cursor readout (Z, SWR, RL, and more) -- Dark theme.*
