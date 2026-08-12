@@ -1903,7 +1903,15 @@ protected:
   friend class QCPAxisRect;
 
 public:
-  bool mShowHint=true;
+  // Project-specific addition (not stock QCustomPlot), drawn in draw()
+  // below: " Use Control(Command) with Mouse scroll to change Y-axis
+  // scale "/" Use Mouse scroll to change X-axis scale " overlaid in the
+  // plot's own bottom corners. Defaulted off -- it collided with the
+  // axis' own tick labels at the bottom of every chart, unreadable where
+  // they overlapped. Pulled off the plots for now; a docked/non-
+  // overlapping home for this hint is still an open question (see the
+  // UI-overhaul branch), not solved by this default flip alone.
+  bool mShowHint=false;
 };
 
 

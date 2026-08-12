@@ -290,7 +290,6 @@ void MainWindow::createTabs (QString sequence)
             m_smithWidget = new CustomPlot(1, m_tab_smith);
             qobject_cast<GLWidget*>(m_tab_smith)->setPlotter(m_smithWidget);
             m_smithWidget->setObjectName(QStringLiteral("smith_widget"));
-            m_smithWidget->mShowHint = false;
 
             sizePolicy.setHorizontalStretch(0);
             sizePolicy.setVerticalStretch(2);
