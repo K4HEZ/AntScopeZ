@@ -45,22 +45,22 @@ void MainWindow::on_analyzerNameFound(QString name)
     ui->continuousStartBtn->setEnabled(true);
     ui->fullBtn->setEnabled(true);
     if (g_bAA55modeNewProtocol) {
-        ui->analyzerDataBtn->setEnabled(true);
-        ui->screenshotAA->setEnabled(false);
+        ui->actionAnalyzerData->setEnabled(true);
+        ui->actionScreenshotAA->setEnabled(false);
     } else if (!NanovnaAnalyzer::isConnected() && !zeroII) {
-        ui->analyzerDataBtn->setEnabled(true);
-        ui->screenshotAA->setEnabled(true);
+        ui->actionAnalyzerData->setEnabled(true);
+        ui->actionScreenshotAA->setEnabled(true);
     } else {
-        ui->analyzerDataBtn->setEnabled(false);
-        ui->screenshotAA->setEnabled(false);
+        ui->actionAnalyzerData->setEnabled(false);
+        ui->actionScreenshotAA->setEnabled(false);
     }
     if (analyzer()->getModelString().contains("Match") && analyzer()->connectionType() == ReDeviceInfo::BLE) {
-        ui->analyzerDataBtn->setEnabled(false);
-        ui->screenshotAA->setEnabled(false);
+        ui->actionAnalyzerData->setEnabled(false);
+        ui->actionScreenshotAA->setEnabled(false);
     }
     if (analyzer()->getModelString().contains("MATCH U") && analyzer()->connectionType() == ReDeviceInfo::BLE) {
-        ui->analyzerDataBtn->setEnabled(false);
-        ui->screenshotAA->setEnabled(false);
+        ui->actionAnalyzerData->setEnabled(false);
+        ui->actionScreenshotAA->setEnabled(false);
     }
 
     // This used to also auto-fire the AntScope2 software-update check, the
@@ -93,8 +93,8 @@ void MainWindow::on_deviceDisconnected()
     setWindowTitle(name);
     ui->singleStart->setEnabled(false);
     ui->continuousStartBtn->setEnabled(false);
-    ui->analyzerDataBtn->setEnabled(false);
-    ui->screenshotAA->setEnabled(false);
+    ui->actionAnalyzerData->setEnabled(false);
+    ui->actionScreenshotAA->setEnabled(false);
     ui->lineEdit_points->setEnabled(true);
     ui->speedAccuracySlider->setEnabled(true);
     ui->fullBtn->setEnabled(false);
@@ -113,7 +113,7 @@ void MainWindow::on_deviceDisconnected()
         m_analyzer->searchAnalyzer();
 }
 
-void MainWindow::on_analyzerDataBtn_clicked()
+void MainWindow::on_actionAnalyzerData_triggered()
 {
     m_analyzerData = new AnalyzerData(m_analyzer->getModel(), this);
     m_analyzerData->setAttribute(Qt::WA_DeleteOnClose);
@@ -126,7 +126,7 @@ void MainWindow::on_analyzerDataBtn_clicked()
     m_analyzerData->exec();
 }
 
-void MainWindow::on_screenshotAA_clicked()
+void MainWindow::on_actionScreenshotAA_triggered()
 {
     AnalyzerParameters* param = AnalyzerParameters::current();
     if (param == nullptr)
@@ -258,7 +258,7 @@ void MainWindow::on_selectDeviceDialog()
     // its combo box before repopulating, so it's no longer harmed by that
     // specifically -- but plenty of the rest of this setup isn't as
     // forgiving.)
-    ui->settingsBtn->setEnabled(m_settingsDialog == nullptr);
+    ui->actionSettings->setEnabled(m_settingsDialog == nullptr);
 }
 
 void MainWindow::on_refreshConnection()

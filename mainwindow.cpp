@@ -124,7 +124,7 @@ MainWindow::MainWindow(QWidget *parent) :
 #ifndef NO_MULTITAB
     if (hide_multi) {
         ui->tabWidget->setTabVisible(ui->tabWidget->indexOf(m_tab_multi), false);
-        ui->printBtn->setEnabled(true);
+        ui->actionPrint->setEnabled(true);
         ui->tabWidget->setCurrentWidget(m_tab_swr);
     }
 #endif
@@ -153,11 +153,11 @@ MainWindow::MainWindow(QWidget *parent) :
 #ifndef NO_MULTITAB
     connect(ui->tabWidget, &QTabWidget::currentChanged, this, [=](int index) {
         if (ui->tabWidget->widget(index) == m_tab_multi) {
-            ui->printBtn->setEnabled(false);
-            ui->exportBtn->setEnabled(false);
+            ui->actionPrint->setEnabled(false);
+            ui->actionExport->setEnabled(false);
         } else {
-            ui->printBtn->setEnabled(true);
-            ui->exportBtn->setEnabled(true);
+            ui->actionPrint->setEnabled(true);
+            ui->actionExport->setEnabled(true);
         }
     });
 #endif
@@ -188,12 +188,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->singleStart->setEnabled(false);
     ui->continuousStartBtn->setEnabled(false);
-    ui->analyzerDataBtn->setEnabled(false);
-    ui->screenshotAA->setEnabled(false);
+    ui->actionAnalyzerData->setEnabled(false);
+    ui->actionScreenshotAA->setEnabled(false);
     ui->measurmentsSaveBtn->setEnabled(false);    
     ui->measurmentsDeleteBtn->setEnabled(false);
     ui->measurmentsClearBtn->setEnabled(false);
-    ui->exportBtn->setEnabled(false);
+    ui->actionExport->setEnabled(false);
     ui->fullBtn->setEnabled(false);
 
     ui->tableWidget_measurments->setColumnCount(MEASUREMENTS_TABLE_COLUMNS);

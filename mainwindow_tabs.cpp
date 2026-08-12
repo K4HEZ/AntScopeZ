@@ -342,7 +342,7 @@ void MainWindow::createTabs (QString sequence)
             ui->tabWidget->addTab(m_tab_multi, QString());
             ui->tabWidget->setTabText(ui->tabWidget->indexOf(m_tab_multi), QApplication::translate("MainWindow", "Multi", 0));
             ui->tabWidget->setTabVisible(ui->tabWidget->indexOf(m_tab_multi), false);
-            ui->printBtn->setEnabled(true);
+            ui->actionPrint->setEnabled(true);
             //ui->tabWidget->widget(ui->tabWidget->indexOf(m_tab_multi))->setVisible(false);
         }
 #endif
@@ -416,12 +416,12 @@ void MainWindow::createTabs (QString sequence)
         if (menu.exec(btn->mapToGlobal(point)) != nullptr) {
             if (!m_multiTabData.tabs.isEmpty()) {
                 ui->tabWidget->setTabVisible(ui->tabWidget->indexOf(m_tab_multi), true);
-                ui->printBtn->setEnabled(false);
+                ui->actionPrint->setEnabled(false);
                 //ui->tabWidget->widget(ui->tabWidget->indexOf(m_tab_multi))->setVisible(true);
                 ui->tabWidget->setCurrentWidget(m_tab_multi);
             } else {
                 ui->tabWidget->setTabVisible(ui->tabWidget->indexOf(m_tab_multi), false);
-                ui->printBtn->setEnabled(true);
+                ui->actionPrint->setEnabled(true);
                 //ui->tabWidget->widget(ui->tabWidget->indexOf(m_tab_multi))->setVisible(false);
                 ui->tabWidget->setCurrentWidget(m_tab_swr);
             }
@@ -430,10 +430,14 @@ void MainWindow::createTabs (QString sequence)
     ui->tabWidget->setCornerWidget(btn, Qt::TopRightCorner);
     // btn is created here at runtime, not in mainwindow.ui, so it can't be
     // placed via <tabstops> -- splice it into the chain setupUi() already
-    // established (tabWidget -> settingsBtn) instead, right after the tab
-    // widget and before Settings.
+    // established (tabWidget -> scanModeCombo) instead, right after the tab
+    // widget. Settings/Export/Import/Print/Screenshot/Data-from-AA used to
+    // continue this chain as a row of QPushButtons right under tabWidget;
+    // they're QMenuBar actions now (see mainwindow.ui), which aren't
+    // QWidgets and don't participate in setTabOrder() at all -- the menu
+    // bar has its own Alt-key-driven keyboard access instead.
     setTabOrder(ui->tabWidget, btn);
-    setTabOrder(btn, ui->settingsBtn);
+    setTabOrder(btn, ui->scanModeCombo);
 #endif
 }
 

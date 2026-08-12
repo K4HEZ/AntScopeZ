@@ -28,7 +28,7 @@ extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
 // mainwindow.cpp itself for the pieces left behind) -- pure code motion,
 // no behavior change. All pieces still define methods of MainWindow.
 
-void MainWindow::on_settingsBtn_clicked()
+void MainWindow::on_actionSettings_triggered()
 {
     emit stopMeasure();
     m_analyzer->setIsMeasuring(false);
@@ -36,7 +36,7 @@ void MainWindow::on_settingsBtn_clicked()
     ui->continuousStartBtn->setChecked(false);
     ui->singleStart->setEnabled(false);
     ui->continuousStartBtn->setEnabled(false);
-    ui->settingsBtn->setEnabled(false);
+    ui->actionSettings->setEnabled(false);
     m_measurements->setContinuous(false);
     m_bInterrupted = true;
     if (m_settingsDialog == nullptr) {
@@ -45,13 +45,13 @@ void MainWindow::on_settingsBtn_clicked()
             ui->singleStart->setEnabled(true);
             ui->singleStart->setChecked(true);
             ui->continuousStartBtn->setEnabled(true);
-            ui->settingsBtn->setEnabled(true);
+            ui->actionSettings->setEnabled(true);
         });
         connect(&m_settingsDialog->licenseAgent(), &LicenseAgent::canceled, this, [=](){
             ui->singleStart->setEnabled(true);
             ui->singleStart->setChecked(true);
             ui->continuousStartBtn->setEnabled(true);
-            ui->settingsBtn->setEnabled(true);
+            ui->actionSettings->setEnabled(true);
         });
     }
     m_settingsDialog->setAttribute(Qt::WA_DeleteOnClose);
@@ -411,7 +411,7 @@ void MainWindow::closeSettingsDialog()
     //m_settingsDialog->deleteLater();
     m_settingsDialog=nullptr;
     m_measurements->on_currentTab(m_measurements->currentTab());
-    ui->settingsBtn->setEnabled(true);
+    ui->actionSettings->setEnabled(true);
 
     auto param = AnalyzerParameters::current();
     bool state = param != nullptr;
