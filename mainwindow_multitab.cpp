@@ -157,10 +157,13 @@ void MainWindow::buildMultiTabLayout()
             layout->removeItem (item);
     }
 
+    QList<QCustomPlot*> joinedPlots;
     foreach(const QString& tab, m_multiTabData.tabs) {
         QString plot = g_mapTabPlotNames[tab];
-        QWidget* widget = m_mapWidgets[plot];
+        QCustomPlot* widget = m_mapWidgets[plot];
         layout->addWidget(widget);
+        if (widget != nullptr)
+            joinedPlots << widget;
     }
     if (m_multiTabData.tabs.contains("tab_smith")) {
         QSize sz = size();
@@ -175,6 +178,23 @@ void MainWindow::buildMultiTabLayout()
             m_smithWidget->replot();
         });
     }
+    // Reparenting into m_tab_multi's shared QVBoxLayout changes every
+    // joined widget's geometry (full-tab-sized -> one of N stacked panes)
+    // -- QCustomPlot needs an explicit replot() to regenerate its paint
+    // buffer at the new size; addWidget() alone doesn't trigger one.
+    // Previously only Smith got this (the resize+replot dance above,
+    // pre-existing, kept as-is), which is exactly why joining any OTHER
+    // chart showed blank/stale content: whichever tab happened to be
+    // active (and therefore already freshly plotted at roughly this size)
+    // looked fine; every other joined chart never got replotted at its
+    // real Multi-tab size at all. Deferred (not called inline) because
+    // addWidget() doesn't resize the widget synchronously -- the layout
+    // pass, and therefore each widget's real final geometry, only happens
+    // on the next event-loop iteration.
+    QTimer::singleShot(0, this, [joinedPlots]() {
+        foreach (QCustomPlot* plot, joinedPlots)
+            plot->replot();
+    });
     m_tab_multi->show();
 }
 
