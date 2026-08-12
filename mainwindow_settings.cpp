@@ -28,7 +28,7 @@ extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
 // mainwindow.cpp itself for the pieces left behind) -- pure code motion,
 // no behavior change. All pieces still define methods of MainWindow.
 
-void MainWindow::on_settingsBtn_clicked()
+void MainWindow::on_actionSettings_triggered()
 {
     emit stopMeasure();
     m_analyzer->setIsMeasuring(false);
@@ -36,7 +36,7 @@ void MainWindow::on_settingsBtn_clicked()
     ui->continuousStartBtn->setChecked(false);
     ui->singleStart->setEnabled(false);
     ui->continuousStartBtn->setEnabled(false);
-    ui->settingsBtn->setEnabled(false);
+    ui->actionSettings->setEnabled(false);
     m_measurements->setContinuous(false);
     m_bInterrupted = true;
     if (m_settingsDialog == nullptr) {
@@ -45,13 +45,13 @@ void MainWindow::on_settingsBtn_clicked()
             ui->singleStart->setEnabled(true);
             ui->singleStart->setChecked(true);
             ui->continuousStartBtn->setEnabled(true);
-            ui->settingsBtn->setEnabled(true);
+            ui->actionSettings->setEnabled(true);
         });
         connect(&m_settingsDialog->licenseAgent(), &LicenseAgent::canceled, this, [=](){
             ui->singleStart->setEnabled(true);
             ui->singleStart->setChecked(true);
             ui->continuousStartBtn->setEnabled(true);
-            ui->settingsBtn->setEnabled(true);
+            ui->actionSettings->setEnabled(true);
         });
     }
     m_settingsDialog->setAttribute(Qt::WA_DeleteOnClose);
@@ -84,28 +84,15 @@ void MainWindow::on_settingsBtn_clicked()
 
     m_settingsDialog->setBands(m_BandsMap.keys());
 
+    // Graph Hint/Brief-hint/Markers-hint checkboxes used to live here,
+    // mirrored into Settings each time it opened -- moved to the View menu
+    // (see mainwindow.cpp's constructor, wired directly to Measurements/
+    // Markers once instead) since they're reachable without opening
+    // Settings now.
     if(m_measurements)
     {
-        // Measurements owns the persisted graph/brief-hint flags (it's what
-        // actually consults them when painting); push its current value in
-        // rather than letting Settings keep a second, independently-loaded
-        // copy of the same setting (issue #28).
-        m_settingsDialog->setGraphHintChecked(m_measurements->getGraphHintEnabled());
-        m_settingsDialog->setGraphBriefHintChecked(m_measurements->getGraphBriefHintEnabled());
-        connect(m_settingsDialog, SIGNAL(graphHintChecked(bool)),
-                m_measurements,SLOT(setGraphHintEnabled(bool)));
-        connect(m_settingsDialog, SIGNAL(graphBriefHintChecked(bool)),
-                m_measurements,SLOT(setGraphBriefHintEnabled(bool)));
         connect(m_settingsDialog, &Settings::exportCableSettings,
                 m_measurements, &Measurements::on_exportCableSettings);
-    }
-
-    if(m_markers)
-    {
-        // Same reasoning as above -- Markers owns markersHintEnabled.
-        m_settingsDialog->setMarkersHintChecked(m_markers->getMarkersHintEnabled());
-        connect(m_settingsDialog, SIGNAL(markersHintChecked(bool)),
-                m_markers,SLOT(setMarkersHintEnabled(bool)));
     }
 
     // TODO
@@ -415,7 +402,7 @@ void MainWindow::closeSettingsDialog()
     //m_settingsDialog->deleteLater();
     m_settingsDialog=nullptr;
     m_measurements->on_currentTab(m_measurements->currentTab());
-    ui->settingsBtn->setEnabled(true);
+    ui->actionSettings->setEnabled(true);
 
     auto param = AnalyzerParameters::current();
     bool state = param != nullptr;

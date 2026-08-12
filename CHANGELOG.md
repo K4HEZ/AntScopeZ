@@ -17,6 +17,15 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   Limits/Center-Range toggle buttons.
 - A "Speed/Accuracy" slider now sits directly under Points; the separate
   "Measurement speed..." dialog is gone.
+- A menu bar: File (Import/Export/Print/Screenshot/Screenshot from AA/Data
+  from AA -- previously a row of buttons under the tab control), View
+  (Graph Hint/Markers Hint/Cursor Params/Show Band Name -- previously
+  checkboxes on Settings' General tab), Connect Analyzer (previously only
+  reachable from inside Settings), and Settings.
+- Main window is now a 3-pane resizable layout (Frequency/Presets/
+  Measurements on the left, a new docked "Graph Hint" panel in the
+  middle, the plot tabs on the right) with draggable splitter handles
+  between panes, replacing the old fixed 2-column layout.
 
 ### Changed
 
@@ -25,6 +34,8 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 - Reworked keyboard tab order across the main window to follow the visual
   layout (tabs, toolbar buttons, Frequency/Presets/Measurements groups in
   order, ending at Clear).
+- The "Frequency = .../SWR = ..." hint box is now docked in the main
+  window instead of a separate floating window.
 
 ### Fixed
 

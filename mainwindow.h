@@ -328,7 +328,7 @@ public slots:
     void on_presetsDeleteBtn_clicked();
     void on_pressetsUpBtn_clicked();
     void on_presetsBandComboBox_currentIndexChanged(int index);
-    void on_exportBtn_clicked();
+    void on_actionExport_triggered();
     void on_measurementComplete();
     void on_measurementCompleteNano();
     void on_translate(QString code);
@@ -337,19 +337,19 @@ public slots:
     void on_refreshConnection();
 
 private slots:
-    void on_analyzerDataBtn_clicked();
+    void on_actionAnalyzerData_triggered();
     void on_tabWidget_currentChanged(int index);
-    void on_screenshotAA_clicked();
-    void on_settingsBtn_clicked();
+    void on_actionScreenshotAA_triggered();
+    void on_actionSettings_triggered();
     void on_measurmentsDeleteBtn_clicked();
     void on_tableWidget_measurments_cellClicked(int row, int column);
     void on_tableWidget_measurments_cellActivated(int row, int column);
-    void on_screenshot_clicked();
-    void on_printBtn_clicked();
+    void on_actionScreenshot_triggered();
+    void on_actionPrint_triggered();
     void on_measurmentsSaveBtn_clicked();
     void on_measurementsOpenBtn_clicked();
     void measurementsClearBtn_clicked(bool);
-    void on_importBtn_clicked();
+    void on_actionImport_triggered();
     void on_changeMeasureSystemMetric (bool state);
     void on_changeColorTheme (bool dark);
     void on_Z0Changed(double _Z0);

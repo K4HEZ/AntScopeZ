@@ -135,7 +135,7 @@ MainWindow::MainWindow(QWidget *parent) :
 #ifndef NO_MULTITAB
     if (hide_multi) {
         ui->tabWidget->setTabVisible(ui->tabWidget->indexOf(m_tab_multi), false);
-        ui->printBtn->setEnabled(true);
+        ui->actionPrint->setEnabled(true);
         ui->tabWidget->setCurrentWidget(m_tab_swr);
     }
 #endif
@@ -164,11 +164,11 @@ MainWindow::MainWindow(QWidget *parent) :
 #ifndef NO_MULTITAB
     connect(ui->tabWidget, &QTabWidget::currentChanged, this, [=](int index) {
         if (ui->tabWidget->widget(index) == m_tab_multi) {
-            ui->printBtn->setEnabled(false);
-            ui->exportBtn->setEnabled(false);
+            ui->actionPrint->setEnabled(false);
+            ui->actionExport->setEnabled(false);
         } else {
-            ui->printBtn->setEnabled(true);
-            ui->exportBtn->setEnabled(true);
+            ui->actionPrint->setEnabled(true);
+            ui->actionExport->setEnabled(true);
         }
     });
 #endif
@@ -199,12 +199,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->singleStart->setEnabled(false);
     ui->continuousStartBtn->setEnabled(false);
-    ui->analyzerDataBtn->setEnabled(false);
-    ui->screenshotAA->setEnabled(false);
+    ui->actionAnalyzerData->setEnabled(false);
+    ui->actionScreenshotAA->setEnabled(false);
     ui->measurmentsSaveBtn->setEnabled(false);    
     ui->measurmentsDeleteBtn->setEnabled(false);
     ui->measurmentsClearBtn->setEnabled(false);
-    ui->exportBtn->setEnabled(false);
+    ui->actionExport->setEnabled(false);
     ui->fullBtn->setEnabled(false);
 
     ui->tableWidget_measurments->setColumnCount(MEASUREMENTS_TABLE_COLUMNS);
@@ -448,6 +448,43 @@ MainWindow::MainWindow(QWidget *parent) :
         connect(m_analyzer, SIGNAL(newMeasurement(QString)), m_markers, SLOT(on_newMeasurement(QString)));
         connect(m_analyzer, SIGNAL(measurementComplete()), m_markers, SLOT(on_measurementComplete()));
     }
+
+    // View menu: Graph Hint/Markers Hint/Cursor Params used to be Settings
+    // checkboxes (graphHintCheckBox/markersHintCheckBox/
+    // graphBriefHintCheckBox), routed through Settings' own signals only
+    // while that (transient) dialog was open. Wired directly to the same
+    // Measurements/Markers setters here instead, once, since these actions
+    // live in the persistent menu bar -- Measurements/Markers still own
+    // the actual enabled flags (see setGraphHintEnabled()/
+    // setGraphBriefHintEnabled()/setMarkersHintEnabled()), this is just a
+    // different front-end for them now.
+    ui->actionGraphHint->setChecked(m_measurements->getGraphHintEnabled());
+    connect(ui->actionGraphHint, &QAction::toggled, m_measurements, &Measurements::setGraphHintEnabled);
+    ui->actionCursorParams->setChecked(m_measurements->getGraphBriefHintEnabled());
+    connect(ui->actionCursorParams, &QAction::toggled, m_measurements, &Measurements::setGraphBriefHintEnabled);
+    ui->actionMarkersHint->setChecked(m_markers->getMarkersHintEnabled());
+    connect(ui->actionMarkersHint, &QAction::toggled, m_markers, &Markers::setMarkersHintEnabled);
+
+    // Show Band Name: same "show-band-name" QSettings key and reload-bands
+    // side effect the removed checkBoxBandName triggered via Settings'
+    // own connect() lambda + reloadBands signal (see mainwindow_settings.cpp's
+    // now-removed connect(m_settingsDialog, &Settings::reloadBands, ...)).
+    {
+        m_settings->beginGroup("Settings");
+        bool showBandName = m_settings->value("show-band-name", false).toBool();
+        m_settings->endGroup();
+        ui->actionShowBandName->setChecked(showBandName);
+    }
+    connect(ui->actionShowBandName, &QAction::toggled, this, [this](bool checked) {
+        m_settings->beginGroup("Settings");
+        m_settings->setValue("show-band-name", checked);
+        QString band = m_settings->value("current_band", "ITU Region 1 - Europe, Africa").toString();
+        m_settings->endGroup();
+        loadBands();
+        on_bandChanged(band);
+    });
+
+    connect(ui->actionConnectAnalyzer, &QAction::triggered, this, &MainWindow::on_selectDeviceDialog);
 
     changeColorTheme(m_darkColorTheme);
 

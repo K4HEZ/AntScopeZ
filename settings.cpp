@@ -63,9 +63,6 @@ void Settings::applyStyles()
 {
     QString style;
 
-    style = Style::checkBox();
-    ui->graphHintCheckBox->setStyleSheet(style);
-
     style = Style::pushButton();
     ui->openOpenFileBtn->setStyleSheet(style);
     ui->shortOpenFileBtn->setStyleSheet(style);
@@ -100,12 +97,8 @@ void Settings::applyStyles()
     ui->atMHz->setStyleSheet(style);
 
     style = Style::checkBox();
-    ui->checkBoxBandName->setStyleSheet(style);
     ui->checkBoxBandSelector->setStyleSheet(style);
     ui->checkBoxOpenConnectAnalyzerAtLaunch->setStyleSheet(style);
-    ui->graphBriefHintCheckBox->setStyleSheet(style);
-    ui->graphHintCheckBox->setStyleSheet(style);
-    ui->markersHintCheckBox->setStyleSheet(style);
 
     style = Style::spinBox();
     ui->spinBoxMeasurements->setStyleSheet(style);
@@ -185,10 +178,12 @@ Settings::Settings(QWidget *parent) :
     });
 
     ui->tabWidget->setCurrentIndex(m_settings->value("currentIndex",0).toInt());
-    // markersHintCheckBox/graphHintCheckBox/graphBriefHintCheckBox are set
-    // from MainWindow right after construction, via setMarkersHintChecked()/
-    // setGraphHintChecked()/setGraphBriefHintChecked() -- Markers/Measurements
-    // own these flags (issue #28), Settings just displays them.
+    // Graph Hint/Markers Hint/Cursor Params/Show Band Name used to be
+    // checkboxes here (graphHintCheckBox/markersHintCheckBox/
+    // graphBriefHintCheckBox/checkBoxBandName) -- moved to the View menu
+    // (see mainwindow.ui/mainwindow.cpp) so they're reachable without
+    // opening Settings. Measurements/Markers/MainWindow own those flags
+    // directly now; nothing left here to display or wire up for them.
 
     ui->spinBoxMeasurements->setValue(g_maxMeasurements);
     // TODO developer(?)
@@ -196,8 +191,6 @@ Settings::Settings(QWidget *parent) :
     if (!g_developerMode) {
         ui->fqRestrictCheckBox->setVisible(false);
     }
-    // ///
-    ui->checkBoxBandName->setChecked(m_settings->value("show-band-name", false).toBool());
     // No default here: MainWindow::populateBandSelector() seeds this key
     // once, the first time bands are loaded, based on whether the active
     // region actually has any named bands -- by the time this dialog can
@@ -229,13 +222,6 @@ Settings::Settings(QWidget *parent) :
         if (dlg.changed()) {
             emit reloadBands(ui->bandsCombobox->currentText());
         }
-    });
-    connect(ui->checkBoxBandName, &QCheckBox::clicked, [=](bool checked) {
-        m_settings->beginGroup("Settings");
-        m_settings->setValue("show-band-name", checked);
-        m_settings->endGroup();
-
-        emit reloadBands(ui->bandsCombobox->currentText());
     });
     connect(ui->checkBoxBandSelector, &QCheckBox::clicked, [=](bool checked) {
         m_settings->beginGroup("Settings");
@@ -369,7 +355,6 @@ Settings::~Settings()
     m_settings->setValue("darkColorTheme", ui->themeComboBox->currentIndex() == 1);
 
     m_settings->setValue("currentIndex",ui->tabWidget->currentIndex());
-    m_settings->setValue("show-band-name", ui->checkBoxBandName->isChecked());
     m_settings->endGroup();
 
     // auto calibration
@@ -523,21 +508,6 @@ void Settings::setCalibration(Calibration * calibration)
     }
 }
 
-void Settings::setGraphHintChecked(bool checked)
-{
-    ui->graphHintCheckBox->setChecked(checked);
-}
-
-void Settings::setGraphBriefHintChecked(bool checked)
-{
-    ui->graphBriefHintCheckBox->setChecked(checked);
-}
-
-void Settings::setMarkersHintChecked(bool checked)
-{
-    ui->markersHintCheckBox->setChecked(checked);
-}
-
 void Settings::findBootloader (void)
 {
     // obsolete
@@ -561,21 +531,6 @@ void Settings::on_percentChanged(qint32 percent)
         ui->updateProgressBar->setValue(0);
     }
     ui->updateProgressBar->setValue(percent);
-}
-
-void Settings::on_graphHintCheckBox_clicked(bool checked)
-{
-    emit graphHintChecked(checked);
-}
-
-void Settings::on_graphBriefHintCheckBox_clicked(bool checked)
-{
-    emit graphBriefHintChecked(checked);
-}
-
-void Settings::on_markersHintCheckBox_clicked(bool checked)
-{
-    emit markersHintChecked(checked);
 }
 
 void Settings::on_fqRestrictCheckBox_clicked(bool checked)

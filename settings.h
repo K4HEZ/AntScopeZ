@@ -27,9 +27,6 @@ public:
 
     void setAnalyzer(AnalyzerPro * analyzer);
     void setCalibration(Calibration * calibration);
-    void setGraphHintChecked(bool checked);
-    void setGraphBriefHintChecked(bool checked);
-    void setMarkersHintChecked(bool checked);
     void setMeasureSystemMetric(bool state);
     void setColorTheme(bool dark);
     void setZ0(double _Z0);
@@ -122,9 +119,6 @@ signals:
     void checkUpdatesBtn();
     void updateBtn(QString);
 
-    void graphHintChecked(bool);
-    void graphBriefHintChecked(bool);
-    void markersHintChecked(bool);
     void fqRestrictChecked(bool);
 
     void startCalibration();
@@ -165,8 +159,6 @@ private slots:
     void on_percentChanged(qint32 percent);
     void findBootloader (void);
     void on_generalTimerTick();
-    void on_graphHintCheckBox_clicked(bool checked);
-    void on_markersHintCheckBox_clicked(bool checked);
     void on_fqRestrictCheckBox_clicked(bool checked);
     void on_calibWizard_clicked();
     void on_percentCalibrationChanged(qint32 state, qint32 percent);
@@ -185,7 +177,6 @@ private slots:
     void on_updateGraphsBtn_clicked();
     void on_aa30bootFound();
     void on_aa30updateComplete();
-    void on_graphBriefHintCheckBox_clicked(bool checked);
 
     void on_languageComboBox_currentIndexChanged(int index);
     void onBandsComboBox_currentIndexChanged(int index);

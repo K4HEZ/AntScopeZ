@@ -179,7 +179,7 @@ void MainWindow::on_singleStart_clicked()
         emit measure(start*1000, stop*1000, m_dotsNumber);
     }
     ui->measurmentsSaveBtn->setEnabled(true);
-    ui->exportBtn->setEnabled(true);
+    ui->actionExport->setEnabled(true);
     ui->measurmentsDeleteBtn->setEnabled(!m_analyzer->isMeasuring());
     ui->measurmentsClearBtn->setEnabled(!m_analyzer->isMeasuring());
 
@@ -299,7 +299,7 @@ void MainWindow::on_continuousStartBtn_clicked(bool checked)
             emit measure(start*1000, stop*1000, m_dotsNumber);
         }
         ui->measurmentsSaveBtn->setEnabled(true);
-        ui->exportBtn->setEnabled(true);
+        ui->actionExport->setEnabled(true);
         ui->measurmentsDeleteBtn->setEnabled(false);
         ui->measurmentsClearBtn->setEnabled(false);
     }else
@@ -319,7 +319,7 @@ void MainWindow::on_startOneFq(quint64 _fq, int _dots)
     emit measureOneFq(this, _fq*1000, _dots);
 
     ui->measurmentsSaveBtn->setEnabled(false);
-    ui->exportBtn->setEnabled(false);
+    ui->actionExport->setEnabled(false);
     ui->measurmentsDeleteBtn->setEnabled(false);
     ui->measurmentsClearBtn->setEnabled(false);
 }
@@ -427,7 +427,7 @@ void MainWindow::on_measurementComplete()
         m_bInterrupted = true;
         ui->measurmentsDeleteBtn->setEnabled(true);
         ui->measurmentsClearBtn->setEnabled(true);
-        ui->exportBtn->setEnabled(true);
+        ui->actionExport->setEnabled(true);
         ui->measurmentsSaveBtn->setEnabled(true);
         m_analyzer->setContinuos(false);
         m_analyzer->setIsMeasuring(false);
@@ -492,7 +492,7 @@ void MainWindow::on_measurementCompleteNano()
         m_bInterrupted = true;
         ui->measurmentsDeleteBtn->setEnabled(true);
         ui->measurmentsClearBtn->setEnabled(true);
-        ui->exportBtn->setEnabled(true);
+        ui->actionExport->setEnabled(true);
         ui->measurmentsSaveBtn->setEnabled(true);
         m_analyzer->setContinuos(false);
         m_analyzer->setIsMeasuring(false);

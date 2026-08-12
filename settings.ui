@@ -296,60 +296,6 @@
              <item>
               <layout class="QFormLayout" name="formLayout_6">
                <item row="0" column="0">
-                <widget class="QCheckBox" name="graphHintCheckBox">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>Show graph hint</string>
-                 </property>
-                 <property name="checked">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="QCheckBox" name="markersHintCheckBox">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>Show markers hint</string>
-                 </property>
-                 <property name="checked">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="0">
-                <widget class="QCheckBox" name="graphBriefHintCheckBox">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>300</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>Show brief params under cursor</string>
-                 </property>
-                 <property name="checked">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="0">
                 <widget class="QCheckBox" name="fqRestrictCheckBox">
                  <property name="text">
                   <string>Don't restrict frequency</string>
@@ -450,13 +396,6 @@
                 </spacer>
                </item>
               </layout>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="checkBoxBandName">
-               <property name="text">
-                <string>Show band name</string>
-               </property>
-              </widget>
              </item>
              <item>
               <widget class="QCheckBox" name="checkBoxBandSelector">
@@ -1681,9 +1620,6 @@
   <tabstop>tabWidget</tabstop>
   <tabstop>measureSystemComboBox</tabstop>
   <tabstop>themeComboBox</tabstop>
-  <tabstop>graphHintCheckBox</tabstop>
-  <tabstop>markersHintCheckBox</tabstop>
-  <tabstop>graphBriefHintCheckBox</tabstop>
   <tabstop>fqRestrictCheckBox</tabstop>
   <tabstop>lineEdit_systemImpedance</tabstop>
   <tabstop>languageComboBox</tabstop>

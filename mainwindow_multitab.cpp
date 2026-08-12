@@ -44,7 +44,7 @@ void MainWindow::toMultiTab(int tab_index)
     buildMultiTabLayout();
     ui->tabWidget->setTabVisible(tab_index, false);
     ui->tabWidget->setTabVisible(ui->tabWidget->indexOf(m_tab_multi), true);
-    ui->printBtn->setEnabled(false);
+    ui->actionPrint->setEnabled(false);
 //    ui->tabWidget->widget(tab_index)->setVisible(false);
 //    ui->tabWidget->widget(ui->tabWidget->indexOf(m_tab_multi))->setVisible(true);
 }
@@ -59,12 +59,12 @@ void MainWindow::fromMultiTab(int tab_index)  // ???? tab_index ????
     QString plot_name = g_mapTabPlotNames[tab_name];
     tab->layout()->addWidget(m_mapWidgets[plot_name]);
     ui->tabWidget->setTabVisible(tab_index, true);
-    ui->printBtn->setEnabled(false);
+    ui->actionPrint->setEnabled(false);
     //ui->tabWidget->widget(tab_index)->setVisible(true);
 
     if (m_multiTabData.tabs.isEmpty()) {
         ui->tabWidget->setTabVisible(ui->tabWidget->indexOf(m_tab_multi), false);
-        ui->printBtn->setEnabled(true);
+        ui->actionPrint->setEnabled(true);
         //ui->tabWidget->widget(ui->tabWidget->indexOf(m_tab_multi))->setVisible(false);
     }
 }
@@ -130,7 +130,7 @@ QMenu& MainWindow::menuMultiTab(QMenu &menu)
                 fromMultiTab(pair.first);
             }
             ui->tabWidget->setTabVisible(ui->tabWidget->indexOf(m_tab_multi), false);
-            ui->printBtn->setEnabled(true);
+            ui->actionPrint->setEnabled(true);
             //ui->tabWidget->widget(ui->tabWidget->indexOf(m_tab_multi))->setVisible(false);
         });
     }
@@ -186,12 +186,12 @@ void MainWindow::showMultiTab()
     if (menu.exec(QCursor::pos()) != nullptr) {
         if (!m_multiTabData.tabs.isEmpty()) {
             ui->tabWidget->setTabVisible(ui->tabWidget->indexOf(m_tab_multi), true);
-            ui->printBtn->setEnabled(false);
+            ui->actionPrint->setEnabled(false);
             //ui->tabWidget->widget(ui->tabWidget->indexOf(m_tab_multi))->setVisible(true);
             ui->tabWidget->setCurrentWidget(m_tab_multi);
         } else {
             ui->tabWidget->setTabVisible(ui->tabWidget->indexOf(m_tab_multi), false);
-            ui->printBtn->setEnabled(true);
+            ui->actionPrint->setEnabled(true);
             //ui->tabWidget->widget(ui->tabWidget->indexOf(m_tab_multi))->setVisible(false);
             ui->tabWidget->setCurrentWidget(m_tab_swr);
         }
