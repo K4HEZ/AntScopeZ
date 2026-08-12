@@ -392,7 +392,7 @@ process in the settings menu!</string>
         </property>
         <property name="maximumSize">
          <size>
-          <width>300</width>
+          <width>330</width>
           <height>16777215</height>
          </size>
         </property>
@@ -406,10 +406,10 @@ process in the settings menu!</string>
          <item>
           <layout class="QVBoxLayout" name="verticalLayout_3">
            <property name="leftMargin">
-            <number>0</number>
+            <number>8</number>
            </property>
            <property name="rightMargin">
-            <number>0</number>
+            <number>8</number>
            </property>
            <item>
             <widget class="QComboBox" name="presetsBandComboBox">
