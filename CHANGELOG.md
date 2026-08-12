@@ -25,10 +25,6 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 - Reworked keyboard tab order across the main window to follow the visual
   layout (tabs, toolbar buttons, Frequency/Presets/Measurements groups in
   order, ending at Clear).
-- Added a menu bar and moved the row of buttons that used to sit under the
-  tab control (Settings, Export, Import, Print, Screenshot, Screenshot from
-  AA, Data from AA) into it -- Settings stays a direct top-level entry,
-  the rest are grouped under File -- freeing that row for more plot area.
 
 ### Fixed
 

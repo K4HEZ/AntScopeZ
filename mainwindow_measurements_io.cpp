@@ -28,7 +28,7 @@ extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
 // mainwindow.cpp itself for the pieces left behind) -- pure code motion,
 // no behavior change. All pieces still define methods of MainWindow.
 
-void MainWindow::on_actionExport_triggered()
+void MainWindow::on_exportBtn_clicked()
 {
     QList <QTableWidgetItem *> list = ui->tableWidget_measurments->selectedItems();
     if(!list.isEmpty())
@@ -69,7 +69,7 @@ void MainWindow::on_measurmentsDeleteBtn_clicked()
         ui->measurmentsSaveBtn->setEnabled(false);
         ui->measurmentsDeleteBtn->setEnabled(false);
         ui->measurmentsClearBtn->setEnabled(false);
-        ui->actionExport->setEnabled(false);
+        ui->exportBtn->setEnabled(false);
     }
     else
     {
@@ -115,7 +115,7 @@ void MainWindow::measurementsClearBtn_clicked(bool)
         ui->measurmentsSaveBtn->setEnabled(false);
         ui->measurmentsDeleteBtn->setEnabled(false);
         ui->measurmentsClearBtn->setEnabled(false);
-        ui->actionExport->setEnabled(false);
+        ui->exportBtn->setEnabled(false);
     }
     if(m_markers)
     {
@@ -230,7 +230,7 @@ void MainWindow::on_tableWidget_measurments_cellActivated(int row, int column)
     updateGraph();
 }
 
-void MainWindow::on_actionScreenshot_triggered()
+void MainWindow::on_screenshot_clicked()
 {
     QString path = m_lastScreenshotPath;
     if (path.isEmpty()) {
@@ -255,7 +255,7 @@ void MainWindow::on_actionScreenshot_triggered()
     }
 }
 
-void MainWindow::on_actionPrint_triggered()
+void MainWindow::on_printBtn_clicked()
 {
     QString name = ui->tabWidget->currentWidget()->objectName();
     if (name == "tab_multi") {
@@ -550,7 +550,7 @@ void MainWindow::on_measurementsOpenBtn_clicked()
 
         m_measurements->loadData( path );
         ui->measurmentsSaveBtn->setEnabled(true);
-        ui->actionExport->setEnabled(true);
+        ui->exportBtn->setEnabled(true);
         ui->measurmentsDeleteBtn->setEnabled(true);
         ui->measurmentsClearBtn->setEnabled(true);
     }
@@ -560,12 +560,12 @@ void MainWindow::openFile(QString path)
 {
     m_measurements->loadData(path);
     ui->measurmentsSaveBtn->setEnabled(true);
-    ui->actionExport->setEnabled(true);
+    ui->exportBtn->setEnabled(true);
     ui->measurmentsDeleteBtn->setEnabled(true);
     ui->measurmentsClearBtn->setEnabled(true);
 }
 
-void MainWindow::on_actionImport_triggered()
+void MainWindow::on_importBtn_clicked()
 {
     if (m_lastExportImportPath.isEmpty()) {
         m_settings->beginGroup("Export");
@@ -587,7 +587,7 @@ void MainWindow::on_actionImport_triggered()
 
     m_measurements->loadData(path);
     ui->measurmentsSaveBtn->setEnabled(true);
-    ui->actionExport->setEnabled(true);
+    ui->exportBtn->setEnabled(true);
     ui->measurmentsDeleteBtn->setEnabled(true);
     ui->measurmentsClearBtn->setEnabled(true);
     m_lastExportImportPath = path;
@@ -617,7 +617,7 @@ void MainWindow::on_importFinished(double _fqMin_khz, double _fqMax_khz)
     on_dataChanged((qint64)_center, (qint64)_range/2, ui->lineEdit_points->text().toInt());
 
     ui->measurmentsSaveBtn->setEnabled(true);
-    ui->actionExport->setEnabled(true);
+    ui->exportBtn->setEnabled(true);
     ui->measurmentsDeleteBtn->setEnabled(true);
     ui->measurmentsClearBtn->setEnabled(true);
 

@@ -90,6 +90,140 @@
         </property>
        </widget>
       </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_Buttons">
+        <item>
+         <widget class="QPushButton" name="settingsBtn">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="toolTip">
+           <string>Entering the AntScopeZ program settings menu</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"/>
+          </property>
+          <property name="text">
+           <string>Settings</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="exportBtn">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="toolTip">
+           <string>Export measurement results to PC</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"/>
+          </property>
+          <property name="text">
+           <string>Export</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="importBtn">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="toolTip">
+           <string>Import measurement results from PC hard disk</string>
+          </property>
+          <property name="text">
+           <string>Import</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="printBtn">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="toolTip">
+           <string>Printing (or saving to PDF) measurement results</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"/>
+          </property>
+          <property name="text">
+           <string>Print</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="screenshot">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="toolTip">
+           <string>Saving a program window with a chart on a PC</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"/>
+          </property>
+          <property name="text">
+           <string>Screenshot</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="screenshotAA">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="toolTip">
+           <string>Screenshot of the current screen of  analyzer (not for all models)</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"/>
+          </property>
+          <property name="text">
+           <string>Screenshot from AA</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="analyzerDataBtn">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="toolTip">
+           <string>Loading saved measurement results from analyzer memory</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"/>
+          </property>
+          <property name="text">
+           <string>Data from AA</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
      </layout>
     </item>
     <item>
@@ -793,87 +927,6 @@ process in the settings menu!</string>
     </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1324</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menuFile">
-    <property name="title">
-     <string>&amp;File</string>
-    </property>
-    <addaction name="actionImport"/>
-    <addaction name="actionExport"/>
-    <addaction name="separator"/>
-    <addaction name="actionPrint"/>
-    <addaction name="separator"/>
-    <addaction name="actionScreenshot"/>
-    <addaction name="actionScreenshotAA"/>
-    <addaction name="actionAnalyzerData"/>
-   </widget>
-   <addaction name="menuFile"/>
-   <addaction name="actionSettings"/>
-  </widget>
-  <action name="actionImport">
-   <property name="text">
-    <string>&amp;Import...</string>
-   </property>
-   <property name="toolTip">
-    <string>Import measurement results from PC hard disk</string>
-   </property>
-  </action>
-  <action name="actionExport">
-   <property name="text">
-    <string>&amp;Export...</string>
-   </property>
-   <property name="toolTip">
-    <string>Export measurement results to PC</string>
-   </property>
-  </action>
-  <action name="actionPrint">
-   <property name="text">
-    <string>&amp;Print...</string>
-   </property>
-   <property name="toolTip">
-    <string>Printing (or saving to PDF) measurement results</string>
-   </property>
-  </action>
-  <action name="actionScreenshot">
-   <property name="text">
-    <string>&amp;Screenshot...</string>
-   </property>
-   <property name="toolTip">
-    <string>Saving a program window with a chart on a PC</string>
-   </property>
-  </action>
-  <action name="actionScreenshotAA">
-   <property name="text">
-    <string>Screenshot from &amp;AA</string>
-   </property>
-   <property name="toolTip">
-    <string>Screenshot of the current screen of  analyzer (not for all models)</string>
-   </property>
-  </action>
-  <action name="actionAnalyzerData">
-   <property name="text">
-    <string>&amp;Data from AA</string>
-   </property>
-   <property name="toolTip">
-    <string>Loading saved measurement results from analyzer memory</string>
-   </property>
-  </action>
-  <action name="actionSettings">
-   <property name="text">
-    <string>&amp;Settings</string>
-   </property>
-   <property name="toolTip">
-    <string>Entering the AntScopeZ program settings menu</string>
-   </property>
-  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
@@ -886,6 +939,13 @@ process in the settings menu!</string>
  </customwidgets>
  <tabstops>
   <tabstop>tabWidget</tabstop>
+  <tabstop>settingsBtn</tabstop>
+  <tabstop>exportBtn</tabstop>
+  <tabstop>importBtn</tabstop>
+  <tabstop>printBtn</tabstop>
+  <tabstop>screenshot</tabstop>
+  <tabstop>screenshotAA</tabstop>
+  <tabstop>analyzerDataBtn</tabstop>
   <tabstop>scanModeCombo</tabstop>
   <tabstop>lineEdit_fqFrom</tabstop>
   <tabstop>lineEdit_fqTo</tabstop>
