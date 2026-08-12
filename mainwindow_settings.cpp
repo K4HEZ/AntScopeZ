@@ -183,8 +183,12 @@ void MainWindow::on_settingsBtn_clicked()
         setChartBackground(color);
         getCurrentPlot()->replot();
         if (m_measurements != nullptr) {
+            // setHintColor() used to belong here too, alongside
+            // setBriefHintColor() -- removed along with m_graphHint's PopUp
+            // itself; the docked replacement (m_graphHintBox/m_graphHintLabel)
+            // is a plain themed widget with no chart-background-dependent
+            // color to refresh.
             m_measurements->setBriefHintColor();
-            m_measurements->setHintColor();
         }
         if (m_markers != nullptr && m_markers->markersHint() != nullptr)
             m_markers->markersHint()->updateLabelColors();

@@ -95,15 +95,12 @@ void PopUp::setName(QString name)
 {
     m_name = name;
     m_settings->beginGroup(m_name);
-    if(m_name == "Hint")
-    {
-        m_x = m_settings->value("x",185).toInt();
-        m_y = m_settings->value("y",642).toInt();
-        m_mainX = m_settings->value("mainX",169).toInt();
-        m_mainY = m_settings->value("mainY",101).toInt();
-        m_mainBiasX = m_settings->value("mainBiasX",16).toInt();
-        m_mainBiasY = m_settings->value("mainBiasY",541).toInt();
-    }
+    // Used to also special-case m_name == "Hint" here, restoring a persisted
+    // x/y/mainX/mainY/mainBiasX/mainBiasY for Measurements' m_graphHint --
+    // gone along with that PopUp instance itself now that it's a docked
+    // widget with no floating position of its own to persist (see
+    // Measurements::setGraphHintWidgets()). No other PopUp instance was ever
+    // named "Hint", so this was dead for every other caller already.
 
 //    QWidget* widget = parentWidget() != nullptr ? parentWidget() : qApp->activeWindow();
 //    QPoint pt = widget->mapToGlobal(widget->rect().center());
@@ -132,8 +129,9 @@ PopUp::~PopUp()
     // silently), this specific form also tears down this object's own
     // destroyed() signal connections, which is what QObject::disconnect
     // warns about ("wildcard call disconnects from destroyed signal of
-    // PopUp::unnamed") -- printed once per PopUp instance (m_graphHint,
-    // m_graphBriefHint, screenshot.cpp's m_popUp) on every shutdown. Nothing
+    // PopUp::unnamed") -- printed once per PopUp instance (m_graphBriefHint,
+    // screenshot.cpp's m_popUp -- Measurements' old m_graphHint was a third,
+    // now docked and no longer a PopUp at all) on every shutdown. Nothing
     // below emits any of PopUp's own signals, so there was nothing to guard
     // against by disconnecting explicitly here.
     m_settings->beginGroup(m_name);

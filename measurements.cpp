@@ -64,7 +64,8 @@ QColor getColor(int _index)
 
 Measurements::Measurements(QObject *parent) : QObject(parent),
     m_currentIndex(0),
-    m_graphHint(NULL),
+    m_graphHintBox(NULL),
+    m_graphHintLabel(NULL),
     m_graphBriefHint(NULL),
     m_swrLine(NULL),
     m_swrLine2(NULL),
@@ -101,35 +102,14 @@ Measurements::Measurements(QObject *parent) : QObject(parent),
     m_pdTdrStep =  new double[TDR_MAXARRAY];
     m_pdTdrZ =  new double[TDR_MAXARRAY];
 
-    if(m_graphHint == NULL)
-    {
-        m_graphHint = new PopUp();
-        m_graphHint->setHiding(false);
-        m_settings->beginGroup("Settings");
-        bool darkTheme = m_settings->value("darkColorTheme", true).toBool();
-        m_settings->endGroup();
-
-        changeColorTheme(darkTheme);
-
-        m_graphHint->setPopupText(tr("Frequency = \n"
-                                     "SWR = \n"
-                                     "RL = \n"
-                                     "Z = \n"
-                                     "|Z| = \n"
-                                     "|rho| = \n"
-                                     "C = \n"
-                                     "Zpar = \n"
-                                     "Cpar = \n"
-                                     "Cable: "));
-        if(m_graphHintEnabled)
-        {
-            m_graphHint->show();
-        }
-        // Not tr("Hint") -- see the comment on Markers::create()'s
-        // setName("Markers") call for why: this is a QSettings group
-        // name/comparison key (PopUp::setName()), not user-facing text.
-        m_graphHint->setName("Hint");
-    }
+    // m_graphHintBox/m_graphHintLabel used to be a self-constructed PopUp
+    // (floating Qt::Tool window, positioned via setName("Hint")'s persisted
+    // x/y, colored per chart-background via changeColorTheme()->
+    // setHintColor()) -- now a plain QGroupBox/QLabel docked in
+    // mainwindow.ui's middle column instead, handed over by MainWindow via
+    // setGraphHintWidgets() once the widgets exist. Nothing to construct or
+    // color here anymore; see setGraphHintWidgets() for the equivalent
+    // initial-text/visibility setup.
 
     if(m_graphBriefHint == NULL)
     {
@@ -151,10 +131,10 @@ Measurements::~Measurements()
     delete []m_pdTdrStep;
     delete []m_pdTdrZ;
 
-    if(m_graphHint)
-    {
-        delete m_graphHint;
-    }
+    // m_graphHintBox/m_graphHintLabel are owned by mainwindow.ui (MainWindow's
+    // own ui_mainwindow.h-generated members), not by Measurements -- nothing
+    // to delete here, unlike m_graphBriefHint below (still a Measurements-
+    // owned floating PopUp).
     if (m_graphBriefHint)
     {
         delete m_graphBriefHint;
@@ -241,6 +221,31 @@ void Measurements::setWidgets(CustomPlot * swr,   CustomPlot * phase,
         }
     });
 
+}
+
+// See the comment on m_graphHintBox/m_graphHintLabel's constructor spot
+// (above) for why this replaces what used to be self-constructed here.
+// Called once from MainWindow, right after ui_mainwindow.h's setupUi() has
+// created the actual widgets.
+void Measurements::setGraphHintWidgets(QWidget* box, QLabel* label)
+{
+    m_graphHintBox = box;
+    m_graphHintLabel = label;
+    if (m_graphHintLabel == nullptr)
+        return;
+
+    m_graphHintLabel->setText(tr("Frequency = \n"
+                                 "SWR = \n"
+                                 "RL = \n"
+                                 "Z = \n"
+                                 "|Z| = \n"
+                                 "|rho| = \n"
+                                 "C = \n"
+                                 "Zpar = \n"
+                                 "Cpar = \n"
+                                 "Cable: "));
+    if (m_graphHintBox != nullptr)
+        m_graphHintBox->setVisible(m_graphHintEnabled);
 }
 
 void Measurements::setUserWidget(CustomPlot * user) {
@@ -1406,9 +1411,9 @@ void Measurements::on_changeMeasureSystemMetric (bool state)
 
 void Measurements::on_translate()
 {
-    if (m_graphHint != nullptr)
+    if (m_graphHintLabel != nullptr)
     {
-        m_graphHint->setPopupText(tr("Frequency = \n"
+        m_graphHintLabel->setText(tr("Frequency = \n"
                                      "SWR = \n"
                                      "RL = \n"
                                      "Z = \n"

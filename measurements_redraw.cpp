@@ -827,16 +827,14 @@ void Measurements::redrawUser(bool _incrementally)
     }
 }
 
-void Measurements::changeColorTheme(bool _dark)
-{
-    Q_UNUSED(_dark);
-    // Background used to follow the app theme here too, independent of the
-    // plot's own chart-background -- against a light chart-background this
-    // stayed a near-black box fighting the now-dark hint text for contrast.
-    // Both text and background now track chart-background instead (see
-    // setHintColor()).
-    setHintColor();
-}
+// Used to re-color m_graphHint here (background/text following the app
+// theme, independent of the plot's own chart-background -- see setHintColor(),
+// removed). m_graphHint is a plain docked, normally-themed QGroupBox/QLabel
+// now (m_graphHintBox/m_graphHintLabel -- see setGraphHintWidgets()) with
+// nothing left for a theme change to touch here; MainWindow's own
+// changeColorTheme() already re-skins it like every other widget via
+// setStyles()'s qApp->setStyleSheet() call. This function (and its call
+// sites) is gone along with the last of its work.
 
 void Measurements::redrawMultiGraph(bool _incrementally)
 {

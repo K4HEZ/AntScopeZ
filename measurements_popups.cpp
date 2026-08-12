@@ -38,18 +38,20 @@ void Measurements::on_focus(bool focus)
     m_focus = focus;
     // Deferred, not called inline: this runs from inside MainWindow::event()
     // handling QEvent::WindowActivate. showHideHints() QWidget::show()s
-    // m_graphHint/m_graphBriefHint -- separate top-level Qt::Tool windows
-    // (see popup.cpp) that were deliberately made activatable so they can be
-    // dragged on this window manager. Doing that show() synchronously,
-    // nested inside MainWindow's own WindowActivate handling, races
-    // MainWindow's activation against the popup's on window managers like
-    // Cinnamon/Muffin -- most visibly on cold start, when m_graphBriefHint
-    // (never shown before this point) and MainWindow both request
-    // activation for the first time within the same event. Symptom: the
-    // plot's mouse wheel/drag stop responding until something else (e.g.
-    // opening/closing the modal "Connect analyzer" dialog) forces a fresh
-    // activation cycle. Letting MainWindow's own activation finish settling
-    // first, by deferring showHideHints() a tick, avoids the race.
+    // m_graphBriefHint -- a separate top-level Qt::Tool window (see
+    // popup.cpp) deliberately made activatable so it can be dragged on this
+    // window manager. (m_graphHintBox used to be one too, until it was
+    // docked into mainwindow.ui's middle column -- see setGraphHintWidgets()
+    // -- so it no longer has a WM identity to race against.) Doing that
+    // show() synchronously, nested inside MainWindow's own WindowActivate
+    // handling, races MainWindow's activation against the popup's on window
+    // managers like Cinnamon/Muffin -- most visibly on cold start, when
+    // m_graphBriefHint (never shown before this point) and MainWindow both
+    // request activation for the first time within the same event. Symptom:
+    // the plot's mouse wheel/drag stop responding until something else
+    // (e.g. opening/closing the modal "Connect analyzer" dialog) forces a
+    // fresh activation cycle. Letting MainWindow's own activation finish
+    // settling first, by deferring showHideHints() a tick, avoids the race.
     QTimer::singleShot(50, this, &Measurements::showHideHints);
 }
 
@@ -63,28 +65,22 @@ void Measurements::hideGraphBriefHint()
 
 void Measurements::showHideHints()
 {
-    if(m_graphHint)
+    if(m_graphHintBox)
     {
-        // Unlike m_graphBriefHint below, m_graphHint isn't interactive-until-
-        // positioned -- it's always had real text since construction (see
-        // setWidgets()) -- so there's no equivalent reason to gate it on
-        // m_focus. Gating it did mean opening the (non-modal) Settings
-        // dialog -- which steals MainWindow's WM activation, triggering
-        // on_focus(false) -- hid it regardless of the checkbox, and toggling
-        // the checkbox while Settings had focus appeared to do nothing since
-        // m_focus stayed false either way. Checkbox state alone should
-        // decide visibility here.
-        if(m_graphHintEnabled)
-        {
-            m_graphHint->focusShow();
-        }else
-        {
-            m_graphHint->focusHide();
-        }
+        // Unlike m_graphBriefHint below, m_graphHintBox isn't interactive-
+        // until-positioned -- it's always had real text since construction
+        // (see setGraphHintWidgets()) -- so there's no equivalent reason to
+        // gate it on m_focus. Gating it did mean opening the (non-modal)
+        // Settings dialog -- which steals MainWindow's WM activation,
+        // triggering on_focus(false) -- hid it regardless of the checkbox,
+        // and toggling the checkbox while Settings had focus appeared to do
+        // nothing since m_focus stayed false either way. Checkbox state
+        // alone decides visibility here, same as before docking.
+        m_graphHintBox->setVisible(m_graphHintEnabled);
     }
     if(m_graphBriefHint)
     {
-        // Unlike m_graphHint, m_graphBriefHint is never proactively shown
+        // Unlike m_graphHintBox, m_graphBriefHint is never proactively shown
         // here. It starts with no text and, because PopUp::setName() only
         // restores a persisted position for the name "Hint" (not
         // "BriefHint"), it always sits at PopUp's hardcoded construction
@@ -391,26 +387,27 @@ void Measurements::on_newCursorSmithPos (double x, double y, int index)
         text += cableString;
     }
 
-    m_graphHint->setPopupText(text);
+    m_graphHintLabel->setText(text);
 }
 
 void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
 {
 #define DELTA 5
-    // hideGraphCursor() hides these via focusHide() (plain QWidget::hide())
-    // whenever the cursor leaves the data area, but nothing else re-shows
-    // them on the way back in -- setPopupText()/setPosition() below don't
-    // call show(), and showHideHints() only reacts to focus/enable-checkbox
-    // events, not mouse movement. Without this, hiding them once (leaving
-    // the plot, or the phase tab's out-of-range gap) hid them for the rest
-    // of the session. Re-show here, right before we're about to populate
-    // real content, whenever they're enabled but not currently visible.
-    if (m_graphHintEnabled && m_focus && m_graphHint && !m_graphHint->isVisible())
-        m_graphHint->focusShow();
+    // hideGraphCursor() hides m_graphBriefHint via focusHide() (plain
+    // QWidget::hide()) whenever the cursor leaves the data area, but nothing
+    // else re-shows it on the way back in -- setPopupText()/setPosition()
+    // below don't call show(), and showHideHints() only reacts to
+    // focus/enable-checkbox events, not mouse movement. Without this, hiding
+    // it once (leaving the plot, or the phase tab's out-of-range gap) hid it
+    // for the rest of the session. Re-show here, right before we're about to
+    // populate real content, whenever it's enabled but not currently
+    // visible. m_graphHintBox doesn't need the equivalent -- it's never
+    // hidden by hideGraphCursor() (see that function's own comment), only by
+    // showHideHints(), which already keeps it in sync with the checkbox.
     if (m_graphBriefHintEnabled && m_focus && m_graphBriefHint && !m_graphBriefHint->isVisible())
         m_graphBriefHint->focusShow();
 
-    if(m_graphHint)
+    if(m_graphHintLabel)
     {
         if (!m_measurements[index].visible) {
             return;
@@ -571,7 +568,7 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
                                 .arg(sr)//7
                                 .arg(zStr);//8
 
-                        m_graphHint->setPopupText(text);
+                        m_graphHintLabel->setText(text);
 
                         if(m_graphBriefHint != NULL)
                         {
@@ -697,7 +694,7 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
                             text += QString::number((int)s21Stage);
                             str += "\n" + QString::number((int)s21Stage);
                         }
-                        m_graphHint->setPopupText(text);
+                        m_graphHintLabel->setText(text);
                         m_graphBriefHint->setPopupText(str);
                         qInfo() << "updatePopup " << mouseX << mouseY << str;
                         break;
@@ -1181,7 +1178,7 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
                         .arg(lenUnits);
                 text += cableString;
             }
-            m_graphHint->setPopupText(text);
+            m_graphHintLabel->setText(text);
         }
     }
     replot();
@@ -1205,8 +1202,8 @@ void Measurements::hideGraphCursor()
     if (m_tdrLine)   m_tdrLine->setVisible(false);
 
     if (m_graphBriefHint) m_graphBriefHint->focusHide();
-    // m_graphHint (the full "Frequency = .../SWR = ..." box, as opposed to
-    // the small cursor-following m_graphBriefHint) deliberately does NOT
+    // m_graphHintBox (the full "Frequency = .../SWR = ..." panel, as opposed
+    // to the small cursor-following m_graphBriefHint) deliberately does NOT
     // hide here anymore. Cursor movement fires many times a second, and
     // near the edge of the scanned data it flickers in/out of range on
     // consecutive events -- hiding/reshowing it every time made it visibly
@@ -1225,9 +1222,10 @@ void Measurements::hideGraphCursor()
 
 void Measurements::on_mainWindowPos(int x, int y)
 {
-    if(m_graphHint)
-        m_graphHint->MainWindowPos(x, y);
-
+    // m_graphHintBox used to need repositioning here too, back when it was
+    // a floating PopUp tracking the main window's own moves (see PopUp::
+    // MainWindowPos()) -- now it's a plain child widget in mainwindow.ui's
+    // layout, which the layout engine keeps positioned for free.
     if (m_oneFqWidget)
         m_oneFqWidget->MainWindowPos(x, y);
 }
@@ -1272,40 +1270,18 @@ QColor Measurements::inverseChartBackground()
 #endif
 }
 
-// Blending a color toward itself (chartBackgroundColor() alone, at any
-// alpha) paints the same color the plot behind it already is -- the box
-// vanished into the plot instead of reading as a floating card. Shifting it
-// partway toward neutral grey keeps it recognizably "the same side" as the
-// chart-background (so it still pairs correctly with the inverted text
-// color) while staying visually distinct from the plot itself, light or
-// dark.
-QColor Measurements::hintBackgroundColor()
-{
-    QColor color = chartBackgroundColor();
-    const qreal towardGrey = 0.35;
-    int r = color.red()   + int((128 - color.red())   * towardGrey);
-    int g = color.green() + int((128 - color.green()) * towardGrey);
-    int b = color.blue()  + int((128 - color.blue())  * towardGrey);
-    QColor tinted(r, g, b);
-    tinted.setAlpha(200);
-    return tinted;
-}
-
+// Used to also back hintBackgroundColor() (m_graphHintBox's tinted
+// background) -- removed once m_graphHintBox became a plain docked
+// QGroupBox/QLabel (see setGraphHintWidgets()): it's themed by the app's
+// normal Light/Dark QSS cascade like every other left-column widget now,
+// same as chart-background-independent widgets always have been, so there's
+// no per-instance color to compute here any more. m_graphBriefHint stays a
+// floating overlay on the plot itself, so it still needs a color that reads
+// against the plot's own (independently configurable) chart-background.
 void Measurements::setBriefHintColor()
 {
     if (m_graphBriefHint != nullptr) {
         m_graphBriefHint->setTextColor(inverseChartBackground().name());
-    }
-}
-
-// m_graphHint's text/background used to be driven by changeColorTheme() (app
-// Light/Dark theme), independent of the plot's own chart-background -- same
-// class of contrast bug Bug 5 fixed for m_graphBriefHint/MarkersPopUp.
-void Measurements::setHintColor()
-{
-    if (m_graphHint != nullptr) {
-        m_graphHint->setTextColor(inverseChartBackground().name());
-        m_graphHint->setBackgroundColor(hintBackgroundColor());
     }
 }
 

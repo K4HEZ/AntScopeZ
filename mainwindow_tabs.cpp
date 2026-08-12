@@ -483,7 +483,10 @@ void MainWindow::changeColorTheme(bool _dark)
     if (m_markers != NULL)
         m_markers->changeColorTheme(m_darkColorTheme);
 
-    m_measurements->changeColorTheme(m_darkColorTheme);
+    // Measurements::changeColorTheme() is gone -- it only ever existed to
+    // re-color m_graphHint's PopUp, which setStyles() below now handles for
+    // free (it's a plain docked, normally-themed widget -- see
+    // setGraphHintWidgets()).
     m_measurements->on_redrawGraphs();
 
     setStyles(); // re-skin the Style::-driven main window chrome for the new theme

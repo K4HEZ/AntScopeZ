@@ -373,6 +373,7 @@ MainWindow::MainWindow(QWidget *parent) :
                                m_s21Widget,
                                m_smithWidget,
                                ui->tableWidget_measurments);
+    m_measurements->setGraphHintWidgets(ui->groupBox_GraphHint, ui->label_graphHint);
     {
         // drawSmithImage() (called from setWidgets() above) resets the Smith inner
         // circle and arcs/labels to their hardcoded default colors; re-sync them
@@ -829,10 +830,15 @@ bool MainWindow::event(QEvent * e)
         // when Settings/Connect Analyzer/an Import file dialog opened, so the
         // popup (Qt::WindowStaysOnTopHint) never got told to hide and sat on
         // top of those dialogs eating their clicks.
+        //
+        // m_measurements->graphHint() used to be checked here too -- dropped
+        // along with the getter itself once that panel was docked into
+        // mainwindow.ui (see setGraphHintWidgets()): a plain child widget has
+        // no WM identity of its own, so it can never be qApp->activeWindow()
+        // and never needed this exemption.
         QWidget *active = qApp->activeWindow();
         bool ownPopupActive = (m_markers && active == static_cast<QWidget*>(m_markers->markersHint())) ||
-                               (m_measurements && (active == static_cast<QWidget*>(m_measurements->graphHint()) ||
-                                                    active == static_cast<QWidget*>(m_measurements->graphBriefHint())));
+                               (m_measurements && active == static_cast<QWidget*>(m_measurements->graphBriefHint()));
         if (!ownPopupActive)
             emit focus(false);
     }else if (e->type() == QEvent::WindowStateChange)
@@ -1190,6 +1196,7 @@ void MainWindow::setStyles()
     ui->groupBox_Fq->setStyleSheet(style);
     ui->groupBox_Presets->setStyleSheet(style);
     ui->groupBox_Measure->setStyleSheet(style);
+    ui->groupBox_GraphHint->setStyleSheet(style);
 
     style = Style::lineEdit();
     ui->lineEdit_fqTo->setStyleSheet(style);

@@ -22,8 +22,8 @@ extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
 void Measurements::showOneFqWidget(QWidget* _parent, int _dots)
 {
     m_oneFqMode = true;
-    if (m_graphHint != nullptr)
-        m_graphHint->focusHide();
+    if (m_graphHintBox != nullptr)
+        m_graphHintBox->setVisible(false);
 //    delete m_oneFqWidget;
 //    m_oneFqWidget = new OneFqWidget(_dots, _parent);
     if (m_oneFqWidget == nullptr) {

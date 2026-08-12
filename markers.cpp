@@ -727,10 +727,11 @@ void Markers::changeColorTheme(bool _dark)
 {
     Q_UNUSED(_dark);
     // Text/background used to be driven by the app's Light/Dark theme here,
-    // independent of the plot's own chart-background -- same contrast bug
-    // fixed for Measurements::changeColorTheme()/setHintColor(). Row/header
-    // text and the popup's own backdrop both now track chart-background via
-    // updateLabelColors() instead.
+    // independent of the plot's own chart-background -- same class of
+    // contrast bug fixed around the same time for Measurements'
+    // m_graphHint/m_graphBriefHint (both now retired or docked -- see
+    // measurements_popups.cpp). Row/header text and the popup's own backdrop
+    // both now track chart-background via updateLabelColors() instead.
     if (m_markersHint != nullptr)
         m_markersHint->updateLabelColors();
 }

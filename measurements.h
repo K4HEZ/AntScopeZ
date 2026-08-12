@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QVector>
+#include <QLabel>
 #include <math.h>
 #include <qdebug.h>
 #include <qcustomplot.h>
@@ -61,6 +62,13 @@ public:
     void setWidgets(CustomPlot * swr, CustomPlot * phase, CustomPlot * rs, CustomPlot * rp,
                     CustomPlot * rl, CustomPlot * tdr, CustomPlot * s21, QCustomPlot * smith, QTableWidget *table);
     void setUserWidget(CustomPlot * user);
+    // box/label live in mainwindow.ui's docked middle column now (see the
+    // UI-overhaul branch) -- this just hands over the pointers Measurements
+    // needs to keep them updated, replacing the PopUp this used to
+    // self-construct. box is what showHideHints() shows/hides (collapses
+    // the whole panel, not just the text); label is what gets the actual
+    // "Frequency = .../SWR = ..." text.
+    void setGraphHintWidgets(QWidget* box, QLabel* label);
     void setCalibration(Calibration * _calibration);
     bool getCalibrationEnabled(void);
     void deleteRow(int row);
@@ -78,7 +86,6 @@ public:
     void saveData(quint32 number, QString path);
     void loadData(QString path);
     int  nextPrefix();
-    void changeColorTheme(bool _dark);
 
     void exportData(QString _name, int _type, int _number, bool _applyCable=false, QString _description=QString());
     void importData(QString _name);
@@ -125,13 +132,10 @@ public:
     void setSmithBackgroundColor(QColor color);
     void setSmithForegroundColor(QColor color);
     void setBriefHintColor();
-    void setHintColor();
     QColor chartBackgroundColor();
     QColor inverseChartBackground();
-    QColor hintBackgroundColor();
     double tdrZRange() { return m_tdrZRange; }
     QString currentTab() { return m_currentTab; }
-    PopUp* graphHint() { return m_graphHint; }
     PopUp* graphBriefHint() { return m_graphBriefHint; }
 
 private:
@@ -168,7 +172,8 @@ private:
 
     qint32 m_currentIndex;
 
-    PopUp *m_graphHint;
+    QWidget *m_graphHintBox;
+    QLabel *m_graphHintLabel;
     PopUp *m_graphBriefHint;
 
     QCPItemStraightLine *m_swrLine;
