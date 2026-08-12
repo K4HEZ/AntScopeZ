@@ -1090,7 +1090,21 @@ void MainWindow::setWidgetsSettings()
     m_swrWidget->yAxis->setTickLabelFont(fontTickLabel);
     m_swrWidget->xAxis->setLabelFont(fontLabel);
     m_swrWidget->yAxis->setLabelFont(fontLabel);
-    on_bandChanged(band);
+    // NOT on_bandChanged(band) -- that redraws bands on every widget
+    // (swr/phase/rs/rp/rl/user), but each of those already gets its own
+    // explicit setBands() call further down this same function (see
+    // lines below for phase/rs/rp/rl/user). Calling on_bandChanged() here
+    // too meant those five got their band rectangles drawn twice --
+    // once right here, once again at their own setBands() call -- while
+    // SWR only got one (on_bandChanged() clears m_itemRectList before
+    // redrawing, wiping the setBands() call immediately above before
+    // anything else had added to the list yet). Two stacked identical
+    // semi-transparent band rectangles read as more saturated/darker than
+    // one, which is why SWR's bands looked lighter than every other
+    // chart's. populateBandSelector() is the one part of on_bandChanged()
+    // actually needed here (seeds the Presets band-selector combo at
+    // startup) -- called directly instead.
+    populateBandSelector(band);
     m_swrWidget->replot();
 
     //-------Phase Widget---------------------------------------------
