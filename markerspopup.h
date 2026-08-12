@@ -66,6 +66,14 @@ public:
 
     void MainWindowPos(int x, int y);
     void on_translate();
+    // The row-value labels used to be styled via Style::label() -- the
+    // app's Light/Dark theme text color -- but this table floats over the
+    // plot's own independently-configurable chart-background color, which
+    // has no relationship to the app theme. Contrast wasn't guaranteed
+    // (confirmed: washed out against several chart-background colors).
+    // Call this whenever chart-background changes, same as
+    // Measurements::setBriefHintColor().
+    void updateLabelColors();
 
 protected:
     void paintEvent(QPaintEvent *event);    // Background will be drawn via the repaint method
@@ -73,6 +81,9 @@ protected:
     virtual void createHeader();
     void createMenu(MarkersHeaderColumn& buttonData);
     QString formatText(int type, QVariant val);
+    QColor chartBackgroundColor();
+    QColor inverseChartBackground();
+    QColor hintBackgroundColor();
 
 public slots:
     QList <QStringList> getPopupList(); // print support

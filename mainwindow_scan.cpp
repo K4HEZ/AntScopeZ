@@ -442,6 +442,15 @@ void MainWindow::on_measurementComplete()
     // trigger a replot. Catch every tab up once here, now that the scan is
     // fully done.
     foreach (QCustomPlot *plot, m_mapWidgets) {
+        // graph(0) on every tab is the live "current scan position" tick
+        // (setWidgetsSettings()'s white QPen(255,255,255,150); fed via
+        // setData(x,y) as each point streams in -- see the comment on
+        // Measurements::replot() for the XOR-buffer mechanism). Nothing
+        // ever cleared it once a scan finished, so it stayed drawn at
+        // wherever the last point was.
+        if (plot->graphCount() > 0) {
+            plot->graph(0)->data()->clear();
+        }
         plot->replot();
     }
 }
@@ -491,7 +500,14 @@ void MainWindow::on_measurementCompleteNano()
     }
 
     // Fixes issue #33: see the matching comment in on_measurementComplete().
+    // This is the NANO analyzer's own end-of-scan path -- on_measurementComplete()
+    // returns immediately for NANO connections (see its own early return
+    // above) and never reaches its graph(0) clear, so that fix has to be
+    // duplicated here rather than shared.
     foreach (QCustomPlot *plot, m_mapWidgets) {
+        if (plot->graphCount() > 0) {
+            plot->graph(0)->data()->clear();
+        }
         plot->replot();
     }
 }

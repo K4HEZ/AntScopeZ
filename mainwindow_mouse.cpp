@@ -180,6 +180,14 @@ void MainWindow::mouseMove_swr(QMouseEvent *e)
                 emit newCursorFq(x, item->row(), QCursor::pos().x(), QCursor::pos().y());
             }
         }
+        else if (m_measurements)
+        {
+            m_measurements->hideGraphCursor();
+        }
+    }
+    else if (m_measurements)
+    {
+        m_measurements->hideGraphCursor();
     }
     if (e->buttons() & Qt::LeftButton)
     {
@@ -251,6 +259,14 @@ void MainWindow::mouseMove_phase(QMouseEvent *e)
                 emit newCursorFq(x, item->row(), QCursor::pos().x(), QCursor::pos().y());
             }
         }
+        else if (m_measurements)
+        {
+            m_measurements->hideGraphCursor();
+        }
+    }
+    else if (m_measurements)
+    {
+        m_measurements->hideGraphCursor();
     }
     if (e->buttons() & Qt::LeftButton)
     {
@@ -361,6 +377,14 @@ void MainWindow::mouseMove_rs(QMouseEvent *e)
                 emit newCursorFq(x, item->row(), QCursor::pos().x(), QCursor::pos().y());
             }
         }
+        else if (m_measurements)
+        {
+            m_measurements->hideGraphCursor();
+        }
+    }
+    else if (m_measurements)
+    {
+        m_measurements->hideGraphCursor();
     }
     if (e->buttons() & Qt::LeftButton)
     {
@@ -470,6 +494,14 @@ void MainWindow::mouseMove_rp(QMouseEvent *e)
                 emit newCursorFq(x, item->row(), QCursor::pos().x(), QCursor::pos().y());
             }
         }
+        else if (m_measurements)
+        {
+            m_measurements->hideGraphCursor();
+        }
+    }
+    else if (m_measurements)
+    {
+        m_measurements->hideGraphCursor();
     }
     if (e->buttons() & Qt::LeftButton)
     {
@@ -568,6 +600,14 @@ void MainWindow::mouseMove_rl(QMouseEvent *e)
                 emit newCursorFq(x, item->row(), QCursor::pos().x(), QCursor::pos().y());
             }
         }
+        else if (m_measurements)
+        {
+            m_measurements->hideGraphCursor();
+        }
+    }
+    else if (m_measurements)
+    {
+        m_measurements->hideGraphCursor();
     }
     if (e->buttons() & Qt::LeftButton)
     {
@@ -637,6 +677,10 @@ void MainWindow::mouseMove_tdr(QMouseEvent * e)
             emit newCursorFq(x, item->row(), e->pos().x(), e->pos().y());
         }
     }
+    else if (m_measurements)
+    {
+        m_measurements->hideGraphCursor();
+    }
 }
 
 void MainWindow::mouseMove_s21(QMouseEvent * e)
@@ -651,6 +695,10 @@ void MainWindow::mouseMove_s21(QMouseEvent * e)
             QTableWidgetItem * item = list.at(0);
             emit newCursorFq(x, item->row(), e->pos().x(), e->pos().y());
         }
+    }
+    else if (m_measurements)
+    {
+        m_measurements->hideGraphCursor();
     }
 }
 

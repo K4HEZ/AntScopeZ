@@ -104,6 +104,71 @@ void MarkersPopUp::initLayout()
       updateTable();
 }
 
+// Same inverse-of-chart-background approach as Measurements::
+// inverseChartBackground() -- duplicated rather than shared since the two
+// classes don't have a common base, but kept identical on purpose.
+QColor MarkersPopUp::chartBackgroundColor()
+{
+    m_settings->beginGroup("Settings");
+    QString strColor = m_settings->value("chart-background", "#ffffff").toString();
+    m_settings->endGroup();
+
+    // QColor::fromString() is a static factory in Qt6 -- it returns a new
+    // QColor rather than mutating the receiver, so the result must be
+    // assigned back (calling it as color.fromString(...) compiles but
+    // silently discards the result, leaving color invalid/black and every
+    // row rendering the same fixed white regardless of chart-background).
+    QColor color = QColor::fromString(strColor);
+    if (!color.isValid())
+        color = QColor(Qt::white);
+    return color;
+}
+
+QColor MarkersPopUp::inverseChartBackground()
+{
+    QColor color = chartBackgroundColor();
+#ifndef Q_OS_MACX
+    return QColor(255-color.red(), 255-color.green(), 255-color.blue());
+#else
+    return color;
+#endif
+}
+
+// Blending a color toward itself (chartBackgroundColor() alone, at any
+// alpha) paints the same color the plot behind it already is -- the box
+// vanished into the plot instead of reading as a floating card. Shifting it
+// partway toward neutral grey keeps it recognizably "the same side" as the
+// chart-background (so it still pairs correctly with inverseChartBackground()'s
+// row text) while staying visually distinct from the plot itself, light or
+// dark. Same approach as Measurements::hintBackgroundColor().
+QColor MarkersPopUp::hintBackgroundColor()
+{
+    QColor color = chartBackgroundColor();
+    const qreal towardGrey = 0.35;
+    int r = color.red()   + int((128 - color.red())   * towardGrey);
+    int g = color.green() + int((128 - color.green()) * towardGrey);
+    int b = color.blue()  + int((128 - color.blue())  * towardGrey);
+    QColor tinted(r, g, b);
+    tinted.setAlpha(200);
+    return tinted;
+}
+
+void MarkersPopUp::updateLabelColors()
+{
+    QString style = "QLabel { color: " + inverseChartBackground().name() + "; }";
+    for (const QList<QWidget*>& row : m_rows) {
+        for (QWidget* w : row) {
+            QLabel* label = qobject_cast<QLabel*>(w);
+            if (label)
+                label->setStyleSheet(style);
+        }
+    }
+
+    // See hintBackgroundColor() above.
+    setBackgroundColor(hintBackgroundColor());
+    update();
+}
+
 void MarkersPopUp::paintEvent(QPaintEvent *event)
 {
     Q_UNUSED(event)
@@ -445,6 +510,7 @@ void MarkersPopUp::updateMarkers(int markers, int measurements, bool force)
 
     int rowCount = m_measurements==0 ? 1 : m_measurements;
     int rowIndex = 1;
+    QString labelStyle = "QLabel { color: " + inverseChartBackground().name() + "; }";
     for (int i=0; i<m_markers; i++) {
         QToolButton* button = new QToolButton(this);
         button->setStyleSheet(Style::toolButton());
@@ -463,7 +529,12 @@ void MarkersPopUp::updateMarkers(int markers, int measurements, bool force)
             row << nullptr;
             for (int k=1; k<m_headerColumns.size(); k++) {
                 QLabel* label = new QLabel(this);
-                label->setStyleSheet(Style::label());
+                // Not Style::label() (the app's Light/Dark theme text
+                // color) -- this table floats over the plot's own
+                // independently-configurable chart-background, so it
+                // needs a color that contrasts with that instead. See
+                // updateLabelColors().
+                label->setStyleSheet(labelStyle);
                 label->setAlignment(Qt::AlignCenter);
                 row << qobject_cast<QLabel*>(label);
                 m_layout.addWidget(label, rowIndex, k);

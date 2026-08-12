@@ -182,8 +182,12 @@ void MainWindow::on_settingsBtn_clicked()
     connect(m_settingsDialog, &Settings::chartBackgroundChanged, [=](QColor color) {
         setChartBackground(color);
         getCurrentPlot()->replot();
-        if (m_measurements != nullptr)
+        if (m_measurements != nullptr) {
             m_measurements->setBriefHintColor();
+            m_measurements->setHintColor();
+        }
+        if (m_markers != nullptr && m_markers->markersHint() != nullptr)
+            m_markers->markersHint()->updateLabelColors();
     });
 
     bool was_customized = CustomAnalyzer::customized();

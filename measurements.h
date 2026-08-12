@@ -125,6 +125,10 @@ public:
     void setSmithBackgroundColor(QColor color);
     void setSmithForegroundColor(QColor color);
     void setBriefHintColor();
+    void setHintColor();
+    QColor chartBackgroundColor();
+    QColor inverseChartBackground();
+    QColor hintBackgroundColor();
     double tdrZRange() { return m_tdrZRange; }
     QString currentTab() { return m_currentTab; }
     PopUp* graphHint() { return m_graphHint; }
@@ -274,6 +278,15 @@ public slots:
     void on_newCursorFq(double x, int number, int mouseX, int mouseY);
     void on_newCursorSmithPos (double x, double y, int number);
     void updatePopUp(double xPos, int number, int mouseX, int mouseY);
+    // Hides the crosshair (m_swrLine/m_phaseLine/etc., drawn in
+    // updatePopUp() when the cursor is over a matching data point)
+    // together with the brief-params popup, instead of leaving them
+    // frozen at their last position once the cursor moves outside the
+    // plot's data area. Called from each MainWindow::mouseMove_XXX()'s
+    // out-of-range branch. Hides every tab's line unconditionally rather
+    // than switching on m_currentTab -- harmless if already hidden, and
+    // avoids relying on m_currentTab being perfectly in sync.
+    void hideGraphCursor();
     void on_mainWindowPos(int x, int y);
     void setGraphHintEnabled(bool enabled);
     void setGraphBriefHintEnabled(bool enabled);

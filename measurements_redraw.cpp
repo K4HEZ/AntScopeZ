@@ -829,13 +829,13 @@ void Measurements::redrawUser(bool _incrementally)
 
 void Measurements::changeColorTheme(bool _dark)
 {
-    if (!_dark) {
-        m_graphHint->setBackgroundColor(QColor(127,127,127,64 ));
-        m_graphHint->setTextColor("#010101");
-    } else {
-        m_graphHint->setBackgroundColor(QColor(0,0,0,180 ));
-        m_graphHint->setTextColor("#01b2ff");
-    }
+    Q_UNUSED(_dark);
+    // Background used to follow the app theme here too, independent of the
+    // plot's own chart-background -- against a light chart-background this
+    // stayed a near-black box fighting the now-dark hint text for contrast.
+    // Both text and background now track chart-background instead (see
+    // setHintColor()).
+    setHintColor();
 }
 
 void Measurements::redrawMultiGraph(bool _incrementally)

@@ -65,6 +65,27 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   `AA-3000 ZOOM`/`AA-1500 ZOOM SE` models). Both now center the image
   properly, the latter with a 50px margin instead of 0. See `BUILDINFO.md`
   -- the large-LCD fix couldn't be tested against real hardware.
+- Crosshairs and the cursor-following "brief params" hint were plain
+  white/black regardless of chart-background, and could get stuck stale,
+  disappear entirely, or fail to reappear after leaving the data area,
+  switching tabs, or scrolling past the last scanned point on any tab
+  (notably TDR, which never showed brief-hint content at all). All tabs'
+  crosshairs/hints now track chart-background and reliably hide/show with
+  the cursor.
+- The white "current scan position" tick stayed drawn at the last point
+  after a scan finished, including on NanoVNA-connected analyzers, which
+  have their own separate scan-complete path that hadn't gotten the fix.
+- Markers-hint and graph-hint boxes had poor contrast against light
+  chart-backgrounds (dark text on a fixed near-black box) and, after an
+  earlier attempt, against the plot's own background (tinting a color
+  toward itself is a no-op, so the box visually vanished into the plot);
+  both now use a grey-shifted background distinct from the plot, paired
+  with contrasting text.
+- Graph-hint box flickered when the cursor crossed the edge of scanned
+  data, and appeared hidden/unresponsive to its checkbox while the
+  Settings dialog was open (it was gated on window focus, which the
+  non-modal Settings dialog steals). Now controlled solely by its
+  checkbox.
 
 ## [2.1.6] - 2026-08-10
 

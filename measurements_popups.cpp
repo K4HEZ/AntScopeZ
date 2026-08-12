@@ -65,7 +65,16 @@ void Measurements::showHideHints()
 {
     if(m_graphHint)
     {
-        if(m_graphHintEnabled && m_focus)
+        // Unlike m_graphBriefHint below, m_graphHint isn't interactive-until-
+        // positioned -- it's always had real text since construction (see
+        // setWidgets()) -- so there's no equivalent reason to gate it on
+        // m_focus. Gating it did mean opening the (non-modal) Settings
+        // dialog -- which steals MainWindow's WM activation, triggering
+        // on_focus(false) -- hid it regardless of the checkbox, and toggling
+        // the checkbox while Settings had focus appeared to do nothing since
+        // m_focus stayed false either way. Checkbox state alone should
+        // decide visibility here.
+        if(m_graphHintEnabled)
         {
             m_graphHint->focusShow();
         }else
@@ -388,6 +397,19 @@ void Measurements::on_newCursorSmithPos (double x, double y, int index)
 void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
 {
 #define DELTA 5
+    // hideGraphCursor() hides these via focusHide() (plain QWidget::hide())
+    // whenever the cursor leaves the data area, but nothing else re-shows
+    // them on the way back in -- setPopupText()/setPosition() below don't
+    // call show(), and showHideHints() only reacts to focus/enable-checkbox
+    // events, not mouse movement. Without this, hiding them once (leaving
+    // the plot, or the phase tab's out-of-range gap) hid them for the rest
+    // of the session. Re-show here, right before we're about to populate
+    // real content, whenever they're enabled but not currently visible.
+    if (m_graphHintEnabled && m_focus && m_graphHint && !m_graphHint->isVisible())
+        m_graphHint->focusShow();
+    if (m_graphBriefHintEnabled && m_focus && m_graphBriefHint && !m_graphBriefHint->isVisible())
+        m_graphBriefHint->focusShow();
+
     if(m_graphHint)
     {
         if (!m_measurements[index].visible) {
@@ -500,6 +522,8 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
                             m_tdrLine->setAntialiased(false);
                             m_tdrWidget->addItem(m_tdrLine);
                         }
+                        m_tdrLine->setPen(QPen(inverseChartBackground()));
+                        m_tdrLine->setVisible(true);
                         m_tdrLine->point1->setCoords(place, -1);
                         m_tdrLine->point2->setCoords(place, 1);
 
@@ -549,10 +573,30 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
 
                         m_graphHint->setPopupText(text);
 
+                        if(m_graphBriefHint != NULL)
+                        {
+                            m_graphBriefHint->setPosition(mouseX+1,mouseY+1);
+                            QString str = QString(tr("Distance = %1 %2\n"
+                                                      "|Z| = %3 Ohm"))
+                                        .arg(distance)
+                                        .arg(lenUnits)
+                                        .arg(zStr);
+                            m_graphBriefHint->setPopupText(str);
+                        }
+
                         res = true;
                         break;
                     }
                 }
+            }
+            // No bracketing data pair found anywhere for xPos (cursor is
+            // past the end of the actual TDR trace, even though still
+            // inside the widget's axis range) -- hide rather than leave the
+            // crosshair/popups showing stale content from the last real hit
+            // (or, before this fix, leftover text from a different tab).
+            if (!res) {
+                hideGraphCursor();
+                return;
             }
         }else if(m_currentTab == "tab_s21") {
             if(m_graphBriefHint != NULL)
@@ -659,6 +703,11 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
                         break;
                     }
                 }
+            }
+            // See the identical check in the tab_tdr branch above.
+            if (!res) {
+                hideGraphCursor();
+                return;
             }
         }else
         {
@@ -910,6 +959,11 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
                     }
                 }
             }
+            // See the identical check in the tab_tdr branch above.
+            if (!res) {
+                hideGraphCursor();
+                return;
+            }
             if(m_currentTab == "tab_swr")
             {
                 if(!m_swrLine)
@@ -924,6 +978,11 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
                     m_swrLine2->setAntialiased(false);
                     m_swrWidget->addItem(m_swrLine2);
                 }
+                QPen crosshairPen(inverseChartBackground());
+                m_swrLine->setPen(crosshairPen);
+                m_swrLine2->setPen(crosshairPen);
+                m_swrLine->setVisible(true);
+                m_swrLine2->setVisible(true);
                 m_swrLine->point1->setCoords(frequency, MIN_SWR);
                 m_swrLine->point2->setCoords(frequency, MAX_SWR);
 
@@ -943,6 +1002,11 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
                     m_phaseLine2->setAntialiased(false);
                     m_phaseWidget->addItem(m_phaseLine2);
                 }
+                QPen crosshairPen(inverseChartBackground());
+                m_phaseLine->setPen(crosshairPen);
+                m_phaseLine2->setPen(crosshairPen);
+                m_phaseLine->setVisible(true);
+                m_phaseLine2->setVisible(true);
                 m_phaseLine->point1->setCoords(frequency, -2000);
                 m_phaseLine->point2->setCoords(frequency, 2000);
                 m_phaseLine2->point1->setCoords(m_phaseWidget->yAxis->getRangeLower(), phase);
@@ -955,6 +1019,8 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
                     m_rsLine->setAntialiased(false);
                     m_rsWidget->addItem(m_rsLine);
                 }
+                m_rsLine->setPen(QPen(inverseChartBackground()));
+                m_rsLine->setVisible(true);
                 m_rsLine->point1->setCoords(frequency, -2000);
                 m_rsLine->point2->setCoords(frequency, 2000);
             }else if(m_currentTab == "tab_rp")
@@ -965,6 +1031,8 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
                     m_rpLine->setAntialiased(false);
                     m_rpWidget->addItem(m_rpLine);
                 }
+                m_rpLine->setPen(QPen(inverseChartBackground()));
+                m_rpLine->setVisible(true);
                 m_rpLine->point1->setCoords(frequency, -2000);
                 m_rpLine->point2->setCoords(frequency, 2000);
             }else if(m_currentTab == "tab_rl")
@@ -981,6 +1049,11 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
                     m_rlLine2->setAntialiased(false);
                     m_rlWidget->addItem(m_rlLine2);
                 }
+                QPen crosshairPen(inverseChartBackground());
+                m_rlLine->setPen(crosshairPen);
+                m_rlLine2->setPen(crosshairPen);
+                m_rlLine->setVisible(true);
+                m_rlLine2->setVisible(true);
                 m_rlLine->point1->setCoords(frequency, -2000);
                 m_rlLine->point2->setCoords(frequency, 2000);
                 m_rlLine2->point1->setCoords(m_rlWidget->yAxis->getRangeLower(), rl);
@@ -999,6 +1072,11 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
                     m_s21Line2->setAntialiased(false);
                     m_s21Widget->addItem(m_s21Line2);
                 }
+                QPen crosshairPen(inverseChartBackground());
+                m_s21Line->setPen(crosshairPen);
+                m_s21Line2->setPen(crosshairPen);
+                m_s21Line->setVisible(true);
+                m_s21Line2->setVisible(true);
                 m_s21Line->point1->setCoords(frequency, -2000);
                 m_s21Line->point2->setCoords(frequency, 2000);
                 m_s21Line2->point1->setCoords(m_s21Widget->yAxis->getRangeLower(), rl);
@@ -1109,6 +1187,42 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
     replot();
 }
 
+void Measurements::hideGraphCursor()
+{
+    // Counterpart is in updatePopUp(): each per-tab branch below sets
+    // setVisible(true) back on its own line(s) right before repositioning
+    // them, since setPen()/setCoords() alone don't undo a prior hide.
+    if (m_swrLine)   m_swrLine->setVisible(false);
+    if (m_swrLine2)  m_swrLine2->setVisible(false);
+    if (m_phaseLine) m_phaseLine->setVisible(false);
+    if (m_phaseLine2) m_phaseLine2->setVisible(false);
+    if (m_rsLine)    m_rsLine->setVisible(false);
+    if (m_rpLine)    m_rpLine->setVisible(false);
+    if (m_rlLine)    m_rlLine->setVisible(false);
+    if (m_rlLine2)   m_rlLine2->setVisible(false);
+    if (m_s21Line)   m_s21Line->setVisible(false);
+    if (m_s21Line2)  m_s21Line2->setVisible(false);
+    if (m_tdrLine)   m_tdrLine->setVisible(false);
+
+    if (m_graphBriefHint) m_graphBriefHint->focusHide();
+    // m_graphHint (the full "Frequency = .../SWR = ..." box, as opposed to
+    // the small cursor-following m_graphBriefHint) deliberately does NOT
+    // hide here anymore. Cursor movement fires many times a second, and
+    // near the edge of the scanned data it flickers in/out of range on
+    // consecutive events -- hiding/reshowing it every time made it visibly
+    // blink. It's meant to stay up as a steady readout whenever its
+    // checkbox is enabled; showHideHints() already hides it on focus loss
+    // or the checkbox being unchecked, which is the only hiding it needs.
+
+    // updatePopUp() dedups against m_previousI: if the cursor re-enters at
+    // the same data index it was at when we hid everything, it early-returns
+    // before ever showing the crosshairs/popups again. Reset it so the next
+    // updatePopUp() call always does real work.
+    m_previousI = -1;
+
+    replot();
+}
+
 void Measurements::on_mainWindowPos(int x, int y)
 {
     if(m_graphHint)
@@ -1128,21 +1242,70 @@ bool Measurements::getGraphBriefHintEnabled(void)
     return m_graphBriefHintEnabled;
 }
 
+QColor Measurements::chartBackgroundColor()
+{
+    m_settings->beginGroup("Settings");
+    QString strColor = m_settings->value("chart-background", "#ffffff").toString();
+    m_settings->endGroup();
+
+    // QColor::fromString() is a static factory in Qt6 -- it returns a new
+    // QColor rather than mutating the receiver. Calling it as color.fromString(...)
+    // compiles (static call via an instance is legal) but silently discards
+    // the result, leaving color default-constructed/invalid, so every call
+    // was returning the same fixed white regardless of chart-background.
+    QColor color = QColor::fromString(strColor);
+    if (!color.isValid())
+        color = QColor(Qt::white);
+    return color;
+}
+
+// Shared by setBriefHintColor() and the crosshair lines (updatePopUp()) --
+// both need a color that reads against the plot's own chart-background,
+// which is independent of the app's Light/Dark theme.
+QColor Measurements::inverseChartBackground()
+{
+    QColor color = chartBackgroundColor();
+#ifndef Q_OS_MACX
+    return QColor(255-color.red(), 255-color.green(), 255-color.blue());
+#else
+    return color;
+#endif
+}
+
+// Blending a color toward itself (chartBackgroundColor() alone, at any
+// alpha) paints the same color the plot behind it already is -- the box
+// vanished into the plot instead of reading as a floating card. Shifting it
+// partway toward neutral grey keeps it recognizably "the same side" as the
+// chart-background (so it still pairs correctly with the inverted text
+// color) while staying visually distinct from the plot itself, light or
+// dark.
+QColor Measurements::hintBackgroundColor()
+{
+    QColor color = chartBackgroundColor();
+    const qreal towardGrey = 0.35;
+    int r = color.red()   + int((128 - color.red())   * towardGrey);
+    int g = color.green() + int((128 - color.green()) * towardGrey);
+    int b = color.blue()  + int((128 - color.blue())  * towardGrey);
+    QColor tinted(r, g, b);
+    tinted.setAlpha(200);
+    return tinted;
+}
+
 void Measurements::setBriefHintColor()
 {
     if (m_graphBriefHint != nullptr) {
-        m_settings->beginGroup("Settings");
-        QString strColor = m_settings->value("chart-background", "#ffffff").toString();
-        m_settings->endGroup();
+        m_graphBriefHint->setTextColor(inverseChartBackground().name());
+    }
+}
 
-        QColor color;
-        color.fromString(strColor);
-#ifndef Q_OS_MACX
-        QColor inverse(255-color.red(), 255-color.green(), 255-color.blue());
-        m_graphBriefHint->setTextColor(inverse.name());
-#else
-        m_graphBriefHint->setTextColor(color.name());
-#endif
+// m_graphHint's text/background used to be driven by changeColorTheme() (app
+// Light/Dark theme), independent of the plot's own chart-background -- same
+// class of contrast bug Bug 5 fixed for m_graphBriefHint/MarkersPopUp.
+void Measurements::setHintColor()
+{
+    if (m_graphHint != nullptr) {
+        m_graphHint->setTextColor(inverseChartBackground().name());
+        m_graphHint->setBackgroundColor(hintBackgroundColor());
     }
 }
 

@@ -725,13 +725,14 @@ void Markers::on_translate()
 
 void Markers::changeColorTheme(bool _dark)
 {
-    if (!_dark) {
-        m_markersHint->setBackgroundColor(QColor(127,127,127,64 ));
-        m_markersHint->setTextColor("#010101");
-    } else {
-        m_markersHint->setBackgroundColor(QColor(0,0,0,180 ));
-        m_markersHint->setTextColor("#01b2ff");
-    }
+    Q_UNUSED(_dark);
+    // Text/background used to be driven by the app's Light/Dark theme here,
+    // independent of the plot's own chart-background -- same contrast bug
+    // fixed for Measurements::changeColorTheme()/setHintColor(). Row/header
+    // text and the popup's own backdrop both now track chart-background via
+    // updateLabelColors() instead.
+    if (m_markersHint != nullptr)
+        m_markersHint->updateLabelColors();
 }
 
 void Markers::changeMarkersHint()
