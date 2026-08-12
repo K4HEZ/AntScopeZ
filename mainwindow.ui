@@ -1144,7 +1144,7 @@ process in the settings menu!</string>
   </action>
   <action name="actionScreenshot">
    <property name="text">
-    <string>&amp;Screenshot...</string>
+    <string>&amp;Save Screenshot...</string>
    </property>
    <property name="toolTip">
     <string>Saving a program window with a chart on a PC</string>
