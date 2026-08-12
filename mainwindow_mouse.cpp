@@ -674,7 +674,7 @@ void MainWindow::mouseMove_tdr(QMouseEvent * e)
         if(!list.isEmpty())
         {
             QTableWidgetItem * item = list.at(0);
-            emit newCursorFq(x, item->row(), e->pos().x(), e->pos().y());
+            emit newCursorFq(x, item->row(), QCursor::pos().x(), QCursor::pos().y());
         }
     }
     else if (m_measurements)
@@ -693,7 +693,7 @@ void MainWindow::mouseMove_s21(QMouseEvent * e)
         if(!list.isEmpty())
         {
             QTableWidgetItem * item = list.at(0);
-            emit newCursorFq(x, item->row(), e->pos().x(), e->pos().y());
+            emit newCursorFq(x, item->row(), QCursor::pos().x(), QCursor::pos().y());
         }
     }
     else if (m_measurements)
