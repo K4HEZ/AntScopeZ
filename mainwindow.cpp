@@ -386,7 +386,15 @@ MainWindow::MainWindow(QWidget *parent) :
                                m_s21Widget,
                                m_smithWidget,
                                ui->tableWidget_measurments);
-    m_measurements->setGraphHintWidgets(ui->groupBox_GraphHint, ui->label_graphHint);
+    m_measurements->setGraphHintWidgets(ui->groupBox_GraphHint, {
+        ui->graphHintName0, ui->graphHintName1, ui->graphHintName2, ui->graphHintName3,
+        ui->graphHintName4, ui->graphHintName5, ui->graphHintName6, ui->graphHintName7,
+        ui->graphHintName8, ui->graphHintName9, ui->graphHintName10,
+    }, {
+        ui->graphHintValue0, ui->graphHintValue1, ui->graphHintValue2, ui->graphHintValue3,
+        ui->graphHintValue4, ui->graphHintValue5, ui->graphHintValue6, ui->graphHintValue7,
+        ui->graphHintValue8, ui->graphHintValue9, ui->graphHintValue10,
+    });
     {
         // drawSmithImage() (called from setWidgets() above) resets the Smith inner
         // circle and arcs/labels to their hardcoded default colors; re-sync them

@@ -65,7 +65,6 @@ QColor getColor(int _index)
 Measurements::Measurements(QObject *parent) : QObject(parent),
     m_currentIndex(0),
     m_graphHintBox(NULL),
-    m_graphHintLabel(NULL),
     m_graphBriefHint(NULL),
     m_swrLine(NULL),
     m_swrLine2(NULL),
@@ -102,14 +101,15 @@ Measurements::Measurements(QObject *parent) : QObject(parent),
     m_pdTdrStep =  new double[TDR_MAXARRAY];
     m_pdTdrZ =  new double[TDR_MAXARRAY];
 
-    // m_graphHintBox/m_graphHintLabel used to be a self-constructed PopUp
-    // (floating Qt::Tool window, positioned via setName("Hint")'s persisted
-    // x/y, colored per chart-background via changeColorTheme()->
-    // setHintColor()) -- now a plain QGroupBox/QLabel docked in
-    // mainwindow.ui's middle column instead, handed over by MainWindow via
-    // setGraphHintWidgets() once the widgets exist. Nothing to construct or
-    // color here anymore; see setGraphHintWidgets() for the equivalent
-    // initial-text/visibility setup.
+    // m_graphHintBox/m_graphHintNameLabels/m_graphHintValueLabels used to
+    // be a single self-constructed PopUp (floating Qt::Tool window,
+    // positioned via setName("Hint")'s persisted x/y, colored per
+    // chart-background via changeColorTheme()->setHintColor()) -- now a
+    // plain QGroupBox with a QFormLayout of label:value QLabel rows,
+    // docked in mainwindow.ui's middle column, handed over by MainWindow
+    // via setGraphHintWidgets() once the widgets exist. Nothing to
+    // construct or color here anymore; see setGraphHintWidgets() for the
+    // equivalent initial-text/visibility setup.
 
     if(m_graphBriefHint == NULL)
     {
@@ -131,10 +131,10 @@ Measurements::~Measurements()
     delete []m_pdTdrStep;
     delete []m_pdTdrZ;
 
-    // m_graphHintBox/m_graphHintLabel are owned by mainwindow.ui (MainWindow's
-    // own ui_mainwindow.h-generated members), not by Measurements -- nothing
-    // to delete here, unlike m_graphBriefHint below (still a Measurements-
-    // owned floating PopUp).
+    // m_graphHintBox/m_graphHintNameLabels/m_graphHintValueLabels are owned
+    // by mainwindow.ui (MainWindow's own ui_mainwindow.h-generated
+    // members), not by Measurements -- nothing to delete here, unlike
+    // m_graphBriefHint below (still a Measurements-owned floating PopUp).
     if (m_graphBriefHint)
     {
         delete m_graphBriefHint;
@@ -227,25 +227,52 @@ void Measurements::setWidgets(CustomPlot * swr,   CustomPlot * phase,
 // (above) for why this replaces what used to be self-constructed here.
 // Called once from MainWindow, right after ui_mainwindow.h's setupUi() has
 // created the actual widgets.
-void Measurements::setGraphHintWidgets(QWidget* box, QLabel* label)
+void Measurements::setGraphHintWidgets(QWidget* box, const QList<QLabel*>& nameLabels, const QList<QLabel*>& valueLabels)
 {
     m_graphHintBox = box;
-    m_graphHintLabel = label;
-    if (m_graphHintLabel == nullptr)
+    m_graphHintNameLabels = nameLabels;
+    m_graphHintValueLabels = valueLabels;
+    if (m_graphHintValueLabels.isEmpty())
         return;
 
-    m_graphHintLabel->setText(tr("Frequency = \n"
-                                 "SWR = \n"
-                                 "RL = \n"
-                                 "Z = \n"
-                                 "|Z| = \n"
-                                 "|rho| = \n"
-                                 "C = \n"
-                                 "Zpar = \n"
-                                 "Cpar = \n"
-                                 "Cable: "));
+    setGraphHintPlaceholder();
     if (m_graphHintBox != nullptr)
         m_graphHintBox->setVisible(m_graphHintEnabled);
+}
+
+void Measurements::setGraphHintFields(const QList<QPair<QString, QString>>& fields)
+{
+    int n = m_graphHintValueLabels.size();
+    for (int i = 0; i < n; ++i) {
+        bool active = i < fields.size();
+        m_graphHintNameLabels[i]->setVisible(active);
+        m_graphHintValueLabels[i]->setVisible(active);
+        if (active) {
+            m_graphHintNameLabels[i]->setText(fields[i].first);
+            m_graphHintValueLabels[i]->setText(fields[i].second);
+        }
+    }
+}
+
+// Labels-only, empty-values placeholder -- same idea as the old
+// single-QLabel placeholder ("Frequency = \nSWR = \n...") but with an
+// explicit Phase row now that it's its own field instead of folded into
+// |rho|'s line.
+void Measurements::setGraphHintPlaceholder()
+{
+    setGraphHintFields({
+        {tr("Frequency"), QString()},
+        {tr("SWR"), QString()},
+        {tr("RL"), QString()},
+        {tr("Z"), QString()},
+        {tr("|Z|"), QString()},
+        {tr("|rho|"), QString()},
+        {tr("Phase"), QString()},
+        {tr("C"), QString()},
+        {tr("Zpar"), QString()},
+        {tr("Cpar"), QString()},
+        {tr("Cable"), QString()},
+    });
 }
 
 void Measurements::setUserWidget(CustomPlot * user) {
@@ -1411,18 +1438,9 @@ void Measurements::on_changeMeasureSystemMetric (bool state)
 
 void Measurements::on_translate()
 {
-    if (m_graphHintLabel != nullptr)
+    if (!m_graphHintValueLabels.isEmpty())
     {
-        m_graphHintLabel->setText(tr("Frequency = \n"
-                                     "SWR = \n"
-                                     "RL = \n"
-                                     "Z = \n"
-                                     "|Z| = \n"
-                                     "|rho| = \n"
-                                     "C = \n"
-                                     "Zpar = \n"
-                                     "Cpar = \n"
-                                     "Cable: "));
+        setGraphHintPlaceholder();
     }
     if (m_graphBriefHint != nullptr)
     {

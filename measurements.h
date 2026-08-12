@@ -62,13 +62,17 @@ public:
     void setWidgets(CustomPlot * swr, CustomPlot * phase, CustomPlot * rs, CustomPlot * rp,
                     CustomPlot * rl, CustomPlot * tdr, CustomPlot * s21, QCustomPlot * smith, QTableWidget *table);
     void setUserWidget(CustomPlot * user);
-    // box/label live in mainwindow.ui's docked middle column now (see the
-    // UI-overhaul branch) -- this just hands over the pointers Measurements
-    // needs to keep them updated, replacing the PopUp this used to
-    // self-construct. box is what showHideHints() shows/hides (collapses
-    // the whole panel, not just the text); label is what gets the actual
-    // "Frequency = .../SWR = ..." text.
-    void setGraphHintWidgets(QWidget* box, QLabel* label);
+    // box/nameLabels/valueLabels live in mainwindow.ui's docked middle
+    // column (see the UI-overhaul branch) -- this just hands over the
+    // pointers Measurements needs to keep them updated, replacing the
+    // PopUp this used to self-construct. box is what showHideHints()
+    // shows/hides (collapses the whole panel, not just the text);
+    // nameLabels/valueLabels are a fixed-size pool of pre-built
+    // QFormLayout rows (mainwindow.ui's graphHintName0../graphHintValue0..)
+    // -- setGraphHintFields() below fills as many as the current tab
+    // needs and hides the rest, rather than formatting one big string
+    // into a single QLabel (see the label/value-columns redesign).
+    void setGraphHintWidgets(QWidget* box, const QList<QLabel*>& nameLabels, const QList<QLabel*>& valueLabels);
     void setCalibration(Calibration * _calibration);
     bool getCalibrationEnabled(void);
     void deleteRow(int row);
@@ -173,7 +177,8 @@ private:
     qint32 m_currentIndex;
 
     QWidget *m_graphHintBox;
-    QLabel *m_graphHintLabel;
+    QList<QLabel*> m_graphHintNameLabels;
+    QList<QLabel*> m_graphHintValueLabels;
     PopUp *m_graphBriefHint;
 
     QCPItemStraightLine *m_swrLine;
@@ -243,7 +248,23 @@ private:
     quint32 computeSWR(double freq, double Z0, double R, double X, double *VSWR, double *RL);
     double computeZ (double R, double X);
 
-    void NormRXtoSmithPoint(double Rnorm, double Xnorm, double &x, double &y);    
+    // Fills as many of the graph-hint panel's fixed row pool
+    // (m_graphHintNameLabels/m_graphHintValueLabels) as fields needs --
+    // one label:value pair per row, in order -- and hides any leftover
+    // rows beyond that (a hidden row takes no layout space, same as
+    // everywhere else this app relies on that QLayout behavior). Replaces
+    // building one big formatted string for a single QLabel; each tab's
+    // updatePopUp()/on_newCursorSmithPos() branch builds its own field
+    // list (different tabs show different quantities) instead.
+    void setGraphHintFields(const QList<QPair<QString, QString>>& fields);
+    // Labels-only, empty-values placeholder shown before any real cursor
+    // position/measurement exists yet -- shared by setGraphHintWidgets()
+    // (initial state) and on_translate() (language switch, since these
+    // rows aren't covered by ui->retranslateUi()'s usual static-widget
+    // handling).
+    void setGraphHintPlaceholder();
+
+    void NormRXtoSmithPoint(double Rnorm, double Xnorm, double &x, double &y);
     void calcFarEnd(bool _incrementally=false);
     RawData calcFarEnd(const RawData& data, int idx, bool refreshGraphs=true);
     void prepareGraphs(RawData _rawData, GraphData& data, GraphData& calibData);

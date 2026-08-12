@@ -829,10 +829,11 @@ void Measurements::redrawUser(bool _incrementally)
 
 // Used to re-color m_graphHint here (background/text following the app
 // theme, independent of the plot's own chart-background -- see setHintColor(),
-// removed). m_graphHint is a plain docked, normally-themed QGroupBox/QLabel
-// now (m_graphHintBox/m_graphHintLabel -- see setGraphHintWidgets()) with
-// nothing left for a theme change to touch here; MainWindow's own
-// changeColorTheme() already re-skins it like every other widget via
+// removed). m_graphHint is a plain docked, normally-themed QGroupBox with a
+// QFormLayout of QLabel rows now (m_graphHintBox/m_graphHintNameLabels/
+// m_graphHintValueLabels -- see setGraphHintWidgets()) with nothing left
+// for a theme change to touch here; MainWindow's own changeColorTheme()
+// already re-skins it like every other widget via
 // setStyles()'s qApp->setStyleSheet() call. This function (and its call
 // sites) is gone along with the last of its work.
 

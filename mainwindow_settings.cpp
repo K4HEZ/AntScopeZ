@@ -172,9 +172,9 @@ void MainWindow::on_actionSettings_triggered()
         if (m_measurements != nullptr) {
             // setHintColor() used to belong here too, alongside
             // setBriefHintColor() -- removed along with m_graphHint's PopUp
-            // itself; the docked replacement (m_graphHintBox/m_graphHintLabel)
-            // is a plain themed widget with no chart-background-dependent
-            // color to refresh.
+            // itself; the docked replacement (m_graphHintBox and its
+            // QFormLayout of QLabel rows) is a plain themed widget with no
+            // chart-background-dependent color to refresh.
             m_measurements->setBriefHintColor();
         }
         if (m_markers != nullptr && m_markers->markersHint() != nullptr)

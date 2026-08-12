@@ -313,54 +313,28 @@ void Measurements::on_newCursorSmithPos (double x, double y, int index)
     }
 
 
-    QString text;
-    if(x1 > 0)
-    {
-        text = QString(tr("Frequency = %1 kHz\n"
-                          "SWR = %2\n"
-                          "RL = %3 dB\n"
-                          "Z = %4 Ohm\n"
-                          "|Z| = %5 Ohm\n"
-                          "|rho| = %6, phase = %7 °\n"
-                          "L = %8 nH\n"
-                          "Zpar = %9 Ohm\n"
-                          "Lpar = %10 nH\n"))
-        .arg(str)
-        .arg(QString::number(swr,'f', 2))
-        .arg(QString::number(rl,'f', 2))
-        .arg(zString)
-        .arg(QString::number(z,'f', 2))
-        .arg(QString::number(rho,'f', 2))
-        .arg(QString::number(phase,'f', 2))
-        .arg(QString::number(l,'f', 2))
-        .arg(zparString)
-        .arg(QString::number(lpar,'f', 2));
-    }else
-    {
-        text = QString(tr("Frequency = %1 kHz\n"
-                          "SWR = %2\n"
-                          "RL = %3 dB\n"
-                          "Z = %4 Ohm\n"
-                          "|Z| = %5 Ohm\n"
-                          "|rho| = %6, phase = %7 °\n"
-                          "C = %8 pF\n"
-                          "Zpar = %9 Ohm\n"
-                          "Cpar = %10 pF\n"))
-        .arg(str)
-        .arg(QString::number(swr,'f', 2))
-        .arg(QString::number(rl,'f', 2))
-        .arg(zString)
-        .arg(QString::number(z,'f', 2))
-        .arg(QString::number(rho,'f', 2))
-        .arg(QString::number(phase,'f', 2))
-        .arg(QString::number(c,'f', 2))
-        .arg(zparString)
-        .arg(QString::number(cpar,'f', 2));
+    QList<QPair<QString, QString>> fields;
+    fields << qMakePair(tr("Frequency"), str + " kHz")
+           << qMakePair(tr("SWR"), QString::number(swr,'f', 2))
+           << qMakePair(tr("RL"), QString::number(rl,'f', 2) + " dB")
+           << qMakePair(tr("Z"), zString + " Ohm")
+           << qMakePair(tr("|Z|"), QString::number(z,'f', 2) + " Ohm")
+           << qMakePair(tr("|rho|"), QString::number(rho,'f', 2))
+           << qMakePair(tr("Phase"), QString::number(phase,'f', 2) + " °");
+    if (x1 > 0) {
+        fields << qMakePair(tr("L"), QString::number(l,'f', 2) + " nH");
+    } else {
+        fields << qMakePair(tr("C"), QString::number(c,'f', 2) + " pF");
+    }
+    fields << qMakePair(tr("Zpar"), zparString + " Ohm");
+    if (x1 > 0) {
+        fields << qMakePair(tr("Lpar"), QString::number(lpar,'f', 2) + " nH");
+    } else {
+        fields << qMakePair(tr("Cpar"), QString::number(cpar,'f', 2) + " pF");
     }
 
     if(!m_farEndMeasurement)
     {
-        QString cableString;
         QString lenUnits;
         if(m_measureSystemMetric)
         {
@@ -379,15 +353,14 @@ void Measurements::on_newCursorSmithPos (double x, double y, int index)
             len12 *= FEETINMETER;
         }
 
-        cableString = tr("Cable: length(1/4) = %1 %2, length(1/2) = %3 %4")
+        fields << qMakePair(tr("Cable"), tr("length(1/4) = %1 %2, length(1/2) = %3 %4")
                 .arg(QString::number(len14,'f',2))
                 .arg(lenUnits)
                 .arg(QString::number(len12,'f',2))
-                .arg(lenUnits);
-        text += cableString;
+                .arg(lenUnits));
     }
 
-    m_graphHintLabel->setText(text);
+    setGraphHintFields(fields);
 }
 
 void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
@@ -407,7 +380,7 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
     if (m_graphBriefHintEnabled && m_focus && m_graphBriefHint && !m_graphBriefHint->isVisible())
         m_graphBriefHint->focusShow();
 
-    if(m_graphHintLabel)
+    if(!m_graphHintValueLabels.isEmpty())
     {
         if (!m_measurements[index].visible) {
             return;
@@ -530,7 +503,6 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
                         if (Z > VALUE_LIMIT)
                             Z = VALUE_LIMIT;
 
-                        QString text;
                         QString distance;
 
                         QString lenUnits;
@@ -553,22 +525,14 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
                         QString sr = QString::number(pdTdrStep,'f',3);
 
                         QString zStr = QString::number(Z,'f',1);
-                        text = QString(tr("Distance = %1 %2\n"
-                                          "(distance in the air = %3 %4)\n"
-                                          "Time = %5 ns\n"
-                                          "Impulse response = %6\n"
-                                          "Step response = %7\n"
-                                          "|Z| = %8 Ohm"))
-                                .arg(distance)//1
-                                .arg(lenUnits)//2
-                                .arg(distanceInAir)//3
-                                .arg(lenUnits)//4
-                                .arg(timeNs)//5
-                                .arg(ir)//6
-                                .arg(sr)//7
-                                .arg(zStr);//8
-
-                        m_graphHintLabel->setText(text);
+                        setGraphHintFields({
+                            {tr("Distance"), distance + " " + lenUnits},
+                            {tr("Distance in air"), distanceInAir + " " + lenUnits},
+                            {tr("Time"), timeNs + " ns"},
+                            {tr("Impulse response"), ir},
+                            {tr("Step response"), sr},
+                            {tr("|Z|"), zStr + " Ohm"},
+                        });
 
                         if(m_graphBriefHint != NULL)
                         {
@@ -683,18 +647,18 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
                                 str.insert(str.length()-len-3," ");
                             }
                         }
+                        QString freqStr = str; // clean, no units yet -- for the graph-hint panel below
                         str += " kHz\n";
-                        QString text = QString(tr("Frequency = %1 kHz\n"
-                                          "S21 = %2 dB\n"))
-                                    .arg(str)
-                                    .arg(QString::number(s21,'f', 2));
+                        QList<QPair<QString, QString>> fields;
+                        fields << qMakePair(tr("Frequency"), freqStr + " kHz")
+                               << qMakePair(tr("S21"), QString::number(s21,'f', 2) + " dB");
 
                         str += QString::number(s21,'f',2);
                         if (g_developerMode) {
-                            text += QString::number((int)s21Stage);
+                            fields << qMakePair(tr("Stage"), QString::number((int)s21Stage));
                             str += "\n" + QString::number((int)s21Stage);
                         }
-                        m_graphHintLabel->setText(text);
+                        setGraphHintFields(fields);
                         m_graphBriefHint->setPopupText(str);
                         qInfo() << "updatePopup " << mouseX << mouseY << str;
                         break;
@@ -1105,54 +1069,28 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
                 }
             }
 
-            QString text;
-            if(x > 0)
-            {
-                text = QString(tr("Frequency = %1 kHz\n"
-                                  "SWR = %2\n"
-                                  "RL = %3 dB\n"
-                                  "Z = %4 Ohm\n"
-                                  "|Z| = %5 Ohm\n"
-                                  "|rho| = %6, phase = %7 °\n"
-                                  "L = %8 nH\n"
-                                  "Zpar = %9 Ohm\n"
-                                  "Lpar = %10 nH\n"))
-                    .arg(str)
-                    .arg(QString::number(swr,'f', 2))
-                    .arg(QString::number(rl,'f', 2))
-                    .arg(zString)
-                    .arg(QString::number(z,'f', 2))
-                    .arg(QString::number(rho,'f', 2))
-                    .arg(QString::number(phase,'f', 2))
-                    .arg(QString::number(l,'f', 2))
-                    .arg(zparString)
-                    .arg(QString::number(lpar,'f', 2));
-            }else
-            {
-                text = QString(tr("Frequency = %1 kHz\n"
-                                  "SWR = %2\n"
-                                  "RL = %3 dB\n"
-                                  "Z = %4 Ohm\n"
-                                  "|Z| = %5 Ohm\n"
-                                  "|rho| = %6, phase = %7 °\n"
-                                  "C = %8 pF\n"
-                                  "Zpar = %9 Ohm\n"
-                                  "Cpar = %10 pF\n"))
-                        .arg(str)
-                        .arg(QString::number(swr,'f', 2))
-                        .arg(QString::number(rl,'f', 2))
-                        .arg(zString)
-                        .arg(QString::number(z,'f', 2))
-                        .arg(QString::number(rho,'f', 2))
-                        .arg(QString::number(phase,'f', 2))
-                        .arg(QString::number(c,'f', 2))
-                        .arg(zparString)
-                        .arg(QString::number(cpar,'f', 2));
+            QList<QPair<QString, QString>> fields;
+            fields << qMakePair(tr("Frequency"), str + " kHz")
+                   << qMakePair(tr("SWR"), QString::number(swr,'f', 2))
+                   << qMakePair(tr("RL"), QString::number(rl,'f', 2) + " dB")
+                   << qMakePair(tr("Z"), zString + " Ohm")
+                   << qMakePair(tr("|Z|"), QString::number(z,'f', 2) + " Ohm")
+                   << qMakePair(tr("|rho|"), QString::number(rho,'f', 2))
+                   << qMakePair(tr("Phase"), QString::number(phase,'f', 2) + " °");
+            if (x > 0) {
+                fields << qMakePair(tr("L"), QString::number(l,'f', 2) + " nH");
+            } else {
+                fields << qMakePair(tr("C"), QString::number(c,'f', 2) + " pF");
+            }
+            fields << qMakePair(tr("Zpar"), zparString + " Ohm");
+            if (x > 0) {
+                fields << qMakePair(tr("Lpar"), QString::number(lpar,'f', 2) + " nH");
+            } else {
+                fields << qMakePair(tr("Cpar"), QString::number(cpar,'f', 2) + " pF");
             }
 
             if(!m_farEndMeasurement)
             {
-                QString cableString;
                 QString lenUnits;
                 if(m_measureSystemMetric)
                 {
@@ -1171,14 +1109,13 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
                     len12 *= FEETINMETER;
                 }
 
-                cableString = tr("Cable: length(1/4) = %1 %2, length(1/2) = %3 %4")
+                fields << qMakePair(tr("Cable"), tr("length(1/4) = %1 %2, length(1/2) = %3 %4")
                         .arg(QString::number(len14,'f',2))
                         .arg(lenUnits)
                         .arg(QString::number(len12,'f',2))
-                        .arg(lenUnits);
-                text += cableString;
+                        .arg(lenUnits));
             }
-            m_graphHintLabel->setText(text);
+            setGraphHintFields(fields);
         }
     }
     replot();

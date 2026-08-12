@@ -789,17 +789,191 @@ process in the settings menu!</string>
         <property name="title">
          <string>Graph Hint</string>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout_GraphHint">
+        <layout class="QFormLayout" name="formLayout_GraphHint">
          <property name="topMargin">
           <number>20</number>
          </property>
-         <item>
-          <widget class="QLabel" name="label_graphHint">
+         <item row="0" column="0">
+          <widget class="QLabel" name="graphHintName0">
            <property name="text">
             <string notr="true"/>
            </property>
-           <property name="alignment">
-            <set>Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLabel" name="graphHintValue0">
+           <property name="text">
+            <string notr="true"/>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="graphHintName1">
+           <property name="text">
+            <string notr="true"/>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLabel" name="graphHintValue1">
+           <property name="text">
+            <string notr="true"/>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="graphHintName2">
+           <property name="text">
+            <string notr="true"/>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLabel" name="graphHintValue2">
+           <property name="text">
+            <string notr="true"/>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="graphHintName3">
+           <property name="text">
+            <string notr="true"/>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLabel" name="graphHintValue3">
+           <property name="text">
+            <string notr="true"/>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="graphHintName4">
+           <property name="text">
+            <string notr="true"/>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QLabel" name="graphHintValue4">
+           <property name="text">
+            <string notr="true"/>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="graphHintName5">
+           <property name="text">
+            <string notr="true"/>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1">
+          <widget class="QLabel" name="graphHintValue5">
+           <property name="text">
+            <string notr="true"/>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="0">
+          <widget class="QLabel" name="graphHintName6">
+           <property name="text">
+            <string notr="true"/>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1">
+          <widget class="QLabel" name="graphHintValue6">
+           <property name="text">
+            <string notr="true"/>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="0">
+          <widget class="QLabel" name="graphHintName7">
+           <property name="text">
+            <string notr="true"/>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="1">
+          <widget class="QLabel" name="graphHintValue7">
+           <property name="text">
+            <string notr="true"/>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="0">
+          <widget class="QLabel" name="graphHintName8">
+           <property name="text">
+            <string notr="true"/>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="1">
+          <widget class="QLabel" name="graphHintValue8">
+           <property name="text">
+            <string notr="true"/>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="0">
+          <widget class="QLabel" name="graphHintName9">
+           <property name="text">
+            <string notr="true"/>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="1">
+          <widget class="QLabel" name="graphHintValue9">
+           <property name="text">
+            <string notr="true"/>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="10" column="0">
+          <widget class="QLabel" name="graphHintName10">
+           <property name="text">
+            <string notr="true"/>
+           </property>
+          </widget>
+         </item>
+         <item row="10" column="1">
+          <widget class="QLabel" name="graphHintValue10">
+           <property name="text">
+            <string notr="true"/>
            </property>
            <property name="wordWrap">
             <bool>true</bool>
