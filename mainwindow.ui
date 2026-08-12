@@ -787,7 +787,7 @@ process in the settings menu!</string>
          </size>
         </property>
         <property name="title">
-         <string>Graph Hint</string>
+         <string>Cursor Details</string>
         </property>
         <layout class="QFormLayout" name="formLayout_GraphHint">
          <property name="topMargin">
@@ -1187,7 +1187,7 @@ process in the settings menu!</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>&amp;Graph Hint</string>
+    <string>Cursor &amp;Details</string>
    </property>
    <property name="toolTip">
     <string>Show the Frequency/SWR/... readout panel</string>
