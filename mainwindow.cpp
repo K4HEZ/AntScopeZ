@@ -66,6 +66,17 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->scanModeCombo->lineEdit()->setReadOnly(true);
     ui->scanModeCombo->lineEdit()->setAlignment(Qt::AlignRight);
 
+    // leftPane (Frequency/Presets/Measurements) and middlePane (Graph Hint)
+    // should stay at their natural/preferred width when the window is
+    // resized; rightPane (the plot tabWidget) should absorb all the extra
+    // space. QSplitter has no .ui-file property for per-pane stretch
+    // factors -- setStretchFactor() has to be called at runtime. Indices
+    // match addWidget() order, which mirrors the panes' left-to-right
+    // declaration order in mainwindow.ui (leftPane, middlePane, rightPane).
+    ui->splitter->setStretchFactor(0, 0);
+    ui->splitter->setStretchFactor(1, 0);
+    ui->splitter->setStretchFactor(2, 1);
+
     setStyles();
 
     qInfo() << "* 1 sslLibraryBuildVersion: " << QSslSocket::sslLibraryBuildVersionString();
@@ -509,7 +520,14 @@ MainWindow::MainWindow(QWidget *parent) :
             this->setGeometry(rect);
         }else
         {
-            this->setGeometry(177, 131, 1230, 700);
+            // 1230 (pre-2.2.0) was sized for two side-by-side columns
+            // (controls + plot tabWidget). The UI overhaul added a third
+            // (the docked Graph Hint column, ~230-300px), so this
+            // first-launch default needs to grow by roughly that much or
+            // the window opens already too narrow for its own layout --
+            // exactly the squeezed/overlapping symptom this was found
+            // chasing.
+            this->setGeometry(177, 131, 1480, 700);
         }
     }
     m_dotsNumber = m_settings->value("dotsNumber", 50).toInt();

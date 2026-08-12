@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1324</width>
+    <width>1480</width>
     <height>841</height>
    </rect>
   </property>
@@ -18,7 +18,7 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>700</width>
+    <width>1000</width>
     <height>700</height>
    </size>
   </property>
@@ -43,6 +43,14 @@
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout_2">
     <item>
+     <widget class="QSplitter" name="splitter">
+      <property name="orientation">
+       <enum>Qt::Orientation::Horizontal</enum>
+      </property>
+      <property name="childrenCollapsible">
+       <bool>false</bool>
+      </property>
+      <widget class="QWidget" name="leftPane">
      <layout class="QVBoxLayout" name="verticalLayout_Left">
       <item>
        <widget class="QGroupBox" name="groupBox_Fq">
@@ -378,13 +386,13 @@ process in the settings menu!</string>
         </property>
         <property name="minimumSize">
          <size>
-          <width>230</width>
+          <width>260</width>
           <height>100</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>270</width>
+          <width>300</width>
           <height>16777215</height>
          </size>
         </property>
@@ -397,6 +405,12 @@ process in the settings menu!</string>
          </property>
          <item>
           <layout class="QVBoxLayout" name="verticalLayout_3">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
            <item>
             <widget class="QComboBox" name="presetsBandComboBox">
              <property name="visible">
@@ -746,8 +760,8 @@ process in the settings menu!</string>
        </widget>
       </item>
      </layout>
-    </item>
-    <item>
+      </widget>
+      <widget class="QWidget" name="middlePane">
      <layout class="QVBoxLayout" name="verticalLayout_Middle">
       <property name="spacing">
        <number>6</number>
@@ -809,8 +823,8 @@ process in the settings menu!</string>
        </spacer>
       </item>
      </layout>
-    </item>
-    <item>
+      </widget>
+      <widget class="QWidget" name="rightPane">
      <layout class="QVBoxLayout" name="verticalLayout_Right">
       <property name="spacing">
        <number>6</number>
@@ -993,6 +1007,8 @@ process in the settings menu!</string>
        </layout>
       </item>
      </layout>
+      </widget>
+     </widget>
     </item>
    </layout>
   </widget>
