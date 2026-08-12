@@ -415,6 +415,12 @@ process in the settings menu!</string>
                <verstretch>1</verstretch>
               </sizepolicy>
              </property>
+             <property name="minimumSize">
+              <size>
+               <width>260</width>
+               <height>0</height>
+              </size>
+             </property>
              <property name="maximumSize">
               <size>
                <width>2000</width>
