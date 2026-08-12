@@ -64,7 +64,6 @@ void MainWindow::on_actionSettings_triggered()
     }
     m_settingsDialog->setCalibration(m_calibration);
     m_settingsDialog->setMeasureSystemMetric(m_measureSystemMetric);
-    m_settingsDialog->setColorTheme(m_darkColorTheme);
     m_settingsDialog->setZ0(m_Z0);
     m_settingsDialog->setCableVelFactor(m_cableVelFactor);
     m_settingsDialog->setCableResistance(m_cableResistance);
@@ -79,10 +78,6 @@ void MainWindow::on_actionSettings_triggered()
     m_settingsDialog->setCableIndex(m_cableIndex);
     m_settingsDialog->setAntScopeVersion(ANTSCOPEZ_VER);
     m_settingsDialog->setRestrictFq(m_fqRestrict);
-
-    m_settingsDialog->setLanguages(m_languageCode);
-
-    m_settingsDialog->setBands(m_BandsMap.keys());
 
     // Graph Hint/Brief-hint/Markers-hint checkboxes used to live here,
     // mirrored into Settings each time it opened -- moved to the View menu
@@ -133,9 +128,6 @@ void MainWindow::on_actionSettings_triggered()
     connect(m_settingsDialog,SIGNAL(changeMeasureSystemMetric(bool)),
             m_measurements,SLOT(on_changeMeasureSystemMetric(bool)));
 
-    connect(m_settingsDialog,SIGNAL(changeColorTheme(bool)),
-            this,SLOT(on_changeColorTheme(bool)));
-
     connect(m_settingsDialog, SIGNAL(Z0Changed(double)),
             this, SLOT(on_Z0Changed(double)));
 
@@ -152,19 +144,8 @@ void MainWindow::on_actionSettings_triggered()
     connect(m_settingsDialog, &Settings::checkUpdatesBtn,
             m_analyzer, &AnalyzerPro::on_checkUpdatesBtn_clicked);
 
-    connect(m_settingsDialog, SIGNAL(languageChanged(QString)), this, SLOT(on_translate(QString)));
-
-    connect(m_settingsDialog, SIGNAL(bandChanged(QString)), this, SLOT(on_bandChanged(QString)));
-
     connect(m_settingsDialog, &Settings::fqRestrictChecked, this, [this](bool checked) {
         this->m_fqRestrict=checked;
-    });
-    connect(m_settingsDialog, &Settings::reloadBands, [=](QString band) {
-        loadBands();
-        on_bandChanged(band);
-    });
-    connect(m_settingsDialog, &Settings::bandSelectorEnabledChanged, [=](bool checked) {
-        ui->presetsBandComboBox->setVisible(checked);
     });
     connect(m_settingsDialog, &Settings::chartBackgroundChanged, [=](QColor color) {
         setChartBackground(color);
@@ -213,11 +194,6 @@ void MainWindow::on_actionSettings_triggered()
 void MainWindow::on_changeMeasureSystemMetric (bool state)
 {
     m_measureSystemMetric = state;
-}
-
-void MainWindow::on_changeColorTheme (bool dark)
-{
-    changeColorTheme(dark);
 }
 
 void MainWindow::on_Z0Changed(double _Z0)

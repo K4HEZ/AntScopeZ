@@ -28,7 +28,6 @@ public:
     void setAnalyzer(AnalyzerPro * analyzer);
     void setCalibration(Calibration * calibration);
     void setMeasureSystemMetric(bool state);
-    void setColorTheme(bool dark);
     void setZ0(double _Z0);
 
     void setCableVelFactor(double value);
@@ -53,7 +52,6 @@ public:
     int getCableIndex(void)const;
     void setRestrictFq(bool value);
     bool getRestrictFq();
-    void setBands(QList<QString> list);
 
     static QString programDataPath(QString _fileName);
     static QString localDataPath(QString _fileName);
@@ -62,15 +60,15 @@ public:
     static QString setIniFile();
     // (native display name, .qm code) pairs -- English first, then every
     // other QtLanguage_<code>.qm discovered in localDataFolder()/
-    // languageDataFolder(), sorted by code. Shared between
-    // setLanguages() (this dialog's combo box) and MainWindow's View ->
-    // Language menu, which needs the same discovered list without a live
-    // Settings instance to ask.
+    // languageDataFolder(), sorted by code. Used by MainWindow's View ->
+    // Language menu (this dialog no longer has a language control of its
+    // own -- see the Settings-dialog-cleanup commit that removed
+    // languageComboBox/bandsCombobox/editBandsBtn/checkBoxBandSelector/
+    // themeComboBox in favor of their View/Edit menu equivalents).
     static QList<QPair<QString, QString>> availableLanguages();
 
     void setAntScopeVersion(QString version);
 
-    void setLanguages(const QString& currentCode);
     void on_translate();
     void showColorDialog();
     LicenseAgent& licenseAgent() { return m_licenseAgent; }
@@ -121,7 +119,6 @@ private:
    //--------------
 
 signals:
-    void reloadBands(QString _currentBand);
     void paramsChanged();
     void checkUpdatesBtn();
     void updateBtn(QString);
@@ -139,15 +136,11 @@ signals:
 
     void calibrationEnabled(bool);
     void changeMeasureSystemMetric(bool);
-    void changeColorTheme(bool dark);
 
     void Z0Changed(double);
 
     void cableActionChanged(int);
 
-    void languageChanged(QString);
-    void bandChanged(QString);
-    void bandSelectorEnabledChanged(bool);
     void exportCableSettings(QString _description);
 //    void connectNanoVNA(QString port);
 //    void disconnectNanoVNA();
@@ -176,7 +169,6 @@ private slots:
     void on_shortOpenFileBtn_clicked();
     void on_loadOpenFileBtn_clicked();
     void on_measureSystemComboBox_currentIndexChanged(int index);
-    void on_themeComboBox_currentIndexChanged(int index);
     void on_doNothingBtn_clicked(bool checked);
     void on_subtractCableBtn_clicked(bool checked);
     void on_addCableBtn_clicked(bool checked);
@@ -185,8 +177,6 @@ private slots:
     void on_aa30bootFound();
     void on_aa30updateComplete();
 
-    void on_languageComboBox_currentIndexChanged(int index);
-    void onBandsComboBox_currentIndexChanged(int index);
     void on_enableCustomizeControls(bool enable);
     void on_addButton();
     void on_removeButton();

@@ -183,7 +183,8 @@ private:
     // for building "QtLanguage_<code>.qm" -- not an index into a fixed
     // list, since the list of available languages is now discovered from
     // whatever QtLanguage_*.qm files actually exist on disk (see
-    // Settings::setLanguages()) rather than compiled in.
+    // Settings::availableLanguages(), used to build the View -> Language
+    // menu) rather than compiled in.
     QString m_languageCode;
 
     bool m_addingMarker;
@@ -351,7 +352,6 @@ private slots:
     void measurementsClearBtn_clicked(bool);
     void on_actionImport_triggered();
     void on_changeMeasureSystemMetric (bool state);
-    void on_changeColorTheme (bool dark);
     void on_Z0Changed(double _Z0);
     void updateGraph ();
     void on_settingsParamsChanged();

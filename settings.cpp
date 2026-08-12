@@ -97,7 +97,6 @@ void Settings::applyStyles()
     ui->atMHz->setStyleSheet(style);
 
     style = Style::checkBox();
-    ui->checkBoxBandSelector->setStyleSheet(style);
     ui->checkBoxOpenConnectAnalyzerAtLaunch->setStyleSheet(style);
 
     style = Style::spinBox();
@@ -105,18 +104,12 @@ void Settings::applyStyles()
 
     style = Style::comboBox();
     ui->cableComboBox->setStyleSheet(style);
-    ui->languageComboBox->setStyleSheet(style);
-    ui->bandsCombobox->setStyleSheet(style);
     ui->cableLossComboBox->setStyleSheet(style);
     ui->measureSystemComboBox->setStyleSheet(style);
-    ui->themeComboBox->setStyleSheet(style);
 
     style = Style::radioButton();
     ui->atFq->setStyleSheet(style);
     ui->anyFq->setStyleSheet(style);
-
-    style = Style::toolButton();
-    ui->editBandsBtn->setStyleSheet(style);
 }
 
 Settings::Settings(QWidget *parent) :
@@ -166,11 +159,6 @@ Settings::Settings(QWidget *parent) :
 
     m_restrictFq = m_settings->value("restrictFq", true).toBool();
 
-    bool dark = m_settings->value("darkColorTheme", true).toBool();
-    ui->themeComboBox->blockSignals(true);
-    ui->themeComboBox->setCurrentIndex(dark ? 1 : 0); // 0 = Light, 1 = Dark
-    ui->themeComboBox->blockSignals(false);
-
     QString strColor = m_settings->value("chart-background", "#ffffff").toString();
     ui->bkgButton->setStyleSheet("QToolButton{background-color: " + strColor + ";}");
     connect(ui->bkgButton, &QToolButton::clicked, [=]() {
@@ -191,11 +179,6 @@ Settings::Settings(QWidget *parent) :
     if (!g_developerMode) {
         ui->fqRestrictCheckBox->setVisible(false);
     }
-    // No default here: MainWindow::populateBandSelector() seeds this key
-    // once, the first time bands are loaded, based on whether the active
-    // region actually has any named bands -- by the time this dialog can
-    // be opened, the key already exists.
-    ui->checkBoxBandSelector->setChecked(m_settings->value("band-selector-enabled", false).toBool());
     // Default true (opt-out, not opt-in): preserves today's behavior for
     // existing installs, since someone who only wants to review saved
     // .s1p files and never touches a physical analyzer is the exception,
@@ -216,20 +199,6 @@ Settings::Settings(QWidget *parent) :
     connect(ui->lineEditPoints, &QLineEdit::editingFinished, this, &Settings::on_PointsFinished);
     connect(ui->exportBtn, &QPushButton::clicked, this, &Settings::on_exportCableSettings);
 
-    connect(ui->editBandsBtn, &QToolButton::clicked, [=]() {
-        EditBandsDialog dlg(this);
-        dlg.exec();
-        if (dlg.changed()) {
-            emit reloadBands(ui->bandsCombobox->currentText());
-        }
-    });
-    connect(ui->checkBoxBandSelector, &QCheckBox::clicked, [=](bool checked) {
-        m_settings->beginGroup("Settings");
-        m_settings->setValue("band-selector-enabled", checked);
-        m_settings->endGroup();
-
-        emit bandSelectorEnabledChanged(checked);
-    });
     connect(ui->checkBoxOpenConnectAnalyzerAtLaunch, &QCheckBox::clicked, [=](bool checked) {
         m_settings->beginGroup("Settings");
         m_settings->setValue("open-connect-analyzer-at-launch", checked);
@@ -352,7 +321,6 @@ Settings::~Settings()
     m_settings->beginGroup("Settings");
     m_settings->setValue("restrictFq", m_restrictFq);
     m_settings->setValue("maxMeasurements", g_maxMeasurements);
-    m_settings->setValue("darkColorTheme", ui->themeComboBox->currentIndex() == 1);
 
     m_settings->setValue("currentIndex",ui->tabWidget->currentIndex());
     m_settings->endGroup();
@@ -713,27 +681,6 @@ void Settings::on_measureSystemComboBox_currentIndexChanged(int index)
     bool checked = (index == 0); // 0 = Metric, 1 = Imperial
     m_metricChecked = checked;
     emit changeMeasureSystemMetric(checked);
-}
-
-void Settings::setColorTheme(bool dark)
-{
-    ui->themeComboBox->blockSignals(true);
-    ui->themeComboBox->setCurrentIndex(dark ? 1 : 0); // 0 = Light, 1 = Dark
-    ui->themeComboBox->blockSignals(false);
-}
-
-void Settings::on_themeComboBox_currentIndexChanged(int index)
-{
-    bool dark = (index == 1); // 0 = Light, 1 = Dark
-    m_settings->beginGroup("Settings");
-    m_settings->setValue("darkColorTheme", dark);
-    m_settings->endGroup();
-
-    // Re-skin this dialog immediately, rather than only on next open.
-    Style::setDarkMode(dark);
-    applyStyles();
-
-    emit changeColorTheme(dark);
 }
 
 void Settings::on_doNothingBtn_clicked(bool checked)
@@ -1249,49 +1196,10 @@ QList<QPair<QString, QString>> Settings::availableLanguages()
     return result;
 }
 
-void Settings::setLanguages(const QString& currentCode)
-{
-    ui->languageComboBox->clear();
-    for (const auto& pair : availableLanguages())
-        ui->languageComboBox->addItem(pair.first, pair.second);
-
-    int idx = ui->languageComboBox->findData(currentCode);
-    ui->languageComboBox->setCurrentIndex(idx >= 0 ? idx : 0);
-}
-
 void Settings::on_translate()
 {
     ui->retranslateUi(this);
     ui->cableComboBox->setItemText(0, tr("Change parameters or choose from list..."));
-}
-
-void Settings::on_languageComboBox_currentIndexChanged(int index)
-{
-    emit languageChanged(ui->languageComboBox->itemData(index).toString());
-}
-
-void Settings::onBandsComboBox_currentIndexChanged(int index)
-{
-    QString band = ui->bandsCombobox->itemText(index);
-
-    m_settings->beginGroup("Settings");
-    m_settings->setValue("current_band", band);
-    m_settings->endGroup();
-
-    emit bandChanged(band);
-}
-
-void Settings::setBands(QList<QString> list)
-{
-    foreach (QString band, list) {
-        ui->bandsCombobox->addItem(band);
-    }
-
-    m_settings->beginGroup("Settings");
-    QString current_band = m_settings->value("current_band", "").toString();
-    m_settings->endGroup();
-    connect(ui->bandsCombobox, SIGNAL(currentIndexChanged(int)), this, SLOT(onBandsComboBox_currentIndexChanged(int)));
-    ui->bandsCombobox->setCurrentText(current_band);
 }
 
 void Settings::initCustomizeTab()
