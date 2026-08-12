@@ -60,6 +60,13 @@ public:
     static QString localDataFolder();
     static QString languageDataFolder();
     static QString setIniFile();
+    // (native display name, .qm code) pairs -- English first, then every
+    // other QtLanguage_<code>.qm discovered in localDataFolder()/
+    // languageDataFolder(), sorted by code. Shared between
+    // setLanguages() (this dialog's combo box) and MainWindow's View ->
+    // Language menu, which needs the same discovered list without a live
+    // Settings instance to ask.
+    static QList<QPair<QString, QString>> availableLanguages();
 
     void setAntScopeVersion(QString version);
 

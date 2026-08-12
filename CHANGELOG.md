@@ -18,10 +18,15 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 - A "Speed/Accuracy" slider now sits directly under Points; the separate
   "Measurement speed..." dialog is gone.
 - A menu bar: File (Import/Export/Print/Screenshot/Screenshot from AA/Data
-  from AA -- previously a row of buttons under the tab control), View
-  (Graph Hint/Markers Hint/Cursor Params/Show Band Name -- previously
-  checkboxes on Settings' General tab), Connect Analyzer (previously only
-  reachable from inside Settings), and Settings.
+  from AA -- previously a row of buttons under the tab control), Edit
+  (Edit ITU Bands...), View (Graph Hint/Markers Hint/Cursor Params/Show
+  Band Name/Band Selector/Band Highlighting/Language/Theme -- previously
+  spread across Settings' General tab and its "Bands highlighting"/
+  "Language"/"Color theme" controls), Connect Analyzer (previously only
+  reachable from inside Settings), and Settings. The mirrored Settings
+  controls (Bands highlighting combo, Language combo, Color theme combo,
+  the "..." edit-bands button) are unchanged and still work -- both stay
+  in sync with the same underlying settings.
 - Main window is now a 3-pane resizable layout (Frequency/Presets/
   Measurements on the left, a new docked "Graph Hint" panel in the
   middle, the plot tabs on the right) with draggable splitter handles

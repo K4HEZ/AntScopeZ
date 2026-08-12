@@ -900,6 +900,12 @@ process in the settings menu!</string>
     <addaction name="actionScreenshotAA"/>
     <addaction name="actionAnalyzerData"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>&amp;Edit</string>
+    </property>
+    <addaction name="actionEditITUBands"/>
+   </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
      <string>&amp;View</string>
@@ -909,8 +915,31 @@ process in the settings menu!</string>
     <addaction name="actionCursorParams"/>
     <addaction name="separator"/>
     <addaction name="actionShowBandName"/>
+    <addaction name="actionBandSelector"/>
+    <addaction name="menuBandHighlighting"/>
+    <addaction name="separator"/>
+    <addaction name="menuLanguage"/>
+    <addaction name="menuTheme"/>
+   </widget>
+   <widget class="QMenu" name="menuBandHighlighting">
+    <property name="title">
+     <string>&amp;Band Highlighting</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuLanguage">
+    <property name="title">
+     <string>&amp;Language</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuTheme">
+    <property name="title">
+     <string>&amp;Theme</string>
+    </property>
+    <addaction name="actionThemeLight"/>
+    <addaction name="actionThemeDark"/>
    </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
    <addaction name="menuView"/>
    <addaction name="actionConnectAnalyzer"/>
    <addaction name="actionSettings"/>
@@ -1024,6 +1053,38 @@ process in the settings menu!</string>
    </property>
    <property name="text">
     <string>Show &amp;Band Name</string>
+   </property>
+  </action>
+  <action name="actionBandSelector">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Band Selector</string>
+   </property>
+   <property name="toolTip">
+    <string>Show the per-band Start/Stop selector above the Presets list</string>
+   </property>
+  </action>
+  <action name="actionEditITUBands">
+   <property name="text">
+    <string>Edit &amp;ITU Bands...</string>
+   </property>
+  </action>
+  <action name="actionThemeLight">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Light</string>
+   </property>
+  </action>
+  <action name="actionThemeDark">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Dark</string>
    </property>
   </action>
  </widget>

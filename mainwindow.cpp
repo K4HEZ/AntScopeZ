@@ -10,7 +10,9 @@
 #include "printmulti.h"
 #include "style.h"
 #include "filedialog.h"
+#include "editbandsdialog.h"
 #include <QWindow>
+#include <QActionGroup>
 
 extern QString appendSpaces(const QString& number);
 extern bool g_developerMode; // see main.cpp
@@ -666,6 +668,113 @@ MainWindow::MainWindow(QWidget *parent) :
     m_1secTimer->start(100);
 
     loadLanguage(m_languageCode);
+
+    // Band Selector: same "band-selector-enabled" QSettings key and
+    // presetsBandComboBox visibility toggle checkBoxBandSelector used to
+    // drive via Settings' bandSelectorEnabledChanged signal.
+    {
+        m_settings->beginGroup("Settings");
+        bool bandSelectorEnabled = m_settings->value("band-selector-enabled", false).toBool();
+        m_settings->endGroup();
+        ui->actionBandSelector->setChecked(bandSelectorEnabled);
+        ui->presetsBandComboBox->setVisible(bandSelectorEnabled);
+    }
+    connect(ui->actionBandSelector, &QAction::toggled, this, [this](bool checked) {
+        m_settings->beginGroup("Settings");
+        m_settings->setValue("band-selector-enabled", checked);
+        m_settings->endGroup();
+        ui->presetsBandComboBox->setVisible(checked);
+    });
+
+    // Band Highlighting submenu: one exclusive/checkable action per band
+    // region in m_BandsMap (populated by loadBands(), called from
+    // setWidgetsSettings() earlier in this constructor), mirroring
+    // Settings' bandsCombobox. Picking one writes the same "current_band"
+    // key and reuses on_bandChanged() -- the same effect Settings'
+    // onBandsComboBox_currentIndexChanged()/bandChanged signal used to have.
+    {
+        m_settings->beginGroup("Settings");
+        QString currentBand = m_settings->value("current_band", "").toString();
+        m_settings->endGroup();
+        QActionGroup* bandGroup = new QActionGroup(this);
+        bandGroup->setExclusive(true);
+        const QStringList bandNames = m_BandsMap.keys();
+        for (const QString& bandName : bandNames) {
+            QAction* action = ui->menuBandHighlighting->addAction(bandName);
+            action->setCheckable(true);
+            action->setChecked(bandName == currentBand);
+            bandGroup->addAction(action);
+            connect(action, &QAction::triggered, this, [this, bandName]() {
+                m_settings->beginGroup("Settings");
+                m_settings->setValue("current_band", bandName);
+                m_settings->endGroup();
+                on_bandChanged(bandName);
+            });
+        }
+    }
+
+    // Edit ITU Bands...: same EditBandsDialog flow as Settings'
+    // editBandsBtn, reloading whichever band region is currently active
+    // if anything actually changed.
+    connect(ui->actionEditITUBands, &QAction::triggered, this, [this]() {
+        EditBandsDialog dlg(this);
+        dlg.exec();
+        if (dlg.changed()) {
+            m_settings->beginGroup("Settings");
+            QString band = m_settings->value("current_band", "ITU Region 1 - Europe, Africa").toString();
+            m_settings->endGroup();
+            loadBands();
+            on_bandChanged(band);
+        }
+    });
+
+    // Language submenu: same discovery Settings::setLanguages() uses
+    // (Settings::availableLanguages(), shared so both stay in sync), one
+    // exclusive/checkable action per language, reaching the same
+    // on_translate() Settings' languageChanged signal used to reach.
+    // Placed after loadLanguage() above so m_languageCode already holds
+    // its real persisted value, not just this constructor's "en" default.
+    {
+        QActionGroup* languageGroup = new QActionGroup(this);
+        languageGroup->setExclusive(true);
+        const auto languages = Settings::availableLanguages();
+        for (const auto& language : languages) {
+            const QString name = language.first;
+            const QString code = language.second;
+            QAction* action = ui->menuLanguage->addAction(name);
+            action->setCheckable(true);
+            action->setChecked(code == m_languageCode);
+            languageGroup->addAction(action);
+            connect(action, &QAction::triggered, this, [this, code]() {
+                on_translate(code);
+            });
+        }
+    }
+
+    // Theme submenu: same "darkColorTheme" QSettings key and
+    // changeColorTheme() Settings' themeComboBox/changeColorTheme signal
+    // used to reach.
+    {
+        QActionGroup* themeGroup = new QActionGroup(this);
+        themeGroup->setExclusive(true);
+        themeGroup->addAction(ui->actionThemeLight);
+        themeGroup->addAction(ui->actionThemeDark);
+        ui->actionThemeLight->setChecked(!m_darkColorTheme);
+        ui->actionThemeDark->setChecked(m_darkColorTheme);
+        connect(ui->actionThemeLight, &QAction::triggered, this, [this]() {
+            m_settings->beginGroup("Settings");
+            m_settings->setValue("darkColorTheme", false);
+            m_settings->endGroup();
+            changeColorTheme(false);
+        });
+        connect(ui->actionThemeDark, &QAction::triggered, this, [this]() {
+            m_settings->beginGroup("Settings");
+            m_settings->setValue("darkColorTheme", true);
+            m_settings->endGroup();
+            changeColorTheme(true);
+        });
+    }
+
     ui->tableWidget_presets->horizontalHeader()->show();
     if(!m_isRange)
     {

@@ -1207,12 +1207,12 @@ void Settings::setAntScopeVersion(QString version)
     ui->antScopeVersion->setText(version);
 }
 
-void Settings::setLanguages(const QString& currentCode)
+QList<QPair<QString, QString>> Settings::availableLanguages()
 {
-    ui->languageComboBox->clear();
+    QList<QPair<QString, QString>> result;
     // English is always offered: it's the source language every tr() call
     // is written in, so there's no QtLanguage_en.qm to discover below.
-    ui->languageComboBox->addItem("English", "en");
+    result << qMakePair(QString("English"), QString("en"));
 
     // Every other entry is discovered from whatever QtLanguage_<code>.qm
     // files actually exist, rather than a fixed compiled-in list -- a
@@ -1244,8 +1244,16 @@ void Settings::setLanguages(const QString& currentCode)
         // before this was discovery-based). Falls back to the bare code
         // for one QLocale doesn't recognize, rather than dropping it.
         QString name = QLocale(code).nativeLanguageName();
-        ui->languageComboBox->addItem(name.isEmpty() ? code : name, code);
+        result << qMakePair(name.isEmpty() ? code : name, code);
     }
+    return result;
+}
+
+void Settings::setLanguages(const QString& currentCode)
+{
+    ui->languageComboBox->clear();
+    for (const auto& pair : availableLanguages())
+        ui->languageComboBox->addItem(pair.first, pair.second);
 
     int idx = ui->languageComboBox->findData(currentCode);
     ui->languageComboBox->setCurrentIndex(idx >= 0 ? idx : 0);
