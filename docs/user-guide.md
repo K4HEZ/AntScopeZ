@@ -100,13 +100,13 @@ order to do it in.
 
 1. [Install AntScopeZ](#installing-and-uninstalling).
 2. [Connect your analyzer](#connecting-to-your-analyzer).
-3. Pick your preferences in [Settings → General](#general-tab):
-   measurement units (Metric/Imperial), Light or Dark theme, and
-   language (if not English).
+3. Pick your measurement units (Metric/Imperial) in
+   [Settings → General](#general-tab); Light/Dark theme and language
+   (if not English) are set from the **View** menu instead.
 4. *(Optional but recommended)* [Run OSL calibration](#calibration-osl)
    -- Open/Short/Load, once per analyzer.
 5. If you want the [band selector](#presets-and-bands) shortcut, enable
-   it in Settings → General too.
+   it from the **View** menu ("Band Selector").
 6. Run [your first scan](#your-first-scan).
 
 That's it -- everything past this point in the guide is reference
@@ -116,34 +116,35 @@ material for a specific feature, not more setup.
 
 ### Connecting to your analyzer
 
-Settings → General → **Connect analyzer** opens the "Select device"
-dialog. Pick a connection type (USB, COM, or BLE), click **Scan**, select
-your device from the list, and **Connect**. "Use same selection for
-future connections" saves that choice so AntScopeZ can silently
-reconnect on its own next time, instead of asking again.
+Click **Connect Analyzer** on the menu bar (or Settings → General →
+**Connect analyzer**, which does the same thing) to open the "Connect
+Analyzer" dialog. Pick a connection type (USB, COM, or BLE), click
+**Scan**, select your device from the list, and **Connect**. "Use same
+selection for future connections" saves that choice so AntScopeZ can
+silently reconnect on its own next time, instead of asking again.
 
 By default, this dialog also pops up automatically ~500 ms after launch
 if there's no valid saved device to silently reconnect to. If you'd
 rather it not do that -- say, you're just reviewing saved `.s1p`/`.asd`
 files with no analyzer connected -- uncheck Settings → General → "Open
-'Connect Analyzer' on launch". The manual Connect button is unaffected
-either way.
+'Connect Analyzer' on launch". The manual **Connect Analyzer** menu item
+is unaffected either way.
 
 Once connected, the window's title bar shows the device's model/name
 instead of "Analyzer not connected".
 
 ### Your first scan
 
-1. **Set a frequency range.** Either type Start/Stop directly into the
-   Frequency panel, switch to Center/Range mode (same panel, different
-   pair of fields), or -- if enabled (Settings → General → "Enable band
-   selector") -- pick a ham band from the selector above the Presets
-   list, which fills in Start/Stop for you.
-2. **Set the point count.** Type a number into Points directly, or open
-   **Measurement speed...** for a Fast ⟷ Accurately slider (5–1000
-   points, snapped to the nearest 10) that sets it for you. More points
-   = finer resolution across your range, at the
-   cost of a slower sweep.
+1. **Set a frequency range.** Type Start/Stop directly into the
+   Frequency panel, switch the **Scan Mode** combo box to Center/Range
+   for that pair of fields instead, or -- if enabled (View menu →
+   "Band Selector") -- pick a ham band from the selector above the
+   Presets list, which fills in Start/Stop for you.
+2. **Set the point count.** Type a number into Points directly, or drag
+   the **Speed/Accuracy** slider just below it (10–1000 points; arrow
+   keys move it in steps of 10) -- Fast end fewer points, Accurate end
+   more. More points = finer resolution across your range, at the cost
+   of a slower sweep.
 3. **Run it.** Click **Single** (or press F9) for one sweep, or
    **Continuous** (F10) to keep sweeping until you stop it -- see
    [Scan modes](#scan-modes-single-vs-continuous) below for why you'd
@@ -161,28 +162,59 @@ instead of "Analyzer not connected".
 Brief description of each control, grouped the way they're laid out in
 the main window.
 
-**Top toolbar**
+**Menu bar**
+
+There's no toolbar of buttons any more -- everything below lives in the
+menu bar instead (File / Edit / View / Connect Analyzer / Help).
+
+*File*
 
 | Control | What it does |
 |---|---|
-| Settings | Opens the Settings dialog (connection, calibration, theme, language, cable settings, and more) |
-| Export | Exports the *selected* measurement to CSV, NWL, or Touchstone (.s1p) -- select a row in Measurements first |
-| Import | Loads an external file: Touchstone (.s1p), CSV, NWL, or AntScopeZ's own `.asd` |
-| Print | Opens the [Print dialog](#print-and-screenshots) for the current chart |
-| Screenshot | Saves the *current chart* (not the whole window) straight to a PNG file you pick -- same image Ctrl+C copies, just written to disk instead of the clipboard |
+| Import Data... | Loads an external file: Touchstone (.s1p), CSV, NWL, or AntScopeZ's own `.asd` |
+| Export Data... | Exports the *selected* measurement to CSV, NWL, or Touchstone (.s1p) -- select a row in Measurements first |
+| Settings... | Opens the [Settings dialog](#settings) |
+| Print... | Opens the [Print dialog](#print-and-screenshots) for the current chart |
+| Save Screenshot... | Saves the *current chart* (not the whole window) straight to a PNG file you pick -- same image Ctrl+C copies, just written to disk instead of the clipboard |
 | Screenshot from AA | Captures the *analyzer's own* on-device screen (not every model supports this -- see [Supported Devices](../SUPPORTED_DEVICES.md)) -- see [Print and screenshots](#print-and-screenshots) |
 | Data from AA | Loads measurement results already stored in the analyzer's own memory -- see [Data from AA](#data-from-aa) |
+| Exit | Closes AntScopeZ |
+
+*Edit*
+
+| Control | What it does |
+|---|---|
+| Edit ITU Bands... | Opens the [band editor](#editing-band-definitions) |
+
+*View*
+
+| Control | What it does |
+|---|---|
+| Cursor Details / Markers Hint / Cursor Params | Toggle the various hover/cursor readout popups on the charts (Cursor Details is docked in the main window; the other two float) |
+| Show Band Name | Labels the shaded bands on the charts with their names, not just color |
+| Band Selector | Shows/hides the band-selector dropdown above the Presets list -- see [Presets and bands](#presets-and-bands) |
+| Band Highlighting | Submenu picking which region's band data to shade on the charts |
+| Language | UI language -- auto-discovered from whatever `QtLanguage_*.qm` files are installed, not a fixed list |
+| Theme | Light or Dark -- see [CHANGELOG.md](../CHANGELOG.md) for what it does and doesn't cover |
+
+*Connect Analyzer* -- opens the [device-connection dialog](#connecting-to-your-analyzer) directly, same as Settings → General's own button.
+
+*Help*
+
+| Control | What it does |
+|---|---|
+| About AntScopeZ... | Shows the running app's version number |
 
 **Frequency panel**
 
 | Control | What it does |
 |---|---|
-| Limits / Center / Range | Two ways to define the same swept range -- absolute Start/Stop, or a Center frequency ± a Range |
+| Scan Mode | Two ways to define the same swept range -- Start/Stop (absolute), or Center/Range (a center frequency ± a range) |
 | Start, Stop (or Center, Range) | The actual sweep bounds, in kHz |
 | Points | Number of measurement points across the range |
+| Speed/Accuracy (slider) | Sets Points for you -- Fast (fewer points) end to Accurate (more points) end, 10–1000 |
 | Calibration (checkbox) | Applies OSL calibration correction to scans -- has no effect until you've actually performed a calibration in Settings (see [Calibration](#calibration-osl)) |
 | Full range | Resets Start/Stop to the connected analyzer's own default range |
-| Measurement speed... | Opens the Fast ⟷ Accurately points slider (5–1000, snapped to the nearest 10) |
 
 **Presets panel**
 
@@ -222,7 +254,7 @@ for the full detail on either.
 | Key | What it does |
 |---|---|
 | F1 – F7 | Jump to the SWR / Phase / Z=R+jX / Z=R‖+jX / RL / Smith / TDR tab (Multi has no shortcut of its own) |
-| F9 / F10 | Single / Continuous scan -- same as the toolbar buttons |
+| F9 / F10 | Single / Continuous scan -- same as the Single/Continuous buttons |
 | Esc | Stop/interrupt the current scan |
 | Delete | Delete the selected measurement |
 | `+`, `=`, ↑ | Zoom the current chart's frequency (X) range in |
@@ -240,13 +272,8 @@ use even when it is.)*
 
 ## Settings
 
-The Settings dialog has three tabs: **General**, **OSL Calibration**, and
-**Cable**. Two more, Customize and Updates, exist in the code but are
-currently disabled -- see `BUILDINFO.md`'s Known Issues for why (Customize,
-which lets you define a custom analyzer preset, turned out to have enough
-problems that it's not safe to expose yet; Updates is unrelated, blocked by
-a known bug, #2247, so "Check for firmware updates" isn't reachable at
-all).
+The Settings dialog has six tabs: **General**, **Markers**,
+**OSL Calibration**, **Cable**, **Custom Analyzer**, and **Updates**.
 
 OSL Calibration has its own section -- see
 [Calibration (OSL)](#calibration-osl).
@@ -255,22 +282,30 @@ OSL Calibration has its own section -- see
 
 <!-- SCREENSHOT: Settings dialog, General tab -->
 
+Theme, Language, Band Highlighting, Show Band Name, and Band Selector
+used to live here too -- they moved to the **View** menu (see
+[Menu bar](#controls-reference) above) and aren't duplicated in Settings
+any more.
+
 | Control | What it does |
 |---|---|
-| Connect analyzer | Opens the device-selection dialog -- see [Connecting to your analyzer](#connecting-to-your-analyzer) |
+| Connect analyzer | Opens the device-connection dialog -- see [Connecting to your analyzer](#connecting-to-your-analyzer) |
 | Register application / Match license / Register device / Update license / Device info | RigExpert's own registration and licensing system. This talks to RigExpert's servers and isn't something this fork tests or supports -- see the disclaimer in [README.md](https://github.com/K4HEZ/AntScopeZ#readme). Use the vendor's own software for anything licensing-related. |
 | Measurement system | Metric or Imperial units |
 | Max measurements | Cap on how many measurements can be displayed at once |
 | Chart background | Opens a color picker for the plot background |
-| Theme | Light or Dark -- see [CHANGELOG.md](../CHANGELOG.md) for what it does and doesn't cover |
-| Show graph hint / Show markers hint / Show brief params under cursor | Toggle the various hover/cursor readout popups on the charts |
 | Don't restrict frequency | Would disable Start/Stop range clamping entirely -- currently hidden, gated behind the disabled internal developer flag (see `BUILDINFO.md`'s Known Issues) |
 | System impedance | The reference impedance (default 50Ω) everything -- SWR, Smith chart center, RL -- is calculated against |
-| Bands highlighting | A dropdown picking which region's band data to shade on the charts, plus a **...** button opening the band editor (add/edit/remove bands for that region) |
-| Show band name | Labels the shaded bands on the charts with their names, not just color |
-| Enable band selector | Shows/hides the band-selector dropdown above the Presets list -- see [Presets and bands](#presets-and-bands) |
 | Open 'Connect Analyzer' on launch | See [Connecting to your analyzer](#connecting-to-your-analyzer) |
-| Language | UI language -- auto-discovered from whatever `QtLanguage_*.qm` files are installed, not a fixed list |
+
+### Markers tab
+
+<!-- SCREENSHOT: Settings dialog, Markers tab -->
+
+| Control | What it does |
+|---|---|
+| Max markers | Cap on how many markers can be placed at once (1–5) |
+| Available / Selected lists | Choose which data columns the [Markers](#markers) popup shows, and in what order -- move columns between the two lists (or reorder within Selected) with the arrow buttons. Del/Marker/#/FQ are pinned at the top of Selected and can't be removed or reordered; everything else is up to you. |
 
 ### Cable tab
 
@@ -297,6 +332,28 @@ data. It may do nothing currently, or it may be wired through a path
 this pass didn't find. Worth confirming against real hardware before
 relying on it; flagging here rather than asserting a behavior that
 wasn't actually confirmed.
+
+### Custom Analyzer tab
+
+<!-- SCREENSHOT: Settings dialog, Custom Analyzer tab -->
+
+Everything on this tab is disabled -- it's shown so you can see it
+exists (and what it's meant to become), not because it currently does
+anything. See [Customized analyzer parameters](#customized-analyzer-parameters)
+below for what it's for and why it's not safe to use yet.
+
+### Updates tab
+
+<!-- SCREENSHOT: Settings dialog, Updates tab -->
+
+Your installed AntScopeZ version sits at the top, next to a
+**Check for Software Updates** button -- there's no update-checking
+mechanism built yet, so that button is a disabled placeholder for now.
+Below it, the rest of the tab (analyzer info, "Update from file",
+"Check for firmware updates") is disabled too, with a warning
+explaining why: "Check for firmware updates" would contact RigExpert's
+own servers directly, which this fork deliberately doesn't do. Get
+firmware updates from RigExpert's own site/software instead.
 
 ## Interpreting your data
 
@@ -456,14 +513,14 @@ currently entered, or double-click an existing row to jump straight to
 it (updates Start/Stop/Points and re-ranges every chart in one step).
 **Delete**/**Move up** manage the list from there.
 
-The **band selector** (Settings → General → "Enable band selector") is
-a faster shortcut for the common case: instead of building your own
-preset, pick a named ham band from the dropdown above Presets and
-Start/Stop are set for you immediately, formatted as
-`<name> (<start> - <stop> kHz)`. Which bands show up depends on the
-region picked in Settings → General → "Bands highlighting" (backed by
-`itu-regions.txt`/`itu-regions-defaults.txt`) -- its **...** button
-opens the band editor if you need to add or adjust one for that region.
+The **band selector** (View menu → "Band Selector") is a faster
+shortcut for the common case: instead of building your own preset, pick
+a named ham band from the dropdown above Presets and Start/Stop are set
+for you immediately, formatted as `<name> (<start> - <stop> kHz)`.
+Which bands show up depends on the region picked in View menu → "Band
+Highlighting" (backed by `itu-regions.txt`/`itu-regions-defaults.txt`)
+-- Edit menu → "Edit ITU Bands..." opens the band editor if you need to
+add or adjust one for that region.
 
 ### Editing band definitions
 
@@ -498,11 +555,16 @@ numbered marker at that frequency -- or right-click and choose **Create
 marker** from the context menu. Markers appear at the same frequency
 across every chart at once (SWR, Phase, Rs, Rp, RL, S21), each labeled
 with a matching number, so you can track one frequency point across
-multiple views simultaneously.
+multiple views simultaneously. You can place up to
+[Settings → Markers → "Max markers"](#markers-tab) at once (5 by
+default); once you hit that cap, double-clicking to add another shows a
+brief notification instead of placing one.
 
 Hovering shows a readout of that marker's values (frequency, SWR, RL,
-R/X/Z, and more, depending on the chart). Settings → General → "Show
-markers hint" controls whether that readout pops up automatically.
+R/X/Z, and more, depending on the chart) in a popup table. The View
+menu's **Markers Hint** controls whether that readout pops up
+automatically; which columns it shows, and in what order, is set from
+[Settings → Markers](#markers-tab).
 
 ## Multi view
 
@@ -520,8 +582,8 @@ You can add and remove tabs to Multi View using the "+" button to join charts.
 
 Loads measurement results that already exist in the *analyzer's own*
 on-device memory (not files on your PC -- see
-[Import / Export](#import--export) for that). The toolbar's **Data from
-AA** button opens a list of everything currently stored on the device;
+[Import / Export](#import--export) for that). **File → Data from AA**
+opens a list of everything currently stored on the device;
 double-click an entry (or select it and click OK) to load just that one
 into AntScopeZ as a new measurement.
 
@@ -532,18 +594,19 @@ for each), with a progress dialog you can Abort partway through.
 
 ## Import / Export
 
-These are two different toolbar buttons, doing related but distinct
+These are two different File menu items, doing related but distinct
 things:
 
-- **Export** (toolbar) opens a dialog for the measurement currently
-  *selected* in the Measurements list, offering:
+- **File → Export Data...** opens a dialog for the measurement
+  currently *selected* in the Measurements list, offering:
   - **CSV** -- comma-separated values
   - **NWL** -- APAK-EL format
   - **Z, RI** / **S, RI** / **S, MA** -- Touchstone (`.s1p`), as
     impedance or S-parameters, in rectangular (real/imaginary) or polar
     (magnitude/angle) form
-- **Import** (toolbar) is the general "bring external data in" action --
-  accepts Touchstone (`.s1p`), CSV, NWL, or AntScopeZ's own `.asd`.
+- **File → Import Data...** is the general "bring external data in"
+  action -- accepts Touchstone (`.s1p`), CSV, NWL, or AntScopeZ's own
+  `.asd`.
 
 Separately, the **Measurements panel's own Open/Save** buttons are
 narrower: they only read/write AntScopeZ's native `.asd` format, for one
@@ -557,10 +620,10 @@ measurement at a time.
 Three related but different ways to get a chart out of AntScopeZ as an
 image or document:
 
-- **Screenshot** (toolbar) saves the *current chart tab* straight to a
-  PNG file you pick -- the same image Ctrl+C copies to the clipboard,
-  just written to disk instead. Not available for Multi.
-- **Print** (toolbar) opens a dedicated dialog: a preview of the current
+- **File → Save Screenshot...** saves the *current chart tab* straight
+  to a PNG file you pick -- the same image Ctrl+C copies to the
+  clipboard, just written to disk instead. Not available for Multi.
+- **File → Print...** opens a dedicated dialog: a preview of the current
   chart, the markers table beneath it, an auto-generated header (e.g.
   "SWR graph") that isn't user-editable in this dialog, a free-text
   Comment box, and a Line width slider affecting the printed/exported
@@ -571,8 +634,8 @@ image or document:
 
   The Print button/dialog isn't available while the Multi tab is
   active -- clicking it does nothing in that case.
-- **Screenshot from AA** captures the *analyzer's own* on-device screen
-  (not every model supports this -- see
+- **File → Screenshot from AA** captures the *analyzer's own* on-device
+  screen (not every model supports this -- see
   [Supported Devices](../SUPPORTED_DEVICES.md)) and opens its own small
   dialog: add an optional comment, then **Export to PDF**,
   **Export to BMP**, or **To clipboard**. **Refresh** re-captures the
@@ -631,21 +694,23 @@ TDR needed, just viewed through a different chart.
 
 ## Customized analyzer parameters
 
-AntScopeZ has an unfinished "Customize" tab in Settings, intended to let you
-define a named analyzer preset -- a custom minimum/maximum frequency range
-plus an LCD width/height -- for a unit AntScopeZ already recognizes correctly
-(a clone, or a newer hardware revision of a known model) whose real frequency
-range differs from what AntScopeZ assumes for that model.
+Settings' **Custom Analyzer** tab is intended to let you define a named
+analyzer preset -- a custom minimum/maximum frequency range plus an LCD
+width/height -- for a unit AntScopeZ already recognizes correctly (a
+clone, or a newer hardware revision of a known model) whose real
+frequency range differs from what AntScopeZ assumes for that model.
 
-It's currently **disabled in the code**, not just hidden behind a launch
-flag: an internal developer-mode switch that used to unlock this tab (among a
-few smaller debug controls) is now permanently off regardless of any
-command-line argument, because exercising the feature turned up real
-problems -- a crash on some paths, a silently-ignored custom range on others,
-and an outright device-protocol rejection when actually scanning with it
-enabled. See `BUILDINFO.md`'s Known Issues for the full technical writeup
-(what's fixed, what's still broken, and where in the code) if you're looking
-to pick this back up.
+The tab is visible (a "This feature is currently under development"
+notice sits at the top of it), but every control on it -- "Use
+customized analyzer", Apply, Auto calibration -- is disabled, so
+there's nothing to actually interact with yet. It's shown rather than
+hidden so it isn't forgotten about, not because it's ready to use:
+exercising the underlying feature previously turned up real problems --
+a crash on some paths, a silently-ignored custom range on others, and
+an outright device-protocol rejection when actually scanning with it
+enabled. See `BUILDINFO.md`'s Known Issues for the full technical
+writeup (what's fixed, what's still broken, and where in the code) if
+you're looking to pick this back up.
 
 ## Files and directories
 
@@ -686,7 +751,7 @@ whatever you like. Nothing the `.deb` installs is ever written to.
 | `AntScopeZ.ini` | Every setting -- see [AntScopeZ.ini reference](#antscopezini-reference) below |
 | `Calibration/<analyzer serial number>/` | `cal_open.s1p`, `cal_short.s1p`, `cal_load.s1p` -- one subfolder per analyzer, see [Calibration (OSL)](#calibration-osl) |
 | `itu-regions.txt` (only if you've edited bands) | Your own edited band data, created the first time you click Save in the [band editor](#editing-band-definitions) -- overrides the shipped `itu-regions-defaults.txt` entirely, not merged with it |
-| `QtLanguage_<code>.qm` / `qtbase_<code>.qm` (optional) | Drop a `.qm` here to add a language AntScopeZ doesn't ship, or override a shipped one -- picked up automatically, no reinstall needed. See [Language](#general-tab) in the Settings reference. |
+| `QtLanguage_<code>.qm` / `qtbase_<code>.qm` (optional) | Drop a `.qm` here to add a language AntScopeZ doesn't ship, or override a shipped one -- picked up automatically, no reinstall needed. See View menu → Language in [Controls reference](#controls-reference). |
 
 **Windows:** the equivalent per-user folder is wherever Qt's
 `GenericConfigLocation` resolves to (typically
@@ -715,6 +780,7 @@ band-selector-enabled=true
 chart-background=#505050
 current_band=ITU Region 2 - Americas
 darkColorTheme=true
+maxMarkers=5
 maxMeasurements=5
 open-connect-analyzer-at-launch=false
 restrictFq=true
@@ -725,6 +791,10 @@ id=180000756
 name=Match
 same=false
 type=0
+
+[Markers]
+header=0,1,2,3,4,5,6,7,8,9
+markersHintEnabled=true
 
 [Cable]
 R0=50
@@ -765,11 +835,16 @@ Notes on specific keys:
   written back out on exit -- the app's actual live check is whether the
   three `*Path` files exist on disk, not this flag (see
   [Calibration (OSL)](#calibration-osl)).
+- **`[Markers]header`** -- the Markers popup's column list and order,
+  same value Settings → Markers' Available/Selected lists edit. Not
+  bookkeeping -- hand-editing it works, but the Settings tab is the
+  supported way to change it.
 - Everything else not listed above (`General`, `Hint`, `BriefHint`,
-  `Markers`, per-tab `*ZoomState`, `mainX`/`mainY`/`geometry`, ...) is
-  internal window-position/zoom-state bookkeeping. Harmless to delete
-  individually if something looks stuck -- it just regenerates with
-  defaults.
+  `[Markers]`'s other keys (`x`/`y`/`mainX`/`mainY`/`mainBiasX`/
+  `mainBiasY`/`markersHintEnabled`), per-tab `*ZoomState`,
+  `mainX`/`mainY`/`geometry`, ...) is internal window-position/
+  zoom-state bookkeeping. Harmless to delete individually if something
+  looks stuck -- it just regenerates with defaults.
 
 If your `.ini` has a leftover group named in another language (e.g.
 `[Marcadores]` sitting next to `[Markers]`) from before this was fixed
@@ -800,27 +875,25 @@ delete.
   Language list.** Confirm the filename matches `QtLanguage_<code>.qm`
   exactly and it's in the right folder -- see
   [Files and directories](#files-and-directories).
-- **"Check for firmware updates" isn't anywhere in Settings.** It's
-  currently unreachable in the shipped UI (a known bug, #2247 -- not
-  something you're missing). Get firmware updates directly from
-  RigExpert's own site/software instead.
+- **"Check for firmware updates" is greyed out / does nothing.** That's
+  deliberate -- it would contact RigExpert's own servers directly, which
+  this fork doesn't do. See [Settings' Updates tab](#updates-tab). Get
+  firmware updates from RigExpert's own site/software instead.
 - **TDR chart is empty after a scan.** TDR only populates from a
   wideband, near-DC sweep -- a normal band-limited scan (e.g. just 20m)
   won't show anything there. See
   [TDR (Time Domain Reflectometry)](#tdr-time-domain-reflectometry).
-- **Customize/Updates tabs aren't in Settings.** Both are unreachable in
-  the current build -- Customize is disabled outright (unfinished, see
-  [Customized analyzer parameters](#customized-analyzer-parameters)),
-  Updates is blocked by a known bug (#2247). Neither is something you're
-  missing; there's no flag or setting that brings them back right now.
+- **Custom Analyzer tab's controls are all greyed out.** Deliberate, not
+  a bug -- the feature underneath is unfinished. See
+  [Customized analyzer parameters](#customized-analyzer-parameters).
 - **Cable loss compensation ("Subtract cable"/"Add cable") doesn't
   seem to change anything.** Flagged as unverified in
   [the Cable tab reference](#cable-tab) -- it may not currently do
   anything at all; not confirmed either way.
 - **There's no S21 tab anywhere, even though it's mentioned in this
   guide/the code.** The code's own comment says why: `// S21 not
-  implemented yet` (`mainwindow.cpp`). Not something you're missing in
-  the UI -- it's genuinely unfinished (not dead: the measurement
+  implemented yet` (`mainwindow_tabs.cpp`). Not something you're missing
+  in the UI -- it's genuinely unfinished (not dead: the measurement
   pipeline is substantially built already). See `BUILDINFO.md`'s Known
   Issues for the full detail on what's there and what's still missing.
 

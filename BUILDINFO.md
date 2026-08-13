@@ -248,15 +248,19 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   2026-08-10 -- `main.cpp` no longer sets `g_developerMode` even when the
   flag is passed (the `args.contains("-developer")` check itself is left in
   place, so re-enabling is a one-line change once the items below are
-  fixed).** It gates the Settings > Customize tab (Custom Analyzer / the
-  "User Defined" chart tab), plus a few smaller things: the "Don't restrict
-  frequency" checkbox, the Ctrl+Alt+Shift+M/N auto-calibration debug
-  shortcuts, and a higher `MAX_DOTS`/`spinBoxPoints` ceiling. Custom
-  Analyzer is the reason it's off: a "User Defined" tab crash (fixed
-  separately, see `CHANGELOG.md`) led to actually exercising this feature
-  for what looks like the first time in a while, and it turned up enough
-  problems that shipping it live to anyone who passes `-developer` isn't
-  safe yet.
+  fixed).** It still gates the "User Defined" chart tab, the "Don't
+  restrict frequency" checkbox, the Ctrl+Alt+Shift+M/N auto-calibration
+  debug shortcuts, and a higher `MAX_DOTS`/`spinBoxPoints` ceiling.
+  **As of 2026-08-13, it no longer gates Settings' Custom Analyzer tab**
+  (renamed from "Customize") -- that tab is always shown now, with every
+  control on it explicitly disabled instead (see `Settings::
+  initCustomizeTab()`), so the still-broken feature described below stays
+  visible-but-inert rather than invisible. Custom Analyzer is still the
+  reason developer mode itself is off, though: a "User Defined" tab crash
+  (fixed separately, see `CHANGELOG.md`) led to actually exercising this
+  feature for what looks like the first time in a while, and it turned up
+  enough problems that shipping it live to anyone who passes `-developer`
+  isn't safe yet.
   - **What it's for:** define a named preset that overrides a real,
     already-detected model's min/max frequency and LCD width/height --
     aimed at a clone or updated-range unit that AntScopeZ already
