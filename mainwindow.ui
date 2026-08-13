@@ -1068,11 +1068,15 @@ process in the settings menu!</string>
     <addaction name="actionImport"/>
     <addaction name="actionExport"/>
     <addaction name="separator"/>
+    <addaction name="actionSettings"/>
+    <addaction name="separator"/>
     <addaction name="actionPrint"/>
     <addaction name="separator"/>
     <addaction name="actionScreenshot"/>
     <addaction name="actionScreenshotAA"/>
     <addaction name="actionAnalyzerData"/>
+    <addaction name="separator"/>
+    <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -1112,15 +1116,21 @@ process in the settings menu!</string>
     <addaction name="actionThemeLight"/>
     <addaction name="actionThemeDark"/>
    </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>&amp;Help</string>
+    </property>
+    <addaction name="actionAbout"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuView"/>
    <addaction name="actionConnectAnalyzer"/>
-   <addaction name="actionSettings"/>
+   <addaction name="menuHelp"/>
   </widget>
   <action name="actionImport">
    <property name="text">
-    <string>&amp;Import...</string>
+    <string>&amp;Import Data...</string>
    </property>
    <property name="toolTip">
     <string>Import measurement results from PC hard disk</string>
@@ -1128,7 +1138,7 @@ process in the settings menu!</string>
   </action>
   <action name="actionExport">
    <property name="text">
-    <string>&amp;Export...</string>
+    <string>&amp;Export Data...</string>
    </property>
    <property name="toolTip">
     <string>Export measurement results to PC</string>
@@ -1173,10 +1183,20 @@ process in the settings menu!</string>
   </action>
   <action name="actionSettings">
    <property name="text">
-    <string>&amp;Settings</string>
+    <string>&amp;Settings...</string>
    </property>
    <property name="toolTip">
     <string>Entering the AntScopeZ program settings menu</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>E&amp;xit</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>&amp;About AntScopeZ...</string>
    </property>
   </action>
   <action name="actionGraphHint">

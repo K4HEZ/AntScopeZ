@@ -10,6 +10,7 @@
 #include "printmulti.h"
 #include "style.h"
 #include "filedialog.h"
+#include "aboutdialog.h"
 #include <QWindow>
 
 extern QString appendSpaces(const QString& number);
@@ -189,6 +190,17 @@ void MainWindow::on_actionSettings_triggered()
     if (m_markers->markersHintEnabled()) {
         m_markers->repaint();
     }
+}
+
+void MainWindow::on_actionExit_triggered()
+{
+    close();
+}
+
+void MainWindow::on_actionAbout_triggered()
+{
+    AboutDialog dlg(this);
+    dlg.exec();
 }
 
 void MainWindow::on_changeMeasureSystemMetric (bool state)

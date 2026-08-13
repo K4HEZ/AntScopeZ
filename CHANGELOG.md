@@ -43,6 +43,9 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Added
 
+- A Help menu with "About AntScopeZ...", showing the running app's
+  version -- same label/value styling as Settings' Updates tab uses for
+  the same information.
 - Settings > Markers tab: a "Max markers" spinner (1-5, capping how many
   markers can be placed at once) and a two-list "Available"/"Selected"
   control for choosing which columns the Markers popup shows and in what
@@ -51,18 +54,20 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   the whole set at once.
 - A "Speed/Accuracy" slider now sits directly under Points; the separate
   "Measurement speed..." dialog is gone.
-- A menu bar: File (Import/Export/Print/Screenshot/Screenshot from AA/Data
-  from AA -- previously a row of buttons under the tab control), Edit
-  (Edit ITU Bands...), View (Graph Hint/Markers Hint/Cursor Params/Show
-  Band Name/Band Selector/Band Highlighting/Language/Theme -- previously
-  spread across Settings' General tab and its "Bands highlighting"/
-  "Language"/"Color theme" controls), Connect Analyzer (previously only
-  reachable from inside Settings), and Settings. The mirrored Settings
-  controls (Bands highlighting combo, Language combo, Color theme combo,
-  the "..." edit-bands button) are unchanged and still work -- both stay
-  in sync with the same underlying settings.
+- A menu bar: File (Import Data.../Export Data.../Settings.../Print.../
+  Save Screenshot.../Screenshot from AA/Data from AA/Exit -- previously
+  a row of buttons under the tab control), Edit (Edit ITU Bands...),
+  View (Cursor Details/Markers Hint/Cursor Params/Show Band Name/Band
+  Selector/Band Highlighting/Language/Theme -- previously spread across
+  Settings' General tab and its "Bands highlighting"/"Language"/"Color
+  theme" controls), Connect Analyzer (previously only reachable from
+  inside Settings), and Help (About AntScopeZ...). The Settings-dialog
+  copies of Bands highlighting/Language/Color theme/Band Selector were
+  removed outright in a later pass, once their View/Edit menu
+  equivalents existed standalone -- Settings no longer has a Theme,
+  Language, Bands highlighting, or Band Selector control of its own.
 - Main window is now a 3-pane resizable layout (Frequency/Presets/
-  Measurements on the left, a new docked "Graph Hint" panel in the
+  Measurements on the left, a new docked "Cursor Details" panel in the
   middle, the plot tabs on the right) with draggable splitter handles
   between panes, replacing the old fixed 2-column layout.
 

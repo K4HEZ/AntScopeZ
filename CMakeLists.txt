@@ -102,6 +102,7 @@ set(CMAKE_AUTORCC ON)
 
 set(ANTSCOPE_SOURCES
     AA55BTPacket.cpp
+    aboutdialog.cpp
     antscopeupdatedialog.cpp
     appregistrationdialog.cpp
     calibration.cpp
@@ -179,6 +180,7 @@ set(ANTSCOPE_SOURCES
 
 set(ANTSCOPE_HEADERS
     AA55BTPacket.h
+    aboutdialog.h
     antscopeupdatedialog.h
     appregistrationdialog.h
     calibration.h
@@ -240,6 +242,7 @@ set(ANTSCOPE_HEADERS
 )
 
 set(ANTSCOPE_FORMS
+    aboutdialog.ui
     antscopeupdatedialog.ui
     appregistrationdialog.ui
     editbandsdialog.ui

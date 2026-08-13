@@ -343,6 +343,8 @@ private slots:
     void on_tabWidget_currentChanged(int index);
     void on_actionScreenshotAA_triggered();
     void on_actionSettings_triggered();
+    void on_actionExit_triggered();
+    void on_actionAbout_triggered();
     void on_measurmentsDeleteBtn_clicked();
     void on_tableWidget_measurments_cellClicked(int row, int column);
     void on_tableWidget_measurments_cellActivated(int row, int column);
