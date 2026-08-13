@@ -7,13 +7,11 @@
 #include <QTableWidget>
 #include <QPushButton>
 #include <QGridLayout>
+#include <QFrame>
 #include <QPropertyAnimation>
 #include <QTimer>
 #include <QSettings>
 #include <settings.h>
-
-#define MIN_BUTTONS_NUM 5
-#define MAX_BUTTONS_NUM 21
 
 struct MarkersHeaderColumn
 {
@@ -22,11 +20,12 @@ struct MarkersHeaderColumn
         fieldSWR, fieldRL, fieldPhase, fieldR, fieldX, fieldZ, // default: 4-9
         fieldL, fieldC, fieldRho, fieldZmod, // optional
         fieldRpar, fieldXpar, fieldZpar, fieldLpar, fieldCpar,
-        fieldInsert=1001, fieldRemove=1002 // special menu items
     };
 
     int index = -1;
-    QMenu* menu=nullptr;
+    // Header cell for this column -- a QLabel (see createHeader()). Column
+    // choice/order is configured in Settings' Markers tab (DualListWidget)
+    // now, not per-column here, so this no longer needs to be interactive.
     QWidget* button=nullptr;
     static QMap<int, QString>& headerMap();
     static QMap<int, QString> m_mapHeader;
@@ -79,11 +78,14 @@ protected:
     void paintEvent(QPaintEvent *event);    // Background will be drawn via the repaint method
     virtual void initLayout();
     virtual void createHeader();
-    void createMenu(MarkersHeaderColumn& buttonData);
     QString formatText(int type, QVariant val);
     QColor chartBackgroundColor();
     QColor inverseChartBackground();
     QColor hintBackgroundColor();
+    // Stronger blend-toward-grey than hintBackgroundColor() -- gives the
+    // header row a visually distinct band instead of blending into the
+    // rest of the (already translucent, plot-background-tinted) table.
+    QColor headerBackgroundColor();
 
 public slots:
     QList <QStringList> getPopupList(); // print support
@@ -101,6 +103,13 @@ public slots:
     virtual void updateMarkers(int markers, int measurements, bool force = false);
     virtual void updateInfo(QList<QList<QVariant>>& info);
 
+    // Rebuilds the header/table from the current [Markers]header ini value.
+    // Column choice/order is owned entirely by Settings' Markers tab
+    // (DualListWidget) now -- this is a pure "reload and repaint yourself"
+    // refresh, called after Settings has already written the new value, not
+    // a place that writes ini itself.
+    void reloadColumns();
+
 private slots:
     void show();
     void hideAnimation();                   // Slot to start the hide animation
@@ -117,6 +126,7 @@ protected:
     int m_measurements=0;
     bool m_menuVisible = false;
     QList<MarkersHeaderColumn> m_headerColumns;
+    QFrame* m_headerSeparator = nullptr; // horizontal rule under the header row
     QList<QList<QWidget*>> m_rows;
     QList<QWidget*> m_removeButtons;
     QGridLayout m_layout;

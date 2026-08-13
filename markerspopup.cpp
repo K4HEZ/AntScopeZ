@@ -85,12 +85,6 @@ MarkersPopUp::~MarkersPopUp()
     m_settings->setValue("mainY",m_mainY);
     m_settings->setValue("mainBiasX",m_mainBiasX);
     m_settings->setValue("mainBiasY",m_mainBiasY);
-    QList<int> buttons = getColumns();
-    QString header;
-    for (int i=0; i<buttons.size(); i++)
-        header += QString::number(buttons[i]) + ",";
-    header.remove(header.length()-1, 1);
-    m_settings->setValue("header", header);
     m_settings->endGroup();
 
     delete m_settings;
@@ -153,6 +147,23 @@ QColor MarkersPopUp::hintBackgroundColor()
     return tinted;
 }
 
+// Same blend-toward-grey technique as hintBackgroundColor(), but pushed
+// further so the header row reads as a distinct band rather than blending
+// into the rest of the (already tinted) table -- the header/data boundary
+// was otherwise impossible to pick out at a glance, especially with many
+// columns selected.
+QColor MarkersPopUp::headerBackgroundColor()
+{
+    QColor color = chartBackgroundColor();
+    const qreal towardGrey = 0.55;
+    int r = color.red()   + int((128 - color.red())   * towardGrey);
+    int g = color.green() + int((128 - color.green()) * towardGrey);
+    int b = color.blue()  + int((128 - color.blue())  * towardGrey);
+    QColor tinted(r, g, b);
+    tinted.setAlpha(220);
+    return tinted;
+}
+
 void MarkersPopUp::updateLabelColors()
 {
     QString style = "QLabel { color: " + inverseChartBackground().name() + "; }";
@@ -162,6 +173,22 @@ void MarkersPopUp::updateLabelColors()
             if (label)
                 label->setStyleSheet(style);
         }
+    }
+
+    QColor headerBg = headerBackgroundColor();
+    QString headerStyle = QString("QLabel { color: %1; background-color: rgba(%2, %3, %4, %5); font-weight: bold; }")
+                               .arg(inverseChartBackground().name())
+                               .arg(headerBg.red()).arg(headerBg.green()).arg(headerBg.blue()).arg(headerBg.alpha());
+    for (const MarkersHeaderColumn& col : m_headerColumns) {
+        QLabel* label = qobject_cast<QLabel*>(col.button);
+        if (label)
+            label->setStyleSheet(headerStyle);
+    }
+
+    if (m_headerSeparator) {
+        QColor line = inverseChartBackground();
+        m_headerSeparator->setStyleSheet(QString("QFrame { background-color: rgba(%1, %2, %3, 140); border: none; }")
+                                              .arg(line.red()).arg(line.green()).arg(line.blue()));
     }
 
     // See hintBackgroundColor() above.
@@ -361,91 +388,32 @@ void MarkersPopUp::on_translate()
 }
 
 
-void MarkersPopUp::createMenu(MarkersHeaderColumn &column)
-{
-    column.menu = new QMenu(column.button);
-    column.menu->setStyleSheet(Style::menu());
-    QMapIterator<int, QString> it(MarkersHeaderColumn::headerMap());
-    while (it.hasNext()) {
-        it.next();
-        if (it.key() > MarkersHeaderColumn::fieldFQ) {
-            QAction* action = column.menu->addAction(it.value());
-            action->setData(it.key());
-        }
-    }
-    connect(column.menu, &QMenu::aboutToShow, this, [=](){
-        m_menuVisible = true;
-        setVisible(true);
-    });
-    connect(column.menu, &QMenu::aboutToHide, this, [=](){
-        m_menuVisible = false;
-        extern MainWindow* g_mainWindow;
-        if (g_mainWindow != nullptr)
-            g_mainWindow->activateWindow();
-    });
-    connect(column.menu, &QMenu::triggered, this, [this, column](QAction* act) {
-       m_menuVisible = true;
-       int index = act->data().toInt();
-       if (index == MarkersHeaderColumn::fieldInsert) {
-            // inset column
-           if (m_headerColumns.size() <= MAX_BUTTONS_NUM) {
-               QList<int> buttons = getColumns();
-               buttons.insert(column.index+1, MarkersHeaderColumn::fieldSWR);
-               QString header;
-               for (int i=0; i<buttons.size(); i++)
-                   header += QString::number(buttons[i]) + ",";
-               m_settings->beginGroup("Markers");
-               m_settings->setValue("header", header);
-               m_settings->endGroup();
-               m_settings->sync();
-               clearTable();
-               createHeader();
-               updateMarkers(m_markers, m_measurements, true);
-           }
-       } else  if (index == MarkersHeaderColumn::fieldRemove) {
-            // remove column
-           if (m_headerColumns.size() > MIN_BUTTONS_NUM) {
-               QList<int> buttons = getColumns();
-               buttons.removeAt(column.index);
-               QString header;
-               for (int i=0; i<buttons.size(); i++)
-                   header += QString::number(buttons[i]) + ",";
-               m_settings->beginGroup("Markers");
-               m_settings->setValue("header", header);
-               m_settings->endGroup();
-               m_settings->sync();
-               clearTable();
-               createHeader();
-               updateMarkers(m_markers, m_measurements, true);
-           }
-       } else {
-           QString title = act->text();
-           ((QToolButton*)(column.button))->setText(title);
-           column.button->setProperty("field_type", index);
-           QList<int> buttons = getColumns();
-           QString header;
-           for (int i=0; i<buttons.size(); i++)
-               header += QString::number(buttons[i]) + ",";
-           m_settings->beginGroup("Markers");
-           m_settings->setValue("header", header);
-           m_settings->endGroup();
-           m_settings->sync();
-        }
-       setVisible(true);
-       m_menuVisible = false;
-       emit changeColumns();
-    });
-}
-
 void MarkersPopUp::createHeader()
 {
     QMap<int, QString>& mapHeader = MarkersHeaderColumn::headerMap();
+
+    // createHeader() used to run once per session; it now runs on every
+    // Settings Markers-tab edit too (via reloadColumns()), so the old
+    // m_headerColumns.clear() -- which dropped the QList entries without
+    // deleting the QLabels/separator they pointed to -- would leak a set of
+    // widgets on every edit instead of rarely. Delete the previous ones
+    // before rebuilding.
+    for (const MarkersHeaderColumn& old : m_headerColumns)
+        delete old.button;
     m_headerColumns.clear();
+    delete m_headerSeparator;
+    m_headerSeparator = nullptr;
 
     m_settings->beginGroup("Markers");
     QString buttons = m_settings->value("header", "0,1,2,3,4,5,6,7,8,9").toString();
     m_settings->endGroup();
     QList<QString> list = buttons.split(',');
+
+    QColor headerBg = headerBackgroundColor();
+    QString headerStyle = QString("QLabel { color: %1; background-color: rgba(%2, %3, %4, %5); font-weight: bold; }")
+                               .arg(inverseChartBackground().name())
+                               .arg(headerBg.red()).arg(headerBg.green()).arg(headerBg.blue()).arg(headerBg.alpha());
+
     int column = 0;
     foreach (QString key, list) {
         if (key.isEmpty())
@@ -453,20 +421,36 @@ void MarkersPopUp::createHeader()
         MarkersHeaderColumn data;
         int type = key.toInt();
         data.index = column;
-        QToolButton* button = new QToolButton(this);        
-        data.button = button;
-        button->setStyleSheet(Style::toolButton());
-        button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-        button->setProperty("field_type", type);
-        if (type > MarkersHeaderColumn::fieldFQ) {
-            button->setPopupMode(QToolButton::MenuButtonPopup);
-            createMenu(data);
-            button->setMenu(data.menu);
-        }
-        button->setText(mapHeader[type]);
-        m_layout.addWidget(data.button, 0 ,column++, Qt::AlignHCenter);
+        QLabel* label = new QLabel(this);
+        data.button = label;
+        label->setStyleSheet(headerStyle);
+        label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+        label->setAlignment(Qt::AlignCenter);
+        label->setProperty("field_type", type);
+        label->setText(mapHeader[type]);
+        // No Qt::AlignHCenter here -- letting the label fill its column
+        // (rather than shrinking to its own sizeHint, centered within the
+        // cell) is what makes the header background paint as one
+        // continuous band across all columns instead of a patchy one
+        // behind each label's text only.
+        m_layout.addWidget(label, 0, column++);
         m_headerColumns << data;
     }
+
+    QColor line = inverseChartBackground();
+    m_headerSeparator = new QFrame(this);
+    m_headerSeparator->setFixedHeight(2);
+    m_headerSeparator->setStyleSheet(QString("QFrame { background-color: rgba(%1, %2, %3, 140); border: none; }")
+                                          .arg(line.red()).arg(line.green()).arg(line.blue()));
+    m_layout.addWidget(m_headerSeparator, 1, 0, 1, qMax(column, 1));
+}
+
+void MarkersPopUp::reloadColumns()
+{
+    clearTable();
+    createHeader();
+    updateMarkers(m_markers, m_measurements, true);
+    emit changeColumns();
 }
 
 
@@ -507,9 +491,16 @@ void MarkersPopUp::updateMarkers(int markers, int measurements, bool force)
         m_layout.addWidget(m_headerColumns[i].button, 0, i);
         m_headerColumns[i].button->show();
     }
+    // clearTable() detaches every layout item generically (it doesn't know
+    // header/separator from data cells), so the separator needs re-adding
+    // here too, same as the header buttons just above.
+    if (m_headerSeparator) {
+        m_layout.addWidget(m_headerSeparator, 1, 0, 1, qMax(m_headerColumns.size(), 1));
+        m_headerSeparator->show();
+    }
 
     int rowCount = m_measurements==0 ? 1 : m_measurements;
-    int rowIndex = 1;
+    int rowIndex = 2; // row 0 = header, row 1 = separator
     QString labelStyle = "QLabel { color: " + inverseChartBackground().name() + "; }";
     for (int i=0; i<m_markers; i++) {
         QToolButton* button = new QToolButton(this);
@@ -653,9 +644,6 @@ QMap<int, QString>& MarkersHeaderColumn::headerMap()
         m_mapHeader.insert(i++, "Z||, Ohm");   // Z|| - impedance (parallel model)
         m_mapHeader.insert(i++, "L||, nH");    // L|| - inductance (parallel model)
         m_mapHeader.insert(i++, "C||, pF");    // C|| - capacitance (parallel model)
-
-        m_mapHeader.insert(MarkersHeaderColumn::fieldInsert, "Insert column");
-        m_mapHeader.insert(MarkersHeaderColumn::fieldRemove, "Remove column");
     }
     return m_mapHeader;
 }
