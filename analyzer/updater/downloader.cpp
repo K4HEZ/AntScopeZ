@@ -20,8 +20,19 @@ Downloader::~Downloader()
 
 }
 
+// WARNING: Disabled due to firmware-update concerns -- fires the actual
+// network request AnalyzerPro::on_checkUpdatesBtn_clicked() builds the URL
+// for (phones home to RigExpert with device/OS/telemetry, over a
+// connection with TLS certificate verification disabled just below). That
+// caller is already disabled, but this is the layer that actually talks to
+// the network, so it's disabled here too rather than trusting every caller
+// to stay disabled forever -- Downloader isn't used anywhere else in this
+// codebase (checked), so nothing else depends on this actually firing. Do
+// not remove the #if 0 without a deliberate decision to re-enable phoning
+// home to RigExpert.
 Downloader::State Downloader::startDownloadInfo(QUrl url)
 {
+#if 0
     if (m_state == InProgress) {
         return m_state;
     }
@@ -42,10 +53,18 @@ Downloader::State Downloader::startDownloadInfo(QUrl url)
     m_isInfo = true;
     m_sendStatisics = false;
     return Started;
+#else
+    Q_UNUSED(url)
+    return Finished;
+#endif
 }
 
+// WARNING: Disabled due to firmware-update concerns, same as
+// startDownloadInfo() above -- downloads the actual firmware binary once a
+// URL for it has been found.
 Downloader::State Downloader::startDownloadFw()
 {
+#if 0
     if (m_state == InProgress) {
         return m_state;
     }
@@ -77,10 +96,18 @@ Downloader::State Downloader::startDownloadFw()
     m_state = InProgress;
 
     return m_state;
+#else
+    return Finished;
+#endif
 }
 
+// WARNING: Disabled due to firmware-update concerns, same as
+// startDownloadInfo() above. Unlike the other two, nothing in this codebase
+// currently calls this one at all -- disabled anyway, on the same "don't
+// let an accidental future call phone home" reasoning.
 Downloader::State Downloader::startSendStatistics(QUrl url)
 {
+#if 0
     if (m_state == InProgress) {
         return m_state;
     }
@@ -94,6 +121,10 @@ Downloader::State Downloader::startSendStatistics(QUrl url)
     m_sendStatisics = true;
 
     return Started;
+#else
+    Q_UNUSED(url)
+    return Finished;
+#endif
 }
 
 Downloader::State Downloader::state() const

@@ -92,8 +92,15 @@ QString AnalyzerPro::getRevision() const
 // this any more (see checkFirmwareUpdate()'s removal), so this used to also
 // have a non-manual branch here that rate-limited itself to once/day and
 // raised a passive notification instead of the dialog; that's gone too.
+//
+// WARNING: Disabled due to firmware-update concerns, same as
+// on_checkUpdatesBtn_clicked() above -- this is only ever reached via that
+// function's now-disabled m_downloader->startDownloadInfo() call, but
+// disabled here too rather than relying on that alone. See the comment
+// there before re-enabling anything in this chain.
 void AnalyzerPro::on_downloadInfoComplete()
 {
+#if 0
     QString ver = m_downloader->version();
     if(ver.isEmpty())
     {
@@ -116,6 +123,7 @@ void AnalyzerPro::on_downloadInfoComplete()
         }
         m_updateDialog->exec();
     }
+#endif
 }
 
 // Downloads and saves the firmware file, but stops short of flashing it --
@@ -124,8 +132,13 @@ void AnalyzerPro::on_downloadInfoComplete()
 // something this (non-vendor-distributed) build should attempt on its own;
 // the user can take the saved file to the vendor's own tool if they want to
 // apply it.
+//
+// WARNING: Disabled due to firmware-update concerns, same as
+// on_checkUpdatesBtn_clicked() above -- only reachable via that now-disabled
+// chain, but disabled here too rather than relying on that alone.
 void AnalyzerPro::on_downloadFileComplete()
 {
+#if 0
     *m_pfw = m_downloader->file();
 
     QString dir = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
@@ -144,12 +157,18 @@ void AnalyzerPro::on_downloadFileComplete()
     } else {
         m_updateDialog->setFinished(tr("Could not save firmware file."));
     }
+#endif
 }
 
+// WARNING: Disabled due to firmware-update concerns, same as
+// on_checkUpdatesBtn_clicked() above -- only reachable via that now-disabled
+// chain, but disabled here too rather than relying on that alone.
 void AnalyzerPro::on_internetUpdate()
 {
+#if 0
     m_downloader->startDownloadFw();
     m_updateDialog->setStatusText(tr("Downloading firmware..."));
+#endif
 }
 
 void AnalyzerPro::readFile(QString pathToFw)
@@ -492,8 +511,21 @@ void AnalyzerPro::on_updatePercentChanged(int number)
 // Only caller is the "Check for firmware updates" button in Settings --
 // see the removed checkFirmwareUpdate()/needCheckForUpdate() for the
 // automatic daily-check path this used to also have.
+//
+// WARNING: Disabled due to firmware-update concerns -- this builds a URL
+// that phones home to RigExpert with the device's serial number, firmware
+// revision, the user's OS/CPU/language, and our own app version, over a
+// connection with TLS certificate verification disabled (see Downloader).
+// checkUpdatesBtn is permanently disabled in Settings' constructor so this
+// can't be reached from the UI, but the function itself is kept intact
+// (not deleted) so the implementation isn't lost to a future cleanup pass.
+// The #if 0 below -- not just the disabled button -- is what stops this
+// from doing anything if something still calls it directly in code. Do not
+// remove the #if 0 without a deliberate decision to re-enable phoning home
+// to RigExpert.
 void AnalyzerPro::on_checkUpdatesBtn_clicked()
 {
+#if 0
     if(m_downloader == nullptr)
     {
         m_downloader = new Downloader();
@@ -520,6 +552,7 @@ void AnalyzerPro::on_checkUpdatesBtn_clicked()
     url += "&fw=" + getVersionString();
 
     m_downloader->startDownloadInfo(QUrl(url));
+#endif
 }
 
 void AnalyzerPro::on_progress(qint64 downloaded,qint64 total)
