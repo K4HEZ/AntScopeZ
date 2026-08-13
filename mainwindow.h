@@ -78,6 +78,7 @@ public:
     QString& lastSavePath() { return m_lastSaveOpenPath; }
     AnalyzerPro* analyzer() { return m_analyzer; }
     bool isMeasuring() { return analyzer()->isMeasuring(); }
+    Markers* markers() { return m_markers; }
     QTabWidget* tabWidget();
 \
     static MainWindow* m_mainWindow;

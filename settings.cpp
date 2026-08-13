@@ -5,6 +5,7 @@
 #include "analyzer/customanalyzer.h"
 #include "editbandsdialog.h"
 #include "mainwindow.h"
+#include "markerspopup.h"
 #include "appregistrationdialog.h"
 #include "inforequestdialog.h"
 #include "style.h"
@@ -21,6 +22,7 @@ extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
                             QMessageBox::StandardButton defaultButton = QMessageBox::NoButton);
 extern bool g_developerMode;
 extern int g_maxMeasurements; // see measurements.cpp
+extern int g_maxMarkers; // see markers.cpp
 extern QString appendSpaces(const QString& number);
 int Settings::m_serialIndex = 0;
 bool Settings::m_licenseUpdateBlocked = false;
@@ -84,6 +86,7 @@ void Settings::applyStyles()
     ui->groupBox_8->setStyleSheet(style);
     ui->groupBox_9->setStyleSheet(style);
     ui->groupBox_7->setStyleSheet(style);
+    ui->groupBox_markers->setStyleSheet(style);
 
     style = Style::label();
     style += Style::lineEdit();
@@ -101,6 +104,7 @@ void Settings::applyStyles()
 
     style = Style::spinBox();
     ui->spinBoxMeasurements->setStyleSheet(style);
+    ui->spinBoxMaxMarkers->setStyleSheet(style);
 
     style = Style::comboBox();
     ui->cableComboBox->setStyleSheet(style);
@@ -174,6 +178,7 @@ Settings::Settings(QWidget *parent) :
     // directly now; nothing left here to display or wire up for them.
 
     ui->spinBoxMeasurements->setValue(g_maxMeasurements);
+    ui->spinBoxMaxMarkers->setValue(g_maxMarkers);
     // TODO developer(?)
     ui->fqRestrictCheckBox->setChecked(g_developerMode ? m_restrictFq : true);
     if (!g_developerMode) {
@@ -206,14 +211,19 @@ Settings::Settings(QWidget *parent) :
     });
     //{
     // TODO Bug #2247: update doesn't work from Antscope2
-    ui->tabWidget->removeTab(4);
+    // indexOf() rather than a hardcoded tab number -- a fixed index silently
+    // pointed at the wrong tab the moment a tab got inserted/reordered
+    // ahead of it (as the new Markers tab just did).
+    ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->Updates));
     //}
 
     if (!g_developerMode) {
-        ui->tabWidget->removeTab(3);
+        ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->Custom));
     } else {
         initCustomizeTab();
     }
+
+    initMarkersTab();
 
 
     QString cablesPath = Settings::programDataPath("cables.txt");
@@ -317,10 +327,12 @@ Settings::~Settings()
     CustomAnalyzer::save();
 
     g_maxMeasurements = ui->spinBoxMeasurements->value();
+    g_maxMarkers = ui->spinBoxMaxMarkers->value();
 
     m_settings->beginGroup("Settings");
     m_settings->setValue("restrictFq", m_restrictFq);
     m_settings->setValue("maxMeasurements", g_maxMeasurements);
+    m_settings->setValue("maxMarkers", g_maxMarkers);
 
     m_settings->setValue("currentIndex",ui->tabWidget->currentIndex());
     m_settings->endGroup();
@@ -447,14 +459,21 @@ void Settings::setAnalyzer(AnalyzerPro * analyzer)
 
 void Settings::setCalibration(Calibration * calibration)
 {
+    // setTabEnabled(), not setTabVisible() -- greys the tab out instead of
+    // making it disappear. A hidden tab silently shifts every other tab's
+    // index (which is exactly how the new Markers tab ended up hidden by
+    // this call instead of Calibration, since this used to be index 1
+    // before Markers was inserted ahead of it); indexOf() instead of a
+    // hardcoded index means the next tab insertion/reorder can't do that
+    // again either.
     if (!calibration || !calibration->isAnalyzerConnected()) {
-        ui->tabWidget->setTabVisible(1, false);
+        ui->tabWidget->setTabEnabled(ui->tabWidget->indexOf(ui->Calibration), false);
         return;
     }
     if(calibration)
     {
         calibration->init(calibration->getSerial());
-        ui->tabWidget->setTabVisible(1, true);
+        ui->tabWidget->setTabEnabled(ui->tabWidget->indexOf(ui->Calibration), true);
         m_calibration = calibration;
         ui->labelCalibrationPath->setText(m_calibration->getCalibrationPath());
         ui->labelOpenState->setText(m_calibration->getOpenFileName());
@@ -1257,6 +1276,60 @@ void Settings::initCustomizeTab()
     ui->lineEditMaxR->setText(QString::number(m_settings->value("cable_res_max", 40).toDouble()));
     ui->lineEditStepR->setText(QString::number(m_settings->value("cable_res_steps", 100).toDouble()));
     m_settings->endGroup();
+}
+
+// Populates the Markers tab's DualListWidget from the current
+// [Markers]header ini value and wires it to write changes straight back --
+// the widget itself is generic (see duallistwidget.h) and knows nothing
+// about ini keys, MarkersHeaderColumn, or MarkersPopUp; all of that lives
+// here, the one and only writer of the header ini key.
+void Settings::initMarkersTab()
+{
+    // header_label[idx] must line up with MarkersHeaderColumn's field enum --
+    // headerMap() is already keyed that way (0..18, no gaps), just needs
+    // flattening from QMap to an index-ordered QStringList.
+    QMap<int, QString>& map = MarkersHeaderColumn::headerMap();
+    QStringList headerLabels;
+    for (auto it = map.constBegin(); it != map.constEnd(); ++it)
+        headerLabels << it.value();
+
+    m_settings->beginGroup("Markers");
+    QString headerStr = m_settings->value("header", "0,1,2,3,4,5,6,7,8,9").toString();
+    m_settings->endGroup();
+
+    QList<int> selected;
+    for (const QString& s : headerStr.split(','))
+        if (!s.isEmpty())
+            selected << s.toInt();
+
+    QList<int> available;
+    for (int idx = 0; idx < headerLabels.size(); ++idx)
+        if (!selected.contains(idx))
+            available << idx;
+
+    // Del/Marker/#/FQ (0..3) are the fixed columns every marker row always
+    // shows -- same boundary MarkersPopUp::createHeader() used to gate its
+    // per-column menu on (type > fieldFQ).
+    const int frozen = MarkersHeaderColumn::fieldFQ + 1;
+
+    ui->dualListMarkersColumns->setItemLists(headerLabels, available, selected, frozen);
+
+    connect(ui->dualListMarkersColumns, &DualListWidget::itemsChanged, this, [this]() {
+        QStringList parts;
+        for (int idx : ui->dualListMarkersColumns->visibleItems())
+            parts << QString::number(idx);
+
+        m_settings->beginGroup("Markers");
+        m_settings->setValue("header", parts.join(','));
+        m_settings->endGroup();
+        m_settings->sync();
+
+        // Live-refresh the popup immediately -- Settings is non-modal and
+        // MarkersPopUp is a long-lived sibling, not something that only
+        // picks up changes on next open.
+        if (MainWindow::m_mainWindow && MainWindow::m_mainWindow->markers())
+            MainWindow::m_mainWindow->markers()->markersHint()->reloadColumns();
+    });
 }
 
 void Settings::on_enableCustomizeControls(bool enable)

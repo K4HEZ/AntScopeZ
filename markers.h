@@ -10,6 +10,8 @@
 #include <settings.h>
 #include <measurements.h>
 
+#define MAX_MARKERS 5
+
 struct marker
 {
     double frequency;

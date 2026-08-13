@@ -13,8 +13,12 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Added
 
-- "Scan Mode" combo box (Start/Stop / Center/Range) replaces the old
-  Limits/Center-Range toggle buttons.
+- Settings > Markers tab: a "Max markers" spinner (1-5, capping how many
+  markers can be placed at once) and a two-list "Available"/"Selected"
+  control for choosing which columns the Markers popup shows and in what
+  order -- replaces the popup's old per-column dropdown menus
+  (Insert/Remove column, pick a field) with a single place to configure
+  the whole set at once.
 - A "Speed/Accuracy" slider now sits directly under Points; the separate
   "Measurement speed..." dialog is gone.
 - A menu bar: File (Import/Export/Print/Screenshot/Screenshot from AA/Data

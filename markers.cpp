@@ -1,6 +1,8 @@
 #include "markers.h"
 #include "mainwindow.h"
 
+int g_maxMarkers = MAX_MARKERS;
+
 Markers::Markers(QObject *parent) : QObject(parent),
     m_swrWidget(NULL),
     m_phaseWidget(NULL),

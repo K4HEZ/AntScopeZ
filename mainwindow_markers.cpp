@@ -16,6 +16,7 @@ extern QString appendSpaces(const QString& number);
 extern bool g_developerMode; // see main.cpp
 extern bool g_usbOnly;
 extern int g_maxMeasurements; // see measurements.cpp
+extern int g_maxMarkers; // see markers.cpp
 extern QMap<QString, QString> g_mapTabPlotNames; // see mainwindow.cpp
 extern void setAbsoluteFqMaximum();
 extern bool g_bAA55modeNewProtocol;
@@ -45,6 +46,13 @@ void MainWindow::onCreateMarker(const QPoint& pos)
     QCustomPlot* plot = getCurrentPlot();
     if (plot->objectName().contains("smith") || plot->objectName().contains("tdr"))
         return;
+    if (m_markers->getMarkersCount() >= g_maxMarkers) {
+        Notification::showMessage(tr("Maximum number of markers reached (%1) -- "
+                                      "remove one, or raise the limit in Settings.")
+                                       .arg(g_maxMarkers),
+                                   this);
+        return;
+    }
     double x = plot->xAxis->pixelToCoord(pos.x());
     m_addingMarker = true;
     m_markers->create(x);

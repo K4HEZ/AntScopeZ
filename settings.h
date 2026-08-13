@@ -112,6 +112,7 @@ private:
     void cableActionEnableButtons(bool enabled);
     void openCablesFile(QString path);
     void initCustomizeTab();
+    void initMarkersTab();
     void setConnectButtonText(bool _connect);
     //vnn_01- for correct close_form---
     bool vnn_FormOn = true;
