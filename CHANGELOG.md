@@ -11,6 +11,36 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+### Changed
+
+- Settings > Updates tab reorganized: AntScopeZ's own software version (plus
+  a placeholder "Check for Software Updates" button -- not implemented yet)
+  now sits at the top. Below it, the analyzer-firmware section (info
+  display, "Update from file", "Check for firmware updates") is now fully
+  disabled, with a warning explaining why displayed inside that section
+  itself: the "Check for firmware updates" flow phones home to RigExpert
+  with the device's serial number, OS, CPU, language, and app version, over
+  a connection with TLS certificate verification disabled. The underlying
+  code for that flow (URL building, the actual network calls in
+  `Downloader`) is kept intact but guarded with `#if 0` rather than
+  deleted, so it isn't reachable by an accidental call in code either, not
+  just a disabled button, and isn't lost to a future cleanup pass. The tab
+  itself stays visible rather than disappearing (previously removed
+  outright for everyone, unconditionally).
+- Settings' developer-only "Custom Analyzer" tab (renamed from "Customize")
+  is now always shown, rather than hidden unless developer mode was on --
+  visibility itself isn't the risk, and hiding it just meant nobody but
+  the developers ever saw it needed finishing. A "This feature is currently
+  under development" notice sits at the top; "Use customized analyzer",
+  "Apply", and the "Auto calibration" group are all explicitly disabled
+  (and the checkbox forced unchecked, regardless of any previously-saved
+  customization) rather than left interactive.
+- The "Connect Analyzer" flow's device-picker dialog is now titled "Connect
+  Analyzer" instead of "Select device" -- it's opened from a menu action, a
+  Settings button, and a toolbar entry that all already call it "Connect
+  Analyzer"; the dialog's own title was the only piece still using
+  different words for the same thing.
+
 ### Added
 
 - Settings > Markers tab: a "Max markers" spinner (1-5, capping how many

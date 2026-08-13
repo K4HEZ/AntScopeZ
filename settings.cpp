@@ -209,19 +209,35 @@ Settings::Settings(QWidget *parent) :
         m_settings->setValue("open-connect-analyzer-at-launch", checked);
         m_settings->endGroup();
     });
-    //{
-    // TODO Bug #2247: update doesn't work from Antscope2
-    // indexOf() rather than a hardcoded tab number -- a fixed index silently
-    // pointed at the wrong tab the moment a tab got inserted/reordered
-    // ahead of it (as the new Markers tab just did).
-    ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->Updates));
-    //}
+    // Bug #2247 / firmware-update concerns: "Check for firmware updates"
+    // phones home to RigExpert (device serial/OS/CPU/language/our own
+    // version, in the URL -- see AnalyzerPro::on_checkUpdatesBtn_clicked())
+    // over a connection with TLS certificate verification disabled (see
+    // Downloader). The Updates tab itself stays visible and enabled
+    // (previously removeTab()'d outright) rather than disappearing, but
+    // every control in the firmware section is explicitly disabled below --
+    // see also the matching #if 0 guards around the actual network-calling
+    // functions in analyzerpro.cpp/downloader.cpp, so this can't be
+    // reawakened by an accidental code path either, not just a disabled
+    // button.
+    ui->groupBox15->setEnabled(false);        // "Info" (read-only, but greys the box/title along with its labels)
+    ui->analyzerModelLabel->setEnabled(false);
+    ui->versionLabel->setEnabled(false);
+    ui->serialLabel->setEnabled(false);
+    ui->groupBox_2->setEnabled(false);        // "Update from file"
+    ui->browseLine->setEnabled(false);
+    ui->browseBtn->setEnabled(false);
+    ui->updateProgressBar->setEnabled(false);
+    ui->updateBtn->setEnabled(false);
+    ui->checkUpdatesBtn->setEnabled(false);
+    ui->groupBox_10->setEnabled(false);       // "Analyzer" (outer box/title)
 
-    if (!g_developerMode) {
-        ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->Custom));
-    } else {
-        initCustomizeTab();
-    }
+    // Custom Analyzer used to be removeTab()'d entirely unless
+    // g_developerMode was on. Shown unconditionally now instead -- developer
+    // mode itself isn't the risk here, and hiding this tab just meant nobody
+    // but us ever saw it needed finishing. Everything on it is already
+    // disabled/under development regardless (see initCustomizeTab()).
+    initCustomizeTab();
 
     initMarkersTab();
 
@@ -439,7 +455,11 @@ void Settings::setAnalyzer(AnalyzerPro * analyzer)
         //if(m_analyzer->getModel() != 0)
         if (true)
         {
-            ui->checkUpdatesBtn->setEnabled(true);
+            // checkUpdatesBtn is permanently disabled now regardless of
+            // connection state -- see its setEnabled(false) at construction
+            // -- so no enabling toggle here any more. The info labels still
+            // update normally; a disabled QLabel still shows its real text,
+            // just visually greyed along with the rest of that section.
             ui->analyzerModelLabel->setText(m_analyzer->getModelString());
             ui->serialLabel->setText(m_analyzer->getSerialNumber());
             QString version = QString::number(m_analyzer->getVersion());
@@ -450,7 +470,6 @@ void Settings::setAnalyzer(AnalyzerPro * analyzer)
             ui->versionLabel->setText(version);
         }else
         {
-            ui->checkUpdatesBtn->setEnabled(false);
             m_analyzer->on_disconnectDevice();
             findBootloader();
         }
@@ -1261,11 +1280,21 @@ void Settings::initCustomizeTab()
     connect(ui->btnAply, &QPushButton::clicked, this, &Settings::onApplyButton);
     connect(ui->comboBoxPrototype, SIGNAL(currentIndexChanged(int)), this, SLOT(on_comboBoxPrototype_currentIndexChanged(int)));
     connect(ui->comboBoxName, SIGNAL(currentIndexChanged(int)), this, SLOT(on_comboBoxName_currentIndexChanged(int)));
-    ui->customizeCheckBox->setChecked(CustomAnalyzer::customized());
 
     ui->comboBoxName->blockSignals(false);
     ui->comboBoxPrototype->blockSignals(false);
-    on_enableCustomizeControls(CustomAnalyzer::customized());
+
+    // "Use customized analyzer" is under development -- forced off and
+    // disabled entirely regardless of whatever CustomAnalyzer::customized()
+    // last had saved, rather than seeding the checkbox/controls from it as
+    // this used to. on_enableCustomizeControls(false) also persists
+    // CustomAnalyzer::customize(false), so this is a real "not customized"
+    // state, not just a greyed-out checkbox with stale customization still
+    // saved underneath it.
+    ui->customizeCheckBox->setChecked(false);
+    on_enableCustomizeControls(false);
+    ui->customizeCheckBox->setEnabled(false);
+    ui->btnAply->setEnabled(false);
 
     // auto calibration
     m_settings->beginGroup("Auto-calibration");
@@ -1276,6 +1305,11 @@ void Settings::initCustomizeTab()
     ui->lineEditMaxR->setText(QString::number(m_settings->value("cable_res_max", 40).toDouble()));
     ui->lineEditStepR->setText(QString::number(m_settings->value("cable_res_steps", 100).toDouble()));
     m_settings->endGroup();
+
+    // "Auto calibration" is under development too, same as the rest of this
+    // tab -- disabling the groupbox covers all 6 of its fields (and greys
+    // its title/border) in one line.
+    ui->groupBox->setEnabled(false);
 }
 
 // Populates the Markers tab's DualListWidget from the current
