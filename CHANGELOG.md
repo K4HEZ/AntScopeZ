@@ -83,6 +83,13 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Fixed
 
+- `.deb` packaging: `dpkg-shlibdeps` could misattribute bundled-Qt
+  libraries back to the antscopez package itself, producing a
+  `Depends: antscopez (>= ...)` self-dependency that made the package
+  uninstallable on any machine without antscopez already present. Added
+  `cmake/fix-deb-self-dependency.sh` as a required last step of the
+  `.deb` packaging recipe to strip it; see BUILDINFO.md's "Known issues"
+  for root cause.
 - Single/Continuous/Full range buttons' disabled state was a hardcoded
   dark gray that ignored the Light/Dark theme; now theme-correct like
   every other disabled control.

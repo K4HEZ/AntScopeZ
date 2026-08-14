@@ -918,6 +918,18 @@ if(UNIX AND NOT APPLE)
     set(CPACK_DEBIAN_PACKAGE_SECTION "hamradio")
     set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/k4hez/AntScopeZ")
     set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+    # Belt-and-suspenders for the bundled-Qt case above: if a machine building
+    # this package already has an antscopez .deb installed at the same
+    # ${CMAKE_INSTALL_LIBDIR}/antscopez path (e.g. a developer testing their
+    # own package, install-then-rebuild), dpkg-shlibdeps can resolve the
+    # bundled libs' realpath back to files already owned by that installed
+    # package via `dpkg -S` and add a bogus self-dependency ("Depends:
+    # antscopez (>= ...)") -- which then makes the package uninstallable on a
+    # clean machine with no prior antscopez install. Explicitly pointing
+    # dpkg-shlibdeps at the staged (not yet installed) copy of those libs
+    # makes it resolve them as private/local first, before it ever falls back
+    # to asking dpkg who owns that path on the build machine.
+    set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS_PRIVATE_DIRS "usr/${CMAKE_INSTALL_LIBDIR}/antscopez")
     set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
     # Matches the CMAKE_INSTALL_PREFIX default set near the top of this file
     # -- kept explicit here so it can't silently drift from the

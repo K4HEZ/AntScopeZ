@@ -64,9 +64,12 @@ the normal CMake build -- see [Translations](#translations)) and produces a
 cmake --preset release
 cmake --build --preset release
 cd build-release && cpack
+../cmake/fix-deb-self-dependency.sh antscopez_<version>_amd64.deb
 ```
 
-Produces `antscopez_<version>_amd64.deb`. Uses the `release` preset (Qt 6.11
+Produces `antscopez_<version>_amd64.deb`. The `fix-deb-self-dependency.sh`
+step is required, not optional -- see "Known issues" below (self-dependency
+bug). Uses the `release` preset (Qt 6.11
 from `/opt/Qt`), not `system-qt` -- the CMake install rules bundle that
 build's own Qt 6.11 libraries and plugins into
 `/usr/lib/x86_64-linux-gnu/antscopez/` rather than linking whatever Qt6 the
@@ -125,6 +128,29 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
 
 ## Known issues
 
+- **`.deb` self-dependency bug in `dpkg-shlibdeps`.** On build machines that
+  also have distro Qt6 packages installed alongside `/opt/Qt` (e.g. this
+  project's own dev box, kept that way on purpose for the `system-qt` preset
+  comparisons below), `CPACK_DEBIAN_PACKAGE_SHLIBDEPS`'s call to
+  `dpkg-shlibdeps` against the bundled-Qt libraries under
+  `usr/lib/<triplet>/antscopez` has been observed to non-deterministically
+  misattribute some of those libraries back to the antscopez package itself,
+  producing a literal `Depends: antscopez (>= <version>)` in the control
+  file -- a package can't depend on itself; `apt`/`dpkg` refuse to install it
+  on any machine that doesn't already have it. `CMakeLists.txt` sets
+  `CPACK_DEBIAN_PACKAGE_SHLIBDEPS_PRIVATE_DIRS` as a partial mitigation, but
+  root cause traces into `dpkg-shlibdeps`'s own path-resolution internals
+  (relative vs. absolute paths change its `$ORIGIN`/package-root detection),
+  not something fully fixable via CPack config. `cmake/fix-deb-self-dependency.sh`
+  (run as the last step of the packaging recipe above) guarantees a clean
+  result by stripping any such self-reference from the built `.deb` after
+  the fact, regardless of whether/how the misattribution recurs.
+  **Separately known and left as-is (cosmetic, not install-blocking):** on a
+  machine with system Qt6 packages installed, the same mechanism can also
+  attribute bundled Qt libraries to *those* real packages (e.g.
+  `libqt6core6t64`) instead of treating them as private -- extra, unneeded
+  `Depends:` entries rather than a missing/broken one, since the app still
+  loads the bundled Qt 6.11 at runtime via RPATH regardless. Not fixed here.
 - `analyzer/updater/downloader.cpp` uses `QDomDocument::ParseResult`, which is
   Qt 6.5+. A version guard keeps it building on 6.2–6.4.
 - ~~`mainwindow.cpp` (~234 KB) and `measurements.cpp` (~192 KB) are very
