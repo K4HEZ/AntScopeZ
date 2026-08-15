@@ -551,7 +551,10 @@ void Measurements::on_newMeasurement(QString name)
         m_tableWidget->setColumnCount(MEASUREMENTS_TABLE_COLUMNS);
         m_tableWidget->setIconSize(QSize(16, 16));
         m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_VISIBLE, QHeaderView::Fixed);
-        m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_NAME, QHeaderView::Fixed);//ResizeToContents);
+        // Interactive, not Fixed: the Name column's width was previously
+        // locked, so a long measurement name (elided to fit) couldn't be
+        // widened to actually read it -- user-draggable now.
+        m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_NAME, QHeaderView::Interactive);
         m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_MENU, QHeaderView::Fixed);
         m_tableWidget->horizontalHeader()->resizeSection(COL_VISIBLE, cell_side);
         m_tableWidget->horizontalHeader()->resizeSection(COL_MENU, cell_side);

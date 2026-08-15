@@ -75,7 +75,6 @@ public:
     ~MainWindow();
 
     void openFile(QString path);
-    QString& lastSavePath() { return m_lastSaveOpenPath; }
     AnalyzerPro* analyzer() { return m_analyzer; }
     bool isMeasuring() { return analyzer()->isMeasuring(); }
     Markers* markers() { return m_markers; }
@@ -133,10 +132,6 @@ private:
     quint64 m_lastEnteredFqFrom=0;
     quint64 m_lastEnteredFqTo=0;
     bool m_fqRestrict = true;
-
-    QString m_lastSaveOpenPath;
-    QString m_lastExportImportPath;
-    QString m_lastScreenshotPath;
 
     bool m_measureSystemMetric;
     double m_Z0;

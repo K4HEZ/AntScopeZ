@@ -232,11 +232,8 @@ void MainWindow::on_tableWidget_measurments_cellActivated(int row, int column)
 
 void MainWindow::on_actionScreenshot_triggered()
 {
-    QString path = m_lastScreenshotPath;
-    if (path.isEmpty()) {
-        QDateTime datetime = QDateTime::currentDateTime();
-        path = "Images/" + datetime.toString("dd.MM.yyyy_hh.mm.ss");
-    }
+    QString path = FileDialog::userDataDir() + "/Screenshot_"
+                    + QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss");
     QString str = FileDialog::getSaveFileName(this, tr("Export PNG"), path, "*.png");
     if(str.isEmpty())
     {
@@ -246,7 +243,7 @@ void MainWindow::on_actionScreenshot_triggered()
     {
         str += ".png";
     }
-    m_lastScreenshotPath = str;
+    FileDialog::noteUserDataDirIfEnabled(str);
 
     on_pressCtrlC();
     QPixmap pixmap = QApplication::clipboard()->pixmap();
@@ -483,30 +480,32 @@ void MainWindow::on_measurmentsSaveBtn_clicked()
 
     if(!list.isEmpty())
     {
-        m_lastSaveOpenPath = FileDialog::withExtension(m_lastSaveOpenPath, "asd");
-
         int row = list.at(0)->row();
 
         // Suggest the measurement's own name (minus its "NN> " auto-numbering
         // prefix, with filesystem-unsafe characters swapped for "_" -- the
         // rename dialog, Measurements::setupUi()'s QInputDialog handler,
-        // accepts any text at all, including "/") as the filename, in the
-        // same folder as the last save/open, instead of just reusing
-        // whatever filename happened to be typed last time.
-        QString suggestedPath = m_lastSaveOpenPath;
+        // accepts any text at all, including "/") as the filename, in
+        // UserDataDir, instead of just reusing whatever filename happened
+        // to be typed last time.
+        QString suggestedName = "Measurement";
         measurement* selectedMm = m_measurements->getMeasurement(m_measurements->getMeasurementLength()-row-1);
         if (selectedMm != nullptr) {
-            QString suggestedName = selectedMm->name;
-            int namePos = suggestedName.indexOf("> ");
+            QString name = selectedMm->name;
+            int namePos = name.indexOf("> ");
             if (namePos != -1)
-                suggestedName = suggestedName.mid(namePos+2);
-            suggestedName.replace(QRegularExpression("[\\\\/:*?\"<>|]"), "_");
-            suggestedName = suggestedName.trimmed();
-            if (!suggestedName.isEmpty()) {
-                QString dir = QFileInfo(m_lastSaveOpenPath).path();
-                suggestedPath = (dir.isEmpty() || dir == ".") ? (suggestedName + ".asd") : (dir + "/" + suggestedName + ".asd");
-            }
+                name = name.mid(namePos+2);
+            name.replace(QRegularExpression("[\\\\/:*?\"<>|]"), "_");
+            name = name.trimmed();
+            if (!name.isEmpty())
+                suggestedName = name;
         }
+        // withExtension() (not a plain "+ .asd") because suggestedName may
+        // already end in ".asd" -- e.g. if it was derived from a
+        // measurement name that already went through this once (see its
+        // own doc comment for why the naive version of this duplicated
+        // extensions instead of self-healing, issue reported 2026-08-14).
+        QString suggestedPath = FileDialog::withExtension(FileDialog::userDataDir() + "/" + suggestedName, "asd");
 
         // The filter string must exactly match "*.asd" -- a stray trailing
         // space before the closing paren here used to make QFileDialog's
@@ -517,10 +516,14 @@ void MainWindow::on_measurmentsSaveBtn_clicked()
         QString path = FileDialog::getSaveFileName(this, tr("Save file"), suggestedPath, "AntScopeZ (*.asd)");
         if(!path.isEmpty())
         {
-            m_lastSaveOpenPath = path;
+            FileDialog::noteUserDataDirIfEnabled(path);
             m_measurements->saveData(row, path);
             QFileInfo fi(path);
-            QString fname = fi.baseName();
+            // completeBaseName(), not baseName(): baseName() truncates at
+            // the *first* '.' in the filename, not the last, so it mangled
+            // any name with its own dots (e.g. a date like "12.08.2026")
+            // instead of just stripping the real ".asd" extension.
+            QString fname = fi.completeBaseName();
 
             measurement* mm = m_measurements->getMeasurement(m_measurements->getMeasurementLength()-row-1);
             QString mmName = mm->name;
@@ -543,11 +546,9 @@ void MainWindow::on_measurmentsSaveBtn_clicked()
 
 void MainWindow::on_measurementsOpenBtn_clicked()
 {
-    QString path = FileDialog::getOpenFileName(this, tr("Open file"), m_lastSaveOpenPath, "AntScopeZ (*.asd)");
+    QString path = FileDialog::getOpenFileName(this, tr("Open file"), FileDialog::userDataDir(), "AntScopeZ (*.asd)");
     if(!path.isEmpty())
     {
-        m_lastSaveOpenPath = path;
-
         m_measurements->loadData( path );
         ui->measurmentsSaveBtn->setEnabled(true);
         ui->actionExport->setEnabled(true);
@@ -567,16 +568,7 @@ void MainWindow::openFile(QString path)
 
 void MainWindow::on_actionImport_triggered()
 {
-    if (m_lastExportImportPath.isEmpty()) {
-        m_settings->beginGroup("Export");
-        m_lastExportImportPath = m_settings->value("lastExportPath", "").toString();
-        m_settings->endGroup();
-    }
-    if (m_lastExportImportPath.isEmpty()) {
-        m_lastExportImportPath = m_lastSaveOpenPath;
-    }
-
-    QString path = FileDialog::getOpenFileName(this, tr("Open file"), m_lastExportImportPath,  "S1p (*.s1p);;"
+    QString path = FileDialog::getOpenFileName(this, tr("Open file"), FileDialog::userDataDir(),  "S1p (*.s1p);;"
                                                                                     "Csv (*.csv);;"
                                                                                     "Nwl (*.nwl);;"
                                                                                     "AntScopeZ (*.asd);;"
@@ -590,7 +582,6 @@ void MainWindow::on_actionImport_triggered()
     ui->actionExport->setEnabled(true);
     ui->measurmentsDeleteBtn->setEnabled(true);
     ui->measurmentsClearBtn->setEnabled(true);
-    m_lastExportImportPath = path;
 }
 
 void MainWindow::on_SaveFile(int row, QString path)

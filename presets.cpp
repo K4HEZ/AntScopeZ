@@ -37,12 +37,12 @@ void Presets::setTable (QTableWidget * table)
     // default QAbstractItemView behavior traps keyboard focus inside.
     m_tableWidget->setTabKeyNavigation(false);
 
-    // Columns always sized to fit their own content, never wider than the
-    // table itself needs, and not user-resizable -- no horizontal
-    // scrollbar should ever be necessary since the widest possible value
-    // in each column already fits.
-    m_tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    m_tableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    // Columns start sized to fit their own content, same as before, but
+    // are now user-resizable (Interactive) rather than locked -- requested
+    // 2026-08-14; the "always fits, no scrollbar needed" reasoning this
+    // replaced no longer overrides being able to adjust it by hand.
+    m_tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+    m_tableWidget->resizeColumnsToContents();
 
     m_settings->beginGroup("Presets");
     int count = m_settings->value("Quantity",0).toInt();

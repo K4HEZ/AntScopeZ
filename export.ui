@@ -6,92 +6,165 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>342</width>
-    <height>198</height>
+    <width>450</width>
+    <height>250</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>450</width>
+    <height>250</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>Export</string>
   </property>
-  <widget class="QPushButton" name="csvBtn">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>80</y>
-     <width>75</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>CSV</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="nwlBtn">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>120</y>
-     <width>75</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>NWL</string>
-   </property>
-  </widget>
-  <widget class="QGroupBox" name="groupBox">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>10</x>
      <y>10</y>
-     <width>251</width>
-     <height>61</height>
+     <width>403</width>
+     <height>176</height>
     </rect>
    </property>
-   <property name="title">
-    <string>Touchstone</string>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="3" column="1">
+     <widget class="QLabel" name="label_4">
+      <property name="text">
+       <string>APEK-EL CSV impedance export, resistance/reactance.  (.csv)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
+      </property>
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QPushButton" name="sRiBtn">
+      <property name="text">
+       <string>S, RI</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="0">
+     <widget class="QPushButton" name="csvBtn">
+      <property name="text">
+       <string>CSV</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="1">
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>One-port impedance parameter, Real/Imaginary representation. Touchstone File (.s1p)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
+      </property>
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <widget class="QPushButton" name="zRiBtn">
+      <property name="text">
+       <string>Z, RI</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="0">
+     <widget class="QPushButton" name="nwlBtn">
+      <property name="text">
+       <string>NWL</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="1">
+     <widget class="QLabel" name="label_5">
+      <property name="text">
+       <string>APEK-EL impedance export, series resistance/reactance. (.nwl)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
+      </property>
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="1">
+     <widget class="QLabel" name="label_2">
+      <property name="text">
+       <string>One-port S-parameter, Real/Imaginary representation. Touchstone File (.s1p)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
+      </property>
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QPushButton" name="sMaBtn">
+      <property name="text">
+       <string>S, MA</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="1">
+     <widget class="QLabel" name="label_3">
+      <property name="text">
+       <string>One-port S-parameter, Magnitude/Angle representation. (Touchstone .s1p)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
+      </property>
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QDialogButtonBox" name="buttonBox">
+   <property name="geometry">
+    <rect>
+     <x>340</x>
+     <y>205</y>
+     <width>100</width>
+     <height>30</height>
+    </rect>
    </property>
-   <widget class="QPushButton" name="zRiBtn">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>20</y>
-      <width>75</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Z, RI</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="sRiBtn">
-    <property name="geometry">
-     <rect>
-      <x>90</x>
-      <y>20</y>
-      <width>75</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>S, RI</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="sMaBtn">
-    <property name="geometry">
-     <rect>
-      <x>170</x>
-      <y>20</y>
-      <width>75</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>S, MA</string>
-    </property>
-   </widget>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+   <property name="standardButtons">
+    <set>QDialogButtonBox::Close</set>
+   </property>
   </widget>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>Export</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>390</x>
+     <y>220</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>225</x>
+     <y>240</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

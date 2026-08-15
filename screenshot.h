@@ -10,7 +10,6 @@
 #include <QScreen>
 #include <QTextDocument>
 #include <QDateTime>
-#include <QSettings>
 #include <analyzer/analyzerparameters.h>
 #include <QClipboard>
 #include <popup.h>
@@ -30,8 +29,6 @@ public:
 
 private:
     Ui::Screenshot *ui;
-    QSettings *m_settings;
-    QString m_lastPath;
     int m_lcdHeight;
     int m_lcdWidth;
     int m_obtainedStick_2=0;

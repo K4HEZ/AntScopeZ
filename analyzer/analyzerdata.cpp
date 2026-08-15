@@ -74,13 +74,19 @@ void AnalyzerData::on_btnReadAll_clicked()
     QWidget* parent = parentWidget();
     MainWindow* mainWindow = qobject_cast<MainWindow*>(parent);
     strSaveDir = FileDialog::getExistingDirectory(this, tr("Open Directory"),
-                                                 mainWindow->lastSavePath(),
+                                                 FileDialog::userDataDir(),
                                                  QFileDialog::ShowDirsOnly
                                                  | QFileDialog::DontResolveSymlinks);
     if (strSaveDir.isEmpty())
         return;
 
-    mainWindow->lastSavePath() = strSaveDir;
+    // Picking a destination for a fresh batch of AA reads is a save-type
+    // gesture, not a browse-somewhere-once one -- follows UserDataDir the
+    // same as any other Save action when that's enabled. (Not
+    // noteUserDataDirIfEnabled(): strSaveDir is already the chosen
+    // directory itself, not a file path to take the parent folder of.)
+    if (FileDialog::userDataDirFollowsSaves())
+        FileDialog::setUserDataDir(strSaveDir);
 
     connect(mainWindow->analyzer(), &AnalyzerPro::measurementComplete, this, &AnalyzerData::on_complete);
 

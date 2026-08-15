@@ -543,9 +543,6 @@ MainWindow::MainWindow(QWidget *parent) :
 #endif
 
     m_settings->beginGroup("MainWindow");
-    m_lastSaveOpenPath = m_settings->value("lastSavePath", "").toString();
-    m_lastExportImportPath = m_settings->value("lastExportImportPath", "").toString();
-    m_lastScreenshotPath = m_settings->value("lastScreenshotPath", "").toString();
     if( m_settings->value("fullScreen", this->isFullScreen()).toBool())
     {
         this->showMaximized();
@@ -882,9 +879,6 @@ MainWindow::~MainWindow()
     m_settings->setValue("fullScreen", this->isMaximized());
     m_settings->setValue("dotsNumber", this->m_dotsNumber);
 
-    m_settings->setValue("lastSavePath", m_lastSaveOpenPath);
-    m_settings->setValue("lastExportImportPath", m_lastExportImportPath);
-    m_settings->setValue("lastScreenshotPath", m_lastScreenshotPath);
     m_settings->setValue("measureSystemMetric", m_measureSystemMetric);
     m_settings->setValue("isRange", m_isRange);
 

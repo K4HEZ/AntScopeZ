@@ -8,6 +8,8 @@
 #include <QScopedPointer>
 #include <QGuiApplication>
 #include <QScreen>
+#include <QRegularExpression>
+#include <QDateTime>
 
 Print::Print(QWidget *parent) :
     QDialog(parent),
@@ -28,8 +30,6 @@ Print::Print(QWidget *parent) :
     QString path = Settings::setIniFile();
     m_settings = new QSettings(path, QSettings::IniFormat);
     m_settings->beginGroup("Print");
-
-    m_lastPath = m_settings->value("lastPath","").toString();
 
     QRect rect = m_settings->value("geometry", 0).toRect();
     if(rect.x() != 0)
@@ -54,7 +54,6 @@ Print::~Print()
 {
     m_settings->beginGroup("Print");
     m_settings->setValue("geometry", this->geometry());
-    m_settings->setValue("lastPath",m_lastPath);
     m_settings->endGroup();
 
     delete ui;
@@ -326,9 +325,23 @@ void Print::on_printBtn_clicked()
 }
 
 
+QString Print::suggestedPath(const QString &ext) const
+{
+    QString name = ui->lineEditHead->text();
+    name.replace(QRegularExpression("[\\\\/:*?\"<>|]"), "_");
+    name = name.trimmed();
+    if (name.isEmpty())
+        name = QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss");
+    // withExtension(), not a plain "+ '.' + ext": the title may already
+    // end in a matching extension, or contain other dots of its own that
+    // a naive strip-at-the-wrong-dot would mangle. See FileDialog::
+    // withExtension()'s own doc comment (issue reported 2026-08-14).
+    return FileDialog::withExtension(FileDialog::userDataDir() + "/" + name, ext);
+}
+
 void Print::on_pdfPrintBtn_clicked()
 {
-    QString path = FileDialog::getSaveFileName(this, tr("Export PDF"), m_lastPath, "*.pdf");
+    QString path = FileDialog::getSaveFileName(this, tr("Export PDF"), suggestedPath("pdf"), "*.pdf");
     if(path.isEmpty())
     {
         return;
@@ -343,7 +356,7 @@ void Print::on_pdfPrintBtn_clicked()
     {
         path.append(".pdf");
     }
-    m_lastPath = path;
+    FileDialog::noteUserDataDirIfEnabled(path);
 
     // Pure file export, no printer/driver involved -- QPdfWriter writes PDF
     // directly, so it doesn't inherit QPrinter's driver-default-resolution
@@ -376,7 +389,7 @@ void Print::on_pdfPrintBtn_clicked()
 
 void Print::on_pngPrintBtn_clicked()
 {
-    QString path = FileDialog::getSaveFileName(this, tr("Export PNG"), m_lastPath, "*.png");
+    QString path = FileDialog::getSaveFileName(this, tr("Export PNG"), suggestedPath("png"), "*.png");
     if(path.isEmpty())
     {
         return;
@@ -412,7 +425,7 @@ void Print::on_pngPrintBtn_clicked()
     {
         path.append(".png");
     }
-    m_lastPath = path;
+    FileDialog::noteUserDataDirIfEnabled(path);
     file.save(path,"PNG",80);
 }
 

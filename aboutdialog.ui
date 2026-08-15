@@ -31,7 +31,7 @@
         </size>
        </property>
        <property name="pixmap">
-        <pixmap>:/AntScopeZ.png</pixmap>
+        <pixmap>:/new/prefix1/AntScopeZ.png</pixmap>
        </property>
        <property name="scaledContents">
         <bool>true</bool>

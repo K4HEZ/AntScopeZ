@@ -52,7 +52,12 @@ protected slots:
 protected:
     Ui::Print *ui;
     QSettings *m_settings;
-    QString m_lastPath;
+
+    // Suggested save path with the given extension (no leading dot) --
+    // FileDialog::userDataDir() plus the printout's own title
+    // (lineEditHead), sanitized; falls back to a timestamp if the title is
+    // empty.
+    QString suggestedPath(const QString &ext) const;
 
     QVector <double> m_mFqList;
     QVector <QCPCurve*> m_curveList;

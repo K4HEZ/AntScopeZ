@@ -239,7 +239,13 @@ void AnalyzerPro::on_measure (qint64 fqFrom, qint64 fqTo, qint32 dotsNumber)
     {
         setIsMeasuring(true);
         QDateTime datetime = QDateTime::currentDateTime();
-        QString name = datetime.toString("##hh:mm:ss dd.MM.yyyy");
+        // yyyyMMdd-hhmmss: sorts chronologically regardless of locale, and
+        // (unlike the old "hh:mm:ss dd.MM.yyyy") has no ':' or '.' for a
+        // later Save to have to sanitize/strip -- those used to survive
+        // into the saved filename as "_"-for-":" and then confuse the
+        // extension-stripping on the next save (dots from the date read as
+        // part of the "extension" to remove). See CHANGELOG.md.
+        QString name = datetime.toString("##yyyyMMdd-hhmmss");
         emit newMeasurement(name, fqFrom, fqTo, dotsNumber);
         m_dotsNumber = dotsNumber;
         m_chartCounter = 0;
@@ -262,7 +268,7 @@ void AnalyzerPro::on_measureS21 (qint64 fqFrom, qint64 fqTo, qint32 dotsNumber)
     {
         setIsMeasuring(true);
         QDateTime datetime = QDateTime::currentDateTime();
-        QString name = datetime.toString("##dd.MM.yyyy-hh:mm:ss");
+        QString name = datetime.toString("##yyyyMMdd-hhmmss"); // see on_measure()'s comment
         emit newMeasurement(name, fqFrom, fqTo, dotsNumber);
         m_dotsNumber = dotsNumber;
         m_chartCounter = 0;
@@ -301,7 +307,7 @@ void AnalyzerPro::on_measureUser (qint64 fqFrom, qint64 fqTo, qint32 dotsNumber)
     {
         setIsMeasuring(true);
         QDateTime datetime = QDateTime::currentDateTime();
-        QString name = datetime.toString("##dd.MM.yyyy-hh:mm:ss");
+        QString name = datetime.toString("##yyyyMMdd-hhmmss"); // see on_measure()'s comment
         emit newMeasurement(name, fqFrom, fqTo, dotsNumber);
         m_dotsNumber = dotsNumber;
         m_chartCounter = 0;
