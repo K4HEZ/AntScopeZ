@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(AntScopeZ
-    VERSION 2.2.0
+    VERSION 2.2.1
     DESCRIPTION "AntScopeZ Antenna Analyzer Application"
     LANGUAGES C CXX
 )
@@ -12,17 +12,11 @@ project(AntScopeZ
 # Debian's own version-format rules. This suffix is for humans instead: it
 # only feeds ANTSCOPEZ_VER (About box, title bar, startup log line -- see
 # target_compile_definitions() below), so an in-progress build reads
-# "2.2.0-dev" instead of silently claiming to be the exact 2.2.0 release.
-# Clear it to an empty string right when 2.2.0 actually ships (matching
-# commit + `v2.2.0` tag, same pattern as `v2.1.6`/`v2.1.5`), then bump
+# "2.2.1-dev" instead of silently claiming to be the exact 2.2.1 release.
+# Clear it to an empty string right when 2.2.1 actually ships (matching
+# commit + `v2.2.1` tag, same pattern as `v2.2.0`/`v2.1.6`), then bump
 # PROJECT_VERSION and set this back to "-dev" to start the next cycle.
-#
-# 2.2.0 marks this branch's UI overhaul (dock the markers/graph-hint
-# popups, add a menu bar, 3-pane layout, UserDataDir unification, Debug
-# Logging) as a minor-version jump, not an incremental fix -- developed on
-# overhaul/2.2.0-ui-redesign (branched from develop 2026-08-12), since
-# reconciled back into develop.
-set(ANTSCOPEZ_VER_SUFFIX "")
+set(ANTSCOPEZ_VER_SUFFIX "-dev")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
