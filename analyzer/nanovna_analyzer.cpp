@@ -1,6 +1,7 @@
 #include "nanovna_analyzer.h"
 #include <qserialport.h>
 #include <QMessageBox>
+#include "debuglog.h"
 
 // static members
 QList<QSerialPortInfo> NanovnaAnalyzer::m_listNanovnaPorts;
@@ -73,6 +74,7 @@ void NanovnaAnalyzer::dataArrived()
     QByteArray ar = m_comPort->readAll();
     m_incomingBuffer += ar;
 
+    DebugLog::nanovnaRx(ar);
     //qDebug() << "NANO dataArrived: " << QString::fromLatin1(ar);
 
     int count = parse(m_incomingBuffer);
@@ -215,7 +217,9 @@ qint64 NanovnaAnalyzer::sendData(QString data)
 {
     //qDebug() << "NanovnaAnalyzer::sendData> " << data;
 
-    qint64 res = m_comPort->write(data.toLocal8Bit());
+    QByteArray bytes = data.toLocal8Bit();
+    DebugLog::nanovnaTx(bytes);
+    qint64 res = m_comPort->write(bytes);
     return res;
 }
 

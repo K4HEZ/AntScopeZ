@@ -3,6 +3,7 @@
 #include <QOperatingSystemVersion>
 #include <QDateTime>
 #include "crc32.h"
+#include "debuglog.h"
 
 
 BleAnalyzer::BleAnalyzer(QObject *parent)
@@ -411,12 +412,7 @@ void BleAnalyzer::write(QByteArray& arr)
         //qInfo() << "BleAnalyzer::write " << error();
         return;
     }
-    // Uncomment when actually debugging Bluetooth -- logs every raw TX packet.
-    //qDebug().noquote()
-    //    << "BLE TX"
-    //    << hrChar.uuid().toString()
-    //    << "(" << arr.size() << ") ^ "
-    //    << arr.toHex(' ').toUpper();
+    DebugLog::bleTx(arr, arr.size() > 0 && (quint8)arr[0] == BLE_PING_CMD);
     m_insideWrite = true;
     m_service->writeCharacteristic(hrChar, arr);
     m_insideWrite = false;
@@ -426,12 +422,7 @@ void BleAnalyzer::dataReceived(const QLowEnergyCharacteristic &c, const QByteArr
 {
     if (c.uuid() != QBluetoothUuid(uuidRead))
         return;
-    // Uncomment when actually debugging Bluetooth -- logs every raw RX packet.
-    //qDebug().noquote()
-    //    << "BLE RX"
-    //    << c.uuid().toString()
-    //    << "(" << value.size() << ") v "
-    //    << value.toHex(' ').toUpper();
+    DebugLog::bleRx(value, value.size() > 0 && (quint8)value[0] == BLE_PING_CMD);
     m_lastReadTimeMS = QDateTime::currentMSecsSinceEpoch();
     if (!checkCRC(value)) {
         qInfo() << "errorCRC";

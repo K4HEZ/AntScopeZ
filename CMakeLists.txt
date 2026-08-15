@@ -110,6 +110,7 @@ set(ANTSCOPE_SOURCES
     crc32.cpp
     customgraph.cpp
     CustomPlot.cpp
+    debuglog.cpp
     duallistwidget.cpp
     editbandsdialog.cpp
     encodinghelpers.cpp
@@ -188,6 +189,7 @@ set(ANTSCOPE_HEADERS
     crc32.h
     customgraph.h
     CustomPlot.h
+    debuglog.h
     duallistwidget.h
     editbandsdialog.h
     encodinghelpers.h

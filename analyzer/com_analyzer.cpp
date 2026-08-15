@@ -2,6 +2,7 @@
 #include "customanalyzer.h"
 #include <qserialport.h>
 #include "AA55BTPacket.h"
+#include "debuglog.h"
 
 extern bool g_bAA55modeNewProtocol;
 extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
@@ -125,6 +126,7 @@ void ComAnalyzer::dataArrived()
     QByteArray ar = m_comPort->readAll();
     m_incomingBuffer += ar;
 
+    DebugLog::serialRx(ar);
     //qDebug() << "com dataArrived: " << m_lastReadTimeMS << QString::fromLatin1(ar);
 
     int count = parse(m_incomingBuffer);
@@ -363,15 +365,16 @@ void ComAnalyzer::searchAnalyzer()
 }
 qint64 ComAnalyzer::sendData(const QByteArray& data)
 {
-    //qDebug() << "ComAnalyzer::sendData> " << data;
+    DebugLog::serialTx(data);
     qint64 res = m_comPort->write(data);
     return res;
 }
 
 qint64 ComAnalyzer::sendCommand(const QString& data)
 {
-    //qDebug() << "comAnalyzer::sendData> " << data;
-    qint64 res = m_comPort->write(data.toLocal8Bit());
+    QByteArray bytes = data.toLocal8Bit();
+    DebugLog::serialTx(bytes);
+    qint64 res = m_comPort->write(bytes);
     return res;
 }
 

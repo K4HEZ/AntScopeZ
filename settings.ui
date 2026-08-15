@@ -355,6 +355,52 @@
          </item>
         </layout>
        </item>
+       <item row="1" column="0" colspan="2">
+        <widget class="QGroupBox" name="groupBoxDataFolder">
+         <property name="title">
+          <string>Data folder</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_dataFolder">
+          <property name="topMargin">
+           <number>20</number>
+          </property>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_dataFolder">
+            <item>
+             <widget class="QLineEdit" name="dataFolderLineEdit">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="dataFolderBrowseBtn">
+              <property name="text">
+               <string>Browse...</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="dataFolderFollowsSavesCheckBox">
+            <property name="text">
+             <string>Save actions update this folder</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="Markers">
@@ -1017,10 +1063,19 @@
      </widget>
      <widget class="QWidget" name="Custom">
       <attribute name="title">
-       <string>Custom Analyzer</string>
+       <string>Developer</string>
       </attribute>
-      <layout class="QFormLayout" name="formLayout_10">
-       <item row="0" column="0">
+      <layout class="QVBoxLayout" name="verticalLayout_developerTab">
+       <item>
+        <widget class="QGroupBox" name="groupBoxCustomAnalyzer">
+         <property name="title">
+          <string>Custom Analyzer</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_10">
+          <property name="topMargin">
+           <number>20</number>
+          </property>
+          <item row="0" column="0">
         <widget class="QLabel" name="customizeUnderDevelopmentLabel">
          <property name="text">
           <string>This feature is currently under development.</string>
@@ -1345,6 +1400,76 @@
           </size>
          </property>
         </spacer>
+       </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBoxDebugLogging">
+         <property name="title">
+          <string>Debug Logging</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_debugLogging">
+          <property name="topMargin">
+           <number>20</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="debugLogSerialCheckBox">
+            <property name="text">
+             <string>Enable Com/Serial debug logs</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="debugLogUsbHidCheckBox">
+            <property name="text">
+             <string>Enable USB/HID debug logs</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="debugLogBleCheckBox">
+            <property name="text">
+             <string>Enable BLE/Bluetooth logs</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_bleShowPings">
+            <item>
+             <spacer name="horizontalSpacer_bleShowPingsIndent">
+              <property name="sizeType">
+               <enum>QSizePolicy::Fixed</enum>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>24</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="debugLogBleShowPingsCheckBox">
+              <property name="text">
+               <string>Show ping/keepalive traffic</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="debugLogNanovnaCheckBox">
+            <property name="text">
+             <string>Enable NanoVNA debug logs</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </item>
       </layout>
      </widget>

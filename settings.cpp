@@ -10,6 +10,7 @@
 #include "inforequestdialog.h"
 #include "style.h"
 #include "filedialog.h"
+#include "debuglog.h"
 #include <QFile>
 #include <QFileInfo>
 #include <QDir>
@@ -74,6 +75,7 @@ void Settings::applyStyles()
     ui->loadCalibBtn->setStyleSheet(style);
     ui->calibWizard->setStyleSheet(style);
     ui->exportBtn->setStyleSheet(style);
+    ui->dataFolderBrowseBtn->setStyleSheet(style);
 
     style = Style::groupBox();
     ui->groupBox_1->setStyleSheet(style);
@@ -87,6 +89,9 @@ void Settings::applyStyles()
     ui->groupBox_9->setStyleSheet(style);
     ui->groupBox_7->setStyleSheet(style);
     ui->groupBox_markers->setStyleSheet(style);
+    ui->groupBoxDataFolder->setStyleSheet(style);
+    ui->groupBoxCustomAnalyzer->setStyleSheet(style);
+    ui->groupBoxDebugLogging->setStyleSheet(style);
 
     style = Style::label();
     style += Style::lineEdit();
@@ -98,9 +103,16 @@ void Settings::applyStyles()
     ui->conductiveLoss->setStyleSheet(style);
     ui->dielectricLoss->setStyleSheet(style);
     ui->atMHz->setStyleSheet(style);
+    ui->dataFolderLineEdit->setStyleSheet(style);
 
     style = Style::checkBox();
     ui->checkBoxOpenConnectAnalyzerAtLaunch->setStyleSheet(style);
+    ui->dataFolderFollowsSavesCheckBox->setStyleSheet(style);
+    ui->debugLogSerialCheckBox->setStyleSheet(style);
+    ui->debugLogUsbHidCheckBox->setStyleSheet(style);
+    ui->debugLogBleCheckBox->setStyleSheet(style);
+    ui->debugLogBleShowPingsCheckBox->setStyleSheet(style);
+    ui->debugLogNanovnaCheckBox->setStyleSheet(style);
 
     style = Style::spinBox();
     ui->spinBoxMeasurements->setStyleSheet(style);
@@ -191,6 +203,55 @@ Settings::Settings(QWidget *parent) :
     ui->checkBoxOpenConnectAnalyzerAtLaunch->setChecked(
         m_settings->value("open-connect-analyzer-at-launch", true).toBool());
     m_settings->endGroup();
+
+    // Debug Logging (Developer tab) -- deliberately NOT persisted to the
+    // ini and always starts unchecked: logging is opt-in per session, not
+    // a standing setting someone forgets they left on. Drives DebugLog's
+    // per-interface enable flags directly (also plain in-memory, not
+    // persisted) rather than through QSettings.
+    ui->debugLogSerialCheckBox->setChecked(false);
+    ui->debugLogUsbHidCheckBox->setChecked(false);
+    ui->debugLogBleCheckBox->setChecked(false);
+    ui->debugLogNanovnaCheckBox->setChecked(false);
+    connect(ui->debugLogSerialCheckBox, &QCheckBox::clicked, DebugLog::setSerialEnabled);
+    connect(ui->debugLogUsbHidCheckBox, &QCheckBox::clicked, DebugLog::setUsbHidEnabled);
+    connect(ui->debugLogBleCheckBox, &QCheckBox::clicked, DebugLog::setBleEnabled);
+    connect(ui->debugLogNanovnaCheckBox, &QCheckBox::clicked, DebugLog::setNanovnaEnabled);
+
+    // BLE's once-a-second keepalive ping is real traffic but drowns out
+    // everything else in a long capture -- see DebugLog::setBleShowPings().
+    // Only meaningful (and only enabled) while BLE logging itself is on;
+    // defaults checked (shown) since nothing here is hidden unless asked
+    // for, same as the rest of this group.
+    ui->debugLogBleShowPingsCheckBox->setChecked(true);
+    ui->debugLogBleShowPingsCheckBox->setEnabled(ui->debugLogBleCheckBox->isChecked());
+    DebugLog::setBleShowPings(true);
+    connect(ui->debugLogBleCheckBox, &QCheckBox::toggled, ui->debugLogBleShowPingsCheckBox, &QCheckBox::setEnabled);
+    connect(ui->debugLogBleShowPingsCheckBox, &QCheckBox::clicked, DebugLog::setBleShowPings);
+
+    // "Data folder" -- the single UserDataDir every save/export/screenshot
+    // dialog now defaults to (see FileDialog::userDataDir()), replacing the
+    // old per-dialog remembered-last-path settings.
+    // setCursorPosition(0) after setText(): QLineEdit otherwise leaves the
+    // cursor (and its scroll position) at the end of the text it was just
+    // given, which for a path wider than the field shows the *tail* of it
+    // ("cuments/AntScopeZ") instead of the front -- scroll back to the
+    // start so the front of the path is what's visible.
+    ui->dataFolderLineEdit->setText(FileDialog::userDataDir());
+    ui->dataFolderLineEdit->setCursorPosition(0);
+    ui->dataFolderFollowsSavesCheckBox->setChecked(FileDialog::userDataDirFollowsSaves());
+    connect(ui->dataFolderBrowseBtn, &QPushButton::clicked, this, [=]() {
+        QString dir = FileDialog::getExistingDirectory(this, tr("Choose data folder"),
+                                                         FileDialog::userDataDir());
+        if (dir.isEmpty())
+            return;
+        FileDialog::setUserDataDir(dir);
+        ui->dataFolderLineEdit->setText(dir);
+        ui->dataFolderLineEdit->setCursorPosition(0);
+    });
+    connect(ui->dataFolderFollowsSavesCheckBox, &QCheckBox::clicked, [=](bool checked) {
+        FileDialog::setUserDataDirFollowsSaves(checked);
+    });
 
     connect(ui->lineEdit_systemImpedance, &QLineEdit::editingFinished, this, &Settings::on_systemImpedance);
 

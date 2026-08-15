@@ -3,6 +3,7 @@
 #include <QtConcurrent/QtConcurrentRun>
 #include <QThread>
 #include "analyzerpro.h"
+#include "debuglog.h"
 
 extern bool g_usbOnly;
 extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
@@ -225,7 +226,6 @@ qint64 HidAnalyzer::sendCommand(const QString& data)
     {
         return 0;
     }
-    //qDebug() << "HidAnalyzer::sendCommand: " << data;
     unsigned char buf[REPORT_SIZE] = {0};
     int size = data.length();
     if(size != 0)
@@ -236,6 +236,7 @@ qint64 HidAnalyzer::sendCommand(const QString& data)
         {
             buf[i+2] = data[i].toLatin1();
         }
+        DebugLog::usbHidTx(QByteArray((const char*)buf, REPORT_SIZE));
         return hid_write(m_hidDevice, buf, REPORT_SIZE);
     }
     return 0;
@@ -247,7 +248,6 @@ qint64 HidAnalyzer::sendData(const QByteArray& data)
     {
         return 0;
     }
-    //qDebug() << "HidAnalyzer::sendData: " << data;
     unsigned char buf[REPORT_SIZE+1] = {0};
     int size = data.length();
     if(size != 0)
@@ -258,9 +258,8 @@ qint64 HidAnalyzer::sendData(const QByteArray& data)
         {
             buf[i+2] = data[i];
         }
+        DebugLog::usbHidTx(QByteArray((const char*)buf, REPORT_SIZE+1));
         qint64 written = hid_write(m_hidDevice, buf, REPORT_SIZE);
-        QByteArray arr((const char*)buf, REPORT_SIZE+1);
-        qDebug() << "HidAnalyzer::sendData" << arr.toHex();
         return written;
     }
     return 0;
@@ -458,6 +457,7 @@ void HidAnalyzer::hidRead (void)
     m_mutexRead.lock();
     if(read > 0)
     {
+        DebugLog::usbHidRx(QByteArray((const char*)readBuff, read));
         if(readBuff[0] == ANTSCOPE_REPORT)
         {
             for(int i = 0; i < readBuff[1]; i++)
