@@ -17,13 +17,12 @@ project(AntScopeZ
 # commit + `v2.2.0` tag, same pattern as `v2.1.6`/`v2.1.5`), then bump
 # PROJECT_VERSION and set this back to "-dev" to start the next cycle.
 #
-# 2.2.0 (rather than the next patch bump off develop's 2.1.7-dev) marks this
-# branch's UI overhaul (dock the markers/graph-hint popups, add a menu bar)
-# as a minor-version jump, not an incremental fix -- see
-# overhaul/2.2.0-ui-redesign, branched from develop 2026-08-12. develop
-# itself is unaffected and stays on its own 2.1.7-dev line until this either
-# merges or the two get reconciled.
-set(ANTSCOPEZ_VER_SUFFIX "-dev")
+# 2.2.0 marks this branch's UI overhaul (dock the markers/graph-hint
+# popups, add a menu bar, 3-pane layout, UserDataDir unification, Debug
+# Logging) as a minor-version jump, not an incremental fix -- developed on
+# overhaul/2.2.0-ui-redesign (branched from develop 2026-08-12), since
+# reconciled back into develop.
+set(ANTSCOPEZ_VER_SUFFIX "")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

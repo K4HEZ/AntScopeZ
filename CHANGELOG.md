@@ -11,6 +11,8 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-08-15
+
 ### Added
 
 - Menu bar (File/Edit/View/Connect Analyzer/Help), replacing the old button
