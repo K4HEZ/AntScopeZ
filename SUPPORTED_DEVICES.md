@@ -48,7 +48,21 @@ current catalog before publishing this list anywhere external.
 - **NanoVNA** -- the open-source/DIY VNA project. Handled by its own
   dedicated `analyzer/nanovna_analyzer.cpp` class, entirely separate
   connection/protocol handling from the RigExpert-oriented analyzer
-  classes.
+  classes. Detected via USB VID:PID `0483:5740` -- STMicroelectronics'
+  generic "Virtual COM Port" demo ID, not a NanoVNA-specific registered
+  one, which nearly the whole NanoVNA ecosystem ships unmodified (few
+  variants bothered registering their own USB VID), so this is a broad
+  but imprecise family match rather than a specific-model check. Speaks
+  the original ASCII shell protocol (`info`/`sweep`/`frequencies`/`data`
+  over what's really a USB CDC-ACM serial port, not a distinct native-USB
+  path) -- the lowest common denominator most of the family (NanoVNA,
+  NanoVNA-H, NanoVNA-H4, DiSlord's fork, most clones) has stayed
+  backward-compatible with, even where a firmware also offers a newer,
+  faster binary protocol as an option (not used here). Only requests S11
+  (1-port reflection) data; S21 (2-port through) isn't requested even
+  though the real firmware supports it. The `info` response's `Board:`
+  line reports the actual connected firmware/hardware string if you need
+  to confirm exactly what's plugged in.
 - **WilsonPro CAA** -- Wilson Electronics' own brand (cellular
   signal-booster company), not RigExpert. Detected via its own
   serial-number prefix alongside the RigExpert ones, which suggests a
@@ -58,7 +72,8 @@ current catalog before publishing this list anywhere external.
 
 ## Anything else
 
-Settings -> Customize (behind the `-developer` launch flag) lets you
-manually define a "prototype" -- frequency range, screen size, protocol --
-for a device not in the table above, without a code change. See
+Settings -> Developer -> Custom Analyzer lets you manually define a
+"prototype" -- frequency range, screen size, protocol -- for a device
+not in the table above, without a code change. Currently disabled (not
+safe to use yet -- see `BUILDINFO.md`'s Known Issues). See
 `docs/user-guide.md`'s "Customized analyzer parameters" section.

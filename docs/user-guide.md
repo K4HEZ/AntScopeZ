@@ -52,12 +52,15 @@ won't pull in anything missing on its own -- run
 `sudo apt --fix-broken install` afterward if it complains about unmet
 dependencies.)
 
-You may notice `antscopez (>= <version>)` listed as one of the
-package's *own* dependencies -- that's a known, harmless cosmetic
-byproduct of how the bundled Qt libraries get their dependency
-declared (see `BUILDINFO.md`'s packaging notes), not a sign of a broken
-build. It doesn't block installation; apt/dpkg treat a package as
-trivially satisfying a dependency on itself.
+Released `.deb`s are built with a fixup step
+(`cmake/fix-deb-self-dependency.sh`) that strips a `dpkg-shlibdeps`
+quirk which otherwise makes the package list itself,
+`antscopez (>= <version>)`, as one of its own dependencies -- not
+cosmetic if it's present: a package can't satisfy a dependency on
+itself on a machine that doesn't already have it installed, so an
+un-fixed-up build is genuinely uninstallable, not just noisy. See
+`BUILDINFO.md`'s Known Issues if you're building your own `.deb` and
+hit this.
 
 **Upgrading:** install a newer `.deb` the same way -- it replaces the
 current install in place. Your own settings and calibration data live
@@ -273,7 +276,7 @@ use even when it is.)*
 ## Settings
 
 The Settings dialog has six tabs: **General**, **Markers**,
-**OSL Calibration**, **Cable**, **Custom Analyzer**, and **Updates**.
+**OSL Calibration**, **Cable**, **Developer**, and **Updates**.
 
 OSL Calibration has its own section -- see
 [Calibration (OSL)](#calibration-osl).
@@ -297,6 +300,8 @@ any more.
 | Don't restrict frequency | Would disable Start/Stop range clamping entirely -- currently hidden, gated behind the disabled internal developer flag (see `BUILDINFO.md`'s Known Issues) |
 | System impedance | The reference impedance (default 50Ω) everything -- SWR, Smith chart center, RL -- is calculated against |
 | Open 'Connect Analyzer' on launch | See [Connecting to your analyzer](#connecting-to-your-analyzer) |
+| Data folder (with Browse...) | Where save/export/screenshot dialogs across the app default to -- see [Files and directories](#files-and-directories) |
+| Save actions update this folder | Off by default. When on, completing a *save* (not Open/Import) somewhere else moves Data folder there too, so it follows you; when off, Data folder only changes when you set it here yourself |
 
 ### Markers tab
 
@@ -333,14 +338,41 @@ this pass didn't find. Worth confirming against real hardware before
 relying on it; flagging here rather than asserting a behavior that
 wasn't actually confirmed.
 
-### Custom Analyzer tab
+### Developer tab
 
-<!-- SCREENSHOT: Settings dialog, Custom Analyzer tab -->
+<!-- SCREENSHOT: Settings dialog, Developer tab -->
 
-Everything on this tab is disabled -- it's shown so you can see it
-exists (and what it's meant to become), not because it currently does
-anything. See [Customized analyzer parameters](#customized-analyzer-parameters)
+Two group boxes:
+
+**Custom Analyzer** -- everything in it is disabled; it's shown so you
+can see it exists (and what it's meant to become), not because it
+currently does anything. See
+[Customized analyzer parameters](#customized-analyzer-parameters)
 below for what it's for and why it's not safe to use yet.
+
+**Debug Logging** -- four checkboxes, one per analyzer connection type:
+Com/Serial, USB/HID, BLE/Bluetooth, and NanoVNA. Turning one on starts
+dumping every raw byte sent and received over that connection --
+timestamped, hex and ASCII side by side (traditional `hexdump`-style,
+16 bytes/line), each line tagged `>>` for a byte the app sent or `<<`
+for one it received -- into a shared log file. See
+[Files and directories](#files-and-directories) for where that file
+lives and what it looks like.
+
+A fifth, indented checkbox under BLE/Bluetooth, **Show ping/keepalive
+traffic**, is only enabled while BLE logging itself is on. BLE sends a
+small keepalive packet once a second to detect a dropped connection;
+useful to confirm it's alive, but it drowns out everything else in a
+longer capture. Checked (shown) by default -- uncheck it to filter
+just the pings out, without turning BLE logging off entirely. Serial,
+USB/HID, and NanoVNA don't have an equivalent filter: their traffic
+(including their own periodic keepalives) is always logged in full.
+
+These checkboxes are session-only by design -- they always start
+unchecked when you open AntScopeZ, regardless of how you left them
+last time, so logging never keeps running silently in the background
+across restarts. Turn them back on each time you actually want to
+capture something.
 
 ### Updates tab
 
@@ -612,6 +644,13 @@ Separately, the **Measurements panel's own Open/Save** buttons are
 narrower: they only read/write AntScopeZ's native `.asd` format, for one
 measurement at a time.
 
+Export and Save both default to your [Data folder](#files-and-directories),
+suggesting a filename built from the measurement's own name (Save) or
+description (Export) rather than whatever you last typed. Import and
+Open default to the same folder but don't move it -- browsing somewhere
+else to import a one-off file doesn't change where your own saves land
+afterward.
+
 ## Print and screenshots
 
 <!-- SCREENSHOT: Print dialog -->
@@ -641,6 +680,11 @@ image or document:
   **Export to BMP**, or **To clipboard**. **Refresh** re-captures the
   device's screen again without closing the dialog, in case it's
   changed since it was first captured.
+
+All of the above default to your [Data folder](#files-and-directories),
+with a timestamped suggested filename (`Screenshot_yyyyMMdd-hhmmss.png`
+for Save Screenshot, `AnalyzerScreen_yyyyMMdd-hhmmss.pdf`/`.bmp` for
+Screenshot from AA) rather than reusing whatever was typed last time.
 
 ## TDR (Time Domain Reflectometry)
 
@@ -694,13 +738,14 @@ TDR needed, just viewed through a different chart.
 
 ## Customized analyzer parameters
 
-Settings' **Custom Analyzer** tab is intended to let you define a named
-analyzer preset -- a custom minimum/maximum frequency range plus an LCD
-width/height -- for a unit AntScopeZ already recognizes correctly (a
-clone, or a newer hardware revision of a known model) whose real
-frequency range differs from what AntScopeZ assumes for that model.
+Settings' **Developer** tab's **Custom Analyzer** group box is intended
+to let you define a named analyzer preset -- a custom minimum/maximum
+frequency range plus an LCD width/height -- for a unit AntScopeZ
+already recognizes correctly (a clone, or a newer hardware revision of
+a known model) whose real frequency range differs from what AntScopeZ
+assumes for that model.
 
-The tab is visible (a "This feature is currently under development"
+It's visible (a "This feature is currently under development"
 notice sits at the top of it), but every control on it -- "Use
 customized analyzer", Apply, Auto calibration -- is disabled, so
 there's nothing to actually interact with yet. It's shown rather than
@@ -759,6 +804,54 @@ whatever you like. Nothing the `.deb` installs is ever written to.
 (`QStandardPaths::HomeLocation`), not a dotfile -- look for an
 `AntScopeZ` folder there.
 
+### Your Data folder: `~/Documents/AntScopeZ/` (by default)
+
+Separate from the config folder above -- this is where the *files you
+actually work with* land: exported measurements, `.asd` saves,
+screenshots, PDF/PNG prints, and (see below) debug logs. Every
+save/export/screenshot dialog across the app defaults here, created
+automatically the first time it's needed.
+
+It's not fixed at that path -- change it any time from Settings →
+General → Data folder (Browse...). Everything landing in one place by
+default, rather than each dialog remembering its own separate folder
+independently, is deliberate (see CHANGELOG.md if you're curious what
+that replaced). Whether *saving* somewhere else should relocate this
+folder for next time, or leave it where you set it, is up to the
+adjacent "Save actions update this folder" checkbox -- off by default.
+Opening/importing a file from elsewhere never relocates it either way.
+
+Filenames are generated for you rather than reused from last time: a
+measurement's own name for `.asd` Save and Export, the Print dialog's
+title field for Print, and a timestamp (`yyyyMMdd-hhmmss`, sorts
+correctly regardless of locale) for screenshots -- see
+[Import / Export](#import--export) and
+[Print and screenshots](#print-and-screenshots) above for specifics.
+
+#### Debug logs: `Debug-yyyyMMdd.log`
+
+Written here too, when you turn on one or more of Settings → Developer
+→ Debug Logging's checkboxes (see [Developer tab](#settings)) -- one
+shared file per calendar day, appended to across the day (including
+across restarts), interleaving whichever of Serial/USB-HID/BLE/NanoVNA
+you had logging turned on for so the order things actually happened in
+is preserved. Every line is flushed to disk immediately, so the file
+is still useful even if the app crashes right after something's
+logged.
+
+Format is a traditional hex+ASCII dump, 16 bytes per line, each line
+ending `>>` (the app sent this) or `<<` (the app received this):
+
+```
+2026-08-14 14:32:07.123 BLE TX (20 bytes)
+00000000  5A 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |Z...............| >>
+00000010  00 00 00 3A                                       |...:| >>
+```
+
+This is raw wire traffic, not an interpretation of it -- exactly the
+bytes sent/received, nothing decoded or summarized. Handy to attach if
+you're reporting a connection problem with a specific analyzer.
+
 ### `AntScopeZ.ini` reference
 
 This is a real, working config from actual use -- not a synthetic
@@ -766,6 +859,10 @@ example -- lightly trimmed of pure window-geometry noise. Groups you'd
 actually want to hand-edit or just recognize:
 
 ```ini
+[General]
+UserDataDir=/home/you/Documents/AntScopeZ
+UserDataDirFollowsSaves=false
+
 [MainWindow]
 languageCode=es
 measureSystemMetric=true
@@ -839,12 +936,23 @@ Notes on specific keys:
   same value Settings → Markers' Available/Selected lists edit. Not
   bookkeeping -- hand-editing it works, but the Settings tab is the
   supported way to change it.
-- Everything else not listed above (`General`, `Hint`, `BriefHint`,
-  `[Markers]`'s other keys (`x`/`y`/`mainX`/`mainY`/`mainBiasX`/
-  `mainBiasY`/`markersHintEnabled`), per-tab `*ZoomState`,
+- **`[General]UserDataDir`/`UserDataDirFollowsSaves`** -- the Data
+  folder shown in Settings → General and the "Save actions update this
+  folder" checkbox next to it; see
+  [Files and directories](#files-and-directories) above. Safe to
+  delete -- it just regenerates at the default location next launch.
+  `[General]` also holds unrelated window-position bookkeeping (see
+  below), sharing the section with these two isn't meaningful.
+- Everything else not listed above (`[General]`'s other keys, `Hint`,
+  `BriefHint`, `[Markers]`'s other keys (`x`/`y`/`mainX`/`mainY`/
+  `mainBiasX`/`mainBiasY`/`markersHintEnabled`), per-tab `*ZoomState`,
   `mainX`/`mainY`/`geometry`, ...) is internal window-position/
   zoom-state bookkeeping. Harmless to delete individually if something
   looks stuck -- it just regenerates with defaults.
+- **Developer tab's four "Enable ... debug logs" checkboxes (and BLE's
+  "Show ping/keepalive traffic") are never written here at all** --
+  deliberately session-only, always starting unchecked. See
+  [Developer tab](#settings).
 
 If your `.ini` has a leftover group named in another language (e.g.
 `[Marcadores]` sitting next to `[Markers]`) from before this was fixed
@@ -883,9 +991,16 @@ delete.
   wideband, near-DC sweep -- a normal band-limited scan (e.g. just 20m)
   won't show anything there. See
   [TDR (Time Domain Reflectometry)](#tdr-time-domain-reflectometry).
-- **Custom Analyzer tab's controls are all greyed out.** Deliberate, not
-  a bug -- the feature underneath is unfinished. See
+- **Developer tab's Custom Analyzer controls are all greyed out.**
+  Deliberate, not a bug -- the feature underneath is unfinished. See
   [Customized analyzer parameters](#customized-analyzer-parameters).
+- **Debug logging was on, but the file is missing or empty.** The
+  checkboxes reset to unchecked every time you open AntScopeZ (by
+  design -- see [Developer tab](#settings)), so check they're still on;
+  and a checkbox only logs traffic for *that* connection type, so
+  nothing gets written unless something's actually connected and
+  talking over it. See [Files and directories](#files-and-directories)
+  for the exact file location.
 - **Cable loss compensation ("Subtract cable"/"Add cable") doesn't
   seem to change anything.** Flagged as unverified in
   [the Cable tab reference](#cable-tab) -- it may not currently do

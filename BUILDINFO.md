@@ -277,9 +277,11 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   fixed).** It still gates the "User Defined" chart tab, the "Don't
   restrict frequency" checkbox, the Ctrl+Alt+Shift+M/N auto-calibration
   debug shortcuts, and a higher `MAX_DOTS`/`spinBoxPoints` ceiling.
-  **As of 2026-08-13, it no longer gates Settings' Custom Analyzer tab**
-  (renamed from "Customize") -- that tab is always shown now, with every
-  control on it explicitly disabled instead (see `Settings::
+  **As of 2026-08-13, it no longer gates Settings' Custom Analyzer group
+  box** (renamed from "Customize"; as of 2026-08-14 it lives inside the
+  renamed "Developer" tab, alongside the unrelated "Debug Logging" group
+  box added the same day -- see `CHANGELOG.md`) -- it's always shown now,
+  with every control on it explicitly disabled instead (see `Settings::
   initCustomizeTab()`), so the still-broken feature described below stays
   visible-but-inert rather than invisible. Custom Analyzer is still the
   reason developer mode itself is off, though: a "User Defined" tab crash

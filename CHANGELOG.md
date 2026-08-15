@@ -11,143 +11,70 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
-### Changed
-
-- Settings > Updates tab reorganized: AntScopeZ's own software version (plus
-  a placeholder "Check for Software Updates" button -- not implemented yet)
-  now sits at the top. Below it, the analyzer-firmware section (info
-  display, "Update from file", "Check for firmware updates") is now fully
-  disabled, with a warning explaining why displayed inside that section
-  itself: the "Check for firmware updates" flow phones home to RigExpert
-  with the device's serial number, OS, CPU, language, and app version, over
-  a connection with TLS certificate verification disabled. The underlying
-  code for that flow (URL building, the actual network calls in
-  `Downloader`) is kept intact but guarded with `#if 0` rather than
-  deleted, so it isn't reachable by an accidental call in code either, not
-  just a disabled button, and isn't lost to a future cleanup pass. The tab
-  itself stays visible rather than disappearing (previously removed
-  outright for everyone, unconditionally).
-- Settings' developer-only "Custom Analyzer" tab (renamed from "Customize")
-  is now always shown, rather than hidden unless developer mode was on --
-  visibility itself isn't the risk, and hiding it just meant nobody but
-  the developers ever saw it needed finishing. A "This feature is currently
-  under development" notice sits at the top; "Use customized analyzer",
-  "Apply", and the "Auto calibration" group are all explicitly disabled
-  (and the checkbox forced unchecked, regardless of any previously-saved
-  customization) rather than left interactive.
-- The "Connect Analyzer" flow's device-picker dialog is now titled "Connect
-  Analyzer" instead of "Select device" -- it's opened from a menu action, a
-  Settings button, and a toolbar entry that all already call it "Connect
-  Analyzer"; the dialog's own title was the only piece still using
-  different words for the same thing.
-
 ### Added
 
-- A Help menu with "About AntScopeZ...", showing the running app's
-  version -- same label/value styling as Settings' Updates tab uses for
-  the same information.
-- Settings > Markers tab: a "Max markers" spinner (1-5, capping how many
-  markers can be placed at once) and a two-list "Available"/"Selected"
-  control for choosing which columns the Markers popup shows and in what
-  order -- replaces the popup's old per-column dropdown menus
-  (Insert/Remove column, pick a field) with a single place to configure
-  the whole set at once.
-- A "Speed/Accuracy" slider now sits directly under Points; the separate
-  "Measurement speed..." dialog is gone.
-- A menu bar: File (Import Data.../Export Data.../Settings.../Print.../
-  Save Screenshot.../Screenshot from AA/Data from AA/Exit -- previously
-  a row of buttons under the tab control), Edit (Edit ITU Bands...),
-  View (Cursor Details/Markers Hint/Cursor Params/Show Band Name/Band
-  Selector/Band Highlighting/Language/Theme -- previously spread across
-  Settings' General tab and its "Bands highlighting"/"Language"/"Color
-  theme" controls), Connect Analyzer (previously only reachable from
-  inside Settings), and Help (About AntScopeZ...). The Settings-dialog
-  copies of Bands highlighting/Language/Color theme/Band Selector were
-  removed outright in a later pass, once their View/Edit menu
-  equivalents existed standalone -- Settings no longer has a Theme,
-  Language, Bands highlighting, or Band Selector control of its own.
-- Main window is now a 3-pane resizable layout (Frequency/Presets/
-  Measurements on the left, a new docked "Cursor Details" panel in the
-  middle, the plot tabs on the right) with draggable splitter handles
-  between panes, replacing the old fixed 2-column layout.
+- Menu bar (File/Edit/View/Connect Analyzer/Help), replacing the old button
+  row.
+- Main window is now a resizable 3-pane layout with a new docked Cursor
+  Details panel.
+- Help > About AntScopeZ, showing the running app version.
+- Settings > Markers: max-markers spinner and a column picker for the
+  Markers popup.
+- Speed/Accuracy slider under Points, replacing the separate "Measurement
+  speed..." dialog.
+- Settings > General: "Data folder" field controlling where Save/Export/
+  Screenshot dialogs default to.
+- Settings' Developer tab: Debug Logging section with per-interface
+  (Serial/USB-HID/BLE/NanoVNA) raw TX/RX logging to a daily log file,
+  including a filter for BLE keepalive traffic.
 
 ### Changed
 
-- Points is now a plain text field instead of a spinner, capped at 1000 to
-  match the Speed/Accuracy slider.
-- Reworked keyboard tab order across the main window to follow the visual
-  layout (tabs, toolbar buttons, Frequency/Presets/Measurements groups in
-  order, ending at Clear).
-- The "Frequency = .../SWR = ..." hint box is now docked in the main
-  window instead of a separate floating window.
+- Settings > Updates tab: app version info moved to the top; firmware-
+  update checks disabled (explained inline) over privacy/security
+  concerns with that network call.
+- Settings' developer-only tab (now "Custom Analyzer") is always visible,
+  with its controls explicitly disabled and marked "under development"
+  instead of hidden.
+- Renamed the device-picker dialog from "Select device" to "Connect
+  Analyzer" for consistency.
+- Points is now a plain text field (capped at 1000) instead of a spinner.
+- Reworked keyboard tab order to follow the visual layout.
+- The Frequency/SWR hint box is now docked in the main window instead of a
+  floating popup.
+- Save, Export, Print, and Screenshot dialogs now share one default folder
+  instead of independent, mostly-unused "last path" settings; default
+  filenames improved.
 
 ### Fixed
 
-- `.deb` packaging: `dpkg-shlibdeps` could misattribute bundled-Qt
-  libraries back to the antscopez package itself, producing a
-  `Depends: antscopez (>= ...)` self-dependency that made the package
-  uninstallable on any machine without antscopez already present. Added
-  `cmake/fix-deb-self-dependency.sh` as a required last step of the
-  `.deb` packaging recipe to strip it; see BUILDINFO.md's "Known issues"
-  for root cause.
-- Single/Continuous/Full range buttons' disabled state was a hardcoded
-  dark gray that ignored the Light/Dark theme; now theme-correct like
-  every other disabled control.
-- Some fields (e.g. Save dialogs' "File name" box) had zero fill contrast
-  against their own dialog background in Dark mode -- `QPalette::Base` was
-  identical to `Window`.
-- Speed/Accuracy slider couldn't be adjusted by keyboard -- arrow keys
-  were being intercepted by the chart pan/zoom shortcuts first.
-- Presets/Measurements tables trapped Tab-key focus inside instead of
-  moving to the next control; added Enter as a keyboard equivalent for
-  the double-click-to-load-a-row action.
-- Presets table columns now auto-size to content instead of allowing a
-  horizontal scrollbar.
-- `.asd` file-type registration wrote a literal `HKEY_CLASSES_ROOT` junk
-  file on non-Windows platforms instead of being skipped -- now guarded
-  with `#ifdef Q_OS_WIN`.
-- PDF export (Print dialog's "Save as .pdf", the "Screenshot from AA"
-  dialog's "Export to PDF", and Print dialog's "Print" &rarr; "Print to
-  File (PDF)") was silently coming out as A4 even where the page size was
-  explicitly set to Letter in code. All three were routed through
-  `QPrinter`, which simulates a physical printer/driver and was overriding
-  the explicit page size; switched to `QPdfWriter` (writes PDF directly, no
-  driver involved) for the actual PDF-producing case in each. Verified via
-  `pdfinfo` on real exported files (confirmed Letter); the A4 that still
-  showed up afterward in one PDF viewer (qpdfview) turned out to be that
-  viewer mis-displaying page size generally, confirmed by it also
-  mislabeling an unrelated third-party PDF as A4. A genuine physical-
-  printer job (as opposed to a PDF file) is unaffected by this fix and
-  still goes through `QPrinter` as before -- see `BUILDINFO.md` for the
-  still-open question of whether that path's own Properties dialog is
-  affected by the same underlying default-page-size issue.
-- "Screenshot from AA"'s "Export to PDF" was positioning the device
-  screenshot image off-center (small/square-LCD models) or stretching it
-  edge-to-edge with no margin (the large-landscape-LCD `AA-2000 ZOOM`/
-  `AA-3000 ZOOM`/`AA-1500 ZOOM SE` models). Both now center the image
-  properly, the latter with a 50px margin instead of 0. See `BUILDINFO.md`
-  -- the large-LCD fix couldn't be tested against real hardware.
-- Crosshairs and the cursor-following "brief params" hint were plain
-  white/black regardless of chart-background, and could get stuck stale,
-  disappear entirely, or fail to reappear after leaving the data area,
-  switching tabs, or scrolling past the last scanned point on any tab
-  (notably TDR, which never showed brief-hint content at all). All tabs'
-  crosshairs/hints now track chart-background and reliably hide/show with
-  the cursor.
-- The white "current scan position" tick stayed drawn at the last point
-  after a scan finished, including on NanoVNA-connected analyzers, which
-  have their own separate scan-complete path that hadn't gotten the fix.
-- Markers-hint and graph-hint boxes had poor contrast against light
-  chart-backgrounds (dark text on a fixed near-black box) and, after an
-  earlier attempt, against the plot's own background (tinting a color
-  toward itself is a no-op, so the box visually vanished into the plot);
-  both now use a grey-shifted background distinct from the plot, paired
-  with contrasting text.
-- Graph-hint box flickered when the cursor crossed the edge of scanned
-  data, and appeared hidden/unresponsive to its checkbox while the
-  Settings dialog was open (it was gated on window focus, which the
-  non-modal Settings dialog steals). Now controlled solely by its
-  checkbox.
+- Duplicate file extensions sometimes appended in Save/Export dialogs
+  (e.g. ".asd.asd").
+- Measurements/Presets table columns weren't resizable.
+- `.deb` packages could depend on themselves, making them uninstallable.
+- Disabled Single/Continuous/Full Range buttons ignored the Light/Dark
+  theme.
+- Some fields had no fill contrast against the dialog background in Dark
+  mode.
+- Speed/Accuracy slider didn't respond to arrow keys.
+- Tab key got trapped inside the Presets/Measurements tables; added Enter
+  as a shortcut to load a row.
+- Presets table columns now auto-size to content instead of showing a
+  scrollbar.
+- A stray Windows registry file was written on non-Windows platforms
+  during `.asd` file-type registration.
+- PDF export sometimes came out as A4 instead of the configured page size.
+- Device-screenshot images were off-center or edge-to-edge in PDF export.
+- Crosshairs and cursor hints could get stuck, disappear, or not track the
+  chart theme across tabs (including TDR).
+- The scan-position tick stayed drawn after a scan finished on NanoVNA-
+  connected analyzers.
+- Poor contrast on the Markers/graph hint boxes against some chart
+  backgrounds.
+- The graph-hint box flickered at the edge of scanned data and ignored
+  its checkbox while Settings was open.
+- App icon missing from the About dialog.
+- Export dialog missing a Close button.
 
 ## [2.1.6] - 2026-08-10
 
