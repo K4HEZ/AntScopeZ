@@ -317,9 +317,13 @@ QString Style::toolButton()
 
 QString Style::comboBox()
 {
-    // Left native -- Fusion's combo box already reads Button/Base correctly
-    // from Style::palette().
-    return QString();
+    // Otherwise left native -- Fusion's combo box already reads Button/Base
+    // correctly from Style::palette(). Padding on both the closed box and
+    // its dropdown list items is added explicitly though: Fusion's default
+    // is tight enough (at some DPI/font combinations) that adjacent
+    // dropdown item text visually crowds/touches its neighbors.
+    return "QComboBox{padding: 2px 6px;} "
+           "QComboBox QAbstractItemView::item{padding: 4px 6px;} ";
 }
 
 QString Style::progressBar()

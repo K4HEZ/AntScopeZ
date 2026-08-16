@@ -315,6 +315,18 @@ QList<QList<QVariant>> Markers::updateInfo(QList<int> _columnTypes)
         int count = m_measurements->getMeasurementLength();
         for(int i=count-1; i>=0; i--)
         {
+            info << computeMarkerRow(fq0, n+1, i, _columnTypes);
+        } // for (m_measurements)
+    } // for (m_markersList)
+    return info;
+}
+
+// Single-marker/single-measurement version of the row body updateInfo()
+// loops over -- factored out so a caller that only cares about one
+// marker (e.g. TunerHelperDialog) can reuse the exact same interpolation/
+// calibration/far-end-adjustment logic instead of duplicating it.
+QList<QVariant> Markers::computeMarkerRow(double fq0, int markerNumber, int i, const QList<int>& _columnTypes)
+{
             QList<QVariant> row;
             int index = i;
             QString name = m_measurements->getMeasurement(i)->name;
@@ -322,7 +334,7 @@ QList<QList<QVariant>> Markers::updateInfo(QList<int> _columnTypes)
             if (pos != -1)
                 index = name.left(2).toInt();
             row << QVariant(); // fieldDelete
-            row << QVariant(n+1); // fieldMarker
+            row << QVariant(markerNumber); // fieldMarker
             row << QVariant(index); // fieldSerie
             row << QVariant(fq0); // fieldFQ
 
@@ -534,10 +546,22 @@ QList<QList<QVariant>> Markers::updateInfo(QList<int> _columnTypes)
                     break;
                 }
             }
-            info << row;
-        } // for (m_measurements)
-    } // for (m_markersList)
-    return info;
+            return row;
+}
+
+// Single marker, most recent measurement only -- what TunerHelperDialog
+// actually wants (it doesn't care about every marker x every measurement
+// the way the Markers popup table does). markerNumber is 1-based, same
+// convention as fieldMarker/getMarker(). Empty list if markerNumber is out
+// of range or there's no measurement yet to read values from.
+QList<QVariant> Markers::valuesForMarkerNumber(int markerNumber, const QList<int>& columnTypes)
+{
+    if (markerNumber < 1 || markerNumber > m_markersList.length() || m_measurements->isEmpty())
+        return QList<QVariant>();
+
+    double fq0 = m_markersList.at(markerNumber - 1)->frequency;
+    int mostRecent = m_measurements->getMeasurementLength() - 1; // i == count-1, same index last() uses
+    return computeMarkerRow(fq0, markerNumber, mostRecent, columnTypes);
 }
 
 double Markers::interpolate(double fq1, double fq2, double fq3, double param1, double param2)

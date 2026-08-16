@@ -125,6 +125,8 @@ set(ANTSCOPE_SOURCES
     mainwindow_settings.cpp
     mainwindow_shortcuts.cpp
     mainwindow_tabs.cpp
+    mainwindow_tools.cpp
+    markercomparisondialog.cpp
     markers.cpp
     markerspopup.cpp
     measurements.cpp
@@ -193,6 +195,7 @@ set(ANTSCOPE_HEADERS
     inforequestdialog.h
     licenseagent.h
     mainwindow.h
+    markercomparisondialog.h
     markers.h
     markerspopup.h
     measurements.h
@@ -244,6 +247,7 @@ set(ANTSCOPE_FORMS
     export.ui
     inforequestdialog.ui
     mainwindow.ui
+    markercomparisondialog.ui
     modelesspopup.ui
     print.ui
     ProgressDlg.ui

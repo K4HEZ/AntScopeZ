@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MarkerComparisonDialog</class>
+ <widget class="QDialog" name="MarkerComparisonDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>380</width>
+    <height>590</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Marker Comparison</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="markersGroupBox">
+     <property name="title">
+      <string>Markers</string>
+     </property>
+     <layout class="QFormLayout" name="markersFormLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="currentMarkerLabel">
+        <property name="text">
+         <string>Current (dip):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="currentMarkerCombo"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="targetMarkerLabel">
+        <property name="text">
+         <string>Target (desired):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="targetMarkerCombo"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="comparisonGroupBox">
+     <property name="title">
+      <string>Marker comparison</string>
+     </property>
+     <layout class="QFormLayout" name="comparisonFormLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="deltaFrequencyNameLabel">
+        <property name="text">
+         <string>&#916;Frequency:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLabel" name="deltaFrequencyLabel">
+        <property name="text">
+         <string notr="true">--</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="deltaSwrNameLabel">
+        <property name="text">
+         <string>&#916;SWR:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLabel" name="deltaSwrLabel">
+        <property name="text">
+         <string notr="true">--</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="deltaReturnLossNameLabel">
+        <property name="text">
+         <string>&#916;RL:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLabel" name="deltaReturnLossLabel">
+        <property name="text">
+         <string notr="true">--</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="deltaResistanceNameLabel">
+        <property name="text">
+         <string>&#916;R:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLabel" name="deltaResistanceLabel">
+        <property name="text">
+         <string notr="true">--</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="deltaReactanceNameLabel">
+        <property name="text">
+         <string>&#916;X:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLabel" name="deltaReactanceLabel">
+        <property name="text">
+         <string notr="true">--</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="qFactorNameLabel">
+        <property name="text">
+         <string>Q factor (Current):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QLabel" name="qFactorLabel">
+        <property name="text">
+         <string notr="true">--</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="equivalentLNameLabel">
+        <property name="text">
+         <string>Equiv. L (Current):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1">
+       <widget class="QLabel" name="equivalentLLabel">
+        <property name="text">
+         <string notr="true">--</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0">
+       <widget class="QLabel" name="equivalentCNameLabel">
+        <property name="text">
+         <string>Equiv. C (Current):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="1">
+       <widget class="QLabel" name="equivalentCLabel">
+        <property name="text">
+         <string notr="true">--</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="antennaGroupBox">
+     <property name="title">
+      <string>Antenna</string>
+     </property>
+     <layout class="QFormLayout" name="antennaFormLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="antennaTypeNameLabel">
+        <property name="text">
+         <string>Type:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="antennaTypeCombo"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="antennaLengthNameLabel">
+        <property name="text">
+         <string>Current length (optional):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <layout class="QHBoxLayout" name="antennaLengthLayout">
+        <item>
+         <widget class="QLineEdit" name="antennaLengthEdit">
+          <property name="placeholderText">
+           <string>auto (nominal formula)</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="antennaLengthUnitLabel">
+          <property name="text">
+           <string notr="true">ft</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="trimUnitsLayout">
+     <item>
+      <widget class="QLabel" name="trimUnitsNameLabel">
+       <property name="text">
+        <string>Trim units:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="trimUnitsCombo"/>
+     </item>
+     <item>
+      <spacer name="trimUnitsSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="trimGroupBox">
+     <property name="title">
+      <string>Trim estimate</string>
+     </property>
+     <layout class="QFormLayout" name="trimFormLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="calculatedTrimNameLabel">
+        <property name="text">
+         <string>Calculated trim:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLabel" name="calculatedTrimLabel">
+        <property name="text">
+         <string notr="true">--</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="suggestedCutNameLabel">
+        <property name="text">
+         <string>Suggested first cut:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLabel" name="suggestedCutLabel">
+        <property name="font">
+         <font>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string notr="true">--</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="perLegNameLabel">
+        <property name="text">
+         <string>Per leg:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLabel" name="perLegLabel">
+        <property name="text">
+         <string notr="true">--</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="caveatLabel">
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>Estimate only -- velocity factor and end effects aren't modeled. Cut the suggested amount, re-measure, and repeat rather than cutting the full calculated trim at once.</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Close</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>MarkerComparisonDialog</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>190</x>
+     <y>540</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>190</x>
+     <y>555</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

@@ -83,6 +83,9 @@ public:
     void changeMarkersHint();
     MarkersPopUp * markersHint() { return m_markersHint; }
     QList<QList<QVariant>> updateInfo(QList<int> _columnTypes);
+    // Single marker, most recent measurement -- see definition in
+    // markers.cpp for why this exists alongside updateInfo().
+    QList<QVariant> valuesForMarkerNumber(int markerNumber, const QList<int>& columnTypes);
     bool markersHintEnabled() { return m_markersHintEnabled; }
 
 private:
@@ -110,6 +113,9 @@ private:
     bool m_focus;
 
     double interpolate(double fq1, double fq2, double fq3, double param1, double param2);
+    // Row body shared by updateInfo() (all markers x all measurements) and
+    // valuesForMarkerNumber() (one marker, most recent measurement only).
+    QList<QVariant> computeMarkerRow(double fq0, int markerNumber, int measurementIndex, const QList<int>& columnTypes);
 
 signals:
 

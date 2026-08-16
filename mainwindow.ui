@@ -1114,6 +1114,12 @@ process in the settings menu!</string>
      <string>&amp;Theme</string>
     </property>
    </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>&amp;Tools</string>
+    </property>
+    <addaction name="actionMarkerComparison"/>
+   </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>&amp;Help</string>
@@ -1123,6 +1129,7 @@ process in the settings menu!</string>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuView"/>
+   <addaction name="menuTools"/>
    <addaction name="actionConnectAnalyzer"/>
    <addaction name="menuHelp"/>
   </widget>
@@ -1177,6 +1184,14 @@ process in the settings menu!</string>
   <action name="actionConnectAnalyzer">
    <property name="text">
     <string>Connect &amp;Analyzer...</string>
+   </property>
+  </action>
+  <action name="actionMarkerComparison">
+   <property name="text">
+    <string>&amp;Marker Comparison...</string>
+   </property>
+   <property name="toolTip">
+    <string>Compare two placed markers (frequency/SWR/RL/R/X, Q factor, equivalent L/C) and estimate an antenna trim to reach a target frequency</string>
    </property>
   </action>
   <action name="actionSettings">

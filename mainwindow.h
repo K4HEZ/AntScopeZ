@@ -28,6 +28,7 @@
 //#include "ProgressDlg.h"
 #include <QTabWidget>
 #include <qserialport.h>
+#include <markercomparisondialog.h>
 
 
 #define MEASUREMENTS_TABLE_COLUMNS 3
@@ -128,6 +129,7 @@ private:
     Markers *m_markers = nullptr;
     QSettings *m_settings = nullptr;
     Calibration *m_calibration = nullptr;
+    MarkerComparisonDialog *m_markerComparisonDialog = nullptr;
 
     Print *m_print = nullptr;
 
@@ -359,6 +361,7 @@ private slots:
     void on_actionSettings_triggered();
     void on_actionExit_triggered();
     void on_actionAbout_triggered();
+    void on_actionMarkerComparison_triggered();
     void on_measurmentsDeleteBtn_clicked();
     void on_tableWidget_measurments_cellClicked(int row, int column);
     void on_tableWidget_measurments_cellActivated(int row, int column);
