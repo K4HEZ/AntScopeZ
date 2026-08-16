@@ -1113,8 +1113,6 @@ process in the settings menu!</string>
     <property name="title">
      <string>&amp;Theme</string>
     </property>
-    <addaction name="actionThemeLight"/>
-    <addaction name="actionThemeDark"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -1263,22 +1261,6 @@ process in the settings menu!</string>
   <action name="actionEditITUBands">
    <property name="text">
     <string>Edit &amp;ITU Bands...</string>
-   </property>
-  </action>
-  <action name="actionThemeLight">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>&amp;Light</string>
-   </property>
-  </action>
-  <action name="actionThemeDark">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>&amp;Dark</string>
    </property>
   </action>
  </widget>

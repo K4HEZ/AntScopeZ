@@ -1179,19 +1179,7 @@ bool Measurements::getGraphBriefHintEnabled(void)
 
 QColor Measurements::chartBackgroundColor()
 {
-    m_settings->beginGroup("Settings");
-    QString strColor = m_settings->value("chart-background", "#ffffff").toString();
-    m_settings->endGroup();
-
-    // QColor::fromString() is a static factory in Qt6 -- it returns a new
-    // QColor rather than mutating the receiver. Calling it as color.fromString(...)
-    // compiles (static call via an instance is legal) but silently discards
-    // the result, leaving color default-constructed/invalid, so every call
-    // was returning the same fixed white regardless of chart-background.
-    QColor color = QColor::fromString(strColor);
-    if (!color.isValid())
-        color = QColor(Qt::white);
-    return color;
+    return Style::theme().chartBackground;
 }
 
 // Shared by setBriefHintColor() and the crosshair lines (updatePopUp()) --

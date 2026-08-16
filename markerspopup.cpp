@@ -103,19 +103,7 @@ void MarkersPopUp::initLayout()
 // classes don't have a common base, but kept identical on purpose.
 QColor MarkersPopUp::chartBackgroundColor()
 {
-    m_settings->beginGroup("Settings");
-    QString strColor = m_settings->value("chart-background", "#ffffff").toString();
-    m_settings->endGroup();
-
-    // QColor::fromString() is a static factory in Qt6 -- it returns a new
-    // QColor rather than mutating the receiver, so the result must be
-    // assigned back (calling it as color.fromString(...) compiles but
-    // silently discards the result, leaving color invalid/black and every
-    // row rendering the same fixed white regardless of chart-background).
-    QColor color = QColor::fromString(strColor);
-    if (!color.isValid())
-        color = QColor(Qt::white);
-    return color;
+    return Style::theme().chartBackground;
 }
 
 QColor MarkersPopUp::inverseChartBackground()

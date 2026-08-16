@@ -190,7 +190,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_fqRestrict = g_developerMode ? m_settings->value("restrictFq", true).toBool() : true;
     g_maxMeasurements = m_settings->value("maxMeasurements", MAX_MEASUREMENTS).toInt();
     g_maxMarkers = m_settings->value("maxMarkers", MAX_MARKERS).toInt();
-    m_darkColorTheme = m_settings->value("darkColorTheme", true).toBool();
+    m_activeThemeIndex = m_settings->value("activeTheme", 0).toInt();
     m_settings->endGroup();
 
     if (g_developerMode)
@@ -403,11 +403,7 @@ MainWindow::MainWindow(QWidget *parent) :
         // with the saved setting now that m_measurements exists (createTabs() ran
         // before m_measurements was constructed, so its earlier
         // setChartBackground() call couldn't reach it).
-        QString path = Settings::setIniFile();
-        QSettings set(path, QSettings::IniFormat);
-        set.beginGroup("Settings");
-        QColor color = QColor::fromString(set.value("chart-background", "#ffffff").toString());
-        set.endGroup();
+        QColor color = Style::theme().chartBackground;
         m_measurements->setSmithBackgroundColor(color);
         if (color.isValid()) {
             QColor inverse(255-color.red(), 255-color.green(), 255-color.blue());
@@ -483,7 +479,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // now-removed connect(m_settingsDialog, &Settings::reloadBands, ...)).
     {
         m_settings->beginGroup("Settings");
-        bool showBandName = m_settings->value("show-band-name", false).toBool();
+        bool showBandName = m_settings->value("show-band-name", true).toBool();
         m_settings->endGroup();
         ui->actionShowBandName->setChecked(showBandName);
     }
@@ -498,7 +494,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->actionConnectAnalyzer, &QAction::triggered, this, &MainWindow::on_selectDeviceDialog);
 
-    changeColorTheme(m_darkColorTheme);
+    changeColorTheme(m_activeThemeIndex);
 
     m_calibration = new Calibration();
     m_calibration->setAnalyzer(m_analyzer);
@@ -758,28 +754,28 @@ MainWindow::MainWindow(QWidget *parent) :
         }
     }
 
-    // Theme submenu: same "darkColorTheme" QSettings key and
-    // changeColorTheme() Settings' themeComboBox/changeColorTheme signal
-    // used to reach.
+    // Theme submenu: 5 fixed, index-keyed slots (Style::themeAt()), same
+    // "index + name" labeling a future Settings > Themes editor's combo box
+    // will use -- see style.h. Built dynamically like the Language submenu
+    // above rather than 5 hand-authored .ui <action>s, since the names are
+    // user-renamable (Settings > Themes, not built yet) and the menu has to
+    // track whatever they currently are.
     {
         QActionGroup* themeGroup = new QActionGroup(this);
         themeGroup->setExclusive(true);
-        themeGroup->addAction(ui->actionThemeLight);
-        themeGroup->addAction(ui->actionThemeDark);
-        ui->actionThemeLight->setChecked(!m_darkColorTheme);
-        ui->actionThemeDark->setChecked(m_darkColorTheme);
-        connect(ui->actionThemeLight, &QAction::triggered, this, [this]() {
-            m_settings->beginGroup("Settings");
-            m_settings->setValue("darkColorTheme", false);
-            m_settings->endGroup();
-            changeColorTheme(false);
-        });
-        connect(ui->actionThemeDark, &QAction::triggered, this, [this]() {
-            m_settings->beginGroup("Settings");
-            m_settings->setValue("darkColorTheme", true);
-            m_settings->endGroup();
-            changeColorTheme(true);
-        });
+        for (int i = 0; i < 5; i++) {
+            QString name = Style::themeAt(i).name;
+            QAction* action = ui->menuTheme->addAction(QString("%1: %2").arg(i + 1).arg(name));
+            action->setCheckable(true);
+            action->setChecked(i == m_activeThemeIndex);
+            themeGroup->addAction(action);
+            connect(action, &QAction::triggered, this, [this, i]() {
+                m_settings->beginGroup("Settings");
+                m_settings->setValue("activeTheme", i);
+                m_settings->endGroup();
+                changeColorTheme(i);
+            });
+        }
     }
 
     ui->tableWidget_presets->horizontalHeader()->show();

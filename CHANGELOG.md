@@ -11,6 +11,32 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+### Added
+
+- Settings > Themes: edit any of the 5 built-in themes' colors (window
+  background, text, muted text, border, chart background, marker) with a
+  live preview, a Default button to restore a theme's original colors, and
+  Save/Cancel. Themes can be freely renamed.
+
+### Changed
+
+- View > Theme now offers 5 built-in options (Light/Dark/Red/Green/Blue)
+  instead of just Light/Dark; the default theme on first launch is now
+  Light instead of Dark.
+- Settings > General's old standalone "Chart background" swatch is gone --
+  chart background is now part of each theme, set from Settings > Themes.
+- "Show Band Name" now defaults to on.
+
+### Fixed
+
+- Switching the active theme from the View menu didn't update the chart
+  background or marker colors, or markers already placed on the chart --
+  only saving a theme from Settings > Themes did.
+- Settings > Themes' color pickers now open with the swatch's current
+  color pre-selected.
+- The open Settings dialog's own text didn't pick up a newly-saved theme
+  until it was closed and reopened.
+
 ## [2.2.0] - 2026-08-15
 
 ### Added

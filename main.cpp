@@ -215,14 +215,14 @@ int main(int argc, char *argv[])
     g_raspbian = QSysInfo::productType().contains("raspbian", Qt::CaseInsensitive);
 
     // Read the persisted theme before building any stylesheet below --
-    // MainWindow doesn't exist yet to do this itself, and Style::m_dark
-    // otherwise defaults to dark, so a saved Light choice would flash (and
-    // partly stick, for the app-wide QMessageBox/QDialog stylesheet below)
-    // as dark on startup.
+    // MainWindow doesn't exist yet to do this itself, and Style::m_activeIndex
+    // otherwise defaults to Light (0), so a saved non-default choice would
+    // flash (and partly stick, for the app-wide QMessageBox/QDialog
+    // stylesheet below) as Light on startup.
     {
         QSettings settings(Settings::setIniFile(), QSettings::IniFormat);
         settings.beginGroup("Settings");
-        Style::setDarkMode(settings.value("darkColorTheme", true).toBool());
+        Style::setActiveThemeIndex(settings.value("activeTheme", 0).toInt());
         settings.endGroup();
     }
 

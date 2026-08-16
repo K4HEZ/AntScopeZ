@@ -1,5 +1,6 @@
 #include "markers.h"
 #include "mainwindow.h"
+#include "style.h"
 
 int g_maxMarkers = MAX_MARKERS;
 
@@ -79,51 +80,53 @@ void Markers::create(double fq)
     marker *m = new marker();
     m->frequency = fq;
 
+    const QColor markerColor = Style::theme().marker;
+
     m->swrLine = new QCPItemStraightLine(m_swrWidget);
     m->swrLineText = new QCPItemText(m_swrWidget);
     m->swrLine->setAntialiased(false);
-    m->swrLine->setPen(QPen(QColor(255,0,0,150)));
-    m->swrLineText->setColor(QColor(255, 0, 0, 150));
+    m->swrLine->setPen(QPen(markerColor));
+    m->swrLineText->setColor(markerColor);
     m_swrWidget->addItem(m->swrLine);
     m_swrWidget->addItem(m->swrLineText);
 
     m->phaseLine = new QCPItemStraightLine(m_phaseWidget);
     m->phaseLineText = new QCPItemText(m_phaseWidget);
     m->phaseLine->setAntialiased(false);
-    m->phaseLine->setPen(QPen(QColor(255,0,0,150)));
-    m->phaseLineText->setColor(QColor(255, 0, 0, 150));
+    m->phaseLine->setPen(QPen(markerColor));
+    m->phaseLineText->setColor(markerColor);
     m_phaseWidget->addItem(m->phaseLine);
     m_phaseWidget->addItem(m->phaseLineText);
 
     m->rsLine = new QCPItemStraightLine(m_rsWidget);
     m->rsLineText = new QCPItemText(m_rsWidget);
     m->rsLine->setAntialiased(false);
-    m->rsLine->setPen(QPen(QColor(255,0,0,150)));
-    m->rsLineText->setColor(QColor(255, 0, 0, 150));
+    m->rsLine->setPen(QPen(markerColor));
+    m->rsLineText->setColor(markerColor);
     m_rsWidget->addItem(m->rsLine);
     m_rsWidget->addItem(m->rsLineText);
 
     m->rpLine = new QCPItemStraightLine(m_rpWidget);
     m->rpLineText = new QCPItemText(m_rpWidget);
     m->rpLine->setAntialiased(false);
-    m->rpLine->setPen(QPen(QColor(255,0,0,150)));
-    m->rpLineText->setColor(QColor(255, 0, 0, 150));
+    m->rpLine->setPen(QPen(markerColor));
+    m->rpLineText->setColor(markerColor);
     m_rpWidget->addItem(m->rpLine);
     m_rpWidget->addItem(m->rpLineText);
 
     m->rlLine = new QCPItemStraightLine(m_rlWidget);
     m->rlLineText = new QCPItemText(m_rlWidget);
     m->rlLine->setAntialiased(false);
-    m->rlLine->setPen(QPen(QColor(255,0,0,150)));
-    m->rlLineText->setColor(QColor(255, 0, 0, 150));
+    m->rlLine->setPen(QPen(markerColor));
+    m->rlLineText->setColor(markerColor);
     m_rlWidget->addItem(m->rlLine);
     m_rlWidget->addItem(m->rlLineText);
 
     m->s21Line = new QCPItemStraightLine(m_s21Widget);
     m->s21LineText = new QCPItemText(m_s21Widget);
     m->s21Line->setAntialiased(false);
-    m->s21Line->setPen(QPen(QColor(255,0,0,150)));
-    m->s21LineText->setColor(QColor(255, 0, 0, 150));
+    m->s21Line->setPen(QPen(markerColor));
+    m->s21LineText->setColor(markerColor);
     m_s21Widget->addItem(m->s21Line);
     m_s21Widget->addItem(m->s21LineText);
 
@@ -725,9 +728,8 @@ void Markers::on_translate()
     }
 }
 
-void Markers::changeColorTheme(bool _dark)
+void Markers::changeColorTheme()
 {
-    Q_UNUSED(_dark);
     // Text/background used to be driven by the app's Light/Dark theme here,
     // independent of the plot's own chart-background -- same class of
     // contrast bug fixed around the same time for Measurements'
@@ -736,6 +738,27 @@ void Markers::changeColorTheme(bool _dark)
     // both now track chart-background via updateLabelColors() instead.
     if (m_markersHint != nullptr)
         m_markersHint->updateLabelColors();
+
+    // Markers::create() only sets each line/text pair's color once, at
+    // creation time -- a marker already on the chart when the theme (or
+    // just its marker color) changes never got told about it, unlike a
+    // freshly-placed one, which picks up Style::theme().marker fresh via
+    // create() itself. Re-apply to every existing marker here.
+    const QColor markerColor = Style::theme().marker;
+    for (marker* m : m_markersList) {
+        m->swrLine->setPen(QPen(markerColor));
+        m->swrLineText->setColor(markerColor);
+        m->phaseLine->setPen(QPen(markerColor));
+        m->phaseLineText->setColor(markerColor);
+        m->rsLine->setPen(QPen(markerColor));
+        m->rsLineText->setColor(markerColor);
+        m->rpLine->setPen(QPen(markerColor));
+        m->rpLineText->setColor(markerColor);
+        m->rlLine->setPen(QPen(markerColor));
+        m->rlLineText->setColor(markerColor);
+        m->s21Line->setPen(QPen(markerColor));
+        m->s21LineText->setColor(markerColor);
+    }
 }
 
 void Markers::changeMarkersHint()

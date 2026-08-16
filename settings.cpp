@@ -59,9 +59,10 @@ void showPortReDeviceInfo(const ReDeviceInfo& info)
 }
 
 // Applies every Style::*() stylesheet to this dialog's widgets. Called once
-// from the constructor, and again whenever the user changes the theme combo
-// so the currently-open dialog reflects the new theme immediately instead of
-// only on next open.
+// from the constructor, and again from the Themes tab's Save button (when
+// the saved slot is the active theme) so the currently-open dialog reflects
+// the change immediately instead of only on next open -- see the "Save"
+// connect in initThemesTab().
 void Settings::applyStyles()
 {
     QString style;
@@ -78,7 +79,6 @@ void Settings::applyStyles()
     ui->dataFolderBrowseBtn->setStyleSheet(style);
 
     style = Style::groupBox();
-    ui->groupBox_1->setStyleSheet(style);
     ui->groupBox_10->setStyleSheet(style);
     ui->groupBox_11->setStyleSheet(style);
     ui->groupBox_3->setStyleSheet(style);
@@ -174,12 +174,6 @@ Settings::Settings(QWidget *parent) :
     m_settings->beginGroup("Settings");
 
     m_restrictFq = m_settings->value("restrictFq", true).toBool();
-
-    QString strColor = m_settings->value("chart-background", "#ffffff").toString();
-    ui->bkgButton->setStyleSheet("QToolButton{background-color: " + strColor + ";}");
-    connect(ui->bkgButton, &QToolButton::clicked, [=]() {
-        showColorDialog();
-    });
 
     ui->tabWidget->setCurrentIndex(m_settings->value("currentIndex",0).toInt());
     // Graph Hint/Markers Hint/Cursor Params/Show Band Name used to be
@@ -302,6 +296,7 @@ Settings::Settings(QWidget *parent) :
 
     initMarkersTab();
 
+    initThemesTab();
 
     QString cablesPath = Settings::programDataPath("cables.txt");
 
@@ -1427,6 +1422,188 @@ void Settings::initMarkersTab()
     });
 }
 
+// Combo items are labeled the same "index: name" way the View > Theme menu
+// is (mainwindow.cpp) -- one shared convention for "which of the 5 fixed
+// slots is this".
+namespace {
+QString themeComboLabel(int index, const QString& name)
+{
+    return QString("%1: %2").arg(index + 1).arg(name);
+}
+}
+
+void Settings::initThemesTab()
+{
+    // Plain QWidget (native="true" in the .ui, not a class Qt Style Sheets
+    // specially integrate with like QGroupBox) -- a stylesheet's
+    // background-color is silently ignored on these without this
+    // attribute, regardless of theme; they'd never have painted correctly
+    // at all. updateThemePreview() sets the actual color on every edit.
+    ui->themePreviewChartWidget->setAttribute(Qt::WA_StyledBackground, true);
+    ui->themePreviewMarkerLine->setAttribute(Qt::WA_StyledBackground, true);
+
+    ui->themeComboBox->clear();
+    for (int i = 0; i < 5; i++)
+        ui->themeComboBox->addItem(themeComboLabel(i, Style::themeAt(i).name));
+
+    connect(ui->themeNameEdit, &QLineEdit::textEdited, this, [this](const QString& text) {
+        m_editingTheme.name = text;
+        ui->themeComboBox->setItemText(m_editingThemeIndex, themeComboLabel(m_editingThemeIndex, text));
+        markThemeDirty();
+    });
+
+    // One reusable click handler per swatch instead of 6 near-identical
+    // blocks -- QColor Theme::* picks out which field this particular
+    // button edits.
+    auto wireSwatch = [this](QToolButton* btn, QLabel* hexLabel, QColor Theme::*field) {
+        connect(btn, &QToolButton::clicked, this, [this, btn, hexLabel, field]() {
+            // Constructor overload (initial color at construction time)
+            // instead of default-constructing then setCurrentColor() --
+            // the latter opened with no color pre-selected in practice.
+            // Re-asserted again below, after setOption()/setStyleSheet(),
+            // in case either of those (setStyleSheet() especially --
+            // triggers a re-polish) resets the internal widgets' state back
+            // to whatever the constructor's initial color established.
+            QColorDialog dlg(m_editingTheme.*field);
+            dlg.setOption(QColorDialog::DontUseNativeDialog, true);
+            dlg.setStyleSheet(Style::colorDialog());
+            dlg.setCurrentColor(m_editingTheme.*field);
+            if (dlg.exec() == QDialog::Accepted) {
+                QColor color = dlg.currentColor();
+                if (color.isValid()) {
+                    m_editingTheme.*field = color;
+                    btn->setStyleSheet("QToolButton{background-color: " + color.name() + ";}");
+                    hexLabel->setText(color.name());
+                    markThemeDirty();
+                }
+            }
+        });
+    };
+    wireSwatch(ui->themeWindowBgBtn, ui->themeWindowBgHexLabel, &Theme::windowBackground);
+    wireSwatch(ui->themeTextBtn, ui->themeTextHexLabel, &Theme::text);
+    wireSwatch(ui->themeTextMutedBtn, ui->themeTextMutedHexLabel, &Theme::textMuted);
+    wireSwatch(ui->themeBorderBtn, ui->themeBorderHexLabel, &Theme::border);
+    wireSwatch(ui->themeChartBgBtn, ui->themeChartBgHexLabel, &Theme::chartBackground);
+    wireSwatch(ui->themeMarkerBtn, ui->themeMarkerHexLabel, &Theme::marker);
+
+    connect(ui->themeDefaultBtn, &QPushButton::clicked, this, [this]() {
+        // Restores the compiled-in seed for this index -- name included --
+        // not whatever's currently persisted in the ini for it.
+        m_editingTheme = Style::defaultThemeAt(m_editingThemeIndex);
+        refreshThemeFormFields();
+        markThemeDirty();
+    });
+
+    connect(ui->themeCancelBtn, &QPushButton::clicked, this, [this]() {
+        loadThemeIntoForm(m_editingThemeIndex);
+    });
+
+    connect(ui->themeSaveBtn, &QPushButton::clicked, this, [this]() {
+        Style::saveThemeAt(m_editingThemeIndex, m_editingTheme);
+        ui->themeComboBox->setItemText(m_editingThemeIndex,
+            themeComboLabel(m_editingThemeIndex, m_editingTheme.name));
+        ui->themeSaveBtn->setEnabled(false);
+        emit themeSaved(m_editingThemeIndex);
+        // themeSaved() -> MainWindow::changeColorTheme() now covers the full
+        // re-skin, chart background included, when this is the active slot.
+        if (m_editingThemeIndex == Style::activeThemeIndex()) {
+            // changeColorTheme() re-skins MainWindow, not this already-open
+            // dialog -- applyStyles() baked the active theme's colors into
+            // Settings' own stylesheet once at construction (that's why most
+            // tabs' text only updated after closing and reopening). Re-running
+            // it here is what actually keeps the open dialog in sync.
+            applyStyles();
+        }
+    });
+
+    ui->themeComboBox->setCurrentIndex(Style::activeThemeIndex());
+    // setCurrentIndex() above only fires on_themeComboBox_currentIndexChanged()
+    // if the index actually changes from the combo's default of 0 -- this
+    // covers the Light (index 0) case too, and is harmlessly redundant
+    // (reloads identical data) otherwise.
+    loadThemeIntoForm(Style::activeThemeIndex());
+}
+
+void Settings::on_themeComboBox_currentIndexChanged(int index)
+{
+    if (index < 0)
+        return;
+    loadThemeIntoForm(index);
+}
+
+void Settings::loadThemeIntoForm(int index)
+{
+    m_editingThemeIndex = index;
+    m_editingTheme = Style::themeAt(index);
+    refreshThemeFormFields();
+    updateThemePreview();
+    ui->themeSaveBtn->setEnabled(false);
+}
+
+void Settings::refreshThemeFormFields()
+{
+    ui->themeNameEdit->setText(m_editingTheme.name);
+    ui->themeWindowBgBtn->setStyleSheet("QToolButton{background-color: " + m_editingTheme.windowBackground.name() + ";}");
+    ui->themeWindowBgHexLabel->setText(m_editingTheme.windowBackground.name());
+    ui->themeTextBtn->setStyleSheet("QToolButton{background-color: " + m_editingTheme.text.name() + ";}");
+    ui->themeTextHexLabel->setText(m_editingTheme.text.name());
+    ui->themeTextMutedBtn->setStyleSheet("QToolButton{background-color: " + m_editingTheme.textMuted.name() + ";}");
+    ui->themeTextMutedHexLabel->setText(m_editingTheme.textMuted.name());
+    ui->themeBorderBtn->setStyleSheet("QToolButton{background-color: " + m_editingTheme.border.name() + ";}");
+    ui->themeBorderHexLabel->setText(m_editingTheme.border.name());
+    ui->themeChartBgBtn->setStyleSheet("QToolButton{background-color: " + m_editingTheme.chartBackground.name() + ";}");
+    ui->themeChartBgHexLabel->setText(m_editingTheme.chartBackground.name());
+    ui->themeMarkerBtn->setStyleSheet("QToolButton{background-color: " + m_editingTheme.marker.name() + ";}");
+    ui->themeMarkerHexLabel->setText(m_editingTheme.marker.name());
+}
+
+void Settings::updateThemePreview()
+{
+    // Style::palette()/Style::groupBox() output, fed the in-progress theme
+    // instead of the active one. setPalette() alone does NOT reach the
+    // buttons/label here the way it would on a plain (no-stylesheet-in-its-
+    // ancestry) widget: per Qt's own docs (stylesheet-syntax.html,
+    // "Inheritance"), once ANY stylesheet is active anywhere in a widget's
+    // ancestor chain -- and Settings' own constructor already puts one on
+    // the whole dialog -- QWidget::setPalette() on a mid-tree widget stops
+    // propagating to its children; they fall back to "the system color"
+    // instead, unless the app-wide (and much riskier to flip) Qt::
+    // AA_UseStyleSheetPropagationInWidgetStyles attribute is set. So every
+    // themed property below is set explicitly via stylesheet instead of
+    // relying on inherited QPalette -- setPalette() is still called too,
+    // since it's harmless and correct for the parts of the app that don't
+    // sit under an ancestor stylesheet, just not sufficient on its own here.
+    QString previewStyle = Style::groupBox(m_editingTheme);
+    previewStyle += "QGroupBox{background-color: " + m_editingTheme.windowBackground.name() + ";}";
+    ui->themePreviewGroupBox->setPalette(Style::palette(m_editingTheme));
+    ui->themePreviewGroupBox->setStyleSheet(previewStyle);
+
+    ui->themePreviewLabel->setStyleSheet(Style::label(m_editingTheme));
+
+    // Flat color instead of trying to replicate Style::palette()'s native
+    // Button-shading formula (canvasIsLight ? darker(112) : lighter(160))
+    // via QSS -- correctness over exactly matching Fusion's chrome, and the
+    // point of this demo pair is the enabled/disabled text contrast anyway.
+    QString buttonStyle =
+        "QPushButton{color: " + m_editingTheme.text.name() +
+        "; background-color: " + m_editingTheme.windowBackground.name() + ";} "
+        "QPushButton:disabled{color: " + m_editingTheme.textMuted.name() + ";}";
+    ui->themePreviewEnabledBtn->setStyleSheet(buttonStyle);
+    ui->themePreviewDisabledBtn->setStyleSheet(buttonStyle);
+
+    ui->themePreviewChartWidget->setStyleSheet("background-color: " + m_editingTheme.chartBackground.name() + ";");
+    ui->themePreviewMarkerLine->setStyleSheet("background-color: " + m_editingTheme.marker.name() + ";");
+    // "1" beside the line, same color -- mirrors a real marker's own
+    // line+number pairing (Markers::create()'s *Line/*LineText pairs).
+    ui->themePreviewMarkerLabel->setStyleSheet("color: " + m_editingTheme.marker.name() + ";");
+}
+
+void Settings::markThemeDirty()
+{
+    updateThemePreview();
+    ui->themeSaveBtn->setEnabled(true);
+}
+
 void Settings::on_enableCustomizeControls(bool enable)
 {
     ui->comboBoxName->setEnabled(enable);
@@ -1588,29 +1765,6 @@ void Settings::setConnectButtonText(bool _connect)
         ui->connectSerialBtn->setText(tr("Disconnect analyzer"));
     ui->connectSerialBtn->update();
 }
-
-void Settings::showColorDialog()
-{
-    m_settings->beginGroup("Settings");
-    QString strColor = m_settings->value("chart-background", "#ffffff").toString();
-    QColor color;
-//    color.fromString(strColor);
-    color.fromString(strColor);
-    QColorDialog dlg;
-    dlg.setOption(QColorDialog::DontUseNativeDialog, true);
-    dlg.setStyleSheet(Style::colorDialog());
-    if (dlg.exec() == QDialog::Accepted) {
-        color = dlg.currentColor();
-        if (color.isValid()) {
-            strColor = color.name();
-            m_settings->setValue("chart-background", strColor);
-            ui->bkgButton->setStyleSheet("QToolButton{background-color: " + strColor + ";}");
-            emit chartBackgroundChanged(color);
-        }
-    }
-    m_settings->endGroup();
-}
-
 
 void Settings::setRestrictFq(bool value)
 {

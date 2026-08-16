@@ -187,7 +187,7 @@ private:
     bool m_isMouseClick;
     bool m_bInterrupted;
     QMap<QString, QStringList*> m_BandsMap;
-    bool m_darkColorTheme = true;
+    int m_activeThemeIndex = 0;
 
     // Guards on_selectDeviceDialog() against opening a second copy of
     // SelectDeviceDialog. QApplication::activeModalWidget() looked like
@@ -237,7 +237,11 @@ private:
     void autoCalibrate();
     void showErrorPopup(QString text, int msDuration);
     void changeMeasurmentsColor(int _row, QColor& _color);
-    void changeColorTheme(bool _dark);
+    void changeColorTheme(int themeIndex);
+    // Updates the View > Theme menu's "N: Name" labels from Style::themeAt()
+    // -- called after Settings > Themes saves any slot, since a rename could
+    // be to a slot other than the currently-active one.
+    void refreshThemeMenu();
     void getEnteredFq(double& start, double& stop);
     // Switches scan mode (Start/Stop vs Center/Range): converts the
     // currently-entered frequency values into the new representation,

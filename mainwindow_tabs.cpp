@@ -356,13 +356,7 @@ void MainWindow::createTabs (QString sequence)
     // S21 not implemented yet
     ui->tabWidget->setTabVisible(ui->tabWidget->indexOf(m_tab_s21), false);
 
-    QString path = Settings::setIniFile();
-    QSettings set(path, QSettings::IniFormat);
-    set.beginGroup("Settings");
-    QString strColor = set.value("chart-background", "#ffffff").toString();
-    QColor color = QColor::fromString(strColor);
-    setChartBackground(color);
-    set.endGroup();
+    setChartBackground(Style::theme().chartBackground);
 
     ui->tabWidget->setCurrentIndex(0);
 
@@ -458,10 +452,10 @@ QCustomPlot* MainWindow::getCurrentPlot()
     return children[0];
 }
 
-void MainWindow::changeColorTheme(bool _dark)
+void MainWindow::changeColorTheme(int themeIndex)
 {
-    m_darkColorTheme = _dark;
-    Style::setDarkMode(_dark);
+    m_activeThemeIndex = themeIndex;
+    Style::setActiveThemeIndex(themeIndex);
 
     // Native/Fusion rendering off Style::palette() for everything except
     // Single/Continuous/Full's checked (running, green) state, which
@@ -484,7 +478,7 @@ void MainWindow::changeColorTheme(bool _dark)
     ui->fullBtn->setStyleSheet(style);
 
     if (m_markers != NULL)
-        m_markers->changeColorTheme(m_darkColorTheme);
+        m_markers->changeColorTheme();
 
     // Measurements::changeColorTheme() is gone -- it only ever existed to
     // re-color m_graphHint's PopUp, which setStyles() below now handles for
@@ -493,6 +487,27 @@ void MainWindow::changeColorTheme(bool _dark)
     m_measurements->on_redrawGraphs();
 
     setStyles(); // re-skin the Style::-driven main window chrome for the new theme
+
+    // chartBackground is a real Theme field now, not the standalone setting
+    // it used to be -- belongs here so it's covered by every path that
+    // changes the active theme (View > Theme menu directly, or Settings >
+    // Themes saving the active slot via themeSaved()), not just the one
+    // that used to exist for it alone (Settings' now-removed chart-
+    // background-only swatch/showColorDialog()).
+    setChartBackground(Style::theme().chartBackground);
+    if (getCurrentPlot() != nullptr)
+        getCurrentPlot()->replot();
+    if (m_measurements != nullptr)
+        m_measurements->setBriefHintColor();
+    if (m_markers != nullptr && m_markers->markersHint() != nullptr)
+        m_markers->markersHint()->updateLabelColors();
+}
+
+void MainWindow::refreshThemeMenu()
+{
+    const QList<QAction*> actions = ui->menuTheme->actions();
+    for (int i = 0; i < actions.size(); i++)
+        actions[i]->setText(QString("%1: %2").arg(i + 1).arg(Style::themeAt(i).name));
 }
 
 

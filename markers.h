@@ -79,7 +79,7 @@ public:
     marker getMarker( quint32 number);
     void repaint();
     void on_translate();
-    void changeColorTheme(bool _dark);
+    void changeColorTheme();
     void changeMarkersHint();
     MarkersPopUp * markersHint() { return m_markersHint; }
     QList<QList<QVariant>> updateInfo(QList<int> _columnTypes);

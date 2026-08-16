@@ -1,49 +1,84 @@
 #include "style.h"
+#include "settings.h"
+#include <QSettings>
 
-bool Style::m_dark = true;
+int Style::m_activeIndex = 0;
 
 namespace {
 
-/*  HEZ: Themes
-    // Red
-    Theme t;
-    t.windowBackground = QColor(64, 18, 18);
-    t.text             = QColor(255, 240, 240);
-    t.textMuted         = QColor(128, 96, 96);
-    t.border            = QColor(142, 90, 95);
+// Compiled-in seed data for the 5 fixed slots. Reused for two things: the
+// no-ini-yet fallback (per key, in themeAt() below) and Style::
+// defaultThemeAt()'s "restore defaults" result -- one source of truth
+// instead of two copies that could drift apart.
+//
+// Dark/Red/Green/Blue have real, individually-chosen chartBackground/marker
+// values now (tuned 2026-08-16); Light is still on the original placeholder
+// (a plain white chartBackground and semi-transparent QColor(255,0,0,150)
+// marker, matching what used to be a single global value shared by every
+// theme) pending the same treatment.
 
-    // Green
-    Theme t;
-    t.windowBackground = QColor(18, 64, 18);
-    t.text             = QColor(240, 255, 240);
-    t.textMuted         = QColor(96, 128, 96);
-    t.border            = QColor(90, 120, 95);
-
-    // Blue
-    Theme t;
-    t.windowBackground = QColor(18, 18, 64);
-    t.text             = QColor(240, 240, 255);
-    t.textMuted         = QColor(96, 96, 128);
-    t.border            = QColor(90, 90, 128);
-*/
-
-Theme darkTheme()
+Theme lightThemeDefault()
 {
     Theme t;
-    t.windowBackground = QColor(18, 18, 18);
-    t.text             = QColor(255, 255, 255);
-    t.textMuted         = QColor(128, 128, 128);
-    t.border            = QColor(90, 90, 95);
+    t.name              = "Light";
+    t.windowBackground  = QColor(246, 246, 246);
+    t.text              = QColor(30, 30, 30);
+    t.textMuted         = QColor(110, 110, 110);
+    t.border            = QColor(195, 195, 200);
+    t.chartBackground   = QColor(255, 255, 255);
+    t.marker            = QColor(255, 0, 0, 150);
     return t;
 }
 
-Theme lightTheme()
+Theme darkThemeDefault()
 {
     Theme t;
-    t.windowBackground = QColor(246, 246, 246);
-    t.text             = QColor(30, 30, 30);
-    t.textMuted         = QColor(110, 110, 110);
-    t.border            = QColor(195, 195, 200);
+    t.name              = "Dark";
+    t.windowBackground  = QColor(0x2f, 0x2f, 0x2f);
+    t.text              = QColor(0xff, 0xff, 0xff);
+    t.textMuted         = QColor(0x80, 0x80, 0x80);
+    t.border            = QColor(0x80, 0x80, 0x80);
+    t.chartBackground   = QColor(0x56, 0x56, 0x56);
+    t.marker            = QColor(0xff, 0x00, 0x00);
+    return t;
+}
+
+Theme redThemeDefault()
+{
+    Theme t;
+    t.name              = "Red";
+    t.windowBackground  = QColor(0x40, 0x12, 0x12);
+    t.text              = QColor(0xff, 0xf0, 0xf0);
+    t.textMuted         = QColor(0x80, 0x60, 0x60);
+    t.border            = QColor(0x8e, 0x5a, 0x5f);
+    t.chartBackground   = QColor(0xaa, 0x8d, 0x8d);
+    t.marker            = QColor(0xff, 0x00, 0x00);
+    return t;
+}
+
+Theme greenThemeDefault()
+{
+    Theme t;
+    t.name              = "Green";
+    t.windowBackground  = QColor(0x00, 0x26, 0x00);
+    t.text              = QColor(0xa2, 0xff, 0xa2);
+    t.textMuted         = QColor(0x1b, 0x64, 0x26);
+    t.border            = QColor(0x00, 0x55, 0x00);
+    t.chartBackground   = QColor(0xac, 0xf9, 0xa7);
+    t.marker            = QColor(0xff, 0x00, 0x00);
+    return t;
+}
+
+Theme blueThemeDefault()
+{
+    Theme t;
+    t.name              = "Blue";
+    t.windowBackground  = QColor(0x12, 0x12, 0x40);
+    t.text              = QColor(0xf0, 0xf0, 0xff);
+    t.textMuted         = QColor(0x60, 0x60, 0x80);
+    t.border            = QColor(0x5a, 0x5a, 0x80);
+    t.chartBackground   = QColor(0x00, 0x76, 0xa1);
+    t.marker            = QColor(0xff, 0x00, 0x00);
     return t;
 }
 
@@ -52,21 +87,88 @@ QString c(const QColor& color)
     return color.name();
 }
 
+// theme() is called from hot paths (crosshair/marker repaint on every mouse
+// move), so the active theme is cached rather than re-read from the ini on
+// every call -- only setActiveThemeIndex()/saveThemeAt() (both rare: a menu
+// click, or a future theme editor's Save button) invalidate it.
+Theme g_activeThemeCache;
+bool g_activeThemeCacheValid = false;
+
 } // namespace
 
-void Style::setDarkMode(bool dark)
+void Style::setActiveThemeIndex(int index)
 {
-    m_dark = dark;
+    m_activeIndex = index;
+    g_activeThemeCacheValid = false;
 }
 
-bool Style::isDarkMode()
+int Style::activeThemeIndex()
 {
-    return m_dark;
+    return m_activeIndex;
 }
 
-QPalette Style::palette()
+Theme Style::defaultThemeAt(int index)
 {
-    const Theme& t = theme();
+    switch (index) {
+    case 0: return lightThemeDefault();
+    case 1: return darkThemeDefault();
+    case 2: return redThemeDefault();
+    case 3: return greenThemeDefault();
+    case 4: return blueThemeDefault();
+    default: return lightThemeDefault();
+    }
+}
+
+Theme Style::themeAt(int index)
+{
+    const Theme def = defaultThemeAt(index);
+
+    QSettings set(Settings::setIniFile(), QSettings::IniFormat);
+    set.beginGroup(QString("Theme%1").arg(index));
+
+    Theme t;
+    t.name             = set.value("name", def.name).toString();
+    t.windowBackground = QColor(set.value("windowBackground", def.windowBackground.name()).toString());
+    t.text             = QColor(set.value("text", def.text.name()).toString());
+    t.textMuted        = QColor(set.value("textMuted", def.textMuted.name()).toString());
+    t.border           = QColor(set.value("border", def.border.name()).toString());
+    t.chartBackground  = QColor(set.value("chartBackground", def.chartBackground.name()).toString());
+    t.marker           = QColor(set.value("marker", def.marker.name()).toString());
+
+    set.endGroup();
+    return t;
+}
+
+void Style::saveThemeAt(int index, const Theme& t)
+{
+    QSettings set(Settings::setIniFile(), QSettings::IniFormat);
+    set.beginGroup(QString("Theme%1").arg(index));
+
+    set.setValue("name", t.name);
+    set.setValue("windowBackground", t.windowBackground.name());
+    set.setValue("text", t.text.name());
+    set.setValue("textMuted", t.textMuted.name());
+    set.setValue("border", t.border.name());
+    set.setValue("chartBackground", t.chartBackground.name());
+    set.setValue("marker", t.marker.name());
+
+    set.endGroup();
+
+    if (index == m_activeIndex)
+        g_activeThemeCacheValid = false;
+}
+
+Theme Style::theme()
+{
+    if (!g_activeThemeCacheValid) {
+        g_activeThemeCache = themeAt(m_activeIndex);
+        g_activeThemeCacheValid = true;
+    }
+    return g_activeThemeCache;
+}
+
+QPalette Style::palette(const Theme& t)
+{
     QPalette p;
 
     const bool canvasIsLight = t.windowBackground.lightness() > 128;
@@ -113,16 +215,8 @@ QPalette Style::palette()
     return p;
 }
 
-const Theme& Style::theme()
+QString Style::label(const Theme& t)
 {
-    static const Theme dark = darkTheme();
-    static const Theme light = lightTheme();
-    return m_dark ? dark : light;
-}
-
-QString Style::label()
-{
-    const Theme& t = theme();
     QString style;
 
     style = "QLabel {color: " + c(t.text) + "; }";
@@ -172,9 +266,8 @@ QString Style::checkBox()
     return QString();
 }
 
-QString Style::groupBox()
+QString Style::groupBox(const Theme& t)
 {
-    const Theme& t = theme();
     QString style;
 
     style = "QGroupBox:title {color: " + c(t.text) + "; padding: 3px 0; subcontrol-origin: 1ex;} ";
@@ -243,13 +336,13 @@ QString Style::slider()
 
 QString Style::dialog()
 {
-    const Theme& t = theme();
+    const Theme t = theme();
     return "QDialog{background-color: " + c(t.windowBackground) + ";} ";
 }
 
 QString Style::mainWindow()
 {
-    const Theme& t = theme();
+    const Theme t = theme();
     // QMainWindow{} alone has no visible effect -- its central widget (the
     // promoted CentralWidget class) fully occludes it edge-to-edge, so that
     // needs its own rule, matched by class name.
@@ -264,7 +357,7 @@ QString Style::messageBox()
     // still needs an explicit background/label rule. Its buttons used to get
     // a hand-picked navy skin here too -- left native now, same reasoning as
     // Style::pushButton().
-    const Theme& t = theme();
+    const Theme t = theme();
     QString style = R"(
     QMessageBox {
         background-color: )" + c(t.windowBackground) + R"(;
@@ -281,7 +374,7 @@ QString Style::colorDialog()
 {
     // Only the canvas -- see Style::messageBox(). QLineEdit/QSpinBox/
     // QPushButton are left native now instead of the hand-picked navy skin.
-    const Theme& t = theme();
+    const Theme t = theme();
     QString style = R"(
     QColorDialog {
         background-color: )" + c(t.windowBackground) + R"(;

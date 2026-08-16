@@ -10,6 +10,7 @@
 #include <QSettings>
 #include <calibration.h>
 #include "licenseagent.h"
+#include "style.h"
 
 //#include <shlobj.h>
 
@@ -70,7 +71,6 @@ public:
     void setAntScopeVersion(QString version);
 
     void on_translate();
-    void showColorDialog();
     LicenseAgent& licenseAgent() { return m_licenseAgent; }
     static bool m_licenseUpdateBlocked;
 
@@ -113,6 +113,24 @@ private:
     void openCablesFile(QString path);
     void initCustomizeTab();
     void initMarkersTab();
+    void initThemesTab();
+    void refreshThemeFormFields();
+    // Loads Style::themeAt(index) into the form (combo selection aside --
+    // callers already know which index they want shown) and disables
+    // themeSaveBtn -- shared by the combo's currentIndexChanged handler and
+    // initThemesTab() itself.
+    void loadThemeIntoForm(int index);
+    // Re-applies m_editingTheme to themePreviewGroupBox via Style::palette()/
+    // Style::groupBox() (the exact code path real widgets use, just fed the
+    // in-progress theme instead of the active one) plus the two swatches
+    // native widgets don't cover on their own.
+    void updateThemePreview();
+    // Common tail of every swatch/name edit: stash the new value into
+    // m_editingTheme, refresh the preview, and enable Save.
+    void markThemeDirty();
+
+    Theme m_editingTheme;
+    int m_editingThemeIndex = 0;
     void setConnectButtonText(bool _connect);
     //vnn_01- for correct close_form---
     bool vnn_FormOn = true;
@@ -151,7 +169,13 @@ signals:
 //    void disconnectBluetooth();
     void disconnectDevice();
     void connectDevice();
-    void chartBackgroundChanged(QColor color);
+    // Emitted after Style::saveThemeAt() -- MainWindow refreshes the View >
+    // Theme menu's labels regardless of which index this is (a rename could
+    // be any slot), and re-skins the running app (chart background included)
+    // if index is the active one. Retired the older, narrower
+    // chartBackgroundChanged signal that used to cover only this same
+    // active-slot case, now fully subsumed by changeColorTheme() itself.
+    void themeSaved(int index);
 
 private slots:
     void on_browseBtn_clicked();
@@ -174,6 +198,7 @@ private slots:
     void on_subtractCableBtn_clicked(bool checked);
     void on_addCableBtn_clicked(bool checked);
     void on_cableComboBox_currentIndexChanged(int index);
+    void on_themeComboBox_currentIndexChanged(int index);
     void on_updateGraphsBtn_clicked();
     void on_aa30bootFound();
     void on_aa30updateComplete();
