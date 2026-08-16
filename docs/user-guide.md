@@ -206,7 +206,7 @@ menu bar instead (File / Edit / View / Connect Analyzer / Help).
 
 | Control | What it does |
 |---|---|
-| About AntScopeZ... | Shows the running app's version number |
+| About AntScopeZ... | Shows the running app's version number and build timestamp |
 
 **Frequency panel**
 
@@ -275,8 +275,9 @@ use even when it is.)*
 
 ## Settings
 
-The Settings dialog has six tabs: **General**, **Markers**,
-**OSL Calibration**, **Cable**, **Developer**, and **Updates**.
+The Settings dialog has seven tabs: **General**, **Markers**,
+**OSL Calibration**, **Cable**, **Themes**, **Developer**, and
+**Updates**.
 
 OSL Calibration has its own section -- see
 [Calibration (OSL)](#calibration-osl).
@@ -285,10 +286,12 @@ OSL Calibration has its own section -- see
 
 <!-- SCREENSHOT: Settings dialog, General tab -->
 
-Theme, Language, Band Highlighting, Show Band Name, and Band Selector
-used to live here too -- they moved to the **View** menu (see
+Language, Band Highlighting, Show Band Name, and Band Selector used to
+live here too -- they moved to the **View** menu (see
 [Menu bar](#controls-reference) above) and aren't duplicated in Settings
-any more.
+any more. Theme also moved to the **View** menu, but that only picks
+*which* of the 5 built-in themes is active -- to actually edit a
+theme's colors, see the new [Themes tab](#themes-tab) below.
 
 | Control | What it does |
 |---|---|
@@ -296,7 +299,6 @@ any more.
 | Register application / Match license / Register device / Update license / Device info | RigExpert's own registration and licensing system. This talks to RigExpert's servers and isn't something this fork tests or supports -- see the disclaimer in [README.md](https://github.com/K4HEZ/AntScopeZ#readme). Use the vendor's own software for anything licensing-related. |
 | Measurement system | Metric or Imperial units |
 | Max measurements | Cap on how many measurements can be displayed at once |
-| Chart background | Opens a color picker for the plot background |
 | Don't restrict frequency | Would disable Start/Stop range clamping entirely -- currently hidden, gated behind the disabled internal developer flag (see `BUILDINFO.md`'s Known Issues) |
 | System impedance | The reference impedance (default 50Ω) everything -- SWR, Smith chart center, RL -- is calculated against |
 | Open 'Connect Analyzer' on launch | See [Connecting to your analyzer](#connecting-to-your-analyzer) |
@@ -337,6 +339,25 @@ data. It may do nothing currently, or it may be wired through a path
 this pass didn't find. Worth confirming against real hardware before
 relying on it; flagging here rather than asserting a behavior that
 wasn't actually confirmed.
+
+### Themes tab
+
+<!-- SCREENSHOT: Settings dialog, Themes tab -->
+
+Edits any of the 5 fixed color themes (Light, Dark, Red, Green, Blue --
+the same 5 View → Theme lists). Selecting one in the combo loads its
+current colors into the form below; nothing here takes effect until you
+hit Save.
+
+| Control | What it does |
+|---|---|
+| Theme combo | Which of the 5 slots you're editing -- switching it discards any unsaved edits to the one you were on |
+| Name | Freely renamable; shown as "N: Name" in both this combo and the View → Theme menu |
+| Window Background / Text / Text Muted / Border / Chart Background / Marker | Six color swatches -- click one to open a color picker. The hex value is shown beside each. Chart Background and Marker apply to the plot area and marker lines; the other four are the general window canvas |
+| Example panel | Live preview of the theme as you edit it -- not the saved version, whatever's currently in the form |
+| Default | Restores this slot's original factory colors and name (not whatever's currently saved for it) |
+| Cancel | Discards unsaved edits, reloads the slot as last saved |
+| Save | Persists your edits. If you're editing the currently *active* theme (see View → Theme), the change applies immediately |
 
 ### Developer tab
 
@@ -874,14 +895,22 @@ isRange=false
 
 [Settings]
 band-selector-enabled=true
-chart-background=#505050
+activeTheme=0
 current_band=ITU Region 2 - Americas
-darkColorTheme=true
 maxMarkers=5
 maxMeasurements=5
 open-connect-analyzer-at-launch=false
 restrictFq=true
-show-band-name=false
+show-band-name=true
+
+[Theme0]
+name=Light
+windowBackground=#f6f6f6
+text=#1e1e1e
+textMuted=#6e6e6e
+border=#c3c3c8
+chartBackground=#ffffff
+marker=#ff0000
 
 [Connection]
 id=180000756
@@ -924,6 +953,12 @@ Notes on specific keys:
 - **`languageCode`** -- an ISO code (`es`, `ja`, `uk`, ...) matching a
   `QtLanguage_<code>.qm` filename, not an index. Delete this line (or
   the whole ini) to fall back to English.
+- **`activeTheme` / `[Theme0]`-`[Theme4]`** -- which of the 5 fixed
+  theme slots is active, and each slot's own colors -- see
+  [Themes tab](#themes-tab). A slot missing here just falls back to its
+  compiled-in factory default; only shows up once you've hit Save on it
+  at least once. Hand-editing works (hex strings, same format shown
+  above), but the Themes tab is the supported way to change these.
 - **`Connection`** -- the last-connected device, used for silent
   auto-reconnect at launch (see
   [Connecting to your analyzer](#connecting-to-your-analyzer)). `same`

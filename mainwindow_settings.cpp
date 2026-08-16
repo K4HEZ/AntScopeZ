@@ -246,7 +246,6 @@ void MainWindow::on_downloadAfterClosing()
 
 bool MainWindow::loadLanguage(QString locale)
 { //locale: en, ukr, ru, ja, etc.
-    QString title = windowTitle();
 
     // Prefer a user-supplied translation over the one shipped with the app
     // -- the same override convention itu-regions.txt already uses (see
@@ -324,7 +323,15 @@ bool MainWindow::loadLanguage(QString locale)
     if (m_settingsDialog != nullptr)
         m_settingsDialog->setWindowTitle(tr("Settings"));
 
-    setWindowTitle(title);
+    // Was: save windowTitle() before retranslating, restore it verbatim
+    // afterward -- worked around ui->retranslateUi(this) resetting the
+    // title to mainwindow.ui's own static, non-translatable "AntScopeZ"
+    // (notr="true"), but meant the dynamically-composed connection-status
+    // suffix was preserved exactly as it was, in whatever language (or no
+    // language, if the translator hadn't loaded yet) it happened to be set
+    // in, rather than ever actually being retranslated. refreshWindowTitle()
+    // rebuilds it fresh in the now-active language instead.
+    refreshWindowTitle();
 
     return res;
 }

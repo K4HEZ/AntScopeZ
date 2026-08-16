@@ -36,8 +36,9 @@ void MainWindow::on_analyzerFound(int index)
 
 void MainWindow::on_analyzerNameFound(QString name)
 {
-    QString name1 = "AntScopeZ v." + QString(ANTSCOPEZ_VER);
-    setWindowTitle(name1 + " - " + name);
+    m_analyzerConnected = true;
+    m_connectedDeviceName = name;
+    refreshWindowTitle();
 
     ui->checkBoxCalibration->setCheckState(Qt::Unchecked);
     bool zeroII = name.contains("Zero II");
@@ -88,9 +89,8 @@ void MainWindow::on_analyzerNameFound(QString name)
 void MainWindow::on_deviceDisconnected()
 {
     QWidget::setCursor(Qt::ArrowCursor);
-    QString name = "AntScopeZ v." + QString(ANTSCOPEZ_VER);
-    name += tr(" - Analyzer not connected");
-    setWindowTitle(name);
+    m_analyzerConnected = false;
+    refreshWindowTitle();
     ui->singleStart->setEnabled(false);
     ui->continuousStartBtn->setEnabled(false);
     ui->actionAnalyzerData->setEnabled(false);
@@ -111,6 +111,16 @@ void MainWindow::on_deviceDisconnected()
 
     if (m_analyzer != nullptr)
         m_analyzer->searchAnalyzer();
+}
+
+void MainWindow::refreshWindowTitle()
+{
+    QString name = "AntScopeZ v." + QString(ANTSCOPEZ_VER);
+    if (m_analyzerConnected)
+        name += " - " + m_connectedDeviceName;   // device name, not translatable text
+    else
+        name += tr(" - Analyzer not connected");
+    setWindowTitle(name);
 }
 
 void MainWindow::on_actionAnalyzerData_triggered()

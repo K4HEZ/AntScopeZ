@@ -277,6 +277,23 @@ target_compile_definitions(AntScopeZ PRIVATE
     ANTSCOPEZ_VER="${PROJECT_VERSION}${ANTSCOPEZ_VER_SUFFIX}"
 )
 
+# Build timestamp for the About box ("Build: yymmdd-hhmmss"). A plain
+# target_compile_definitions() value (like ANTSCOPEZ_VER above) is only
+# recomputed when CMake reconfigures, so it'd go stale across ordinary
+# incremental rebuilds -- an add_custom_target() with no tracked OUTPUT
+# reruns on every build instead, regenerating build-timestamp.h fresh each
+# time. AntScopeZ depends on it so a parallel build can't compile
+# aboutdialog.cpp before it exists.
+add_custom_target(generate_build_timestamp
+    COMMAND ${CMAKE_COMMAND}
+        "-DIN_FILE=${CMAKE_SOURCE_DIR}/cmake/build-timestamp.h.in"
+        "-DOUT_FILE=${CMAKE_BINARY_DIR}/build-timestamp.h"
+        -P "${CMAKE_SOURCE_DIR}/cmake/generate-build-timestamp.cmake"
+    BYPRODUCTS "${CMAKE_BINARY_DIR}/build-timestamp.h"
+    COMMENT "Generating build timestamp"
+)
+add_dependencies(AntScopeZ generate_build_timestamp)
+
 # The qmake build defined _DEBUG in debug configurations.
 target_compile_definitions(AntScopeZ PRIVATE $<$<CONFIG:Debug>:_DEBUG>)
 
@@ -292,6 +309,7 @@ target_include_directories(AntScopeZ PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/analyzer
     ${CMAKE_CURRENT_SOURCE_DIR}/analyzer/updater
+    ${CMAKE_BINARY_DIR}
 )
 
 
@@ -452,6 +470,12 @@ qt_add_translations(
     SOURCE_TARGETS AntScopeZ
     TS_FILES ${ANTSCOPE_TS_FILES}
     QM_FILES_OUTPUT_VARIABLE ANTSCOPE_QM_FILES
+    # -no-obsolete: drop entries for source strings that no longer exist
+    # instead of leaving them behind marked obsolete/vanished -- update_
+    # translations is opt-in already (see BUILDINFO.md's Translations
+    # section), so a run is a deliberate "bring locales/*.ts up to date"
+    # moment, not something that should accumulate dead weight over time.
+    LUPDATE_OPTIONS -no-obsolete
 )
 add_dependencies(AntScopeZ release_translations)
 

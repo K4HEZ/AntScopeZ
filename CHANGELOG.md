@@ -17,6 +17,8 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   background, text, muted text, border, chart background, marker) with a
   live preview, a Default button to restore a theme's original colors, and
   Save/Cancel. Themes can be freely renamed.
+- Help > About AntScopeZ now shows a centered build timestamp below the
+  version.
 
 ### Changed
 
@@ -36,6 +38,19 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   color pre-selected.
 - The open Settings dialog's own text didn't pick up a newly-saved theme
   until it was closed and reopened.
+- Marker table's "Del"/"Marker" column headers never translated, in any
+  language, even after a live language switch -- now translate properly,
+  and "Del" is a plain "x" (no translation needed) instead.
+- Print dialog's three buttons were fixed-size and clipped translated
+  text; now resize to fit.
+- The window title's "- Analyzer not connected"/connected-device-name
+  suffix could get stuck in English (or whatever language was active at
+  first launch) forever, even after switching languages -- it was being
+  saved and blindly restored verbatim around each language reload instead
+  of actually being rebuilt in the new language.
+- Brought Ukrainian, Japanese, and Spanish translations up to date with
+  everything added since they were last refreshed, including several
+  strings found silently untranslated in older, pre-existing entries.
 
 ## [2.2.0] - 2026-08-15
 

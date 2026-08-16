@@ -93,6 +93,10 @@ private:
 
     AnalyzerData *m_analyzerData = nullptr;
     AnalyzerPro *m_analyzer = nullptr;
+    // State refreshWindowTitle() composes the title from -- see its
+    // declaration above.
+    bool m_analyzerConnected = false;
+    QString m_connectedDeviceName;
     Screenshot *m_screenshot = nullptr;
     Presets *m_presets = nullptr;
 
@@ -304,6 +308,17 @@ public slots:
     void on_analyzerFound(int index);
     void on_analyzerNameFound(QString name);
     void on_deviceDisconnected();
+    // Rebuilds the window title from current state (m_analyzerConnected/
+    // m_connectedDeviceName) in the active language -- the one place that
+    // actually composes it, called from both connect/disconnect and from
+    // loadLanguage() after a language switch. mainwindow.ui's own
+    // windowTitle is a static, non-translatable "AntScopeZ"
+    // (notr="true"), so ui->retranslateUi(this) resets the title to that
+    // plain string on every language load; without this, whatever text
+    // was set here earliest (possibly before the translator even loaded)
+    // would otherwise need to be preserved verbatim forever instead of
+    // actually being retranslated.
+    void refreshWindowTitle();
     void mouseWheel_swr(QWheelEvent *e);
     void replotY_swr();
     void mouseMove_swr(QMouseEvent *);

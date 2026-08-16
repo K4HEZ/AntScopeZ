@@ -1,6 +1,7 @@
 #include "markerspopup.h"
 #include "mainwindow.h"
 #include "style.h"
+#include <QCoreApplication>
 
 
 QMap<int, QString> MarkersHeaderColumn::m_mapHeader;
@@ -365,14 +366,16 @@ void MarkersPopUp::setTextColor(QString color)
 
 void MarkersPopUp::on_translate()
 {
-//    m_removeLabel.setText(tr("Del"));
-//    m_numberLabel.setText(tr("Marker"));
-//    m_measurementLabel.setText("#");
-//    m_fqLabel.setText(tr("Fq"));
-//    m_swrLabel.setText(tr("SWR"));
-//    m_rlLabel.setText(tr("RL"));
-//    m_zLabel.setText(tr("Z"));
-//    m_phaseLabel.setText(tr("Phase"));
+    // The m_removeLabel/m_numberLabel/etc. members these calls used to
+    // target are gone -- createHeader() builds the header as a dynamic set
+    // of QLabels (m_headerColumns) from MarkersHeaderColumn::headerMap()
+    // instead now. That map is lazily built once and cached forever
+    // (QMap<int, QString> MarkersHeaderColumn::m_mapHeader), so switching
+    // language at runtime otherwise never reaches it -- clear it so the
+    // next headerMap() call (from createHeader() below) rebuilds it in the
+    // new language, then actually rebuild the header labels.
+    MarkersHeaderColumn::m_mapHeader.clear();
+    createHeader();
 }
 
 
@@ -612,26 +615,35 @@ QString MarkersPopUp::formatText(int type, QVariant v)
 QMap<int, QString>& MarkersHeaderColumn::headerMap()
 {
     if (m_mapHeader.isEmpty()) {
+        // QCoreApplication::translate(), not tr() -- this is a plain struct,
+        // not a QObject, so tr() (which needs a metaobject/className to key
+        // the lookup) isn't available here. "MarkersHeaderColumn" is the
+        // context lupdate/QTranslator index this under, same role tr()'s
+        // enclosing class name would normally play. Previously plain
+        // literals, so these never got picked up by lupdate at all --
+        // always showed English regardless of locale.
         int i = MarkersHeaderColumn::fieldDelete;
-        m_mapHeader.insert(i++, "Del");
-        m_mapHeader.insert(i++, "Marker");
-        m_mapHeader.insert(i++, " # ");
-        m_mapHeader.insert(i++, "FQ, kHz");
-        m_mapHeader.insert(i++, "SWR");        // SWR - standing wave ratio
-        m_mapHeader.insert(i++, "RL, dB");     // RL - return loss
-        m_mapHeader.insert(i++, "Phase°");     // phase - phase
-        m_mapHeader.insert(i++, "R, Ohm");     // R - resistance (series model)
-        m_mapHeader.insert(i++, "X, Ohm");     // X - reactance (series model)
-        m_mapHeader.insert(i++, "Z, Ohm");     // Z - impedance
-        m_mapHeader.insert(i++, "L, nH");      // L - inductance (series model)
-        m_mapHeader.insert(i++, "C, pF");      // C - capacitance (series model)
-        m_mapHeader.insert(i++, "rho");        // rho - magnitude
-        m_mapHeader.insert(i++, "|Z|, Ohm");   // |Z| - impedance modulus
-        m_mapHeader.insert(i++, "R||, Ohm");   // R|| - resistance (parallel model)
-        m_mapHeader.insert(i++, "X||, Ohm");   // X|| - reactance (parallel model)
-        m_mapHeader.insert(i++, "Z||, Ohm");   // Z|| - impedance (parallel model)
-        m_mapHeader.insert(i++, "L||, nH");    // L|| - inductance (parallel model)
-        m_mapHeader.insert(i++, "C||, pF");    // C|| - capacitance (parallel model)
+        // "x" rather than "Del" -- universally understood as a delete/close
+        // glyph without needing translation at all (user's call, 2026-08-16).
+        m_mapHeader.insert(i++, QCoreApplication::translate("MarkersHeaderColumn", "x"));
+        m_mapHeader.insert(i++, QCoreApplication::translate("MarkersHeaderColumn", "Marker"));
+        m_mapHeader.insert(i++, QCoreApplication::translate("MarkersHeaderColumn", " # "));
+        m_mapHeader.insert(i++, QCoreApplication::translate("MarkersHeaderColumn", "FQ, kHz"));
+        m_mapHeader.insert(i++, QCoreApplication::translate("MarkersHeaderColumn", "SWR"));        // SWR - standing wave ratio
+        m_mapHeader.insert(i++, QCoreApplication::translate("MarkersHeaderColumn", "RL, dB"));     // RL - return loss
+        m_mapHeader.insert(i++, QCoreApplication::translate("MarkersHeaderColumn", "Phase°"));     // phase - phase
+        m_mapHeader.insert(i++, QCoreApplication::translate("MarkersHeaderColumn", "R, Ohm"));     // R - resistance (series model)
+        m_mapHeader.insert(i++, QCoreApplication::translate("MarkersHeaderColumn", "X, Ohm"));     // X - reactance (series model)
+        m_mapHeader.insert(i++, QCoreApplication::translate("MarkersHeaderColumn", "Z, Ohm"));     // Z - impedance
+        m_mapHeader.insert(i++, QCoreApplication::translate("MarkersHeaderColumn", "L, nH"));      // L - inductance (series model)
+        m_mapHeader.insert(i++, QCoreApplication::translate("MarkersHeaderColumn", "C, pF"));      // C - capacitance (series model)
+        m_mapHeader.insert(i++, QCoreApplication::translate("MarkersHeaderColumn", "rho"));        // rho - magnitude
+        m_mapHeader.insert(i++, QCoreApplication::translate("MarkersHeaderColumn", "|Z|, Ohm"));   // |Z| - impedance modulus
+        m_mapHeader.insert(i++, QCoreApplication::translate("MarkersHeaderColumn", "R||, Ohm"));   // R|| - resistance (parallel model)
+        m_mapHeader.insert(i++, QCoreApplication::translate("MarkersHeaderColumn", "X||, Ohm"));   // X|| - reactance (parallel model)
+        m_mapHeader.insert(i++, QCoreApplication::translate("MarkersHeaderColumn", "Z||, Ohm"));   // Z|| - impedance (parallel model)
+        m_mapHeader.insert(i++, QCoreApplication::translate("MarkersHeaderColumn", "L||, nH"));    // L|| - inductance (parallel model)
+        m_mapHeader.insert(i++, QCoreApplication::translate("MarkersHeaderColumn", "C||, pF"));    // C|| - capacitance (parallel model)
     }
     return m_mapHeader;
 }

@@ -98,6 +98,16 @@
     </layout>
    </item>
    <item>
+    <widget class="QLabel" name="buildLabel">
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
+     </property>
+     <property name="text">
+      <string notr="true">0</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>

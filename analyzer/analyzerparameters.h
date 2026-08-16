@@ -399,7 +399,7 @@ public:
                qDebug() << "AnalyzerParameters::test() FAILED: name=" << par->name() << "found=" << found->name();
            }
         }
-        qDebug() << "AnalyzerParameters::test() FINISH " << (res?"SUCCESS":"FAILED");
+        // qDebug() << "AnalyzerParameters::test() FINISH " << (res?"SUCCESS":"FAILED");
         return res;
     }
 };

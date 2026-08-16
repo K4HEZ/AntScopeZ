@@ -97,8 +97,10 @@ copy (`MainWindow::loadLanguage()`; see `Settings::localDataFolder()` /
 hand — building the app regenerates them from whatever's currently in
 `locales/*.ts`.
 
-The Language combo box (Settings → General) is populated by scanning both of
-those folders for `QtLanguage_<code>.qm` files (`Settings::setLanguages()`),
+The View → Language menu is populated by scanning both of
+those folders for `QtLanguage_<code>.qm` files (`Settings::availableLanguages()`,
+called from `MainWindow` -- Settings itself no longer has a language control of its
+own, moved to the View menu along with Theme/Bands highlighting/Band Selector),
 not from a fixed list -- adding a language is "add `locales/QtLanguage_<code>.ts`,
 rebuild" (or, without a rebuild, drop a `.qm` compiled elsewhere into either
 folder). The combo's display name for each comes from `QLocale(code).nativeLanguageName()`,
@@ -113,6 +115,31 @@ translating:
 ```sh
 cmake --build --preset debug --target update_translations
 ```
+
+`qt_add_translations()` passes `-no-obsolete` to `lupdate` (see
+`CMakeLists.txt`), so a string no longer found in source is dropped
+outright rather than left behind marked `obsolete`/`vanished` -- keeps
+`locales/*.ts` from accumulating dead entries across releases.
+
+Before assuming a "translated" string just needs updating, check whether
+its `<translation>` is actually just a copy of the English `<source>` --
+`lupdate`'s same-text heuristic can reuse a match from elsewhere in the
+file for a *new* entry, but older entries translated by hand or by an
+earlier pass can also just be an untouched English copy with no visual
+indication besides that. Found repeatedly (2026-08-16) across all three
+languages this way, well after they'd otherwise seemed complete.
+
+## Build timestamp
+
+`cmake/generate-build-timestamp.cmake`, invoked via an `add_custom_target()`
+with no tracked `OUTPUT` (so it reruns on every build, not just on
+reconfigure), regenerates `build-timestamp.h` in the build directory with
+`ANTSCOPEZ_BUILD_TIMESTAMP` (`yymmdd-hhmmss`, local time) fresh each time.
+Shown in Help → About AntScopeZ, below the version. A plain
+`target_compile_definitions()` value (like `ANTSCOPEZ_VER`) would only be
+recomputed at configure time, going stale across ordinary incremental
+rebuilds -- not useful for actually identifying which build you're
+looking at.
 
 ## Platform notes
 

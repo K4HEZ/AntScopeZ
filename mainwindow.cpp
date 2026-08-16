@@ -433,9 +433,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_measurements, &Measurements::oneFqCanceled, this, &MainWindow::on_pressEsc);
     connect(m_measurements, &Measurements::selectMeasurement, this, &MainWindow::on_tableWidget_measurments_cellClicked);
 
-    QString name = "AntScopeZ v." + QString(ANTSCOPEZ_VER);
-    name += tr(" - Analyzer not connected");
-    setWindowTitle(name);
+    m_analyzerConnected = false;
+    refreshWindowTitle();
 
     if(m_markers == NULL)
     {

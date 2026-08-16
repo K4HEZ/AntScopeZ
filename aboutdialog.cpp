@@ -1,6 +1,7 @@
 #include "aboutdialog.h"
 #include "ui_aboutdialog.h"
 #include "style.h"
+#include "build-timestamp.h"
 
 AboutDialog::AboutDialog(QWidget *parent) :
     QDialog(parent),
@@ -17,6 +18,13 @@ AboutDialog::AboutDialog(QWidget *parent) :
     // (Settings::setAntScopeVersion()) -- kept visually consistent rather
     // than introducing a second way to display the app version.
     ui->versionLabel->setText(ANTSCOPEZ_VER);
+
+    // ANTSCOPEZ_BUILD_TIMESTAMP (build-timestamp.h, generated fresh every
+    // build -- see CMakeLists.txt) rather than this file's own compile
+    // time: aboutdialog.cpp only recompiles when it or something it
+    // includes changes, which would make a plain __DATE__/__TIME__ here go
+    // stale across incremental rebuilds that touch other files.
+    ui->buildLabel->setText(ANTSCOPEZ_BUILD_TIMESTAMP);
 }
 
 AboutDialog::~AboutDialog()
