@@ -11,6 +11,8 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+## [2.2.1] - 2026-08-16
+
 ### Added
 
 - Settings > Themes: edit any of the 5 built-in themes' colors (window
