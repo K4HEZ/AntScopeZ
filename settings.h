@@ -51,6 +51,11 @@ public:
     int getCableFarEndMeasurement(void)const;
     void setCableIndex(int value);
     int getCableIndex(void)const;
+    // true = Preset (cableComboBox drives velocity factor/R0/loss, fields
+    // read-only), false = Custom (combo disabled, fields hand-editable).
+    // See updateCableEditability() in settings.cpp.
+    void setCableIsPreset(bool value);
+    bool getCableIsPreset(void)const;
     void setRestrictFq(bool value);
     bool getRestrictFq();
 
@@ -73,9 +78,20 @@ public:
     void on_translate();
     LicenseAgent& licenseAgent() { return m_licenseAgent; }
     static bool m_licenseUpdateBlocked;
+    // Re-applies every Style::*() stylesheet this dialog sets, using
+    // whatever theme is active right now. Most of Settings' controls are
+    // left native (Style::palette(), applied via qApp->setPalette() in
+    // MainWindow::changeColorTheme()) so they repaint for free the instant
+    // the active theme changes, dialog open or not -- no refresh call
+    // needed. A few explicitly bake a theme color into their own
+    // stylesheet instead (Style::readOnlyLock()'s read-only/locked-field
+    // background, set once here), which doesn't track a later palette
+    // change on its own; MainWindow::changeColorTheme() calls this (if
+    // Settings is currently open) so those don't go stale until the
+    // dialog happens to be closed and reopened.
+    void applyStyles();
 
 private:
-    void applyStyles();
     static QString sharedDataFolder();
 
     Ui::Settings *ui;
@@ -109,8 +125,9 @@ private:
     bool m_connectedButton = true;
 
     void enableButtons(bool enabled);
-    void cableActionEnableButtons(bool enabled);
     void openCablesFile(QString path);
+    void updateCableEditability();
+    void updateCableLengthUnit(bool metric);
     void initCustomizeTab();
     void initMarkersTab();
     void initThemesTab();

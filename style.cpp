@@ -245,9 +245,16 @@ QString Style::lineEdit()
     // existed -- a saturated, attention-grabbing blue that was never
     // reconsidered against a themeable canvas (it's especially jarring on
     // Start/Stop/Points and every other plain input field). The readOnly/
-    // disabled rules below it were dead code besides: nothing in the app
-    // ever calls QLineEdit::setReadOnly(true), and Fusion already dims
-    // disabled fields off the palette's Disabled group.
+    // disabled rules below it were dead code when this was written: at the
+    // time, nothing in the app called QLineEdit::setReadOnly(true), and
+    // Fusion already dims disabled fields off the palette's Disabled
+    // group. Settings > Cable's Preset mode is the first caller of
+    // setReadOnly() (see Settings::updateCableEditability()) -- that gets
+    // its own deliberate styling in Style::readOnlyLock() instead of
+    // reviving anything here, since plain native read-only (no visual
+    // change at all) reads as "still editable" and disabled's dimming
+    // reads as "unavailable/broken", neither of which is what "locked to
+    // the selected preset's value" should look like.
     return QString();
 }
 
@@ -342,6 +349,22 @@ QString Style::dialog()
 {
     const Theme t = theme();
     return "QDialog{background-color: " + c(t.windowBackground) + ";} ";
+}
+
+QString Style::readOnlyLock(const Theme& t)
+{
+    // Text stays fully legible (t.text, not t.textMuted) -- this is real,
+    // current information, not a hint/placeholder. Flattening the fill to
+    // the dialog's own background (rather than the input's normal Base
+    // fill) is what actually reads as "locked" instead of "just like every
+    // other editable field". See the declaration in style.h for why two
+    // separate selectors are needed (QLineEdit really is read-only;
+    // QComboBox/QRadioButton fake it via the "readOnlyLock" property since
+    // neither has a native read-only state).
+    QString bg = c(t.windowBackground);
+    QString fg = c(t.text);
+    return "QLineEdit:read-only {background-color: " + bg + "; color: " + fg + ";} "
+           "*[readOnlyLock=\"true\"]:disabled {background-color: " + bg + "; color: " + fg + ";} ";
 }
 
 QString Style::mainWindow()

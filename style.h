@@ -81,6 +81,18 @@ public:
     static QString comboBox();
     static QString progressBar();
     static QString dialog();
+    // A control disabled because it's locked to a currently-selected
+    // value (e.g. Settings > Cable's Preset mode) needs to read
+    // differently from one disabled because it's simply not applicable
+    // right now -- the former is still showing real, current information
+    // and shouldn't look "broken" the way Qt's automatic disabled-palette
+    // dimming does. QLineEdit's own :read-only state gets this
+    // automatically; QComboBox/QRadioButton have no read-only concept, so
+    // callers toggle the "readOnlyLock" dynamic property (setProperty()
+    // + style()->unpolish()/polish() to force a repaint) on just the
+    // specific instances that mean "locked", leaving plain setEnabled(false)
+    // elsewhere to keep Qt's normal dimmed look for "not applicable".
+    static QString readOnlyLock(const Theme& t = theme());
     static QString mainWindow();
     static QString slider();
     static QString messageBox();

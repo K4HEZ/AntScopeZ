@@ -22,6 +22,78 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   behavior group, on by default) places a marker at the swept trace's
   lowest-SWR point right after a single/full scan finishes -- never during
   a Continuous scan, and only if a marker slot is free.
+- Tools > TDR Analysis: distance to the strongest reflection in the last
+  TDR scan, whether it looks like an open or a short, and a velocity
+  factor picker (cable-type presets from cables.txt, local to this dialog
+  -- doesn't touch Settings > Cable) including a reverse calculator that
+  solves for velocity factor given a known physical cable length. "Use
+  this velocity factor" applies the solved value to Settings > Cable as
+  Custom and refreshes the TDR chart's distance axis immediately -- also
+  resets R0/loss to the "Ideal 50-Ohm cable" convention (50 Ohm, no loss)
+  instead of leaving whatever a previously-selected Preset's real figures
+  were showing, which would otherwise look like real data for the cable
+  actually being solved for here. If Settings > Cable happens to already
+  be open, it updates live instead of only taking effect the next time
+  the dialog is opened.
+- Settings > Cable: new Preset/Custom toggle. Preset locks velocity
+  factor/R0/conductive+dielectric loss/loss units/frequency to whatever
+  cableComboBox has selected (so the displayed numbers can never silently
+  disagree with the cable name shown); Custom disables the combo and
+  hand-edits those fields instead, same as before this existed. Locked
+  fields get their own deliberate "read-only" styling (full-contrast text,
+  flattened into the dialog background) instead of Qt's normal disabled
+  dimming, so they read as "showing a fixed value" rather than "broken".
+  This is now the *only* thing that ever disables those fields -- see the
+  cableActionEnableButtons() removal below.
+
+### Changed
+
+- Settings > Cable tab reordered to match how it's actually used and how
+  the fields are actually consumed by calcFarEnd() (measurements_farend.cpp):
+  cable type picker first; velocity factor/R0 joined the former "Cable
+  loss" groupbox (renamed "Cable specifications") alongside
+  conductive/dielectric loss/units/frequency -- all seven lock together
+  under Preset. Cable length moved into "Transmission line options"
+  instead (R0/loss/length all only affect anything once Subtract or Add
+  cable is selected, but length isn't a property *of* the cable the way
+  the other six are, so it stays always-editable regardless of
+  Preset/Custom) and now shows its own ft/m unit label that follows the
+  app's Metric/Imperial setting, converting the displayed number rather
+  than just relabeling it -- previously always feet with no indication of
+  that. Transmission line options' three buttons are stacked vertically
+  with a plain-English explanation next to each (Do nothing/Subtract
+  cable/Add cable). Export/Update graphs left as-is.
+- Removed Settings::cableActionEnableButtons() -- a second, older mechanism
+  that also disabled cableR0/cableLossComboBox/cableLen/conductiveLoss/
+  dielectricLoss/atFq/anyFq whenever Transmission line options was set to
+  Do nothing (vs. Subtract/Add), fighting the new Preset/Custom lock for
+  control of the same widgets. Editability is now solely a Preset/Custom
+  question ("can I change this"), never a Do-nothing/Subtract/Add one
+  ("does this currently matter") -- those turned out to be different
+  questions that don't need the same answer.
+
+### Fixed
+
+- Settings > Cable's Export button crashed with no measurement data yet --
+  it always passed size()-1 (-1, wrapping to 4294967295 through a quint32
+  parameter) as the measurement index to export, an out-of-bounds access
+  as soon as Export needed a suggested filename. Now shows a "run a scan
+  first" notification instead of opening Export at all in that case.
+- Settings dialog's Data Folder field and any Preset-locked Cable
+  specifications fields kept showing the previous theme's background color
+  if the active theme was changed (View > Theme) while Settings stayed
+  open -- Style::readOnlyLock() bakes the active theme's colors into a
+  stylesheet once (unlike most of the dialog's controls, which are native
+  and repaint for free off the live application palette), and nothing was
+  re-running that when the theme changed out from under an already-open
+  dialog. MainWindow::changeColorTheme() now refreshes Settings' styles
+  too when it's currently open.
+- m_settingsDialog could go dangling if Settings was closed via the native
+  window decoration/Alt+F4 instead of its own Close button -- only that
+  button's handler ever nulled the pointer; WA_DeleteOnClose's deferred
+  deletion from any other close path left it pointing at a freed object.
+  Added the same destroyed()-nulls-the-pointer safety net the newer
+  Marker Comparison/TDR Analysis dialogs already had.
 
 ## [2.2.1] - 2026-08-16
 

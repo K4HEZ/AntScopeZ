@@ -643,6 +643,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_cableLength = m_settings->value("Length",0 ).toDouble();
     m_farEndMeasurement = m_settings->value("FarEndMeasurement", 0 ).toInt();
     m_cableIndex = m_settings->value("CableIndex",0).toInt();
+    m_cableIsPreset = m_settings->value("CableIsPreset", false).toBool();
     m_settings->endGroup();
 
     m_measurements->setCableVelFactor(m_cableVelFactor);
@@ -941,6 +942,7 @@ MainWindow::~MainWindow()
     m_settings->setValue("Length", m_cableLength);
     m_settings->setValue("FarEndMeasurement", m_farEndMeasurement);
     m_settings->setValue("CableIndex", m_cableIndex);
+    m_settings->setValue("CableIsPreset", m_cableIsPreset);
     m_settings->endGroup();
 
     if(m_qtLanguageTranslator)

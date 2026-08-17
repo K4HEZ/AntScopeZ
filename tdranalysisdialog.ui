@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TDRAnalysisDialog</class>
+ <widget class="QDialog" name="TDRAnalysisDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>380</width>
+    <height>420</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>TDR Analysis</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="sizeConstraint">
+    <enum>QLayout::SetFixedSize</enum>
+   </property>
+   <item>
+    <widget class="QGroupBox" name="velocityGroupBox">
+     <property name="title">
+      <string>Velocity factor</string>
+     </property>
+     <layout class="QFormLayout" name="velocityFormLayout">
+      <property name="topMargin">
+       <number>20</number>
+      </property>
+      <item row="0" column="0">
+       <widget class="QLabel" name="cableTypeNameLabel">
+        <property name="text">
+         <string>Cable type:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="cableTypeCombo"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="velocityFactorNameLabel">
+        <property name="text">
+         <string>Velocity factor:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="velocityFactorEdit">
+        <property name="toolTip">
+         <string>0.01 - 1.0. Local to this dialog -- picking a cable type or editing this doesn't change Settings > Cable's velocity factor used for feedline loss compensation.</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="lengthGroupBox">
+     <property name="title">
+      <string>Cable length</string>
+     </property>
+     <layout class="QFormLayout" name="lengthFormLayout">
+      <property name="topMargin">
+       <number>20</number>
+      </property>
+      <item row="0" column="0">
+       <widget class="QLabel" name="cableLengthNameLabel">
+        <property name="text">
+         <string>Distance to strongest reflection:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLabel" name="cableLengthLabel">
+        <property name="font">
+         <font>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string notr="true">--</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="reflectionNameLabel">
+        <property name="text">
+         <string>Reflection:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLabel" name="reflectionLabel">
+        <property name="text">
+         <string notr="true">--</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="2">
+       <widget class="QLabel" name="rangeNoteLabel">
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string notr="true"></string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="reverseSolveGroupBox">
+     <property name="title">
+      <string>Calculate velocity factor from a known length</string>
+     </property>
+     <layout class="QFormLayout" name="reverseSolveFormLayout">
+      <property name="topMargin">
+       <number>20</number>
+      </property>
+      <item row="0" column="0">
+       <widget class="QLabel" name="knownLengthNameLabel">
+        <property name="text">
+         <string>Known cable length:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <layout class="QHBoxLayout" name="knownLengthLayout">
+        <item>
+         <widget class="QLineEdit" name="knownLengthEdit"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="knownLengthUnitLabel">
+          <property name="text">
+           <string notr="true">ft</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="calculatedVfNameLabel">
+        <property name="text">
+         <string>Calculated velocity factor:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLabel" name="calculatedVfLabel">
+        <property name="font">
+         <font>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string notr="true">--</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QPushButton" name="applyVfButton">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="toolTip">
+         <string>Also sets Settings &gt; Cable to Custom with this velocity factor, resetting R0 to 50 Ohm and loss to none (TDR only solves for velocity factor, so the rest is genuinely unknown here, not borrowed from whatever preset was last selected) -- affects the TDR chart's own distance axis and any active Subtract/Add cable compensation, not just this dialog.</string>
+        </property>
+        <property name="text">
+         <string>Use this velocity factor</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="caveatLabel">
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>Estimate only -- reports the single strongest reflection in the scan, which may be a fault, a connector, or the far end depending on what's actually connected. Run a scan on the TDR tab first (Continuous doesn't produce TDR data).</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Close</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>TDRAnalysisDialog</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>190</x>
+     <y>400</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>190</x>
+     <y>415</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

@@ -29,6 +29,7 @@
 #include <QTabWidget>
 #include <qserialport.h>
 #include <markercomparisondialog.h>
+#include <tdranalysisdialog.h>
 
 
 #define MEASUREMENTS_TABLE_COLUMNS 3
@@ -130,6 +131,7 @@ private:
     QSettings *m_settings = nullptr;
     Calibration *m_calibration = nullptr;
     MarkerComparisonDialog *m_markerComparisonDialog = nullptr;
+    TDRAnalysisDialog *m_tdrAnalysisDialog = nullptr;
 
     Print *m_print = nullptr;
 
@@ -156,6 +158,7 @@ private:
     double m_cableLength;
     qint32 m_farEndMeasurement;
     qint32 m_cableIndex;
+    bool m_cableIsPreset = false; // see Settings::setCableIsPreset()
 
     bool m_isRange;
 
@@ -362,6 +365,7 @@ private slots:
     void on_actionExit_triggered();
     void on_actionAbout_triggered();
     void on_actionMarkerComparison_triggered();
+    void on_actionTDRAnalysis_triggered();
     void on_measurmentsDeleteBtn_clicked();
     void on_tableWidget_measurments_cellClicked(int row, int column);
     void on_tableWidget_measurments_cellActivated(int row, int column);

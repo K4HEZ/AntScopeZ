@@ -1119,6 +1119,7 @@ process in the settings menu!</string>
      <string>&amp;Tools</string>
     </property>
     <addaction name="actionMarkerComparison"/>
+    <addaction name="actionTDRAnalysis"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -1192,6 +1193,14 @@ process in the settings menu!</string>
    </property>
    <property name="toolTip">
     <string>Compare two placed markers (frequency/SWR/RL/R/X, Q factor, equivalent L/C) and estimate an antenna trim to reach a target frequency</string>
+   </property>
+  </action>
+  <action name="actionTDRAnalysis">
+   <property name="text">
+    <string>&amp;TDR Analysis...</string>
+   </property>
+   <property name="toolTip">
+    <string>Distance to the strongest reflection in the last TDR scan, open/short indication, and a velocity-factor calculator from a known cable length</string>
    </property>
   </action>
   <action name="actionSettings">

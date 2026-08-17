@@ -116,6 +116,13 @@ public:
     void FFT2(double *Rdat, double *Idat, int N, int LogN, int Ft_Flag);
 
     void setCableVelFactor(double value);
+    // Current live value (Settings > Cable, propagated via
+    // MainWindow::on_settingsParamsChanged()) -- what redrawTDR() actually
+    // used to turn the last TDR scan's raw data into the distance-keyed
+    // tdrImpGraph/tdrZGraph/etc. QCPDataMaps. TDRAnalysisDialog reads this
+    // to rescale those already-computed distances to whatever velocity
+    // factor it's locally trying, without re-running the FFT.
+    double cableVelFactor() const { return m_cableVelFactor; }
     void setCableResistance(double value);
     void setCableLossConductive(double value);
     void setCableLossDielectric(double value);

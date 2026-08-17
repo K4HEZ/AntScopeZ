@@ -15,6 +15,7 @@
 #include <QFileInfo>
 #include <QDir>
 #include <QLocale>
+#include <QStyle>
 #include <algorithm>
 
 extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
@@ -96,7 +97,12 @@ void Settings::applyStyles()
 
     style = Style::label();
     style += Style::lineEdit();
-    setStyleSheet(Style::dialog() + style);
+    // Dialog-level, not per-widget -- cascades to every descendant
+    // (velocityFactor/cableR0/conductiveLoss/dielectricLoss's :read-only,
+    // and whichever widgets updateCableEditability() flags with the
+    // "readOnlyLock" property) without needing its own setStyleSheet()
+    // call on each one.
+    setStyleSheet(Style::dialog() + style + Style::readOnlyLock());
     ui->lineEdit_systemImpedance->setStyleSheet(style);
     ui->velocityFactor->setStyleSheet(style);
     ui->cableLen->setStyleSheet(style);
@@ -128,6 +134,8 @@ void Settings::applyStyles()
     style = Style::radioButton();
     ui->atFq->setStyleSheet(style);
     ui->anyFq->setStyleSheet(style);
+    ui->cablePresetRadio->setStyleSheet(style);
+    ui->cableCustomRadio->setStyleSheet(style);
 }
 
 Settings::Settings(QWidget *parent) :
@@ -304,6 +312,14 @@ Settings::Settings(QWidget *parent) :
     QString cablesPath = Settings::programDataPath("cables.txt");
 
     openCablesFile(cablesPath);
+
+    connect(ui->cablePresetRadio, &QRadioButton::toggled, this, &Settings::updateCableEditability);
+    // atFq/anyFq don't otherwise drive atMHz's enabled state on their own
+    // (see updateCableEditability()) -- route their toggling through the
+    // same place rather than duplicating that one line elsewhere.
+    connect(ui->atFq, &QRadioButton::toggled, this, &Settings::updateCableEditability);
+    updateCableEditability(); // match cableCustomRadio's checked="true" .ui default until setCableIsPreset() overrides it
+
     vnn_FormOn = true;//vnn_01
     connect(ui->closeBtn, &QPushButton::clicked, this, [=]() {
         vnn_FormOn = false;//vnn_01
@@ -769,7 +785,7 @@ void Settings::on_loadOpenFileBtn_clicked()
 
 void Settings::setMeasureSystemMetric(bool state)
 {
-    m_metricChecked = state;
+    updateCableLengthUnit(state);
     ui->measureSystemComboBox->blockSignals(true);
     ui->measureSystemComboBox->setCurrentIndex(state ? 0 : 1);
     ui->measureSystemComboBox->blockSignals(false);
@@ -778,8 +794,22 @@ void Settings::setMeasureSystemMetric(bool state)
 void Settings::on_measureSystemComboBox_currentIndexChanged(int index)
 {
     bool checked = (index == 0); // 0 = Metric, 1 = Imperial
-    m_metricChecked = checked;
+    updateCableLengthUnit(checked);
     emit changeMeasureSystemMetric(checked);
+}
+
+// cableLen's own text is always in whatever unit is currently displayed
+// (ft or m) -- getCableLength()/setCableLength() convert to/from feet at
+// this boundary since that's the unit calcFarEnd() actually computes in
+// (see measurements_farend.cpp). Called whenever m_metricChecked is about
+// to change so the displayed number gets re-expressed in the new unit
+// instead of keeping the same digits under a different label.
+void Settings::updateCableLengthUnit(bool metric)
+{
+    double feet = getCableLength(); // reads using the *old* m_metricChecked
+    m_metricChecked = metric;
+    ui->cableLenUnitLabel->setText(metric ? tr("m") : tr("ft"));
+    setCableLength(feet); // redisplays using the *new* m_metricChecked
 }
 
 void Settings::on_doNothingBtn_clicked(bool checked)
@@ -796,7 +826,6 @@ void Settings::on_doNothingBtn_clicked(bool checked)
         ui->addCableBtn->setChecked(false);
         ui->subtractCableBtn->setChecked(false);
         emit paramsChanged();
-        cableActionEnableButtons(false);
     }
 }
 
@@ -814,7 +843,6 @@ void Settings::on_subtractCableBtn_clicked(bool checked)
         ui->addCableBtn->setChecked(false);
         ui->doNothingBtn->setChecked(false);
         emit paramsChanged();
-        cableActionEnableButtons(true);
     }
 }
 
@@ -832,21 +860,8 @@ void Settings::on_addCableBtn_clicked(bool checked)
         ui->subtractCableBtn->setChecked(false);
         ui->doNothingBtn->setChecked(false);
         emit paramsChanged();
-        cableActionEnableButtons(true);
     }
 }
-
-void Settings::cableActionEnableButtons(bool enabled)
-{
-    ui->cableR0->setEnabled(enabled);
-    ui->cableLossComboBox->setEnabled(enabled);
-    ui->cableLen->setEnabled(enabled);
-    ui->conductiveLoss->setEnabled(enabled);
-    ui->dielectricLoss->setEnabled(enabled);
-    ui->atFq->setEnabled(enabled);
-    ui->anyFq->setEnabled(enabled);
-}
-
 
 //Cable-------------------------------------------------------------------------
 void Settings::setCableVelFactor(double value)
@@ -920,11 +935,16 @@ bool Settings::getCableLossAtAnyFq(void)const
 //------------------------------------------------------------------------------
 void Settings::setCableLength(double value)
 {
-    ui->cableLen->setText(QString::number(value));
+    // value is always feet (see calcFarEnd()'s "per foot" formulas in
+    // measurements_farend.cpp) -- cableLen's own text is displayed in
+    // whichever unit m_metricChecked currently selects.
+    double displayValue = m_metricChecked ? value / FEETINMETER : value;
+    ui->cableLen->setText(QString::number(displayValue, 'f', 3));
 }
 double Settings::getCableLength(void)const
 {
-    return ui->cableLen->text().toDouble();
+    double displayValue = ui->cableLen->text().toDouble();
+    return m_metricChecked ? displayValue * FEETINMETER : displayValue;
 }
 //------------------------------------------------------------------------------
 void Settings::setCableFarEndMeasurement(int value)
@@ -933,7 +953,6 @@ void Settings::setCableFarEndMeasurement(int value)
     if(m_farEndMeasurement == 0)
     {
         ui->doNothingBtn->setChecked(true);
-        cableActionEnableButtons(false);
     }else if(m_farEndMeasurement == 1)
     {
         ui->subtractCableBtn->setChecked(true);
@@ -1012,6 +1031,13 @@ void Settings::openCablesFile(QString path)
 
 void Settings::on_cableComboBox_currentIndexChanged(int index)
 {
+    // Custom mode: the combo isn't driving anything (it's disabled for
+    // user interaction anyway -- see updateCableEditability() -- but
+    // setCableIndex() below still sets its index programmatically on
+    // dialog open, which would otherwise fire this and clobber whatever
+    // custom values were just loaded).
+    if (!ui->cablePresetRadio->isChecked())
+        return;
     if(index > 0)
     {
         QString str = m_cablesList.at(index-1);
@@ -1036,6 +1062,67 @@ void Settings::on_cableComboBox_currentIndexChanged(int index)
 void Settings::on_updateGraphsBtn_clicked()
 {
     emit paramsChanged();
+}
+
+// Preset locks velocity factor/R0/conductive+dielectric loss/loss units/
+// frequency to whatever cableComboBox has selected (the same 7 fields
+// cables.txt itself carries, minus the name); Custom hand-edits them and
+// disables the combo instead, so the two can never silently disagree --
+// see the Settings > Cable planning discussion for why. Cable length and
+// the Subtract/Add/Do-nothing buttons aren't part of either group: they're
+// "this installation" and "how to apply it", not properties of the cable
+// type itself, so both stay editable regardless of this toggle.
+void Settings::updateCableEditability()
+{
+    bool isPreset = ui->cablePresetRadio->isChecked();
+
+    ui->cableComboBox->setEnabled(isPreset);
+
+    ui->velocityFactor->setReadOnly(isPreset);
+    ui->cableR0->setReadOnly(isPreset);
+    ui->conductiveLoss->setReadOnly(isPreset);
+    ui->dielectricLoss->setReadOnly(isPreset);
+
+    // Disabled here always means "locked to the preset's value" -- flag
+    // these specific instances (not a blanket rule on the QComboBox/
+    // QRadioButton styles they share with cableComboBox itself, which
+    // really is just "not applicable" in Custom mode and should keep Qt's
+    // normal dimmed look) so Style::readOnlyLock()'s QSS only affects
+    // them. QComboBox/QRadioButton have no read-only state of their own
+    // (unlike the QLineEdits above), hence the property + repolish.
+    auto markReadOnlyLock = [](QWidget* w, bool locked) {
+        w->setProperty("readOnlyLock", locked);
+        w->style()->unpolish(w);
+        w->style()->polish(w);
+    };
+    ui->cableLossComboBox->setEnabled(!isPreset);
+    markReadOnlyLock(ui->cableLossComboBox, isPreset);
+    ui->anyFq->setEnabled(!isPreset);
+    markReadOnlyLock(ui->anyFq, isPreset);
+    ui->atFq->setEnabled(!isPreset);
+    markReadOnlyLock(ui->atFq, isPreset);
+    // atMHz only ever means anything when atFq itself is both reachable
+    // and selected.
+    ui->atMHz->setEnabled(!isPreset && ui->atFq->isChecked());
+
+    // Switching into Preset re-applies the selected preset's own values --
+    // otherwise switching Custom -> hand-edit -> Preset would leave stale
+    // hand-edited numbers on screen even though they're now read-only and
+    // claim to be that preset's real spec.
+    if (isPreset && ui->cableComboBox->currentIndex() > 0)
+        on_cableComboBox_currentIndexChanged(ui->cableComboBox->currentIndex());
+}
+
+void Settings::setCableIsPreset(bool value)
+{
+    ui->cablePresetRadio->setChecked(value);
+    ui->cableCustomRadio->setChecked(!value);
+    updateCableEditability();
+}
+
+bool Settings::getCableIsPreset(void) const
+{
+    return ui->cablePresetRadio->isChecked();
 }
 
 QString Settings::setIniFile()

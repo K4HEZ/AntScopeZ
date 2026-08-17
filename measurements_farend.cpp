@@ -6,6 +6,7 @@
 #include "customgraph.h"
 #include "glwidget.h"
 #include "style.h"
+#include "Notification.h"
 
 extern bool g_developerMode;
 extern QMap<QString, QString> g_mapTabPlotNames;
@@ -254,6 +255,18 @@ RawData Measurements::calcFarEnd(const RawData& data, int idx, bool refreshGraph
 
 void Measurements::on_exportCableSettings(QString _description)
 {
+    // m_measurements.size()-1 is -1 with no scans yet, which silently
+    // wraps to 4294967295 once it's passed into
+    // Export::setMeasurements()'s quint32 number parameter -- Export::
+    // suggestedPath() then feeds that straight into getMeasurement() with
+    // no bounds check, an out-of-bounds QList access that crashes as soon
+    // as the Export dialog needs a suggested filename. Guard here instead
+    // of chasing it downstream.
+    if (m_measurements.isEmpty()) {
+        Notification::showMessage(tr("No measurement to export -- run a scan first."), m_tableWidget);
+        return;
+    }
+
     Export* exportDialog = new Export(m_tableWidget);
     exportDialog->setAttribute(Qt::WA_DeleteOnClose);
     exportDialog->setWindowTitle(tr("Export"));

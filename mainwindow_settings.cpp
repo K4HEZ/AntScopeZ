@@ -42,6 +42,19 @@ void MainWindow::on_actionSettings_triggered()
     m_bInterrupted = true;
     if (m_settingsDialog == nullptr) {
         m_settingsDialog = new Settings(this);
+        // closeSettingsDialog() (the dialog's own Close button) already
+        // nulls m_settingsDialog synchronously, but that's the only path
+        // that did -- closing via the native window decoration/Alt+F4
+        // skips it, leaving m_settingsDialog dangling once WA_DeleteOnClose's
+        // deferred deletion actually runs. The dlg-capture + compare
+        // guards against the (unlikely but real) case where Settings gets
+        // closed and reopened fast enough that a new instance is already
+        // assigned by the time this fires for the old one -- don't null
+        // out a live dialog because a stale one finally got destroyed.
+        connect(m_settingsDialog, &QObject::destroyed, this, [this, dlg = m_settingsDialog](){
+            if (m_settingsDialog == dlg)
+                m_settingsDialog = nullptr;
+        });
         connect(&m_settingsDialog->licenseAgent(), &LicenseAgent::registered, this, [=](){
             ui->singleStart->setEnabled(true);
             ui->singleStart->setChecked(true);
@@ -77,6 +90,7 @@ void MainWindow::on_actionSettings_triggered()
     m_settingsDialog->setCableLength(m_cableLength);
     m_settingsDialog->setCableFarEndMeasurement(m_farEndMeasurement);
     m_settingsDialog->setCableIndex(m_cableIndex);
+    m_settingsDialog->setCableIsPreset(m_cableIsPreset);
     m_settingsDialog->setAntScopeVersion(ANTSCOPEZ_VER);
     m_settingsDialog->setRestrictFq(m_fqRestrict);
 
@@ -222,6 +236,7 @@ void MainWindow::on_settingsParamsChanged()
         m_cableLength = m_settingsDialog->getCableLength();
         m_farEndMeasurement = m_settingsDialog->getCableFarEndMeasurement();
         m_cableIndex = m_settingsDialog->getCableIndex();
+        m_cableIsPreset = m_settingsDialog->getCableIsPreset();
 
         if(m_measurements != NULL)
         {

@@ -98,6 +98,7 @@ set(ANTSCOPE_SOURCES
     aboutdialog.cpp
     antscopeupdatedialog.cpp
     appregistrationdialog.cpp
+    cablecatalog.cpp
     calibration.cpp
     centralwidget.cpp
     crc32.cpp
@@ -153,6 +154,7 @@ set(ANTSCOPE_SOURCES
     selectdevicedialog.cpp
     settings.cpp
     style.cpp
+    tdranalysisdialog.cpp
     unitrequestdialog.cpp
     updatedialog.cpp
 
@@ -179,6 +181,7 @@ set(ANTSCOPE_HEADERS
     aboutdialog.h
     antscopeupdatedialog.h
     appregistrationdialog.h
+    cablecatalog.h
     calibration.h
     centralwidget.h
     crc32.h
@@ -215,6 +218,7 @@ set(ANTSCOPE_HEADERS
     selectdevicedialog.h
     settings.h
     style.h
+    tdranalysisdialog.h
     unitrequestdialog.h
     updatedialog.h
 
@@ -254,6 +258,7 @@ set(ANTSCOPE_FORMS
     screenshot.ui
     selectdevicedialog.ui
     settings.ui
+    tdranalysisdialog.ui
     unitrequestdialog.ui
     updatedialog.ui
 

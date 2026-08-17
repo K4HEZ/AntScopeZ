@@ -480,6 +480,16 @@ void MainWindow::changeColorTheme(int themeIndex)
     if (m_markers != NULL)
         m_markers->changeColorTheme();
 
+    // Settings' own read-only/locked-field styling (Style::readOnlyLock())
+    // bakes the active theme's colors into a stylesheet once, unlike most
+    // of its controls (native, live off Style::palette() above) -- if
+    // Settings happens to be open right now, refresh it too, or e.g. the
+    // Data Folder field and any Preset-locked Cable fields keep showing
+    // the previous theme's background until the dialog is closed and
+    // reopened. See Settings::applyStyles()'s own comment.
+    if (m_settingsDialog != nullptr)
+        m_settingsDialog->applyStyles();
+
     // Measurements::changeColorTheme() is gone -- it only ever existed to
     // re-color m_graphHint's PopUp, which setStyles() below now handles for
     // free (it's a plain docked, normally-themed widget -- see
