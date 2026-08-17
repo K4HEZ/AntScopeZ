@@ -14,12 +14,18 @@
    <string>Marker Comparison</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="sizeConstraint">
+    <enum>QLayout::SetFixedSize</enum>
+   </property>
    <item>
     <widget class="QGroupBox" name="markersGroupBox">
      <property name="title">
-      <string>Markers</string>
+      <string>Current marker</string>
      </property>
      <layout class="QFormLayout" name="markersFormLayout">
+      <property name="topMargin">
+       <number>20</number>
+      </property>
       <item row="0" column="0">
        <widget class="QLabel" name="currentMarkerLabel">
         <property name="text">
@@ -31,14 +37,46 @@
        <widget class="QComboBox" name="currentMarkerCombo"/>
       </item>
       <item row="1" column="0">
-       <widget class="QLabel" name="targetMarkerLabel">
+       <widget class="QLabel" name="qFactorNameLabel">
         <property name="text">
-         <string>Target (desired):</string>
+         <string>Q factor (Current):</string>
         </property>
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QComboBox" name="targetMarkerCombo"/>
+       <widget class="QLabel" name="qFactorLabel">
+        <property name="text">
+         <string notr="true">--</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="equivalentLNameLabel">
+        <property name="text">
+         <string>Equiv. L (Current):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLabel" name="equivalentLLabel">
+        <property name="text">
+         <string notr="true">--</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="equivalentCNameLabel">
+        <property name="text">
+         <string>Equiv. C (Current):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLabel" name="equivalentCLabel">
+        <property name="text">
+         <string notr="true">--</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
@@ -49,113 +87,84 @@
       <string>Marker comparison</string>
      </property>
      <layout class="QFormLayout" name="comparisonFormLayout">
+      <property name="topMargin">
+       <number>20</number>
+      </property>
       <item row="0" column="0">
+       <widget class="QLabel" name="targetMarkerLabel">
+        <property name="text">
+         <string>Target (desired):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="targetMarkerCombo"/>
+      </item>
+      <item row="1" column="0">
        <widget class="QLabel" name="deltaFrequencyNameLabel">
         <property name="text">
          <string>&#916;Frequency:</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
+      <item row="1" column="1">
        <widget class="QLabel" name="deltaFrequencyLabel">
         <property name="text">
          <string notr="true">--</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
+      <item row="2" column="0">
        <widget class="QLabel" name="deltaSwrNameLabel">
         <property name="text">
          <string>&#916;SWR:</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="2" column="1">
        <widget class="QLabel" name="deltaSwrLabel">
         <property name="text">
          <string notr="true">--</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
+      <item row="3" column="0">
        <widget class="QLabel" name="deltaReturnLossNameLabel">
         <property name="text">
          <string>&#916;RL:</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
+      <item row="3" column="1">
        <widget class="QLabel" name="deltaReturnLossLabel">
         <property name="text">
          <string notr="true">--</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
+      <item row="4" column="0">
        <widget class="QLabel" name="deltaResistanceNameLabel">
         <property name="text">
          <string>&#916;R:</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
+      <item row="4" column="1">
        <widget class="QLabel" name="deltaResistanceLabel">
         <property name="text">
          <string notr="true">--</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
+      <item row="5" column="0">
        <widget class="QLabel" name="deltaReactanceNameLabel">
         <property name="text">
          <string>&#916;X:</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
-       <widget class="QLabel" name="deltaReactanceLabel">
-        <property name="text">
-         <string notr="true">--</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="0">
-       <widget class="QLabel" name="qFactorNameLabel">
-        <property name="text">
-         <string>Q factor (Current):</string>
-        </property>
-       </widget>
-      </item>
       <item row="5" column="1">
-       <widget class="QLabel" name="qFactorLabel">
-        <property name="text">
-         <string notr="true">--</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="0">
-       <widget class="QLabel" name="equivalentLNameLabel">
-        <property name="text">
-         <string>Equiv. L (Current):</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="1">
-       <widget class="QLabel" name="equivalentLLabel">
-        <property name="text">
-         <string notr="true">--</string>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="0">
-       <widget class="QLabel" name="equivalentCNameLabel">
-        <property name="text">
-         <string>Equiv. C (Current):</string>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="1">
-       <widget class="QLabel" name="equivalentCLabel">
+       <widget class="QLabel" name="deltaReactanceLabel">
         <property name="text">
          <string notr="true">--</string>
         </property>
@@ -170,6 +179,9 @@
       <string>Antenna</string>
      </property>
      <layout class="QFormLayout" name="antennaFormLayout">
+      <property name="topMargin">
+       <number>20</number>
+      </property>
       <item row="0" column="0">
        <widget class="QLabel" name="antennaTypeNameLabel">
         <property name="text">
@@ -209,60 +221,46 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="trimUnitsLayout">
-     <item>
-      <widget class="QLabel" name="trimUnitsNameLabel">
-       <property name="text">
-        <string>Trim units:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QComboBox" name="trimUnitsCombo"/>
-     </item>
-     <item>
-      <spacer name="trimUnitsSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
-   </item>
-   <item>
     <widget class="QGroupBox" name="trimGroupBox">
      <property name="title">
       <string>Trim estimate</string>
      </property>
      <layout class="QFormLayout" name="trimFormLayout">
+      <property name="topMargin">
+       <number>20</number>
+      </property>
       <item row="0" column="0">
+       <widget class="QLabel" name="trimUnitsNameLabel">
+        <property name="text">
+         <string>Trim units:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="trimUnitsCombo"/>
+      </item>
+      <item row="1" column="0">
        <widget class="QLabel" name="calculatedTrimNameLabel">
         <property name="text">
          <string>Calculated trim:</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
+      <item row="1" column="1">
        <widget class="QLabel" name="calculatedTrimLabel">
         <property name="text">
          <string notr="true">--</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
+      <item row="2" column="0">
        <widget class="QLabel" name="suggestedCutNameLabel">
         <property name="text">
-         <string>Suggested first cut:</string>
+         <string>Suggested first trim:</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="2" column="1">
        <widget class="QLabel" name="suggestedCutLabel">
         <property name="font">
          <font>
@@ -274,14 +272,14 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
+      <item row="3" column="0">
        <widget class="QLabel" name="perLegNameLabel">
         <property name="text">
          <string>Per leg:</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
+      <item row="3" column="1">
        <widget class="QLabel" name="perLegLabel">
         <property name="text">
          <string notr="true">--</string>

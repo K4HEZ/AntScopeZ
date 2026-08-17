@@ -3,6 +3,7 @@
 #include "style.h"
 #include <markerspopup.h>
 #include <qcustomplot.h>
+#include <cfloat>
 
 MarkerComparisonDialog::MarkerComparisonDialog(Markers* markers, Measurements* measurements,
                                                  bool measureSystemMetric, QWidget *parent) :
@@ -59,8 +60,9 @@ MarkerComparisonDialog::~MarkerComparisonDialog()
     delete ui;
 }
 
-// Called on show and hooked to the analyzer's measurementComplete() signal
-// (see MainWindow::on_actionMarkerComparison_triggered()) so a marker added/
+// Called on show and hooked to both the analyzer's measurementComplete()
+// signal and Markers::markersChanged() (see
+// MainWindow::on_actionMarkerComparison_triggered()) so a marker added/
 // removed elsewhere, or a fresh sweep during Continuous scan, is reflected
 // here without the user having to reopen the dialog.
 void MarkerComparisonDialog::refresh()
@@ -104,8 +106,18 @@ void MarkerComparisonDialog::populateMarkerCombos()
 MarkerComparisonDialog::MarkerReadout MarkerComparisonDialog::readoutForMarker(int markerNumber)
 {
     MarkerReadout r;
-    if (markerNumber < 1)
+    if (markerNumber < 1 || markerNumber > m_markers->getMarkersCount())
         return r;
+
+    // The marker's own frequency is known the instant it's placed, well
+    // before any sweep has run -- read it straight from the marker rather
+    // than through valuesForMarkerNumber() below, which (see its comment
+    // in markers.cpp) comes back completely empty until there's a
+    // measurement to read SWR/RL/R/X/L/C from. Frequency-only consumers
+    // (the trim calculator, delta frequency) key off hasFrequency instead
+    // of valid so they aren't blocked on a scan they don't need.
+    r.frequency = m_markers->getMarker(markerNumber - 1).frequency; // kHz
+    r.hasFrequency = true;
 
     // Mirrors the real [Markers]header convention (fixed Delete/Marker/
     // Serie/FQ columns first) -- see Markers::computeMarkerRow()/
@@ -121,16 +133,25 @@ MarkerComparisonDialog::MarkerReadout MarkerComparisonDialog::readoutForMarker(i
 
     QList<QVariant> row = m_markers->valuesForMarkerNumber(markerNumber, columns);
     if (row.size() < 10)
-        return r; // no measurement yet, or markerNumber out of range
+        return r; // no measurement yet -- frequency above still stands, rest stays unset
+
+    // A marker whose frequency falls outside the current measurement's
+    // swept range (e.g. markers placed on one band, then a scan run on a
+    // different one) comes back with Markers' no-interpolation-found
+    // sentinel (DBL_MAX) in every numeric field -- see the bracketing loop
+    // in Markers::computeMarkerRow(). MarkersPopUp::formatText() already
+    // guards against this for the Markers table; mirror that guard here
+    // instead of formatting DBL_MAX as if it were a real value.
+    if (!row.at(4).isValid() || row.at(4).toDouble() == DBL_MAX)
+        return r; // marker exists, but no data at this frequency in this sweep
 
     r.valid = true;
-    r.frequency = row.at(3).toDouble(); // fieldFQ, kHz
-    r.swr       = row.at(4).toDouble();
-    r.rl        = row.at(5).toDouble();
-    r.r         = row.at(6).toDouble();
-    r.x         = row.at(7).toDouble();
-    r.l         = row.at(8).toDouble(); // nH
-    r.c         = row.at(9).toDouble(); // pF
+    r.swr = row.at(4).toDouble();
+    r.rl  = row.at(5).toDouble();
+    r.r   = row.at(6).toDouble();
+    r.x   = row.at(7).toDouble();
+    r.l   = row.at(8).toDouble(); // nH
+    r.c   = row.at(9).toDouble(); // pF
     return r;
 }
 
@@ -145,7 +166,7 @@ double MarkerComparisonDialog::qFactorAt(double centerFq)
     if (m_measurements->isEmpty())
         return 0;
 
-    int mostRecent = m_measurements->getMeasurementLength() - 1; // same index last() uses
+    int mostRecent = 0; // getMeasurement()/Sub()/Add() index backwards from newest -- 0 is most recent, same index last() uses (see measurements.h)
     measurement* mm;
     switch (m_measurements->getFarEndMeasurement()) {
     case 1: mm = m_measurements->getMeasurementSub(mostRecent); break;
@@ -241,8 +262,8 @@ void MarkerComparisonDialog::recompute()
     MarkerReadout cur = readoutForMarker(currentMarkerNum);
     MarkerReadout tgt = readoutForMarker(targetMarkerNum);
 
-    if (!cur.valid || !tgt.valid) {
-        // Not enough markers placed yet, or no measurement to read from.
+    if (!cur.hasFrequency || !tgt.hasFrequency) {
+        // Fewer than two markers placed -- nothing at all to show.
         const QString none = "--";
         ui->deltaFrequencyLabel->setText(none);
         ui->deltaSwrLabel->setText(none);
@@ -258,18 +279,31 @@ void MarkerComparisonDialog::recompute()
         return;
     }
 
-    // -- Marker comparison --
+    // -- Marker comparison -- Delta frequency only needs the markers'
+    // placement, but SWR/RL/R/X/Q/equivalent-L-C need an actual sweep to
+    // read from, so those stay "--" until cur/tgt.valid.
     ui->deltaFrequencyLabel->setText(QString("%1 kHz").arg(tgt.frequency - cur.frequency, 0, 'f', 3));
-    ui->deltaSwrLabel->setText(QString::number(tgt.swr - cur.swr, 'f', 2));
-    ui->deltaReturnLossLabel->setText(QString("%1 dB").arg(tgt.rl - cur.rl, 0, 'f', 2));
-    ui->deltaResistanceLabel->setText(QString("%1 Ohm").arg(tgt.r - cur.r, 0, 'f', 2));
-    ui->deltaReactanceLabel->setText(QString("%1 Ohm").arg(tgt.x - cur.x, 0, 'f', 2));
+    if (cur.valid && tgt.valid) {
+        ui->deltaSwrLabel->setText(QString::number(tgt.swr - cur.swr, 'f', 2));
+        ui->deltaReturnLossLabel->setText(QString("%1 dB").arg(tgt.rl - cur.rl, 0, 'f', 2));
+        ui->deltaResistanceLabel->setText(QString("%1 Ohm").arg(tgt.r - cur.r, 0, 'f', 2));
+        ui->deltaReactanceLabel->setText(QString("%1 Ohm").arg(tgt.x - cur.x, 0, 'f', 2));
 
-    double q = qFactorAt(cur.frequency);
-    ui->qFactorLabel->setText(q > 0 ? QString::number(q, 'f', 1)
-                                     : tr("n/a (no 2:1 crossing found)"));
-    ui->equivalentLLabel->setText(QString("%1 nH").arg(cur.l, 0, 'f', 1));
-    ui->equivalentCLabel->setText(QString("%1 pF").arg(cur.c, 0, 'f', 1));
+        double q = qFactorAt(cur.frequency);
+        ui->qFactorLabel->setText(q > 0 ? QString::number(q, 'f', 1)
+                                         : tr("n/a (no 2:1 crossing found)"));
+        ui->equivalentLLabel->setText(QString("%1 nH").arg(cur.l, 0, 'f', 1));
+        ui->equivalentCLabel->setText(QString("%1 pF").arg(cur.c, 0, 'f', 1));
+    } else {
+        const QString none = "--";
+        ui->deltaSwrLabel->setText(none);
+        ui->deltaReturnLossLabel->setText(none);
+        ui->deltaResistanceLabel->setText(none);
+        ui->deltaReactanceLabel->setText(none);
+        ui->qFactorLabel->setText(none);
+        ui->equivalentLLabel->setText(none);
+        ui->equivalentCLabel->setText(none);
+    }
 
     // -- Trim calculator --
     if (cur.frequency <= 0 || tgt.frequency <= 0) {
@@ -299,7 +333,14 @@ void MarkerComparisonDialog::recompute()
 
     double lengthNewFeet = lengthCurrentFeet * (fDipMHz / fTargetMHz);
     double trimFeet = lengthCurrentFeet - lengthNewFeet; // positive == shorten, negative == lengthen
-    double suggestedCutFeet = trimFeet * 0.5;
+
+    // Cutting is irreversible, so a shorten only suggests half the
+    // calculated amount -- trim conservatively, re-measure, repeat.
+    // Lengthening is the opposite: added wire can always be trimmed back
+    // down later if it overshoots, but adding too little just means
+    // redoing the splice, so suggest 50% *more* than the calculated
+    // amount instead of half.
+    double suggestedCutFeet = trimFeet >= 0 ? trimFeet * 0.5 : trimFeet * 1.5;
 
     TrimUnit trimUnit = static_cast<TrimUnit>(ui->trimUnitsCombo->currentData().toInt());
     QString unit = trimUnitSuffix(trimUnit);

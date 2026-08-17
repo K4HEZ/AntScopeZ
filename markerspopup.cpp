@@ -532,12 +532,18 @@ void MarkersPopUp::updateMarkers(int markers, int measurements, bool force)
 
 void MarkersPopUp::updateInfo(QList<QList<QVariant>>& info)
 {
-    if (info.size() != (m_markers*m_measurements))
+    // Mirrors updateMarkers()'s own rowCount fallback: with no measurements
+    // yet, the table is still built with one (blank) row per marker rather
+    // than zero, so info -- which now supplies one row per marker in that
+    // case too (see Markers::updateInfo()) -- has to be walked the same way
+    // or every cell it fills in gets silently skipped.
+    int rowCount = m_measurements==0 ? 1 : m_measurements;
+    if (info.size() != (m_markers*rowCount))
         return;
 
     int rowIndex = 0;
     for (int i=0; i<m_markers; i++) {
-        for (int j=0; j<m_measurements; j++) {
+        for (int j=0; j<rowCount; j++) {
             QList<QVariant>& rowInfo = info[rowIndex];
             QList<QWidget*>& rowLabel = m_rows[rowIndex];
             for (int k=1; k<m_headerColumns.size(); k++) { // ignore fieldDelete

@@ -3,6 +3,7 @@
 #include "style.h"
 
 int g_maxMarkers = MAX_MARKERS;
+bool g_autoMarkerAtLowestSwr = true;
 
 Markers::Markers(QObject *parent) : QObject(parent),
     m_swrWidget(NULL),
@@ -268,6 +269,7 @@ void Markers::add()
     } else {
         m_markersHint->setVisible(false);
     }
+    emit markersChanged();
 }
 
 void Markers::on_focus(bool focus)
@@ -313,12 +315,32 @@ QList<QList<QVariant>> Markers::updateInfo(QList<int> _columnTypes)
         double fq0 = m_markersList.at(n)->frequency;
 
         int count = m_measurements->getMeasurementLength();
+        if (count == 0) {
+            // No scan yet -- still show the marker's own number/frequency
+            // (known the instant it's placed) instead of the row simply
+            // not appearing. See MarkersPopUp::updateInfo()'s matching
+            // rowCount fallback, which is what actually renders this row.
+            info << emptyMarkerRow(fq0, n+1, _columnTypes);
+            continue;
+        }
         for(int i=count-1; i>=0; i--)
         {
             info << computeMarkerRow(fq0, n+1, i, _columnTypes);
         } // for (m_measurements)
     } // for (m_markersList)
     return info;
+}
+
+QList<QVariant> Markers::emptyMarkerRow(double fq0, int markerNumber, const QList<int>& _columnTypes)
+{
+    QList<QVariant> row;
+    row << QVariant();             // fieldDelete
+    row << QVariant(markerNumber); // fieldMarker
+    row << QVariant();             // fieldSerie -- no measurement to number yet
+    row << QVariant(fq0);          // fieldFQ
+    for (int j = MarkersHeaderColumn::fieldFQ+1; j < _columnTypes.size(); j++)
+        row << QVariant(); // SWR/RL/R/X/... all unknown until there's a scan
+    return row;
 }
 
 // Single-marker/single-measurement version of the row body updateInfo()
@@ -560,7 +582,7 @@ QList<QVariant> Markers::valuesForMarkerNumber(int markerNumber, const QList<int
         return QList<QVariant>();
 
     double fq0 = m_markersList.at(markerNumber - 1)->frequency;
-    int mostRecent = m_measurements->getMeasurementLength() - 1; // i == count-1, same index last() uses
+    int mostRecent = 0; // getMeasurement() indexes backwards from newest -- 0 is most recent (see measurements.h)
     return computeMarkerRow(fq0, markerNumber, mostRecent, columnTypes);
 }
 
@@ -590,6 +612,55 @@ void Markers::on_newMeasurement(QString )
 void Markers::on_measurementComplete()
 {
     changeMarkersHint();
+}
+
+// See markers.h for the full contract. Callers are responsible for only
+// invoking this on single/full scan completion (never Continuous) --
+// nothing here checks that itself.
+void Markers::autoPlaceAtLowestSwr()
+{
+    if (!g_autoMarkerAtLowestSwr)
+        return;
+    if (m_markersList.length() >= g_maxMarkers)
+        return; // no free slot -- silent no-op, see markers.h
+
+    if (m_measurements == nullptr || m_measurements->isEmpty())
+        return;
+
+    // Same far-end/calibration measurement selection as
+    // MarkerComparisonDialog::qFactorAt() -- search whatever trace the user
+    // is actually looking at, not always the raw uncalibrated one.
+    int mostRecent = 0; // getMeasurement()/Sub()/Add() index backwards from newest -- 0 is most recent, same index last() uses (see measurements.h)
+    measurement* mm;
+    switch (m_measurements->getFarEndMeasurement()) {
+    case 1: mm = m_measurements->getMeasurementSub(mostRecent); break;
+    case 2: mm = m_measurements->getMeasurementAdd(mostRecent); break;
+    default: mm = m_measurements->last(); break;
+    }
+    if (mm == nullptr)
+        return;
+
+    bool calib = m_measurements->getCalibrationEnabled();
+    QCPDataMap* swrMap = calib ? &mm->swrGraphCalib : &mm->swrGraph;
+
+    QList<double> keys = swrMap->keys();
+    if (keys.isEmpty())
+        return;
+
+    double bestFq = keys.first();
+    double bestSwr = swrMap->value(bestFq).value;
+    for (int i = 1; i < keys.length(); ++i) {
+        double fq = keys.at(i);
+        double swr = swrMap->value(fq).value;
+        if (swr < bestSwr) {
+            bestSwr = swr;
+            bestFq = fq;
+        }
+    }
+
+    create(bestFq);
+    setFq(bestFq);
+    add();
 }
 
 void Markers::setMarkersHintEnabled(bool enabled)
@@ -739,6 +810,7 @@ void Markers::on_removeMarker(int number)
     if (m_markersList.isEmpty()) {
        m_markersHint->setVisible(false);
     }
+    emit markersChanged();
 }
 
 void Markers::on_translate()
@@ -796,4 +868,10 @@ void Markers::changeMarkersHint()
     if (!m_markersList.isEmpty()) {
         repaint();
     }
+    // markersChanged() is emitted by add()/on_removeMarker() themselves, not
+    // here -- on_measurementComplete() also routes through this function on
+    // every scan tick, and that already has its own signal
+    // (MainWindow::on_actionMarkerComparison_triggered() wires up both), so
+    // emitting from here too would fire MarkerComparisonDialog::refresh()
+    // twice per tick.
 }

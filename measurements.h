@@ -78,7 +78,16 @@ public:
     void deleteRow(int row);
     void setFarEndMeasurement (qint32 mode) { m_farEndMeasurement=mode; }
     qint32 getFarEndMeasurement (void) {return m_farEndMeasurement;}
-    measurement* last() {return (isEmpty() ? nullptr : getMeasurement(getMeasurementLength()-1)); }
+    // getMeasurement(number) indexes backwards from the newest entry --
+    // new scans are appended (see on_newMeasurement()), so number=0 is the
+    // just-completed scan and larger number walks back into history. last()
+    // must therefore pass 0, not getMeasurementLength()-1 (which is the
+    // OLDEST retained scan once more than one is in history -- see
+    // callers that keep their own "mostRecent" index for the far-end Sub/
+    // Add case and need the same fix: qFactorAt() in
+    // markercomparisondialog.cpp, valuesForMarkerNumber() and
+    // autoPlaceAtLowestSwr() in markers.cpp).
+    measurement* last() {return (isEmpty() ? nullptr : getMeasurement(0)); }
     measurement* getMeasurement(int number) {return &m_measurements[m_measurements.length()-1 - number];}
     measurement* getMeasurementSub(int number) {return &m_farEndMeasurementsSub[m_farEndMeasurementsSub.length()-1 - number];}
     measurement* getMeasurementAdd(int number) {return &m_farEndMeasurementsAdd[m_farEndMeasurementsAdd.length()-1 - number];}

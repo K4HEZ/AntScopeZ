@@ -87,6 +87,17 @@ public:
     // markers.cpp for why this exists alongside updateInfo().
     QList<QVariant> valuesForMarkerNumber(int markerNumber, const QList<int>& columnTypes);
     bool markersHintEnabled() { return m_markersHintEnabled; }
+    // Called after a single/full scan completes (never during Continuous --
+    // see the call sites in MainWindow::on_measurementComplete()/
+    // on_measurementCompleteNano(), which only reach this on the
+    // non-Continuous path). If g_autoMarkerAtLowestSwr is on and a marker
+    // slot is free, places an ordinary marker (same create()/setFq()/add()
+    // as a user-placed one -- nothing marks it as "auto") at the lowest-SWR
+    // point of the trace the user is currently looking at (calibrated/
+    // far-end-adjusted per Measurements' own settings, same selection
+    // qFactorAt() in MarkerComparisonDialog uses). No-ops silently if no
+    // slot is free or there's no SWR data to search.
+    void autoPlaceAtLowestSwr();
 
 private:
     QCustomPlot *m_swrWidget;
@@ -116,8 +127,21 @@ private:
     // Row body shared by updateInfo() (all markers x all measurements) and
     // valuesForMarkerNumber() (one marker, most recent measurement only).
     QList<QVariant> computeMarkerRow(double fq0, int markerNumber, int measurementIndex, const QList<int>& columnTypes);
+    // Stand-in row body for updateInfo() when there's no measurement yet to
+    // read from -- unlike computeMarkerRow(), doesn't touch m_measurements
+    // at all, so it's safe to call with zero measurements. Only fieldMarker/
+    // fieldFQ are known this early; everything else comes back invalid,
+    // which MarkersPopUp::formatText() already renders as blank.
+    QList<QVariant> emptyMarkerRow(double fq0, int markerNumber, const QList<int>& columnTypes);
 
 signals:
+    // Emitted by add()/on_removeMarker() whenever the marker list itself
+    // changes -- distinct from on_measurementComplete(), which fires for a
+    // new sweep and routes through changeMarkersHint() just like they do,
+    // but on every scan tick rather than on add/remove (so it deliberately
+    // doesn't also emit this). MarkerComparisonDialog listens for this so
+    // its marker combos stay in sync without needing a fresh scan.
+    void markersChanged();
 
 public slots:
     void on_focus(bool focus);

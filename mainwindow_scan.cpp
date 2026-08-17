@@ -424,6 +424,7 @@ void MainWindow::on_measurementComplete()
         ui->fullBtn->setEnabled(true);
         ui->fullBtn->setChecked(true);
         m_measurements->on_measurementComplete();
+        m_markers->autoPlaceAtLowestSwr();
         m_bInterrupted = true;
         ui->measurmentsDeleteBtn->setEnabled(true);
         ui->measurmentsClearBtn->setEnabled(true);
@@ -489,6 +490,7 @@ void MainWindow::on_measurementCompleteNano()
         ui->singleStart->setChecked(false);
         ui->continuousStartBtn->setChecked(false);
         m_measurements->on_measurementComplete();
+        m_markers->autoPlaceAtLowestSwr();
         m_bInterrupted = true;
         ui->measurmentsDeleteBtn->setEnabled(true);
         ui->measurmentsClearBtn->setEnabled(true);

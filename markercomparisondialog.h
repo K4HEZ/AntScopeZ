@@ -29,10 +29,11 @@ public:
 public slots:
     // Repopulates the marker combos from Markers' current list (preserving
     // the current selection where still valid) and recomputes every
-    // derived field. Connected to the analyzer's measurementComplete()
-    // signal (see MainWindow::on_actionMarkerComparison_triggered()) so
-    // this dialog tracks a live Continuous scan the same way the chart
-    // itself does, not just markers being added/removed.
+    // derived field. Connected to both the analyzer's measurementComplete()
+    // and Markers::markersChanged() (see
+    // MainWindow::on_actionMarkerComparison_triggered()), so this dialog
+    // tracks a live Continuous scan the same way the chart itself does, and
+    // also picks up a marker being added/removed on the plots.
     void refresh();
 
 private slots:
@@ -58,6 +59,12 @@ private:
     };
 
     struct MarkerReadout {
+        // Set as soon as the marker exists, regardless of whether a
+        // measurement has ever run -- frequency is known the moment a
+        // marker is placed (see Markers::getMarker()). `valid` below is
+        // stricter: it also requires a completed sweep to read SWR/RL/R/
+        // X/L/C from.
+        bool hasFrequency = false;
         bool valid = false;
         double frequency = 0; // kHz
         double swr = 0;

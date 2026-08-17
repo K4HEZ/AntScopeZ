@@ -58,11 +58,28 @@ the normal CMake build -- see [Translations](#translations)) and produces a
 ./build.sh [build-dir]
 ```
 
+## Build performance
+
+Always build with `--parallel` (or `-j<N>`) -- `cmake --build` on the Unix
+Makefiles generator (the default here; no generator is pinned in
+`CMakePresets.json`) defaults to serial, one file at a time, regardless of
+how many cores are available. Confirmed (2026-08-16): touching a
+widely-included header and rebuilding took 3m07s plain vs 51s with
+`--parallel 16` on a 16-core box -- same build, same everything else. Qt
+Creator's own Build button is a separate question -- check Projects > Build
+Settings > Build Steps for a jobs override if it also feels serial.
+
+This is unrelated to translations (`.ts`/`.qm`, see
+[Translations](#translations) below) and unrelated to the `.deb`
+self-dependency fix (see "Known issues") -- that fix only touches the CPack
+packaging step (`cpack`/`fix-deb-self-dependency.sh`), never `cmake --build`,
+so it structurally can't affect ordinary build times.
+
 ## Linux packaging (.deb)
 
 ```sh
 cmake --preset release
-cmake --build --preset release
+cmake --build --preset release --parallel
 cd build-release && cpack
 ../cmake/fix-deb-self-dependency.sh antscopez_<version>_amd64.deb
 ```
@@ -113,7 +130,7 @@ target first (manual/opt-in, since it rewrites `.ts` file contents) to have
 translating:
 
 ```sh
-cmake --build --preset debug --target update_translations
+cmake --build --preset debug --target update_translations --parallel
 ```
 
 `qt_add_translations()` passes `-no-obsolete` to `lupdate` (see

@@ -18,6 +18,11 @@ void MainWindow::on_actionMarkerComparison_triggered()
         // (WA_DeleteOnClose above), no manual disconnect needed.
         connect(m_analyzer, &AnalyzerPro::measurementComplete,
                 m_markerComparisonDialog, &MarkerComparisonDialog::refresh);
+        // A marker added/removed on the plots doesn't produce a new sweep
+        // (no measurementComplete above), so the combos need their own hook
+        // to pick it up without the user having to reopen this dialog.
+        connect(m_markers, &Markers::markersChanged,
+                m_markerComparisonDialog, &MarkerComparisonDialog::refresh);
     }
     m_markerComparisonDialog->refresh();
     if (!m_markerComparisonDialog->isVisible())

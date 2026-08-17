@@ -24,6 +24,7 @@ extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
 extern bool g_developerMode;
 extern int g_maxMeasurements; // see measurements.cpp
 extern int g_maxMarkers; // see markers.cpp
+extern bool g_autoMarkerAtLowestSwr; // see markers.cpp
 extern QString appendSpaces(const QString& number);
 int Settings::m_serialIndex = 0;
 bool Settings::m_licenseUpdateBlocked = false;
@@ -113,6 +114,7 @@ void Settings::applyStyles()
     ui->debugLogBleCheckBox->setStyleSheet(style);
     ui->debugLogBleShowPingsCheckBox->setStyleSheet(style);
     ui->debugLogNanovnaCheckBox->setStyleSheet(style);
+    ui->checkBoxAutoMarkerLowestSwr->setStyleSheet(style);
 
     style = Style::spinBox();
     ui->spinBoxMeasurements->setStyleSheet(style);
@@ -185,6 +187,7 @@ Settings::Settings(QWidget *parent) :
 
     ui->spinBoxMeasurements->setValue(g_maxMeasurements);
     ui->spinBoxMaxMarkers->setValue(g_maxMarkers);
+    ui->checkBoxAutoMarkerLowestSwr->setChecked(g_autoMarkerAtLowestSwr);
     // TODO developer(?)
     ui->fqRestrictCheckBox->setChecked(g_developerMode ? m_restrictFq : true);
     if (!g_developerMode) {
@@ -400,10 +403,12 @@ Settings::~Settings()
 
     g_maxMeasurements = ui->spinBoxMeasurements->value();
     g_maxMarkers = ui->spinBoxMaxMarkers->value();
+    g_autoMarkerAtLowestSwr = ui->checkBoxAutoMarkerLowestSwr->isChecked();
 
     m_settings->beginGroup("Settings");
     m_settings->setValue("restrictFq", m_restrictFq);
     m_settings->setValue("maxMeasurements", g_maxMeasurements);
+    m_settings->setValue("autoMarkerAtLowestSwr", g_autoMarkerAtLowestSwr);
     m_settings->setValue("maxMarkers", g_maxMarkers);
 
     m_settings->setValue("currentIndex",ui->tabWidget->currentIndex());

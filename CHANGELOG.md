@@ -11,6 +11,18 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+### Added
+
+- Tools > Marker Comparison: compare two markers' frequency/SWR/return
+  loss/R/X, estimated Q and equivalent L/C off the Current marker, and
+  estimate how much to trim (or add) to a simple 1/4-wave vertical,
+  1/2-wave dipole or full-wave antenna to move resonance from one marker
+  to the other.
+- Settings > Markers: "Automatically set a marker at the lowest SWR" (Marker
+  behavior group, on by default) places a marker at the swept trace's
+  lowest-SWR point right after a single/full scan finishes -- never during
+  a Continuous scan, and only if a marker slot is free.
+
 ## [2.2.1] - 2026-08-16
 
 ### Added

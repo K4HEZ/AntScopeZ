@@ -779,50 +779,67 @@
        <item>
         <widget class="QGroupBox" name="groupBox_markers">
          <property name="title">
-          <string>Marker limit</string>
+          <string>Marker behavior</string>
          </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_maxMarkers">
-          <property name="topMargin">
-           <number>20</number>
-          </property>
+         <layout class="QVBoxLayout" name="verticalLayout_markerBehavior">
           <item>
-           <widget class="QSpinBox" name="spinBoxMaxMarkers">
-            <property name="toolTip">
-             <string>The maximum number of markers that can be placed at once</string>
+           <layout class="QHBoxLayout" name="horizontalLayout_maxMarkers">
+            <property name="topMargin">
+             <number>20</number>
             </property>
-            <property name="minimum">
-             <number>1</number>
-            </property>
-            <property name="maximum">
-             <number>5</number>
-            </property>
-            <property name="value">
-             <number>5</number>
-            </property>
-           </widget>
+            <item>
+             <widget class="QSpinBox" name="spinBoxMaxMarkers">
+              <property name="toolTip">
+               <string>The maximum number of markers that can be placed at once</string>
+              </property>
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <number>5</number>
+              </property>
+              <property name="value">
+               <number>5</number>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_maxMarkers">
+              <property name="toolTip">
+               <string>The maximum number of markers that can be placed at once</string>
+              </property>
+              <property name="text">
+               <string>Maximum number of markers</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_maxMarkers">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
           </item>
           <item>
-           <widget class="QLabel" name="label_maxMarkers">
+           <widget class="QCheckBox" name="checkBoxAutoMarkerLowestSwr">
             <property name="toolTip">
-             <string>The maximum number of markers that can be placed at once</string>
+             <string>After a single/full scan finishes, place a marker at the frequency with the lowest SWR -- only if a marker slot is free (see "Maximum number of markers" above). Never fires during a Continuous scan.</string>
             </property>
             <property name="text">
-             <string>Max markers</string>
+             <string>Automatically set a marker at the lowest SWR</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
             </property>
            </widget>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer_maxMarkers">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
           </item>
          </layout>
         </widget>

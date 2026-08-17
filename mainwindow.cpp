@@ -19,6 +19,7 @@ extern bool g_developerMode; // see main.cpp
 extern bool g_usbOnly;
 extern int g_maxMeasurements; // see measurements.cpp
 extern int g_maxMarkers; // see markers.cpp
+extern bool g_autoMarkerAtLowestSwr; // see markers.cpp
 extern void setAbsoluteFqMaximum();
 extern bool g_bAA55modeNewProtocol;
 extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
@@ -190,6 +191,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_fqRestrict = g_developerMode ? m_settings->value("restrictFq", true).toBool() : true;
     g_maxMeasurements = m_settings->value("maxMeasurements", MAX_MEASUREMENTS).toInt();
     g_maxMarkers = m_settings->value("maxMarkers", MAX_MARKERS).toInt();
+    g_autoMarkerAtLowestSwr = m_settings->value("autoMarkerAtLowestSwr", true).toBool();
     m_activeThemeIndex = m_settings->value("activeTheme", 0).toInt();
     m_settings->endGroup();
 
@@ -925,6 +927,7 @@ MainWindow::~MainWindow()
     m_settings->setValue("restrictFq", m_fqRestrict);
     m_settings->setValue("maxMeasurements", g_maxMeasurements);
     m_settings->setValue("maxMarkers", g_maxMarkers);
+    m_settings->setValue("autoMarkerAtLowestSwr", g_autoMarkerAtLowestSwr);
     m_settings->endGroup();
 
     m_settings->beginGroup("Cable");
