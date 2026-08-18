@@ -200,6 +200,13 @@ menu bar instead (File / Edit / View / Connect Analyzer / Help).
 | Language | UI language -- auto-discovered from whatever `QtLanguage_*.qm` files are installed, not a fixed list |
 | Theme | Light or Dark -- see [CHANGELOG.md](../CHANGELOG.md) for what it does and doesn't cover |
 
+*Tools*
+
+| Control | What it does |
+|---|---|
+| Marker Comparison... | Compare two placed markers and estimate an antenna trim -- see [Markers](#markers) |
+| TDR Analysis... | Distance/open-short readout and a velocity-factor calculator for the last TDR scan -- see [TDR](#tdr-time-domain-reflectometry) |
+
 *Connect Analyzer* -- opens the [device-connection dialog](#connecting-to-your-analyzer) directly, same as Settings → General's own button.
 
 *Help*
@@ -252,21 +259,28 @@ currently reachable -- both are unfinished/disabled features, not
 something you're missing in the UI; see `BUILDINFO.md`'s Known Issues
 for the full detail on either.
 
-### Keyboard shortcuts
+### Keyboard and mouse shortcuts, in the plot area
 
-| Key | What it does |
+| Key / gesture | What it does |
 |---|---|
 | F1 – F7 | Jump to the SWR / Phase / Z=R+jX / Z=R‖+jX / RL / Smith / TDR tab (Multi has no shortcut of its own) |
 | F9 / F10 | Single / Continuous scan -- same as the Single/Continuous buttons |
 | Esc | Stop/interrupt the current scan |
 | Delete | Delete the selected measurement |
+| Mouse scroll | Zoom the current chart's frequency (X) range in/out |
 | `+`, `=`, ↑ | Zoom the current chart's frequency (X) range in |
 | `-`, ↓ | Zoom the current chart's frequency (X) range out |
 | ←, → | Pan the current chart's frequency range left/right |
+| Control (Command on macOS) + Mouse scroll | Zoom the Y-axis scale in/out |
 | Ctrl + `+` / Ctrl + ↑ | Zoom the Y-axis scale in (same as Ctrl+scroll) |
 | Ctrl + `-` / Ctrl + ↓ | Zoom the Y-axis scale out |
 | Ctrl + 0 | Reset the Y-axis scale to default |
 | Ctrl + C | Copy the current chart to the clipboard as an image |
+
+These are the two gestures a hint overlay used to draw directly on every
+chart (turned off -- it collided with the axis' own tick labels in the
+corners where it was drawn); worth knowing since there's currently no
+on-screen reminder that scroll/Ctrl+scroll do anything at all.
 
 *(Ctrl+Alt+Shift+M and Ctrl+Alt+Shift+N trigger internal auto-calibration
 debug routines gated behind an internal developer flag that's currently
@@ -309,36 +323,75 @@ theme's colors, see the new [Themes tab](#themes-tab) below.
 
 <!-- SCREENSHOT: Settings dialog, Markers tab -->
 
+**Marker behavior**
+
 | Control | What it does |
 |---|---|
-| Max markers | Cap on how many markers can be placed at once (1–5) |
+| Maximum number of markers | Cap on how many markers can be placed at once (1–5) |
+| Automatically set a marker at the lowest SWR | On by default. Right after a single/full scan finishes (never during Continuous), places a marker at the swept trace's lowest-SWR point -- only if a marker slot is still free, otherwise it's a silent no-op. It's an ordinary marker once placed; deleting it later doesn't change this setting or stop it firing again next scan. |
+
+**Columns**
+
+| Control | What it does |
+|---|---|
 | Available / Selected lists | Choose which data columns the [Markers](#markers) popup shows, and in what order -- move columns between the two lists (or reorder within Selected) with the arrow buttons. Del/Marker/#/FQ are pinned at the top of Selected and can't be removed or reordered; everything else is up to you. |
 
 ### Cable tab
 
 <!-- SCREENSHOT: Settings dialog, Cable tab -->
 
-Lets you tell AntScopeZ about your feedline, so it can account for
-cable loss/length in what it shows you -- useful when your analyzer is
-some distance from the antenna through lossy coax.
+Lets you tell AntScopeZ about your feedline, so it can account for cable
+loss/length in what it shows you -- useful when your analyzer is some
+distance from the antenna through lossy coax. Also independently feeds
+the TDR chart's distance axis (velocity factor only -- see
+[TDR](#tdr-time-domain-reflectometry)).
+
+**Preset vs. Custom**
+
+A radio pair controls whether the cable-specification fields below are
+locked or hand-editable:
 
 | Control | What it does |
 |---|---|
-| Cable dropdown | Pick a built-in ideal cable (50/75/25/37.5Ω), a saved custom one, or "Change parameters or choose from list..." to enter your own |
-| Cable R0, Cable length, Velocity factor | Your feedline's characteristic impedance, physical length, and velocity factor |
-| Conductive loss, Dielectric loss | Loss figures for the cable, in dB/100ft, dB/ft, dB/100m, or dB/m (pick the unit from the dropdown next to them), specified either "at" a given frequency or as "any frequency" |
-| Do nothing / Subtract cable / Add cable | Selects whether cable loss is factored out of, into, or ignored in your readings |
-| Export | Exports the current cable settings |
-| Update graphs | Re-applies the current cable settings to already-plotted data |
+| Preset | The cable dropdown is enabled; velocity factor, R0, conductive/dielectric loss, loss units, and frequency are locked to whatever cable you've selected there (shown, but not editable) -- picking a different cable re-applies its numbers immediately |
+| Custom | The cable dropdown is disabled; all of those fields become hand-editable instead -- use this for a cable not in the list (e.g. off a manufacturer datasheet), or after using Tools → TDR Analysis's "Use this velocity factor" (see below), which always switches to Custom rather than pretending a reverse-solved number matches some named cable |
 
-**Not independently verified:** while auditing this tab, "Do nothing /
-Subtract cable / Add cable" only appear to toggle each other and
-enable/disable the fields above them -- no code path was found that
-reads which one is selected to actually transform displayed or exported
-data. It may do nothing currently, or it may be wired through a path
-this pass didn't find. Worth confirming against real hardware before
-relying on it; flagging here rather than asserting a behavior that
-wasn't actually confirmed.
+Locked (Preset) fields are styled distinctly from Qt's normal "disabled"
+dimming -- full-contrast text on a flattened background, so they read as
+"showing a fixed value" rather than "unavailable".
+
+**Cable specifications**
+
+| Control | What it does |
+|---|---|
+| Cable dropdown | Pick a built-in ideal cable (50/75/25/37.5Ω) or one of the ~150 real-world cables from `cables.txt` (Belden part numbers, sourced from ac6la.com) -- only usable in Preset mode |
+| Velocity factor, Cable R0 | Your feedline's velocity factor and characteristic impedance |
+| Conductive loss, Dielectric loss | Loss figures for the cable, in dB/100ft, dB/ft, dB/100m, or dB/m (pick the unit from the dropdown next to them), specified either "at" a given frequency or as "any frequency" |
+
+**Transmission line options**
+
+Cable length and the three mode buttons live together here, separately
+from Cable specifications above, because length isn't a property *of* a
+particular cable the way R0/loss/velocity factor are -- it's how much of
+it you actually have -- and because it (along with R0/loss/units/
+frequency) only affects anything once Subtract or Add cable is selected.
+Both stay editable regardless of Preset/Custom.
+
+| Control | What it does |
+|---|---|
+| Cable length | Your feedline's physical length, in ft or m following the app's Metric/Imperial setting (Settings → General → Measurement system) |
+| Do nothing | Use the measured impedance as-is -- no cable model applied (the default) |
+| Subtract cable | De-embedding: removes this cable's modeled effect from the measurement, showing the antenna's true impedance at its own terminals. Use this when you measured *through* a known feedline and want to see past it. |
+| Add cable | Embedding: the reverse -- projects a bare measurement forward through the modeled cable, showing what the radio end would actually see. |
+
+The math behind Subtract/Add is a real lossy-transmission-line model
+(`Measurements::calcFarEnd()`), using velocity factor, R0, conductive/
+dielectric loss, and cable length together -- not just a cosmetic toggle.
+
+| Control | What it does |
+|---|---|
+| Export | Exports the current/most recent measurement to a Touchstone file, with a comment block describing the active cable settings (Subtract/Add, velocity factor, length, R0, loss) embedded in it. Needs at least one scan first -- with none, it shows a notification instead of opening. |
+| Update graphs | Applies whatever's currently in this tab immediately, without closing the dialog first |
 
 ### Themes tab
 
@@ -511,6 +564,35 @@ X](#reading-the-dip-is-my-antenna-too-long-or-too-short) gives. How
 narrow frequency range points to a high-Q (narrowband) antenna or
 match; a gentle, gradual slope points to a broader, lower-Q one.
 
+### Q factor
+
+"Q" is short for **Quality factor** -- same term as in general RF/filter
+theory, just derived here from your actual swept data instead of a lab
+Q-meter: `Q = center frequency ÷ 2:1-SWR bandwidth` (see
+[Markers](#markers)' Tools > Marker Comparison "Q factor (Current)"
+field, or the informal read from the Phase chart above).
+
+- **Higher Q → narrower usable bandwidth.** SWR climbs back above 2:1
+  close to resonance on either side, so you'll notice re-tuning (or a
+  worse match) moving even a modest distance across the band. Typical
+  of electrically short/loaded antennas -- mobile whips, loaded
+  verticals with a coil, trap antennas -- and extreme for magnetic
+  loops (Q often in the hundreds, tunable in kHz steps).
+- **Lower Q → broader, more forgiving match.** Typical of a full-size
+  resonant antenna (a proper half-wave dipole or quarter-wave vertical
+  cut close to the actual operating frequency) -- SWR stays under 2:1
+  across much more of the band without touching anything.
+- **What it doesn't tell you:** whether a high reading is costing you
+  efficiency. A lossy loading coil can produce the same SWR-bandwidth
+  signature as a "clean" high-Q small antenna -- Q alone can't
+  distinguish the two. It's a bandwidth/tuning-sensitivity indicator,
+  not an efficiency meter.
+
+Rule of thumb: single-digit-to-teens is a comfortably broad, close-to-
+full-size match; several tens starts to mean noticeable re-tuning
+across the band; hundreds means essentially a single-frequency device
+(loop territory).
+
 ## Scan modes: Single vs. Continuous
 
 **Single (F9)** runs exactly one sweep across the current range and
@@ -609,15 +691,39 @@ marker** from the context menu. Markers appear at the same frequency
 across every chart at once (SWR, Phase, Rs, Rp, RL, S21), each labeled
 with a matching number, so you can track one frequency point across
 multiple views simultaneously. You can place up to
-[Settings → Markers → "Max markers"](#markers-tab) at once (5 by
-default); once you hit that cap, double-clicking to add another shows a
-brief notification instead of placing one.
+[Settings → Markers → "Maximum number of markers"](#markers-tab) at once
+(5 by default); once you hit that cap, double-clicking to add another
+shows a brief notification instead of placing one.
 
 Hovering shows a readout of that marker's values (frequency, SWR, RL,
 R/X/Z, and more, depending on the chart) in a popup table. The View
 menu's **Markers Hint** controls whether that readout pops up
 automatically; which columns it shows, and in what order, is set from
 [Settings → Markers](#markers-tab).
+
+By default, AntScopeZ also places one for you: right after a
+single/full scan finishes, a marker drops at the trace's lowest-SWR
+point automatically (never during Continuous, and only if a slot is
+free) -- turn this off at
+[Settings → Markers → "Automatically set a marker at the lowest
+SWR"](#markers-tab).
+
+### Tools > Marker Comparison
+
+Compares two already-placed markers -- **Current (dip)** and **Target
+(desired)** -- and estimates how much to trim an antenna to move its
+resonance from one to the other.
+
+| Field | What it shows |
+|---|---|
+| Q factor, Equiv. L, Equiv. C (Current) | Derived from the Current marker alone -- Q is the classic bandwidth definition (center frequency ÷ 2:1-SWR bandwidth, walked from your actual swept data, not a lab Q-meter reading), read up on what it means at [Interpreting your data](#interpreting-your-data) |
+| ΔFrequency, ΔSWR, ΔRL, ΔR, ΔX | Target minus Current -- Δ Frequency works off marker placement alone (no scan needed yet); the rest need real measurement data from both markers |
+| Antenna type / Current length | Feeds the trim estimate below -- length is optional; leave it blank and a nominal half/quarter-wave formula stands in |
+| Calculated trim, Suggested first trim, Per leg | The full calculated adjustment, and a conservative first cut -- shortening suggests half the calculated amount (cutting can't be undone); lengthening suggests 1.5× it (added wire can always be trimmed back down later) |
+
+Estimate only -- velocity factor and end effects aren't modeled. Cut the
+suggested amount, re-measure, and repeat rather than cutting the full
+calculated trim at once.
 
 ## Multi view
 
@@ -712,14 +818,17 @@ Screenshot from AA) rather than reusing whatever was typed last time.
 ### What a TDR scan actually measures
 
 A TDR run in AntScopeZ is not a separate kind of measurement -- it's a normal
-frequency sweep, just an unusually wide one. When you start a TDR scan, the
-software picks a start frequency near the analyzer's lowest supported
-frequency (close to DC) and a stop frequency computed from your cable-length
-and velocity-factor settings (capped at the analyzer's maximum), then runs
-that sweep through the exact same measurement pipeline as a regular
-Single/Continuous scan. The result is a genuine, real complex-impedance sweep
-across that whole span -- commonly on the order of 100 kHz up to several
-hundred MHz, depending on your analyzer and cable settings.
+frequency sweep, just an unusually wide one. Switch to the TDR tab *before*
+clicking Single/Full -- that's what tells AntScopeZ to scan near-DC to your
+connected analyzer's own maximum supported frequency (or a customized
+analyzer's max, if you're using one), instead of whatever Start/Stop range is
+in the Frequency panel; the number of points is clamped to a 200–1000 range
+regardless of your usual Points/Speed-Accuracy setting. Continuous doesn't
+work on this tab -- TDR is single/full-scan only. That sweep then runs
+through the exact same measurement pipeline as a regular Single/Continuous
+scan -- a genuine, real complex-impedance sweep across that whole span,
+commonly on the order of 100 kHz up to several hundred MHz depending on your
+analyzer.
 
 The TDR tab then runs an inverse FFT over that near-DC-to-wideband sweep to
 turn it into a time-domain impulse/step response -- which is what lets you see
@@ -756,6 +865,50 @@ in mind before treating it like a normal scan of your operating band:
 So: if you run a TDR scan and then flip to SWR/Multi and see a curve running
 all the way from ~100 kHz to ~500 MHz, that's expected -- it's the same sweep
 TDR needed, just viewed through a different chart.
+
+### Tools > TDR Analysis
+
+Reads the results of your last TDR scan and answers three questions
+directly instead of making you eyeball the chart:
+
+| Field | What it shows |
+|---|---|
+| Cable type / Velocity factor | A preset from `cables.txt` (~150 real cables), or an editable custom value -- local to this dialog by default, doesn't change Settings → Cable unless you click "Use this velocity factor" below |
+| Distance to strongest reflection | The single biggest reflection in the scan, at whatever velocity factor is currently set above -- recalculates live as you change it, no re-scan needed (distance is exactly linear in velocity factor) |
+| Reflection | Open / high impedance, or Short / near 0Ω, based on the sign of that reflection -- or "None detected" if nothing crosses the noise floor |
+| Known cable length → Calculated velocity factor | The reverse direction: type in a length you've actually measured, get the velocity factor that makes the two agree -- exact, not trial-and-error |
+| Use this velocity factor | Applies the solved value to Settings → Cable as Custom (resetting R0/loss to "no loss modeled" rather than keeping whichever preset's real numbers happened to be showing), and updates the TDR chart's own distance axis immediately |
+
+**Workflows this answers:**
+
+- **Bad SWR, feedline or antenna?** Compare "Distance to strongest
+  reflection" against your feedline's actual physical length. Close
+  match → that's just the antenna feedpoint, the problem is the antenna
+  itself. Reflection shows up *short* of the real length → a fault
+  partway along the cable (bad connector, damage, water intrusion) --
+  now you know roughly where to look.
+- **Unmarked/unknown cable -- is it open, shorted, or damaged?** Reliable
+  regardless of velocity factor -- leave the far end open or shorted as
+  a deliberate test (or see what the mystery termination gives you) and
+  read "Reflection" directly. This is the one question here that doesn't
+  need you to know anything about the cable first.
+- **Unmarked cable -- how long is it?** Circular unless you know one of
+  {length, velocity factor} already. If you can physically measure it
+  (even coiled), use the reverse calculator to solve for velocity
+  factor, then eyeball `cables.txt`'s presets for a plausible match by
+  VF + R0. If you can't measure it at all, you're limited to guessing a
+  plausible preset and accepting the length reading is only as good as
+  that guess.
+- **Spool of wire -- how much is left?** Same technique as above, but
+  only if it's actually coax (or another real two-conductor
+  transmission line) -- this doesn't apply to bare single-conductor
+  antenna wire, which has no meaningful velocity factor without pairing
+  it against a ground return. For that, a tape measure is the real
+  answer.
+
+A maximum unambiguous distance is set by the scan's own resolution (point
+count) -- a long run may exceed what one scan can resolve; the dialog
+flags this when the peak sits near the edge of that range.
 
 ## Customized analyzer parameters
 
