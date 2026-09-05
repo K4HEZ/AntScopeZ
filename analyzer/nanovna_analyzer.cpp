@@ -370,11 +370,11 @@ void NanovnaAnalyzer::startMeasure(qint64 fqFrom, qint64 fqTo, int dotsNumber, b
     // per scan command with no awareness of a multi-segment plan -- wiring
     // that up correctly is tracked separately (full stitching support for
     // NANO, see the GH issue). For now, just clamp to the device's own real
-    // range rather than stitch: a request outside [100, 401] gets the
+    // range rather than stitch: a request outside [50, 401] gets the
     // nearest in-range value, trading resolution for actually completing
-    // instead of erroring out. 100 is the confirmed practical floor on real
-    // hardware (2026-09-05); 401 is the device's own stated ceiling.
-    constexpr int kNanoMinPoints = 100;
+    // instead of erroring out. 50 and 401 are the device's confirmed real
+    // floor/ceiling on real hardware (2026-09-05).
+    constexpr int kNanoMinPoints = 50;
     constexpr int kNanoMaxPoints = 401;
     m_dotsNumber = qBound(kNanoMinPoints, dotsNumber, kNanoMaxPoints);
     m_isMeasuring = true;
