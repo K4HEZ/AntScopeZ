@@ -581,8 +581,14 @@ public slots:
     void on_impedanceChanged(double _z0);
     void on_exportCableSettings(QString _description);
 
-    void on_measurementComplete();
+    bool on_measurementComplete(); // returns true if the just-finished (empty) row was deleted
     void toggleVisibility(int row, bool _state);
+    // Re-centers the Smith chart cursor dot (m_smithTracer, One Fq/marker-
+    // click only) to the 50 ohm center point. Called on a new scan starting
+    // and on Clear -- without this it just sat at its last One-Fq/marker
+    // position indefinitely (issue #31). No-op if it hasn't been created
+    // yet (nothing stale to reset).
+    void resetSmithTracer();
 
     void redrawMultiGraph(bool _incrementally);
 

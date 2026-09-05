@@ -2,8 +2,6 @@
 #include "mainwindow.h"
 
 static QString msgFormat = "FQ: %1\nSWR: %2\nRhoPhase: %3\nRhoMod: %4\nR: %5\nX: %6\nZ: %7\nRpar: %8\nXpar: %9\nZpar: %10\nRL: %11";
-extern bool g_developerMode;
-extern MainWindow* g_mainWindow;
 
 OneFqWidget::OneFqWidget(int _points, QWidget *parent) :
     QWidget(parent),
@@ -66,12 +64,6 @@ OneFqWidget::OneFqWidget(int _points, QWidget *parent) :
     m_settings->endGroup();
 
     setText(msgFormat);
-    if (g_developerMode) {
-        m_udpSender = new QUdpSocket(this);
-        m_udpReceiver = new QUdpSocket(this);
-        m_udpReceiver->bind(UDP_PORT_RECEIVE, QUdpSocket::ShareAddress);
-        connect(m_udpReceiver, &QUdpSocket::readyRead, this, &OneFqWidget::processPendingDatagrams);
-    }
 //    qDebug() << "OneFqWidget::OneFqWidget()";
 }
 
@@ -86,14 +78,6 @@ OneFqWidget::~OneFqWidget()
     m_settings->setValue("mainBiasY",m_mainBiasY);
     m_settings->endGroup();
     delete m_settings;
-    if (g_developerMode) {
-        m_udpSender->close();
-        m_udpSender->deleteLater();
-        m_udpSender = nullptr;
-        m_udpReceiver->close();
-        m_udpReceiver->deleteLater();
-        m_udpReceiver = nullptr;
-    }
 //    qDebug() << "OneFqWidget::~OneFqWidget()";
 }
 
@@ -188,13 +172,6 @@ void OneFqWidget::addData(GraphData _data)
     addValue(_data.Zpar, m_data.Zpar);
     addValue(_data.RL, m_data.RL);
 
-    if (g_developerMode) {
-        if (m_needBroadcast && _data.FQ == m_broadcastFq) {
-            broadcastDatagram();
-            m_needBroadcast = false;
-        }
-    }
-
     if (m_added == 1)
         updateText();
 
@@ -226,46 +203,4 @@ void OneFqWidget::updateText()
             .arg(m_data.Zpar)
             .arg(m_data.RL);
     setText(msg);
-}
-
-void OneFqWidget::broadcastDatagram()
-{
-    if (g_developerMode) {
-        QString msg = QString("%1, %2, %3")
-                .arg(UDP_SEND_VERSION)
-                .arg(m_data.FQ)
-                .arg(m_data.SWR);
-
-        QByteArray datagram = msg.toUtf8();
-        m_udpSender->writeDatagram(datagram.data(), datagram.size(), m_udpAddress, UDP_PORT_SEND);
-                                 //QHostAddress::Broadcast, UDP_PORT_SEND);
-    }
-}
-
-void OneFqWidget::processPendingDatagrams()
-{
-    if (g_developerMode) {
-        while (m_udpReceiver->hasPendingDatagrams()) {
-            QByteArray datagram;
-            datagram.resize(m_udpReceiver->pendingDatagramSize());
-            m_udpReceiver->readDatagram(datagram.data(), datagram.size(), &m_udpAddress);
-            QString msg(datagram.data());
-            qDebug() << "OneFqWidget::processPendingDatagrams()" << msg;
-            if (!msg.isEmpty()) {
-                QList<QString> list = msg.split(',');
-                if (list.size() > 1) {
-                    if (list.at(0).trimmed().compare("AA2", Qt::CaseInsensitive) == 0) {
-                        if (list.at(1).trimmed().compare("SETFQ", Qt::CaseInsensitive) == 0) {
-                            bool ok;
-                            QString strfq = list.at(2).trimmed();
-                            qreal fq = strfq.toDouble(&ok) *1000;
-                            if (ok) {
-                                emit udpReceived(list.at(1), fq);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
 }

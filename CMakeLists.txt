@@ -1,10 +1,18 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(AntScopeZ
-    VERSION 2.2.4
+    VERSION 2.2.5
     DESCRIPTION "AntScopeZ Antenna Analyzer Application"
     LANGUAGES C CXX
 )
+
+# RC (Windows resource-script) support is not one of the base LANGUAGES above
+# since it's meaningless on Linux/macOS; enabled here, gated on WIN32, so
+# CMake knows how to hand a .rc file to windres (MinGW) / rc.exe (MSVC) --
+# see the WIN32 block below for why this is needed at all.
+if(WIN32)
+    enable_language(RC)
+endif()
 
 # PROJECT_VERSION itself has to stay strictly numeric (major.minor.patch) --
 # CMake's project(VERSION ...) rejects anything else, and CPACK_PACKAGE_VERSION
@@ -13,10 +21,10 @@ project(AntScopeZ
 # only feeds ANTSCOPEZ_VER (About box, title bar, startup log line -- see
 # target_compile_definitions() below), so an in-progress build reads
 # "2.2.4-dev" instead of silently claiming to be the exact 2.2.4 release.
-# Clear it to an empty string right when 2.2.4 actually ships (matching
-# commit + `v2.2.4` tag, same pattern as `v2.2.3`/`v2.2.2`), then bump
+# Clear it to an empty string right when 2.2.5 actually ships (matching
+# commit + `v2.2.5` tag, same pattern as `v2.2.3`/`v2.2.2`), then bump
 # PROJECT_VERSION and set this back to "-dev" to start the next cycle.
-set(ANTSCOPEZ_VER_SUFFIX "-dev")
+set(ANTSCOPEZ_VER_SUFFIX "")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -404,13 +412,41 @@ if(WIN32)
         ${CMAKE_CURRENT_SOURCE_DIR}/ftdi
     )
 
-    # Equivalent of qmake's RC_ICONS: Qt generates the .rc for us. A checked-in
-    # AntScope2_resource.rc used to sit here unused -- it hardcoded an absolute
-    # path (C:\Projects\AntScope2\AntScope2.ico) and qmake never referenced it
+    # Equivalent of qmake's RC_ICONS. A checked-in AntScope2_resource.rc used
+    # to sit here unused -- it hardcoded an absolute path
+    # (C:\Projects\AntScope2\AntScope2.ico) and qmake never referenced it
     # either -- and has been deleted rather than renamed for AntScopeZ.
+    #
+    # 2026-09-04: the QT_TARGET_RC_ICONS target property this block used to
+    # set turned out to be a no-op with Qt 6.11.2 -- traced through Qt's own
+    # CMake modules (Qt6CoreMacros.cmake / QtPublicWindowsHelpers.cmake): the
+    # public qt_add_executable() finalizer chain
+    # (qt6_finalize_target -> _qt_internal_finalize_executable ->
+    # _qt_internal_finalize_windows_app) only generates the app manifest on
+    # WIN32; the function that actually reads QT_TARGET_RC_ICONS and emits an
+    # .rc file (_qt_internal_generate_win32_rc_file) is only ever called from
+    # Qt's *internal* qt_internal_add_executable()/qt_internal_add_app()
+    # helpers (used to build Qt itself), which this project doesn't use. Net
+    # effect: no .rc file was ever generated, so the taskbar/Start-menu icon
+    # was silently never embedded, on this Qt version, from day one -- not a
+    # regression, just a property that never did anything here. Confirmed by
+    # the complete absence of any *.rc file or windres invocation anywhere
+    # under build-windows-mingw/ before this fix.
+    #
+    # Fixed by generating our own minimal .rc file instead (still no
+    # third-party/vendor edits -- src/resources/AntScopeZ.rc.in is first-party)
+    # and handing it to CMake directly via target_sources(), which every CMake
+    # version/generator supports regardless of what Qt's finalizers do.
+    set(ANTSCOPEZ_ICON_PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/resources/AntScopeZ.ico")
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/resources/AntScopeZ.rc.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/AntScopeZ.rc"
+        @ONLY
+    )
+    target_sources(AntScopeZ PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/AntScopeZ.rc")
+
     set_target_properties(AntScopeZ PROPERTIES
         WIN32_EXECUTABLE      ON
-        QT_TARGET_RC_ICONS    "${CMAKE_CURRENT_SOURCE_DIR}/src/resources/AntScopeZ.ico"
     )
 
     # Ship the FTDI driver DLL next to the executable.
@@ -838,6 +874,70 @@ if(WIN32)
     install(FILES ${ANTSCOPE_RUNTIME_FILES} ${ANTSCOPE_QM_FILES} ${ANTSCOPE_QT_QM_FILES} ${ANTSCOPE_QTBASE_OVERRIDE_QM_FILES}
         DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
+
+    # Settings::programDataPath() (src/settings.cpp) -- the actual runtime
+    # source of truth for cables.txt/itu-regions-defaults.txt/user-guide.md
+    # -- unconditionally resolves to C:\ProgramData\AntScopeZ on Windows
+    # (unlike its Linux/macOS branches, which fall back to sitting next to
+    # the binary). The install(FILES) rule just above only ever staged
+    # these next to the binary, so a real Windows install never actually
+    # had them where programDataPath() looks -- confirmed live 2026-09-03:
+    # "Can't open file: C:/ProgramData/AntScopeZ/cables.txt" opening
+    # Settings on an installed (well, staged-but-not-actually-installed)
+    # build.
+    #
+    # This is NOT done as a second install(FILES DESTINATION <absolute>)
+    # rule here -- tried that first, but CPack's staged-install step sets
+    # CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION and hard-fails on any
+    # absolute destination (a real, correct safety check: a CPack package
+    # is meant to be relocatable, and "write outside the package root" is
+    # exactly what that check exists to catch). ProgramData is
+    # legitimately outside the package root by design here, so the copy
+    # belongs in the installer's own script instead -- see
+    # CPACK_NSIS_EXTRA_INSTALL_COMMANDS below, which copies these same
+    # source files to $PROGRAMDATA\AntScopeZ at install time. (The
+    # uninstaller removes that directory too -- see
+    # CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS.)
+
+    # ftd2xx.dll is copied next to the binary by the POST_BUILD custom_command
+    # above for a dev/debug build, but that step only touches the build tree
+    # -- cmake --install has no rule of its own to carry it into a packaged
+    # install, so FTDI-based device support was silently missing from every
+    # packaged build until this rule was added. Found while building the
+    # first packaged release (2026-08-30).
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ftdi/amd64/ftd2xx.dll
+        DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+
+    # Bundle Qt's own DLLs/plugins next to the executable via Qt's CMake-native
+    # deploy API (qt_deploy_runtime_dependencies(), Qt 6.3+) -- confirmed via
+    # Qt's own docs that on Windows this command uses windeployqt internally,
+    # so this gets windeployqt's plugin-aware deployment (platform plugin,
+    # TLS backend, etc. -- not just directly-linked DLLs) without a separate
+    # custom_command/post-build step. Much simpler than the Linux branch
+    # below: Windows has no RPATH concept (DLLs next to the exe are found
+    # automatically), and CMAKE_INSTALL_BINDIR here is this app's own private
+    # install directory, not one shared with other applications the way
+    # Linux's /usr/bin is -- so none of the qt.conf-pollution/wrapper-script
+    # complexity the Linux branch needs applies here. NO_TRANSLATIONS for the
+    # same reason as the Linux branch: this app's own hand-picked .qm install
+    # rule above already covers the languages actually used.
+    if(COMMAND qt6_generate_deploy_script)
+        qt6_generate_deploy_script(
+            TARGET AntScopeZ
+            OUTPUT_SCRIPT deploy_script
+            CONTENT "
+set(QT_DEPLOY_BIN_DIR \"${CMAKE_INSTALL_BINDIR}\")
+qt_deploy_runtime_dependencies(
+    EXECUTABLE \"\${QT_DEPLOY_BIN_DIR}/$<TARGET_FILE_NAME:AntScopeZ>\"
+    GENERATE_QT_CONF
+    NO_TRANSLATIONS
+)
+"
+        )
+        install(SCRIPT ${deploy_script})
+    endif()
+
 elseif(NOT APPLE) # Linux and other Unix
     install(FILES ${ANTSCOPE_RUNTIME_FILES} ${ANTSCOPE_QM_FILES} ${ANTSCOPE_QT_QM_FILES} ${ANTSCOPE_QTBASE_OVERRIDE_QM_FILES}
         DESTINATION ${CMAKE_INSTALL_DATADIR}/antscopez
@@ -1105,6 +1205,89 @@ if(UNIX AND NOT APPLE)
     # already-compiled-in ANTSCOPE_SHARED_DATA_DIR if CPack's own DEB
     # default (also /usr) ever changes.
     set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
+
+    include(CPack)
+endif()
+
+#
+# Packaging (Windows installer/uninstaller)
+#
+# NSIS chosen over WiX/MSI: matches this project's hobbyist scale and
+# already-informal release process (previously a hand-zipped
+# `cmake --install` staging tree, see BUILDINFO.md), with a lighter
+# toolchain requirement (just makensis.exe) and CPack's built-in NSIS
+# template covering everything needed here without hand-written script.
+# Requires NSIS (https://nsis.sourceforge.io/) installed on the build
+# machine -- not needed for a plain `cmake --build`, only for `cpack`.
+#
+if(WIN32)
+    set(CPACK_GENERATOR "NSIS")
+    set(CPACK_PACKAGE_NAME "AntScopeZ")
+    set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PROJECT_DESCRIPTION}")
+    set(CPACK_PACKAGE_VENDOR "k4hez")
+    set(CPACK_NSIS_DISPLAY_NAME "AntScopeZ")
+    # Same .ico already used for WIN32_EXECUTABLE's taskbar/window icon
+    # (see QT_TARGET_RC_ICONS above) -- reused here for the installer UI
+    # and the Programs & Features entry, not a separate asset.
+    set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/src/resources/AntScopeZ.ico")
+    set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\AntScopeZ.exe")
+    # Registers the Start Menu shortcut CPack's NSIS template creates.
+    set(CPACK_PACKAGE_EXECUTABLES "AntScopeZ" "AntScopeZ")
+    # A GUI app has no business modifying the user's PATH.
+    set(CPACK_NSIS_MODIFY_PATH OFF)
+    # cables.txt/itu-regions-defaults.txt/user-guide.md need to land in
+    # C:\ProgramData\AntScopeZ -- the one place Settings::programDataPath()
+    # (src/settings.cpp) actually looks on Windows (see the comment on the
+    # WIN32 install(FILES) block above for the full "why", including why
+    # this can't just be a second install(FILES DESTINATION <absolute>)
+    # rule: CPack hard-fails on absolute install destinations). Doing the
+    # copy as raw NSIS script instead, reading straight from the source
+    # tree the same way CPACK_NSIS_MUI_ICON above already does.
+    #
+    # Deliberately unquoted: CPack's own substitution for this variable
+    # replaces literal `"` characters with `;` (NSIS's line-comment
+    # marker) before inserting it into the generated script -- confirmed
+    # by hitting exactly that mangling ("CreateDirectory ;$PROGRAMDATA...;"
+    # -> "CreateDirectory expects 1 parameters, got 0", since `;` ate the
+    # rest of the line as a comment). NSIS only requires quoting a path
+    # that contains spaces; none of these do, so omitting quotes entirely
+    # sidesteps the mangling rather than fighting it.
+    #
+    # $PROGRAMDATA is NOT a built-in NSIS path variable (confirmed: NSIS
+    # 3.12 warns "unknown variable/constant" and silently treats it as
+    # literal text) -- the actual idiom is SetShellVarContext all, which
+    # makes $APPDATA resolve to CSIDL_COMMON_APPDATA (the real
+    # C:\ProgramData) instead of the default per-user roaming AppData.
+    # Restored to `current` afterward so nothing later in the generated
+    # script inherits the "all users" context unexpectedly.
+    #
+    # NSIS's File command also flatly rejects forward-slash paths
+    # ("no files found", confirmed by isolating it in a standalone .nsi --
+    # CMAKE_CURRENT_SOURCE_DIR is forward-slash-style) -- file(TO_NATIVE_PATH)
+    # converts each to backslash form first.
+    file(TO_NATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/shared/cables.txt" ANTSCOPE_NSIS_CABLES_PATH)
+    file(TO_NATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/shared/itu-regions-defaults.txt" ANTSCOPE_NSIS_ITU_PATH)
+    file(TO_NATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/docs/user-guide.md" ANTSCOPE_NSIS_GUIDE_PATH)
+    set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS
+        "SetShellVarContext all
+        CreateDirectory $APPDATA\\AntScopeZ
+        SetOutPath $APPDATA\\AntScopeZ
+        File ${ANTSCOPE_NSIS_CABLES_PATH}
+        File ${ANTSCOPE_NSIS_ITU_PATH}
+        File ${ANTSCOPE_NSIS_GUIDE_PATH}
+        SetShellVarContext current"
+    )
+    # Mirror image of the install commands above -- removes exactly the one
+    # directory they created. Must never be broadened to touch %APPDATA%
+    # (the user's own settings/calibration data, untouched by design -- see
+    # this plan's own verification step). Unquoted/SetShellVarContext for
+    # the same reasons as the install commands above.
+    set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS
+        "SetShellVarContext all
+        RMDir /r $APPDATA\\AntScopeZ
+        SetShellVarContext current"
+    )
 
     include(CPack)
 endif()

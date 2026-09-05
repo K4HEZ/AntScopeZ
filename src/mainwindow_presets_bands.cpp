@@ -63,6 +63,7 @@ void MainWindow::on_tableWidget_presets_cellActivated(int row, int column)
     m_rsWidget->xAxis->setRange(range);
     m_rpWidget->xAxis->setRange(range);
     m_rlWidget->xAxis->setRange(range);
+    m_s21Widget->xAxis->setRange(range);
 #if USER_DEFINED_FEATURE
     m_userWidget->xAxis->setRange(range);
 #endif
@@ -205,6 +206,22 @@ void MainWindow::populateBandSelector(const QString& band)
     // or a prior seed), later region switches never touch it again -- an
     // enabled selector with nothing but "Select a band" in it (e.g. after
     // switching to a region with no named bands) is fine, not an error.
+    //
+    // ISSUE #23 (2026-09-04): this seed only fires once, on a key that has
+    // never existed -- it can't retroactively flip an old persisted
+    // `false` back on, which is one of the two ways users were seeing the
+    // band selector come up disabled (see MainWindow's constructor,
+    // mainwindow.cpp, for the other -- issue #21's current_band drift
+    // making `enabled` compute false even here). Left this function's own
+    // logic untouched deliberately: it still governs mid-session region
+    // switches (Band Highlighting menu) correctly, respecting whatever
+    // the user currently has toggled. Only the *startup* default was
+    // overridden (unconditionally forced true, ini value ignored) as an
+    // explicit, "for now" stopgap -- this function runs earlier in the
+    // constructor than that override, so whatever `enabled` computes to
+    // here is transient and gets stomped moments later anyway. Not worth
+    // special-casing this function for that -- it'd just be dead logic
+    // duplicated in two places.
     m_settings->beginGroup("Settings");
     if (!m_settings->contains("band-selector-enabled")) {
         m_settings->setValue("band-selector-enabled", ui->presetsBandComboBox->count() > 1);
@@ -245,6 +262,7 @@ void MainWindow::on_presetsBandComboBox_currentIndexChanged(int index)
         m_rsWidget->xAxis->setRange(plotRange);
         m_rpWidget->xAxis->setRange(plotRange);
         m_rlWidget->xAxis->setRange(plotRange);
+        m_s21Widget->xAxis->setRange(plotRange);
 #if USER_DEFINED_FEATURE
         m_userWidget->xAxis->setRange(plotRange);
 #endif

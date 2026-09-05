@@ -40,12 +40,6 @@ void Measurements::createOneFqDisplayWidgets(QWidget* parent, int dots)
     m_oneFqWidget = new OneFqWidget(dots, parent);
     connect(m_oneFqWidget, &OneFqWidget::canceled, this, &Measurements::hideOneFqWidget);
     connect(m_oneFqWidget, &OneFqWidget::styleToggleRequested, this, &Measurements::toggleOneFqDisplayStyle);
-    connect(m_oneFqWidget, &OneFqWidget::udpReceived, this, [=](QString cmd, qreal data) {
-        extern MainWindow* g_mainWindow;
-        g_mainWindow->analyzer()->on_stopMeasure();
-        g_mainWindow->analyzer()->on_measureOneFq(g_mainWindow, quint64(data*1000), dots);
-        m_oneFqWidget->needBroadcast(data*1000);
-    });
 
     m_oneFqBigReadout = new OneFqBigReadout(parent);
     m_oneFqBigReadout->setAttribute(Qt::WA_DeleteOnClose);

@@ -74,7 +74,6 @@ public:
     void add();
     bool getMarkersHintEnabled(void);
     void saveBmp(QString path);
-    QList <QStringList> getMarkersHintList();
     qint32 getMarkersCount();
     marker getMarker( quint32 number);
     void repaint();
@@ -157,6 +156,11 @@ public slots:
     void redraw(void);
     void rescale();
     void on_removeMarker(int number);
+    // Bulk equivalent of on_removeMarker() -- one redraw/replot pass instead
+    // of one per marker. Wired to MarkersPanel::clearAllMarkers() (its
+    // table's right-click "Clear All"), mirroring how removeMarker(int) is
+    // wired to the per-row "X" buttons.
+    void on_removeAllMarkers();
 };
 
 #endif // MARKERS_H

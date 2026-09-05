@@ -6,6 +6,7 @@
 #include "analyzer/customanalyzer.h"
 #include "settings.h"
 #include "style.h"
+#include "debuglog.h"
 #include <QSettings>
 
 bool g_developerMode = false;
@@ -211,6 +212,23 @@ int main(int argc, char *argv[])
     // is left in place so that's a one-line change.
     if (args.contains("-developer")) {
         //g_developerMode = true;
+
+        // Debug Logging (Settings > Developer) enable flags, one per
+        // checkbox -- lets a repro run start with the right logging already
+        // on instead of having to open Settings and tick it by hand every
+        // time. Gated behind -developer same as everything else on this
+        // line (not g_developerMode, which stays inert -- see this block's
+        // own comment above): the checkboxes themselves are always reachable
+        // regardless of -developer, this is only about skipping the manual
+        // GUI step, not resurrecting the broader gate.
+        if (args.contains("-comserial"))
+            DebugLog::setSerialEnabled(true);
+        if (args.contains("-usbhid"))
+            DebugLog::setUsbHidEnabled(true);
+        if (args.contains("-nanovna"))
+            DebugLog::setNanovnaEnabled(true);
+        if (args.contains("-ble"))
+            DebugLog::setBleEnabled(true);
     }
     if (args.contains("-usb-only")) {
         g_usbOnly = true;

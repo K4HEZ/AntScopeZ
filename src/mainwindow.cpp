@@ -199,13 +199,14 @@ MainWindow::MainWindow(QWidget *parent) :
 //    QRegExpValidator *validator = new QRegExpValidator(re, this);
 //    ui->lineEdit_fqFrom->setValidator(validator);
 //    ui->lineEdit_fqTo->setValidator(validator);
-    connect(ui->lineEdit_fqFrom, &QLineEdit::editingFinished, this, [=]() {
-        changeFqFrom(true);
-    });
-    connect(ui->lineEdit_fqTo, &QLineEdit::editingFinished, this, [=]() {
-        changeFqTo(true);
-    });
-
+    // lineEdit_fqFrom/fqTo's editingFinished() is already auto-connected to
+    // on_lineEdit_fqFrom_editingFinished()/on_lineEdit_fqTo_editingFinished()
+    // (mainwindow_frequency.cpp) by Qt's connectSlotsByName() inside
+    // ui->setupUi() above, via the on_<objectName>_<signal> naming
+    // convention -- an explicit connect() here to the same effective call
+    // (changeFqFrom(true)/changeFqTo(true)) used to run it a second time on
+    // every edit (issue #29's aside). Removed rather than kept as a
+    // "just in case" duplicate.
 
     m_qtLanguageTranslator = new QTranslator();
     m_qtBaseTranslator = new QTranslator();
@@ -261,6 +262,26 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->tabWidget->setCurrentIndex(0);
     ui->tabWidget->setCurrentIndex(cur_index);
+    // The two calls above are a no-op signal-wise whenever cur_index == 0
+    // (the common case -- SWR, index 0, is both the tab widget's own
+    // default and the most-used tab) -- QTabWidget::setCurrentIndex()
+    // doesn't fire currentChanged() unless the index actually changes, and
+    // it's already sitting at 0 from createTabs()'s addTab() calls above,
+    // before either call here runs. Since Measurements::m_currentTab is
+    // only ever set from currentChanged() (via on_tabWidget_currentChanged()
+    // -> emit currentTab()), it stayed permanently empty for the rest of
+    // the session whenever this happened -- and on_redrawGraphs() dispatches
+    // purely on m_currentTab's exact tab-name string, so every scan's live
+    // chart update silently no-opped (matched no branch) until the user
+    // happened to switch tabs, or closeSettingsDialog()'s own equivalent
+    // re-sync (added earlier for a different reason, same root gap) ran.
+    // Root cause of issue #27 ("first click after launch shows nothing"),
+    // confirmed 2026-09-05 by tracing a live NanoVNA debug log where both
+    // scans completed identically at the wire level -- only the chart
+    // rendering silently failed for the first one. Force the sync
+    // unconditionally rather than relying on the two setCurrentIndex()
+    // calls to happen to produce a real change.
+    on_tabWidget_currentChanged(cur_index);
 #ifndef NO_MULTITAB
     connect(ui->tabWidget, &QTabWidget::currentChanged, this, [=](int index) {
         if (ui->tabWidget->widget(index) == m_tab_multi) {
@@ -487,6 +508,16 @@ MainWindow::MainWindow(QWidget *parent) :
     // This filter lets the slider claim them first; see eventFilter().
     ui->speedAccuracySlider->installEventFilter(this);
 
+    // Issue #29: QLineEdit::editingFinished() only fires on Enter/Return or
+    // an actual Qt focus transfer -- clicking a widget that doesn't itself
+    // accept focus (a QLabel, a chart's empty background, etc.) never moves
+    // focus away from lineEdit_fqFrom/fqTo, so their change/rescan logic
+    // never ran for that click. A filter on just those two widgets (like
+    // speedAccuracySlider's above) can't see this -- the click lands on some
+    // *other* widget entirely -- so this needs the application-wide net
+    // instead, watching every mouse press regardless of target.
+    qApp->installEventFilter(this);
+
     QShortcut *shortCtrlC = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_C),this);
     connect(shortCtrlC,SIGNAL(activated()),this,SLOT(on_pressCtrlC()));
 
@@ -631,6 +662,7 @@ MainWindow::MainWindow(QWidget *parent) :
     });
 
     connect(ui->actionConnectAnalyzer, &QAction::triggered, this, &MainWindow::on_selectDeviceDialog);
+    connect(ui->actionDisconnectAnalyzer, &QAction::triggered, this, &MainWindow::on_disconnectAnalyzerRequested);
 
     changeColorTheme(m_activeThemeIndex);
 
@@ -814,10 +846,44 @@ MainWindow::MainWindow(QWidget *parent) :
     // Band Selector: same "band-selector-enabled" QSettings key and
     // presetsBandComboBox visibility toggle checkBoxBandSelector used to
     // drive via Settings' bandSelectorEnabledChanged signal.
+    //
+    // ISSUE #23 (2026-09-04): repo owner reported the band dropdown not
+    // showing by default, and decided -- "for now" -- that this control
+    // should just always start enabled on launch, full stop, regardless
+    // of whatever's persisted from a prior run. Two things were previously
+    // making it come up disabled: (a) any settings file predating the
+    // "seed enabled on first run" logic in populateBandSelector()
+    // (mainwindow_presets_bands.cpp) never gets that seed applied
+    // retroactively -- it only fires once, on a key that has never
+    // existed; (b) issue #21 (current_band drift) can make that same seed
+    // compute "disabled" even on an apparently-fresh run, if the
+    // persisted current_band string doesn't match a real loaded region.
+    // Rather than pick between "fix the seed's one-shot guard" and "fix
+    // #21 first and see if that alone resolves it", the owner's call was
+    // to just force this true unconditionally as an immediate, simple
+    // stopgap -- with the real long-term question ("should this persist
+    // across restarts at all, and if so how") deliberately left open,
+    // to be decided later.
+    //
+    // bandSelectorEnabledPersisted below is intentionally read (not
+    // deleted) even though its value doesn't drive the startup default
+    // anymore -- keeps the ini-read code path alive and in the same shape
+    // it'll need to be in whenever that longer-term decision is made,
+    // instead of ripping it out now only to re-add it later. The toggle
+    // handler just below (which DOES still write this key on every
+    // uncheck/recheck) is completely unchanged -- unchecking Band
+    // Selector still works normally for the rest of this run, it's only
+    // the value this block starts from on the *next* launch that's now
+    // ignored.
     {
         m_settings->beginGroup("Settings");
-        bool bandSelectorEnabled = m_settings->value("band-selector-enabled", false).toBool();
+        bool bandSelectorEnabledPersisted = m_settings->value("band-selector-enabled", false).toBool();
         m_settings->endGroup();
+        qDebug() << "Band Selector: ini had band-selector-enabled ="
+                 << bandSelectorEnabledPersisted
+                 << "-- ignored, forcing enabled=true at startup per issue #23";
+
+        bool bandSelectorEnabled = true; // forced -- see comment above, not read from ini
         ui->actionBandSelector->setChecked(bandSelectorEnabled);
         ui->presetsBandComboBox->setVisible(bandSelectorEnabled);
     }
@@ -909,10 +975,7 @@ MainWindow::MainWindow(QWidget *parent) :
             action->setChecked(i == m_activeThemeIndex);
             themeGroup->addAction(action);
             connect(action, &QAction::triggered, this, [this, i]() {
-                m_settings->beginGroup("Settings");
-                m_settings->setValue("activeTheme", i);
-                m_settings->endGroup();
-                changeColorTheme(i);
+                activateThemeIndex(i);
             });
         }
     }
@@ -1194,6 +1257,22 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
             return true;
         }
     }
+
+    // Issue #29: force a real focus-out (which does fire editingFinished())
+    // on lineEdit_fqFrom/fqTo whenever a mouse press lands anywhere else,
+    // including on a widget that would never have taken focus away from
+    // them on its own. `obj != focused` skips the case where the press is
+    // on the field itself (repositioning the text cursor shouldn't blur
+    // it), and clicking the *other* of the two fields already worked
+    // correctly before this filter -- this just makes it also work for
+    // every non-focusable target (labels, chart backgrounds, etc.).
+    if (event->type() == QEvent::MouseButtonPress) {
+        QWidget* focused = QApplication::focusWidget();
+        if ((focused == ui->lineEdit_fqFrom || focused == ui->lineEdit_fqTo) && obj != focused) {
+            focused->clearFocus();
+        }
+    }
+
     return QMainWindow::eventFilter(obj, event);
 }
 

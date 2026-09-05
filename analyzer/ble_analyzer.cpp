@@ -257,6 +257,19 @@ void BleAnalyzer::setDevice(BleDeviceInfo *device)
                     // just discarded. QMetaEnum gives back Qt's own name
                     // for it (e.g. "RemoteHostClosedError") without hand-
                     // maintaining a switch/string table.
+                    //
+                    // ISSUE #20 (2026-09-04): deliberately NOT routed through
+                    // BaseAnalyzer::reportBusy() the way HidAnalyzer/
+                    // ComAnalyzer's "device busy" checks now are --
+                    // QLowEnergyController::Error has no value equivalent to
+                    // QSerialPort::PermissionError/a failed hid_open(), i.e.
+                    // nothing here specifically means "another process
+                    // already holds this device" as distinct from any other
+                    // connection failure. Guessing at a mapping (e.g.
+                    // treating ConnectionError as "busy") would risk
+                    // mislabeling a genuine unrelated failure -- left as
+                    // this generic message, see BaseAnalyzer::reportBusy()'s
+                    // own comment for the full reasoning.
                     QMetaEnum me = QMetaEnum::fromType<QLowEnergyController::Error>();
                     setError(tr("Cannot connect to remote device. (%1)")
                                  .arg(me.valueToKey(error)));

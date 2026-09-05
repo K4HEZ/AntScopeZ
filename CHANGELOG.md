@@ -198,6 +198,66 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   that emulator is actually running (checks for its symlink at
   `/tmp/nanovna-emulator`), invisible otherwise.
 
+## [2.2.5] - 2026-09-05
+
+### Added
+
+- Native Windows support: AntScopeZ now builds and runs natively on
+  Windows (Qt 6.11.2, MinGW), packaged as an NSIS installer
+  (`AntScopeZ-<version>-win64.exe`).
+- File > "Disconnect Analyzer" menu action, next to Connect Analyzer.
+- Settings > Themes: an Apply button to activate the selected theme
+  immediately, instead of only loading it into the editor.
+- About dialog: credits K4HEZ (creator) and KC5CD, with a link to
+  RigExpert's AntScope2.
+- `-developer`-gated CLI flags (`-comserial`/`-usbhid`/`-nanovna`/`-ble`)
+  to enable Debug Logging at launch instead of only via Settings.
+
+### Changed
+
+- NanoVNA: no longer hard-locked to 100 scan points -- uses the same
+  configurable points field/slider (and app-wide maximum) as every
+  other analyzer.
+- Band Selector now defaults to enabled at startup (a deliberate
+  stopgap while the real cross-restart configuration behavior is
+  decided).
+- Analyzer connections: consolidated "device busy" and scan-timeout-
+  watchdog handling across HID, Serial, and NanoVNA connections into
+  shared logic, closing a few gaps where a stuck scan could leave the
+  watchdog un-armed.
+
+### Fixed
+
+- Windows: taskbar/Start-menu icon was missing (a Qt 6.11.2 quirk with
+  the public build API silently skipping icon generation); now shows
+  correctly.
+- Amateur band definitions: 60m corrected in all three ITU regions (US:
+  5 channelized lines instead of one inaccurate wide range; IARU:
+  5351.5-5366.5kHz), and the previously-missing 33cm band added for
+  Region 2 (US/Canada). Also fixed a 70cm/23cm label typo in Region 1/3.
+- Band preset dropdown wasn't updating the S21 chart's X-axis range
+  along with every other chart.
+- TDR: a NanoVNA TDR scan left the dialog's Cable Type/Velocity
+  Factor/Points controls disabled after one measurement, with no way to
+  change settings or re-scan without closing the dialog.
+- Smith chart: the cursor position dot stayed at its last position from
+  a previous scan or marker click instead of resetting on a new scan or
+  Clear.
+- Start/Stop frequency fields didn't apply their value when clicking
+  elsewhere (only Enter or moving to another field worked); also fixed
+  a duplicate-connection bug that ran the update logic twice per edit.
+- NanoVNA: fixed a 0Hz first point and a race on the first Single-click
+  right after connecting.
+- Various NanoVNA edge cases: leftover S-parameter points leaking into
+  a measurement after Stop, marker auto-placement using stale data
+  after an empty/cancelled scan, a binary-scan-mismatch error skipping
+  completion cleanup, and a stale-row bug in the device selection
+  dialog's Connect button.
+- SWR chart: vertical click-drag disabled (only Ctrl+scroll zooms the Y
+  axis) to avoid accidental rescaling.
+- Installer: fixed a missing `ftd2xx.dll` and a broken `ProgramData`
+  data-file path in the Windows installer.
+
 ## [2.2.3] - 2026-09-01
 
 ### Added

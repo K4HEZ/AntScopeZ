@@ -131,9 +131,16 @@ SelectDeviceDialog::SelectDeviceDialog(bool silent, QWidget *parent) :
                 serial);
     });
     connect(ui->pushButtonConnect, &QPushButton::clicked, this, [=]{
-        QTableWidgetItem* item = ui->tableWidget->currentItem();
-        if (item == nullptr)
+        // currentItem() tracks keyboard/tab focus, which can diverge from the
+        // row actually highlighted as selected (confirmed via UI Automation:
+        // SelectionItemPattern::Select() moves the selection flags without
+        // moving currentIndex(), so Connect could fire on a stale row). Use
+        // the real selection instead -- table is SingleSelection/SelectRows,
+        // so selectedItems() always belongs to at most one row.
+        QList<QTableWidgetItem*> selected = ui->tableWidget->selectedItems();
+        if (selected.isEmpty())
             return;
+        QTableWidgetItem* item = selected.first();
         QTableWidgetItem* name = ui->tableWidget->item(item->row(), 0);
         QTableWidgetItem* id = ui->tableWidget->item(item->row(), 1);
         ReDeviceInfo::InterfaceType _type = (ReDeviceInfo::InterfaceType)(name->data(Qt::UserRole+1).toInt());
@@ -522,8 +529,10 @@ ReDeviceInfo::InterfaceType SelectDeviceDialog::type()
 
 QString SelectDeviceDialog::name()
 {
-    QTableWidgetItem* item = ui->tableWidget->currentItem();
-    return (item == nullptr ? "" : item->data(Qt::UserRole).toString());
+    // See the pushButtonConnect handler above: selectedItems() reflects the
+    // actual highlighted row, currentItem() does not.
+    QList<QTableWidgetItem*> selected = ui->tableWidget->selectedItems();
+    return (selected.isEmpty() ? "" : selected.first()->data(Qt::UserRole).toString());
 }
 
 bool SelectDeviceDialog::connectSilent(int _type, QString _device_name)

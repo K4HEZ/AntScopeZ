@@ -56,6 +56,53 @@ next to it. Use `-DCMAKE_BUILD_TYPE=Debug` for a debug build.
 For build options, macOS packaging, Qt Creator setup, translations, platform
 notes, and known issues, see [BUILDINFO.md](BUILDINFO.md).
 
+## Windows
+
+Windows support is a beta effort (releases tagged `-win-beta`); see
+[BUILDINFO.md](BUILDINFO.md)'s platform notes for what has and hasn't been
+verified against real hardware yet.
+
+### Installing a prebuilt release
+
+Download the `AntScopeZ-<version>-win64-beta.zip` asset from the
+[Releases page](https://github.com/kc5cd/AntScopeZ/releases), extract it
+anywhere, and run `AntScopeZ.exe` inside the extracted `bin\` folder --
+it's a fully self-contained build (Qt DLLs and plugins included), so no
+separate Qt install is required.
+
+### Building from source
+
+Requires the Qt 6.11.2 MinGW kit installed via the
+[Qt Online Installer](https://www.qt.io/download-qt-installer) under
+`C:\Qt`, including the SerialPort and Bluetooth (under "Connectivity")
+addon components -- both are optional and not installed by default, so
+check `C:\Qt\6.11.2\mingw_64\lib\cmake\` for `Qt6SerialPort`/
+`Qt6Bluetooth` first.
+
+```
+cmake --preset windows-mingw
+cmake --build --preset windows-mingw --parallel
+```
+
+This is a native build against the Qt Online Installer's bundled
+MinGW-w64 toolchain and Ninja (`C:\Qt\Tools`), not a cross-compile and
+not a system compiler. Use the `windows-mingw-release` preset instead
+for an optimized build.
+
+### Running
+
+Windows builds don't use rpath, so the `AntScopeZ.exe` produced by the
+build above (in `build-windows-mingw\`) won't find its Qt DLLs on its
+own. To produce a complete, runnable copy -- the same layout the
+packaged releases ship, with `windeployqt` run automatically -- install
+into a staging directory instead of running the build output directly:
+
+```
+cmake --install build-windows-mingw --prefix pkg-windows
+```
+
+Then run `pkg-windows\bin\AntScopeZ.exe`.
+
 ## License
 
 AntScopeZ, as built and distributed, is licensed under the **GNU General

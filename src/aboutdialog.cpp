@@ -18,7 +18,7 @@ AboutDialog::AboutDialog(QWidget *parent) :
     // time: aboutdialog.cpp only recompiles when it or something it
     // includes changes, which would make a plain __DATE__/__TIME__ here go
     // stale across incremental rebuilds that touch other files.
-    ui->buildLabel->setText(ANTSCOPEZ_BUILD_TIMESTAMP);
+    ui->buildLabel->setText(tr("Build: ") + ANTSCOPEZ_BUILD_TIMESTAMP);
 }
 
 AboutDialog::~AboutDialog()

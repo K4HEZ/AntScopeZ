@@ -92,6 +92,7 @@ void MainWindow::measurementsClearBtn_clicked(bool)
     }
 
     m_measurements->on_measurementComplete();
+    m_measurements->resetSmithTracer(); // issue #31 -- don't leave a stale cursor dot after Clear
     while(ui->tableWidget_measurments->rowCount() != 0)
     {
         QTableWidgetItem * item = ui->tableWidget_measurments->item(0, 0);

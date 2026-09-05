@@ -726,6 +726,16 @@
             </spacer>
            </item>
            <item>
+            <widget class="QPushButton" name="themeApplyBtn">
+             <property name="toolTip">
+              <string>Make the selected theme the app's active theme now</string>
+             </property>
+             <property name="text">
+              <string>Apply</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QPushButton" name="themeCancelBtn">
              <property name="text">
               <string>Cancel</string>

@@ -77,24 +77,19 @@ void MainWindow::on_analyzerNameFound(QString name)
     // (Settings::checkUpdatesBtn() -> AnalyzerPro::on_checkUpdatesBtn_clicked(),
     // wired up below).
 
-    // Was a name.contains("NanoVNA") substring check -- classic NanoVNA's
-    // slow serial-shell protocol is the actual reason for this cap, not its
-    // name, and that stopped being a reliable proxy the moment NanoVNA V2 /
-    // LiteVNA64 support (NanovnaV2Analyzer, connectionType() ==
-    // ReDeviceInfo::NANOV2) landed: "NanoVNA V2" matched the substring and
-    // got needlessly locked to 100 points despite the protocol supporting
-    // up to ~1023 (V2) / ~25601 (LiteVNA64); "LiteVNA64" didn't match at
-    // all, missing the cap inconsistently in the other direction. Keying
-    // this on connectionType() instead identifies exactly the protocol
-    // this cap is actually about.
-    if (m_analyzer->connectionType() == ReDeviceInfo::NANO) {
-        ui->lineEdit_points->setEnabled(false);
-        ui->speedAccuracySlider->setEnabled(false);
-        setDotsNumber(100);
-    } else {
-        ui->lineEdit_points->setEnabled(true);
-        ui->speedAccuracySlider->setEnabled(true);
-    }
+    // Was hard-locked to 100 and disabled for any NanoVNA (present unchanged
+    // since this fork's first commit, no comment ever explaining why 100).
+    // Traced the actual wire path for issue #35: NanovnaAnalyzer::startMeasure()
+    // sends whatever point count it's given straight to the device's "scan"/
+    // "sweep" command with no clamping of its own (analyzer/nanovna_analyzer.cpp),
+    // so this was a pure GUI-side restriction, not a protocol limit -- and the
+    // repo owner confirmed their NanoVNA-H4 handles 400+ points fine over this
+    // same path. Now just uses the same enabled field/slider (and existing
+    // g_pointsMax clamp in setDotsNumber()) as every other analyzer -- also
+    // covers NanoVNA V2/LiteVNA64 (connectionType() == ReDeviceInfo::NANOV2)
+    // correctly, since nothing here special-cases by device type at all.
+    ui->lineEdit_points->setEnabled(true);
+    ui->speedAccuracySlider->setEnabled(true);
     m_calibration->init(m_analyzer->getSerialNumber());
     updateConnectionStatusLabel();
 }
@@ -224,6 +219,13 @@ void MainWindow::on_actionScreenshotAA_triggered()
 
     m_screenshot->exec();
     m_screenshot = nullptr;
+}
+
+void MainWindow::on_disconnectAnalyzerRequested()
+{
+    if (!m_analyzerConnected)
+        return;
+    m_analyzer->on_disconnectDevice(); // emits deviceDisconnected() -> on_deviceDisconnected() does the rest
 }
 
 void MainWindow::on_selectDeviceDialog()

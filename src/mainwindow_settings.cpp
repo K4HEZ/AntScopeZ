@@ -167,6 +167,9 @@ void MainWindow::on_actionSettings_triggered()
         if (index == m_activeThemeIndex)
             changeColorTheme(index);
     });
+    connect(m_settingsDialog, &Settings::activateTheme, this, [this](int index) {
+        activateThemeIndex(index);
+    });
 
     bool was_customized = CustomAnalyzer::customized();
 

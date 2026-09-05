@@ -54,10 +54,31 @@ class AnalyzerPro : public QObject
     void buildStitchSegments(qint64 fqFrom, qint64 fqTo, qint32 totalDots);
 
     // Scan-silence watchdog -- single-shot, (re)started every time a scan
-    // begins or a data point actually arrives (kickWatchdog(), called from
-    // on_newData()/on_newS21Data()/on_newUserData() and every on_measure*()
-    // that actually starts a transfer), stopped on real completion/cancel
-    // (stopWatchdog()). If it ever fires, nothing has answered for
+    // begins or a data point actually arrives, stopped on real
+    // completion/cancel. ISSUE #19 (2026-09-04): the start/stop half of
+    // this used to be manually threaded into 6+ separate on_measure*()
+    // entry points and every completion branch instead of living here in
+    // setIsMeasuring() -- the one place m_isMeasuring actually transitions
+    // -- so a future new measurement-start path that called
+    // setIsMeasuring(true) directly without separately remembering
+    // kickWatchdog() got zero hang protection (this had already happened
+    // at least once: on_itemDoubleClick()'s "fetch a stored measurement by
+    // index" path set m_isMeasuring without ever kicking the watchdog).
+    // setIsMeasuring() itself now calls kickWatchdog()/stopWatchdog()
+    // directly; the per-point re-kicks in on_newData()/on_newS21Data()/
+    // on_newSParamPoint()/on_newUserData() are NOT transitions (m_isMeasuring
+    // stays true across an entire scan) so those still kick explicitly,
+    // once per arriving point. Kicking on every setIsMeasuring(true) call
+    // is safe even for paths that previously didn't (e.g. NANO-connection
+    // branches of on_measure*() that skipped the old explicit call) --
+    // this codebase already treats an extra/redundant kick as harmless
+    // (see PopUpIndicator::setIndicatorVisible()'s identical
+    // called-from-both-setIsMeasuring()-and-its-callers pattern just
+    // below) -- it only ever adds coverage, never removes it, and
+    // on_watchdogTimeout() itself no-ops once whatever started it has
+    // already finished (checks m_isMeasuring first).
+    //
+    // If it ever fires, nothing has answered for
     // g_analyzerTimeoutSec (Settings > General) -- device gone, or busy
     // (held open by another program or another AntScopeZ window). This is
     // the only thing that ever used to time out a scan that never got a
@@ -164,7 +185,7 @@ signals:
     void measurementCompleteNano();
     void newData (RawData);
     void newS21Data (S21Data);
-    void newSParamPoint (SParamPoint); // real 2-port data, NanoVNA-only today -- bare passthrough from BaseAnalyzer, see its own comment
+    void newSParamPoint (SParamPoint); // real 2-port data, NanoVNA-only today -- guarded passthrough, see on_newSParamPoint()
     void newUserData (RawData, UserData);
     void newUserDataHeader (QStringList);
     void newAnalyzerData (RawData);
@@ -207,6 +228,7 @@ public slots:
     void on_stopMeasure();
     void on_newData(RawData _rawData);
     void on_newS21Data(S21Data _s21Data);
+    void on_newSParamPoint(SParamPoint sp);
     void on_newUserData(RawData,UserData);
     void on_newUserDataHeader(QStringList);
     void on_analyzerDataStringArrived(QString str);

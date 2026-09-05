@@ -723,7 +723,6 @@ void AnalyzerPro::on_newData(RawData _rawData)
     if(m_chartCounter > finNum || !m_isMeasuring)
     {
         //qDebug() << "AnalyzerPro::on_newData COMPLETE";
-        stopWatchdog();
         m_chartCounter = 0;
         setIsMeasuring(false);
         PopUpIndicator::setIndicatorVisible(false);
@@ -757,7 +756,6 @@ void AnalyzerPro::on_newS21Data(S21Data _s21Data)
     if(m_chartCounter > finNum || !m_isMeasuring)
     {
         qDebug() << "AnalyzerPro::on_newS21Data COMPLETE";
-        stopWatchdog();
         m_chartCounter = 0;
         setIsMeasuring(false);
         PopUpIndicator::setIndicatorVisible(false);
@@ -770,6 +768,29 @@ void AnalyzerPro::on_newS21Data(S21Data _s21Data)
     }
     announceScanProgress();
     m_chartCounter++;
+}
+
+void AnalyzerPro::on_newSParamPoint(SParamPoint sp)
+{
+    // Same leftover-data-after-stop guard as on_newData()/on_newS21Data(),
+    // but deliberately not touching m_chartCounter/completion -- every
+    // point that carries S-param data also arrives via newData() on the
+    // "scan"-command fast path (see NanovnaAnalyzer::emitPoint()), so
+    // on_newData() already owns end-of-scan tracking for it there.
+    //
+    // kickWatchdog() IS still needed here, though: on older firmware
+    // without "scan", NanovnaAnalyzer::parse()'s fallback WAIT_NANO_DATA_S21
+    // pass (the second half of the sweep/data-0/data-1 sequence) emits
+    // *only* newSParamPoint per point, no newData -- so without this call
+    // nothing kicks the watchdog for the whole back half of a fallback-tier
+    // scan, and a slow device can trip AnalyzerPro's own timeout mid-scan
+    // even while it's still sending valid data. Redundant (harmless -- just
+    // restarts the same timer) on the fast path, where on_newData() already
+    // kicked it for this same point moments earlier.
+    if (!m_isMeasuring)
+        return;
+    kickWatchdog();
+    emit newSParamPoint(sp);
 }
 
 void AnalyzerPro::on_newUserData(RawData _rawData, UserData _userData)
@@ -786,7 +807,6 @@ void AnalyzerPro::on_newUserData(RawData _rawData, UserData _userData)
     advanceStitchSegmentIfNeeded();
     if(++m_chartCounter == m_dotsNumber+1 || !m_isMeasuring)
     {
-        stopWatchdog();
         emit newUserData (_rawData, _userData);
         setIsMeasuring(false);
         m_chartCounter = 0;
@@ -963,7 +983,6 @@ void AnalyzerPro::on_measureCalib(int dotsNumber)
     if(m_baseAnalyzer != nullptr)
     {
         m_baseAnalyzer->startMeasure(minFq_, maxFq_, dotsNumber);
-        kickWatchdog();
     }
 }
 
@@ -984,6 +1003,13 @@ void AnalyzerPro::setIsMeasuring (bool _isMeasuring)
         m_baseAnalyzer->setIsMeasuring(_isMeasuring);
     }
     PopUpIndicator::setIndicatorVisible(_isMeasuring);
+    // ISSUE #19: centralized here instead of at every individual
+    // measurement-start/completion call site -- see the comment on
+    // m_watchdogTimer (analyzerpro.h) for the full reasoning.
+    if (_isMeasuring)
+        kickWatchdog();
+    else
+        stopWatchdog();
 }
 
 void AnalyzerPro::setContinuos(bool _isContinuos)
@@ -1072,7 +1098,7 @@ void AnalyzerPro::connectSignals()
     connect(m_baseAnalyzer, &BaseAnalyzer::signalMeasurementError, this, &AnalyzerPro::signalMeasurementError);
     connect(m_baseAnalyzer, &BaseAnalyzer::newData,this,&AnalyzerPro::on_newData);
     connect(m_baseAnalyzer, &BaseAnalyzer::newS21Data,this, &AnalyzerPro::on_newS21Data);
-    connect(m_baseAnalyzer, &BaseAnalyzer::newSParamPoint, this, &AnalyzerPro::newSParamPoint); // bare passthrough -- deliberately not touching m_chartCounter
+    connect(m_baseAnalyzer, &BaseAnalyzer::newSParamPoint, this, &AnalyzerPro::on_newSParamPoint);
     connect(m_baseAnalyzer, &BaseAnalyzer::newUserData,this, &AnalyzerPro::on_newUserData);
     connect(m_baseAnalyzer,&BaseAnalyzer::newUserDataHeader,this, &AnalyzerPro::on_newUserDataHeader);
     connect(m_baseAnalyzer, &BaseAnalyzer::analyzerDataStringArrived,this, &AnalyzerPro::on_analyzerDataStringArrived);
@@ -1081,6 +1107,20 @@ void AnalyzerPro::connectSignals()
     connect(this, &AnalyzerPro::screenshotComplete, m_baseAnalyzer, &BaseAnalyzer::on_screenshotComplete);
     connect(m_baseAnalyzer, &BaseAnalyzer::signalAnalyzerError, this, &AnalyzerPro::signalAnalyzerError);
     connect(m_baseAnalyzer, &BaseAnalyzer::completeMeasurement, this, [=](){
+        // Same leftover-data-after-stop guard as on_newData()/on_newS21Data()/
+        // on_newSParamPoint() (see on_newData()'s comment for the full
+        // reasoning) -- NanovnaAnalyzer::stopMeasure() only clears
+        // m_isMeasuring, not the parser state, so a scan already in flight
+        // when Esc/Stop is pressed keeps parsing to its own natural end and
+        // still emits completeMeasurement() once the trailing "ch>" arrives.
+        // Without this guard that stale signal reaches
+        // MainWindow::on_measurementCompleteNano() same as a real
+        // completion does -- if the user has since started a *new* scan,
+        // it wrongly runs that handler's completion bookkeeping (including
+        // possibly deleting the new scan's just-created row and forcing
+        // m_analyzer->setIsMeasuring(false) mid-flight) against it instead.
+        if (!m_isMeasuring)
+            return;
         if (m_baseAnalyzer != nullptr) {
             m_baseAnalyzer->on_measurementComplete();
         }

@@ -521,6 +521,18 @@ void MainWindow::changeColorTheme(int themeIndex)
     // changeColorTheme()).
 }
 
+void MainWindow::activateThemeIndex(int index)
+{
+    m_settings->beginGroup("Settings");
+    m_settings->setValue("activeTheme", index);
+    m_settings->endGroup();
+    changeColorTheme(index);
+
+    const QList<QAction*> actions = ui->menuTheme->actions();
+    if (index >= 0 && index < actions.size())
+        actions[index]->setChecked(true);
+}
+
 void MainWindow::refreshThemeMenu()
 {
     const QList<QAction*> actions = ui->menuTheme->actions();

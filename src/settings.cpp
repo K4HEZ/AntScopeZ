@@ -146,19 +146,19 @@ Settings::Settings(QWidget *parent) :
     m_settings->endGroup();
 
     // Debug Logging (Developer tab) -- deliberately NOT persisted to the
-    // ini, so it always starts off on a *fresh app launch* (DebugLog's
-    // static flags default false at process start) -- logging is opt-in
-    // per run, not a standing setting someone forgets they left on. But
-    // this dialog itself is reconstructed fresh every time Settings is
-    // opened (not a singleton reused across opens), so hardcoding
-    // setChecked(false) here -- as this used to -- reset the *visible*
-    // checkbox on every single reopen too, not just once per launch,
-    // regardless of whether logging was actually still running underneath.
-    // Reading DebugLog's own current state instead fixes that without
-    // giving up the "off by default each launch" behavior (the getters
-    // just return whatever's actually true right now). Confirmed live
-    // 2026-09-04: checked "NanoVNA", closed Settings, reopened it, box was
-    // back to unchecked.
+    // ini: logging is opt-in per session, not a standing setting someone
+    // forgets they left on. Drives DebugLog's per-interface enable flags
+    // directly (also plain in-memory, not persisted) rather than through
+    // QSettings. Read back DebugLog's own current state rather than just
+    // assuming unchecked -- it can already be true here, e.g. the
+    // -comserial/-usbhid/-nanovna/-ble CLI flags (main.cpp) set it before
+    // Settings is ever opened, and this dialog itself is reconstructed
+    // fresh every time Settings is opened (not a singleton reused across
+    // opens), so hardcoding setChecked(false) -- as this used to -- reset
+    // the *visible* checkbox on every reopen too, not just once per
+    // launch, regardless of whether logging was actually still running
+    // underneath. Confirmed live 2026-09-04: checked "NanoVNA", closed
+    // Settings, reopened it, box was back to unchecked.
     ui->debugLogSerialCheckBox->setChecked(DebugLog::serialEnabled());
     ui->debugLogUsbHidCheckBox->setChecked(DebugLog::usbHidEnabled());
     ui->debugLogBleCheckBox->setChecked(DebugLog::bleEnabled());
@@ -175,7 +175,21 @@ Settings::Settings(QWidget *parent) :
     // hardcoded reset.
     ui->debugLogBleShowPingsCheckBox->setChecked(DebugLog::bleShowPings());
     ui->debugLogBleShowPingsCheckBox->setEnabled(ui->debugLogBleCheckBox->isChecked());
-    connect(ui->debugLogBleCheckBox, &QCheckBox::toggled, ui->debugLogBleShowPingsCheckBox, &QCheckBox::setEnabled);
+    DebugLog::setBleShowPings(false);
+    // Was: connect(..., &QCheckBox::setEnabled) directly -- only toggled
+    // *enabled*, so unchecking BLE/Bluetooth after BLE Pings had been
+    // turned on left it disabled but still checked (and DebugLog still
+    // reporting pings), with no way to uncheck a disabled checkbox from the
+    // UI. Force it back off (both the checkbox and the underlying
+    // DebugLog state, same as loadDefaults()'s own initial state just
+    // above) whenever BLE/Bluetooth itself goes off. Issue #40.
+    connect(ui->debugLogBleCheckBox, &QCheckBox::toggled, this, [=](bool checked) {
+        ui->debugLogBleShowPingsCheckBox->setEnabled(checked);
+        if (!checked) {
+            ui->debugLogBleShowPingsCheckBox->setChecked(false);
+            DebugLog::setBleShowPings(false);
+        }
+    });
     connect(ui->debugLogBleShowPingsCheckBox, &QCheckBox::clicked, DebugLog::setBleShowPings);
 
     // "Data folder" -- the single UserDataDir every save/export/screenshot
@@ -1592,6 +1606,15 @@ void Settings::initThemesTab()
         // active slot -- qApp->setStyleSheet()/setPalette() there reaches this
         // already-open dialog for free now that Settings doesn't put a
         // stylesheet on itself anymore (see the comment above Settings::Settings()).
+    });
+
+    // Apply (issue #24): make the currently-selected theme the app's live
+    // active one, independent of Save -- themeComboBox's own selection
+    // never did this (see activateTheme()'s declaration for why), so
+    // there was no way to switch the live theme from here at all short of
+    // saving into whatever slot happened to already be active.
+    connect(ui->themeApplyBtn, &QPushButton::clicked, this, [this]() {
+        emit activateTheme(m_editingThemeIndex);
     });
 
     ui->themeComboBox->setCurrentIndex(Style::activeThemeIndex());

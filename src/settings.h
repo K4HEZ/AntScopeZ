@@ -179,6 +179,14 @@ signals:
     // chartBackgroundChanged signal that used to cover only this same
     // active-slot case, now fully subsumed by changeColorTheme() itself.
     void themeSaved(int index);
+    // Themes tab's Apply button (issue #24) -- unlike themeSaved(), this
+    // doesn't touch the ini at all: it just tells MainWindow to make
+    // `index` the live active theme, the same effect View > Theme's menu
+    // actions have. Exists because themeComboBox itself only ever loaded
+    // a slot into the editor, never activated it -- picking "Dark" here
+    // did nothing to the running app, unlike picking it from the View
+    // menu, which is what #24 reported.
+    void activateTheme(int index);
 
 private slots:
     void on_browseBtn_clicked();

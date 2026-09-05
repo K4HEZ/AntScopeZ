@@ -519,9 +519,23 @@ void Measurements::on_newMeasurement(QString name, qint64 from, qint64 to, qint3
     m_measuringInProgress = true;
 }
 
+void Measurements::resetSmithTracer()
+{
+    if (m_smithTracer == NULL)
+        return;
+    // (0,0) is the Smith chart's own center -- NormRXtoSmithPoint(1,0,...)
+    // (Rnorm==1, i.e. R==m_Z0, the standard 50 ohm case) resolves to
+    // RhoReal==RhoImag==0, so this is genuinely "50 ohm", not an arbitrary
+    // origin pick.
+    m_smithTracer->topLeft->setCoords(-0.1, 0.1);
+    m_smithTracer->bottomRight->setCoords(0.1, -0.1);
+    m_smithWidget->replot();
+}
+
 void Measurements::on_newMeasurement(QString name)
 {
     m_interrupted = false;
+    resetSmithTracer(); // issue #31 -- don't carry over the last scan's/marker's cursor position
     m_liveS21PhaseHavePrev = false; // fresh phase-unwrap run for on_newSParamPoint(), see its own comment
     while(m_measurements.length() >= g_maxMeasurements)
     {
@@ -1567,7 +1581,8 @@ void Measurements::on_newS21Data(S21Data _s21Data)
 
 void Measurements::on_newSParamPoint(SParamPoint sp)
 {
-    if (m_measurements.isEmpty())
+    // See on_newData()'s own comment -- same leftover-data-after-stop guard.
+    if (m_interrupted || m_measurements.isEmpty())
         return;
 
     measurement& mm = m_measurements.last();
@@ -1593,7 +1608,10 @@ void Measurements::on_newSParamPoint(SParamPoint sp)
         emit sparamDataStarted();
     }
 
-    on_redrawGraphs(true);
+    // See SParamPoint::skipRedraw's own comment -- on the NanoVNA "scan"
+    // fast path, on_newData() already redrew this exact point moments ago.
+    if (!sp.skipRedraw)
+        on_redrawGraphs(true);
 }
 
 
@@ -1890,7 +1908,7 @@ void Measurements::on_impedanceChanged(double _z0)
     }
 }
 
-void Measurements::on_measurementComplete()
+bool Measurements::on_measurementComplete()
 {
     m_previousI = 0;
     m_measuringInProgress = false;
@@ -1907,10 +1925,12 @@ void Measurements::on_measurementComplete()
     // completion, NanoVNA single-scan completion) -- not reached by
     // Continuous mode's per-tick continuation, which never calls this
     // until it's stopped, by which point its row already has whatever data
-    // it accumulated across ticks.
+    // it accumulated across ticks. Callers use the return value to skip
+    // any further action (e.g. autoPlaceAtLowestSwr()) that assumes a real,
+    // just-finished row still exists.
     if (!isEmpty() && last()->dataRX.isEmpty()) {
         deleteRow(m_measurements.length() - 1);
-        return;
+        return true;
     }
 
     // Fill in the just-finished scan's actual point count directly, rather
@@ -1921,6 +1941,7 @@ void Measurements::on_measurementComplete()
         if (row < m_tableWidget->rowCount() && m_tableWidget->item(row, COL_POINTS) != nullptr)
             m_tableWidget->item(row, COL_POINTS)->setText(pointsCellText(*last()));
     }
+    return false;
 }
 
 void Measurements::toggleVisibility(int row, bool _state)

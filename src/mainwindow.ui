@@ -1151,11 +1151,18 @@ process in the settings menu!</string>
     <addaction name="actionUserGuide"/>
     <addaction name="actionAbout"/>
    </widget>
+   <widget class="QMenu" name="menuAnalyzer">
+    <property name="title">
+     <string>&amp;Analyzer</string>
+    </property>
+    <addaction name="actionConnectAnalyzer"/>
+    <addaction name="actionDisconnectAnalyzer"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuView"/>
    <addaction name="menuTools"/>
-   <addaction name="actionConnectAnalyzer"/>
+   <addaction name="menuAnalyzer"/>
    <addaction name="menuHelp"/>
   </widget>
   <action name="actionImport">
@@ -1208,7 +1215,15 @@ process in the settings menu!</string>
   </action>
   <action name="actionConnectAnalyzer">
    <property name="text">
-    <string>Connect &amp;Analyzer...</string>
+    <string>&amp;Connect...</string>
+   </property>
+  </action>
+  <action name="actionDisconnectAnalyzer">
+   <property name="text">
+    <string>&amp;Disconnect</string>
+   </property>
+   <property name="toolTip">
+    <string>Disconnect the currently connected analyzer</string>
    </property>
   </action>
   <action name="actionMarkerComparison">
