@@ -92,17 +92,17 @@ You should restart %1 and update firmware.</source>
     <message>
         <location filename="../src/aboutdialog.ui" line="14"/>
         <source>About AntScopeZ</source>
-        <translation type="unfinished">AntScopeZについて</translation>
+        <translation>AntScopeZについて</translation>
     </message>
     <message>
         <location filename="../src/aboutdialog.ui" line="50"/>
         <source>AntScopeZ</source>
-        <translation type="unfinished">AntScopeZ</translation>
+        <translation>AntScopeZ</translation>
     </message>
     <message>
         <location filename="../src/aboutdialog.ui" line="74"/>
         <source>Version:</source>
-        <translation type="unfinished">バージョン</translation>
+        <translation>バージョン</translation>
     </message>
     <message>
         <location filename="../src/aboutdialog.ui" line="137"/>
@@ -131,68 +131,127 @@ You should restart %1 and update firmware.</source>
 <context>
     <name>AnalyzerPro</name>
     <message>
-        <location filename="../analyzer/analyzerpro.cpp" line="108"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="126"/>
         <source>Latest version</source>
-        <translation type="unfinished">最新バージョン</translation>
+        <translation>最新バージョン</translation>
     </message>
     <message>
-        <location filename="../analyzer/analyzerpro.cpp" line="109"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="127"/>
         <source>Can not get the latest version.
 Please try later.</source>
-        <translation type="unfinished">最新バージョンを入手できません。後ほど再試行ください。</translation>
+        <translation>最新バージョンを入手できません。後ほど再試行ください。</translation>
     </message>
     <message>
-        <location filename="../analyzer/analyzerpro.cpp" line="115"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="133"/>
         <source>Firmware update</source>
-        <translation type="unfinished">ファームウェア更新</translation>
+        <translation>ファームウェア更新</translation>
     </message>
     <message>
-        <location filename="../analyzer/analyzerpro.cpp" line="120"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="138"/>
         <source>New version of firmware is available! Click Download to save it.</source>
-        <translation type="unfinished">新しいファームウェアが利用可能です！「ダウンロード」をクリックして保存してください。</translation>
+        <translation>新しいファームウェアが利用可能です！「ダウンロード」をクリックして保存してください。</translation>
     </message>
     <message>
-        <location filename="../analyzer/analyzerpro.cpp" line="123"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="141"/>
         <source>You have the latest version of firmware.</source>
-        <translation type="unfinished">お使いのバージョンは最新です。</translation>
+        <translation>お使いのバージョンは最新です。</translation>
     </message>
     <message>
-        <location filename="../analyzer/analyzerpro.cpp" line="157"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="175"/>
         <source>Firmware saved to:
 %1</source>
-        <translation type="unfinished">ファームウェアの保存先:
+        <translation>ファームウェアの保存先:
 %1</translation>
     </message>
     <message>
-        <location filename="../analyzer/analyzerpro.cpp" line="159"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="177"/>
         <source>Could not save firmware file.</source>
-        <translation type="unfinished">ファームウェアファイルを保存できませんでした。</translation>
+        <translation>ファームウェアファイルを保存できませんでした。</translation>
     </message>
     <message>
-        <location filename="../analyzer/analyzerpro.cpp" line="171"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="189"/>
         <source>Downloading firmware...</source>
-        <translation type="unfinished">ファームウェアをダウンロード中・・・</translation>
+        <translation>ファームウェアをダウンロード中・・・</translation>
     </message>
     <message>
-        <location filename="../analyzer/analyzerpro.cpp" line="182"/>
-        <location filename="../analyzer/analyzerpro.cpp" line="190"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="200"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="208"/>
         <source>Warning</source>
-        <translation type="unfinished">警告</translation>
+        <translation>警告</translation>
     </message>
     <message>
-        <location filename="../analyzer/analyzerpro.cpp" line="182"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="200"/>
         <source>Can not open firmware file.</source>
-        <translation type="unfinished">ファームウェア ファイルを開けません。</translation>
+        <translation>ファームウェア ファイルを開けません。</translation>
     </message>
     <message>
-        <location filename="../analyzer/analyzerpro.cpp" line="190"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="208"/>
         <source>Can not read firmware file.</source>
-        <translation type="unfinished">ファームウェア ファイルを読めません。</translation>
+        <translation>ファームウェア ファイルを読めません。</translation>
     </message>
     <message>
-        <location filename="../analyzer/analyzerpro.cpp" line="670"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="377"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="404"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="424"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="658"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="731"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="764"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="795"/>
+        <source>Ready</source>
+        <translation>準備完了</translation>
+    </message>
+    <message>
+        <location filename="../analyzer/analyzerpro.cpp" line="383"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="427"/>
+        <source>Stopping — draining remaining data (%1/%2 points)...</source>
+        <translation>停止中 — 残りのデータを排出中(%1/%2ポイント)...</translation>
+    </message>
+    <message>
+        <location filename="../analyzer/analyzerpro.cpp" line="393"/>
+        <source>Stopping — reconnecting to abandon remaining data...</source>
+        <translation>停止中 — 残りのデータを破棄するために再接続しています...</translation>
+    </message>
+    <message>
+        <location filename="../analyzer/analyzerpro.cpp" line="417"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="802"/>
+        <source>Scanning (%1/%2 points)...</source>
+        <translation>スキャン中(%1/%2ポイント)...</translation>
+    </message>
+    <message>
+        <location filename="../analyzer/analyzerpro.cpp" line="452"/>
+        <source>Stopped by timeout (device stopped responding).</source>
+        <translation>タイムアウトにより停止しました(デバイスが応答しなくなりました)。</translation>
+    </message>
+    <message>
+        <location filename="../analyzer/analyzerpro.cpp" line="462"/>
+        <source>Analyzer communications error. Please check device, cables, configuration, and ensure no other process is using it.</source>
+        <translation>アナライザーとの通信エラーです。デバイス、ケーブル、設定を確認し、他のプロセスが使用していないことを確認してください。</translation>
+    </message>
+    <message>
+        <location filename="../analyzer/analyzerpro.cpp" line="495"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="561"/>
+        <source>Scanning (%1 points)...</source>
+        <translation>スキャン中(%1ポイント)...</translation>
+    </message>
+    <message>
+        <location filename="../analyzer/analyzerpro.cpp" line="520"/>
+        <source>Scanning S21 (%1 points)...</source>
+        <translation>S21スキャン中(%1ポイント)...</translation>
+    </message>
+    <message>
+        <location filename="../analyzer/analyzerpro.cpp" line="539"/>
+        <source>Scanning continuously (%1 points)...</source>
+        <translation>連続スキャン中(%1ポイント)...</translation>
+    </message>
+    <message>
+        <location filename="../analyzer/analyzerpro.cpp" line="588"/>
+        <source>Scanning single frequency...</source>
+        <translation>単一周波数をスキャン中...</translation>
+    </message>
+    <message>
+        <location filename="../analyzer/analyzerpro.cpp" line="942"/>
         <source>Saving firmware file...</source>
-        <translation type="unfinished">ファームウェアファイルを保存中...</translation>
+        <translation>ファームウェアファイルを保存中...</translation>
     </message>
 </context>
 <context>
@@ -233,105 +292,126 @@ Please try later.</source>
     <message>
         <location filename="../src/appregistrationdialog.ui" line="14"/>
         <source>Register application</source>
-        <translation type="unfinished">アプリケーションを登録</translation>
+        <translation>アプリケーションを登録</translation>
     </message>
     <message>
         <location filename="../src/appregistrationdialog.ui" line="22"/>
         <source>User name</source>
-        <translation type="unfinished">ユーザー名</translation>
+        <translation>ユーザー名</translation>
     </message>
     <message>
         <location filename="../src/appregistrationdialog.ui" line="32"/>
         <source>Email</source>
-        <translation type="unfinished">メールアドレス</translation>
+        <translation>メールアドレス</translation>
     </message>
     <message>
         <location filename="../src/appregistrationdialog.ui" line="66"/>
         <source>Cancel</source>
-        <translation type="unfinished">キャンセル</translation>
+        <translation>キャンセル</translation>
     </message>
     <message>
         <location filename="../src/appregistrationdialog.ui" line="73"/>
         <source>Ok</source>
-        <translation type="unfinished">OK</translation>
+        <translation>OK</translation>
     </message>
     <message>
         <location filename="../src/appregistrationdialog.cpp" line="42"/>
         <source></source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../src/appregistrationdialog.cpp" line="42"/>
         <source>Email address should be valid</source>
-        <translation type="unfinished">有効なメールアドレスを入力してください</translation>
+        <translation>有効なメールアドレスを入力してください</translation>
     </message>
     <message>
         <location filename="../src/appregistrationdialog.cpp" line="47"/>
         <source>Wrong email address</source>
-        <translation type="unfinished">メールアドレスが正しくありません</translation>
+        <translation>メールアドレスが正しくありません</translation>
     </message>
 </context>
 <context>
     <name>BleAnalyzer</name>
     <message>
-        <location filename="../analyzer/ble_analyzer.cpp" line="119"/>
+        <location filename="../analyzer/ble_analyzer.cpp" line="123"/>
         <source>Scanning for devices...</source>
-        <translation type="unfinished">デバイスをスキャン中...</translation>
+        <translation>デバイスをスキャン中...</translation>
     </message>
     <message>
-        <location filename="../analyzer/ble_analyzer.cpp" line="147"/>
+        <location filename="../analyzer/ble_analyzer.cpp" line="151"/>
         <source>Low Energy device found. Scanning more...</source>
-        <translation type="unfinished">Low Energyデバイスが見つかりました。さらにスキャンしています...</translation>
-    </message>
-    <message>
-        <location filename="../analyzer/ble_analyzer.cpp" line="155"/>
-        <source>The Bluetooth adapter is powered off.</source>
-        <translation type="unfinished">Bluetoothアダプターの電源がオフになっています。</translation>
-    </message>
-    <message>
-        <location filename="../analyzer/ble_analyzer.cpp" line="157"/>
-        <source>Writing or reading from the device resulted in an error.</source>
-        <translation type="unfinished">デバイスへの書き込みまたは読み取り中にエラーが発生しました。</translation>
+        <translation>Low Energyデバイスが見つかりました。さらにスキャンしています...</translation>
     </message>
     <message>
         <location filename="../analyzer/ble_analyzer.cpp" line="159"/>
+        <source>The Bluetooth adapter is powered off.</source>
+        <translation>Bluetoothアダプターの電源がオフになっています。</translation>
+    </message>
+    <message>
+        <location filename="../analyzer/ble_analyzer.cpp" line="161"/>
+        <source>Writing or reading from the device resulted in an error.</source>
+        <translation>デバイスへの書き込みまたは読み取り中にエラーが発生しました。</translation>
+    </message>
+    <message>
+        <location filename="../analyzer/ble_analyzer.cpp" line="163"/>
         <source>An unknown error has occurred.</source>
-        <translation type="unfinished">不明なエラーが発生しました。</translation>
+        <translation>不明なエラーが発生しました。</translation>
     </message>
     <message>
-        <location filename="../analyzer/ble_analyzer.cpp" line="165"/>
+        <location filename="../analyzer/ble_analyzer.cpp" line="169"/>
         <source>No Low Energy devices found.</source>
-        <translation type="unfinished">Low Energyデバイスが見つかりませんでした。</translation>
+        <translation>Low Energyデバイスが見つかりませんでした。</translation>
     </message>
     <message>
-        <location filename="../analyzer/ble_analyzer.cpp" line="167"/>
+        <location filename="../analyzer/ble_analyzer.cpp" line="171"/>
         <source>Scanning done.</source>
-        <translation type="unfinished">スキャンが完了しました。</translation>
+        <translation>スキャンが完了しました。</translation>
     </message>
     <message>
-        <location filename="../analyzer/ble_analyzer.cpp" line="291"/>
-        <source>REU BLE Service not found.</source>
-        <translation type="unfinished">REU BLEサービスが見つかりません。</translation>
+        <location filename="../analyzer/ble_analyzer.cpp" line="261"/>
+        <source>Cannot connect to remote device. (%1)</source>
+        <translation>リモートデバイスに接続できません。(%1)</translation>
+    </message>
+    <message>
+        <location filename="../analyzer/ble_analyzer.cpp" line="270"/>
+        <source>LowEnergy controller disconnected.</source>
+        <translation>LowEnergyコントローラーが切断されました。</translation>
     </message>
     <message>
         <location filename="../analyzer/ble_analyzer.cpp" line="301"/>
+        <location filename="../analyzer/ble_analyzer.cpp" line="421"/>
+        <source>REU BLE Service not found.</source>
+        <translation>REU BLEサービスが見つかりません。</translation>
+    </message>
+    <message>
+        <location filename="../analyzer/ble_analyzer.cpp" line="311"/>
         <source>Discovering services...</source>
-        <translation type="unfinished">サービスを検出中...</translation>
+        <translation>サービスを検出中...</translation>
     </message>
     <message>
-        <location filename="../analyzer/ble_analyzer.cpp" line="305"/>
+        <location filename="../analyzer/ble_analyzer.cpp" line="315"/>
         <source>Service discovered.</source>
-        <translation type="unfinished">サービスが検出されました。</translation>
+        <translation>サービスが検出されました。</translation>
     </message>
     <message>
-        <location filename="../analyzer/ble_analyzer.cpp" line="391"/>
-        <source>Analyzer disconnected</source>
-        <translation type="unfinished">アナライザーが切断されました</translation>
+        <location filename="../analyzer/ble_analyzer.cpp" line="324"/>
+        <source>&apos;Read characteristic&apos; not found.</source>
+        <translation>&apos;Read&apos;特性が見つかりません。</translation>
     </message>
     <message>
-        <location filename="../analyzer/ble_analyzer.cpp" line="429"/>
-        <source>Analyzer error: wrong CRC</source>
-        <translation type="unfinished">アナライザーエラー: CRCが正しくありません</translation>
+        <location filename="../analyzer/ble_analyzer.cpp" line="404"/>
+        <source>Analyzer disconnected. (no response for %1 ms)</source>
+        <translation>アナライザーが切断されました。(%1ms応答なし)</translation>
+    </message>
+    <message>
+        <location filename="../analyzer/ble_analyzer.cpp" line="426"/>
+        <source>Write characteristic doesn&apos;t exist!</source>
+        <translation>Write特性が存在しません!</translation>
+    </message>
+    <message>
+        <location filename="../analyzer/ble_analyzer.cpp" line="446"/>
+        <source>Analyzer error: wrong CRC. (data: %1)</source>
+        <translation>アナライザーエラー: CRCが正しくありません。(データ: %1)</translation>
     </message>
 </context>
 <context>
@@ -390,139 +470,149 @@ Please try later.</source>
         <translation>較正完了！</translation>
     </message>
     <message>
-        <location filename="../src/calibration.cpp" line="471"/>
+        <location filename="../src/calibration.cpp" line="479"/>
         <source>CRC Error</source>
-        <translation type="unfinished">CRCエラー</translation>
+        <translation>CRCエラー</translation>
     </message>
     <message>
-        <location filename="../src/calibration.cpp" line="472"/>
+        <location filename="../src/calibration.cpp" line="480"/>
         <source>Analyzer error. 
 It is recommended to perform calibration with connection via USB</source>
-        <translation type="unfinished">アナライザーエラー。
+        <translation>アナライザーエラー。
 USB接続でキャリブレーションを行うことをお勧めします</translation>
     </message>
 </context>
 <context>
     <name>ComAnalyzer</name>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="176"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="105"/>
+        <source>Analyzer port %1 found but could not be opened -- it may be in use by another program (or another AntScopeZ window). (%2)</source>
+        <translation>アナライザーのポート%1が見つかりましたが開けませんでした -- 他のプログラム(または別のAntScopeZウィンドウ)が使用している可能性があります。(%2)</translation>
+    </message>
+    <message>
+        <location filename="../analyzer/com_analyzer.cpp" line="187"/>
         <source> can not update firmware.
 </source>
-        <translation type="unfinished">ファームウェアを更新できません。</translation>
+        <translation>ファームウェアを更新できません。</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="182"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="193"/>
         <source>Error: </source>
-        <translation type="unfinished">エラー</translation>
+        <translation>エラー</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="183"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="194"/>
         <source>Warning</source>
-        <translation type="unfinished">警告</translation>
+        <translation>警告</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="619"/>
-        <location filename="../analyzer/com_analyzer.cpp" line="696"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="267"/>
+        <source>Analyzer returned ERROR while waiting for measurement data.</source>
+        <translation>測定データを待っている間にアナライザーがエラーを返しました。</translation>
+    </message>
+    <message>
+        <location filename="../analyzer/com_analyzer.cpp" line="636"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="713"/>
         <source>Finish</source>
-        <translation type="unfinished">完了</translation>
+        <translation>完了</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="619"/>
-        <location filename="../analyzer/com_analyzer.cpp" line="696"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="636"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="713"/>
         <source>Successfully updated!</source>
-        <translation type="unfinished">更新完了！</translation>
+        <translation>更新完了！</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="653"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="670"/>
         <source>Error</source>
-        <translation type="unfinished">エラー</translation>
+        <translation>エラー</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="653"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="670"/>
         <source>Error while update, please try again.</source>
-        <translation type="unfinished">更新中にエラー、やり直して下さい。</translation>
+        <translation>更新中にエラー、やり直して下さい。</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="712"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="729"/>
         <source>Can not erase flash memory.
 You should reconnect your analyzer,
 restart %1 and update firmware.</source>
-        <translation type="unfinished">フラッシュメモリーを消去できません。
+        <translation>フラッシュメモリーを消去できません。
 アナライザーを再接続してください。
  %1 を再起動してファームウェアを更新してください。</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="719"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="736"/>
         <source>Can not write data to flash memory.
 You should reconnect your analyzer,
 restart %1 and update firmware.</source>
-        <translation type="unfinished">フラッシュメモリーにデータを書き込めません。
+        <translation>フラッシュメモリーにデータを書き込めません。
 アナライザーを繋ぎ直してください。
  %1 を再起動してファームウェアを更新してください。</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="725"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="742"/>
         <source>Firmware file has wrong length.
 Try to choose another file.</source>
-        <translation type="unfinished">ファームウェアのファイル長が正しくありません。
+        <translation>ファームウェアのファイル長が正しくありません。
 他のファイルを選んでください。</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="730"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="747"/>
         <source>Firmware has incorrect CRC.
 Try to choose another file.</source>
-        <translation type="unfinished">ファームウェアのCRCが違っています。
+        <translation>ファームウェアのCRCが違っています。
 別のファイルを選択してみてください。</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="735"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="752"/>
         <source>Serial flash has incorrect CRC.
 Try to choose another file.</source>
-        <translation type="unfinished">シリアルフラッシュのCRCが違っています。
+        <translation>シリアルフラッシュのCRCが違っています。
 別のファイルを選択してみてください。</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="740"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="757"/>
         <source>Timeout in the device.
 You should reconnect your analyzer,
 restart %1 and update firmware.</source>
-        <translation type="unfinished">デバイスがタイムアウトです。
+        <translation>デバイスがタイムアウトです。
 アナライザーを繋ぎ直してください。
  %1 を再起動しファームウェアを更新してください。</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="746"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="763"/>
         <source>Firmware file has wrong format.
 Try to choose another file.</source>
-        <translation type="unfinished">ファームウェアファイルのファーマットが違っています。
+        <translation>ファームウェアファイルのファーマットが違っています。
 別のファイルを選択してみてください。</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="751"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="768"/>
         <source>Timeout.
 You should restart %1 and update firmware.</source>
-        <translation type="unfinished">タイムアウト
+        <translation>タイムアウト
  %1 を再起動しファームウェアを更新してください。</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="756"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="773"/>
         <source>Can not open serial port.
 You should close application which uses this port.</source>
-        <translation type="unfinished">シリアルポートを開けません。
+        <translation>シリアルポートを開けません。
 そのポートを使っているアプリを閉じてください。</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="761"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="778"/>
         <source>Can not write data to serial port.
 You should restart %1 and update firmware.</source>
-        <translation type="unfinished">シリアルポート経由でデータを書き込めません。
+        <translation>シリアルポート経由でデータを書き込めません。
  %1 を再起動してファームウェアを更新してください。</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="766"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="783"/>
         <source>Can not read data from serial port.
 You should restart %1 and update firmware.</source>
-        <translation type="unfinished">シリアルポート経由でデータを読めません。
+        <translation>シリアルポート経由でデータを読めません。
  %1 を再起動してファームウェアを更新してください。</translation>
     </message>
 </context>
@@ -539,37 +629,37 @@ You should restart %1 and update firmware.</source>
     <message>
         <location filename="../src/duallistwidget.cpp" line="15"/>
         <source>Add &gt;</source>
-        <translation type="unfinished">追加 &amp;gt;</translation>
+        <translation>追加 &amp;gt;</translation>
     </message>
     <message>
         <location filename="../src/duallistwidget.cpp" line="16"/>
         <source>&lt; Remove</source>
-        <translation type="unfinished">&amp;lt; 削除</translation>
+        <translation>&amp;lt; 削除</translation>
     </message>
     <message>
         <location filename="../src/duallistwidget.cpp" line="17"/>
         <source>^</source>
-        <translation type="unfinished">^</translation>
+        <translation>^</translation>
     </message>
     <message>
         <location filename="../src/duallistwidget.cpp" line="18"/>
         <source>v</source>
-        <translation type="unfinished">v</translation>
+        <translation>v</translation>
     </message>
     <message>
         <location filename="../src/duallistwidget.cpp" line="19"/>
         <source>Available</source>
-        <translation type="unfinished">利用可能</translation>
+        <translation>利用可能</translation>
     </message>
     <message>
         <location filename="../src/duallistwidget.cpp" line="20"/>
         <source>Selected</source>
-        <translation type="unfinished">選択済み</translation>
+        <translation>選択済み</translation>
     </message>
     <message>
         <location filename="../src/duallistwidget.cpp" line="203"/>
         <source>Always shown</source>
-        <translation type="unfinished">常に表示</translation>
+        <translation>常に表示</translation>
     </message>
 </context>
 <context>
@@ -577,64 +667,69 @@ You should restart %1 and update firmware.</source>
     <message>
         <location filename="../src/editbandsdialog.ui" line="14"/>
         <source>Edit Bands</source>
-        <translation type="unfinished">帯域を編集</translation>
+        <translation>帯域を編集</translation>
     </message>
     <message>
         <location filename="../src/editbandsdialog.cpp" line="64"/>
         <source>Couldn&apos;t load default bands</source>
-        <translation type="unfinished">デフォルトの帯域を読み込めませんでした</translation>
+        <translation>デフォルトの帯域を読み込めませんでした</translation>
     </message>
     <message>
         <location filename="../src/editbandsdialog.cpp" line="90"/>
         <source>Couldn&apos;t load bands</source>
-        <translation type="unfinished">帯域を読み込めませんでした</translation>
+        <translation>帯域を読み込めませんでした</translation>
     </message>
     <message>
         <location filename="../src/editbandsdialog.cpp" line="113"/>
         <source>Couldn&apos;t save bands</source>
-        <translation type="unfinished">帯域を保存できませんでした</translation>
+        <translation>帯域を保存できませんでした</translation>
     </message>
 </context>
 <context>
     <name>Export</name>
     <message>
-        <location filename="../src/export.ui" line="20"/>
-        <location filename="../src/export.cpp" line="99"/>
-        <location filename="../src/export.cpp" line="112"/>
         <location filename="../src/export.cpp" line="127"/>
-        <location filename="../src/export.cpp" line="145"/>
-        <location filename="../src/export.cpp" line="162"/>
-        <location filename="../src/export.cpp" line="179"/>
-        <location filename="../src/export.cpp" line="196"/>
-        <location filename="../src/export.cpp" line="213"/>
+        <location filename="../src/export.cpp" line="141"/>
+        <location filename="../src/export.cpp" line="157"/>
+        <location filename="../src/export.cpp" line="176"/>
+        <location filename="../src/export.cpp" line="194"/>
+        <location filename="../src/export.cpp" line="212"/>
         <location filename="../src/export.cpp" line="230"/>
+        <location filename="../src/export.cpp" line="248"/>
+        <location filename="../src/export.cpp" line="266"/>
         <source>Export</source>
-        <translation type="unfinished">書出し</translation>
+        <translation>書出し</translation>
     </message>
     <message>
-        <location filename="../src/export.ui" line="137"/>
+        <location filename="../src/export.ui" line="157"/>
         <source>APEK-EL CSV impedance export, resistance/reactance.  (.csv)</source>
-        <translation type="unfinished">APEK-EL CSVインピーダンスエクスポート、抵抗/リアクタンス。 (.csv)</translation>
+        <translation>APEK-EL CSVインピーダンスエクスポート、抵抗/リアクタンス。 (.csv)</translation>
     </message>
     <message>
-        <location filename="../src/export.ui" line="130"/>
+        <location filename="../src/export.ui" line="150"/>
         <source>CSV</source>
         <translation>CSV</translation>
     </message>
     <message>
-        <location filename="../src/export.ui" line="57"/>
+        <location filename="../src/export.ui" line="77"/>
         <source>One-port impedance parameter, Real/Imaginary representation. Touchstone File (.s1p)</source>
-        <translation type="unfinished">1ポートインピーダンスパラメータ、実部/虚部表示。Touchstoneファイル (.s1p)</translation>
+        <translation>1ポートインピーダンスパラメータ、実部/虚部表示。Touchstoneファイル (.s1p)</translation>
     </message>
     <message>
-        <location filename="../src/export.ui" line="150"/>
+        <location filename="../src/export.ui" line="170"/>
         <source>NWL</source>
         <translation>NWL</translation>
     </message>
     <message>
-        <location filename="../src/export.ui" line="97"/>
+        <location filename="../src/export.ui" line="117"/>
         <source>One-port S-parameter, Magnitude/Angle representation. (Touchstone .s1p)</source>
-        <translation type="unfinished">1ポートSパラメータ、振幅/角度表示。(Touchstone .s1p)</translation>
+        <translation>1ポートSパラメータ、振幅/角度表示。(Touchstone .s1p)</translation>
+    </message>
+    <message>
+        <location filename="../src/export.ui" line="20"/>
+        <location filename="../src/export.cpp" line="113"/>
+        <source>Save</source>
+        <translation>保存</translation>
     </message>
     <message>
         <location filename="../src/export.ui" line="32"/>
@@ -647,66 +742,76 @@ Type: --</source>
     </message>
     <message>
         <location filename="../src/export.ui" line="50"/>
+        <source>AntScopeZ</source>
+        <translation>AntScopeZ</translation>
+    </message>
+    <message>
+        <location filename="../src/export.ui" line="57"/>
+        <source>AntScopeZ&apos;s own format -- same frequency/R/X fields as the other 1-port formats here, just as JSON numbers instead of rounded text (not that it matters -- real measurement precision is well below where that distinction would show up). Doesn&apos;t store S21/S12/S22 -- use one of the S2P options below for a 2-port measurement&apos;s transmission data. (.asd)</source>
+        <translation>AntScopeZ独自の形式 -- ここにある他の1ポート形式と同じ周波数/R/Xフィールドを、丸められたテキストではなくJSON数値として保存します(実際の測定精度はその違いが現れるレベルよりはるかに低いため、あまり意味はありません)。S21/S12/S22は保存されません -- 2ポート測定の伝送データには下のS2Pオプションのいずれかを使用してください。(.asd)</translation>
+    </message>
+    <message>
+        <location filename="../src/export.ui" line="70"/>
         <source>Z, RI</source>
         <translation>Z、RI</translation>
     </message>
     <message>
-        <location filename="../src/export.ui" line="70"/>
+        <location filename="../src/export.ui" line="90"/>
         <source>S, RI</source>
         <translation>Z、RI</translation>
     </message>
     <message>
-        <location filename="../src/export.ui" line="110"/>
+        <location filename="../src/export.ui" line="130"/>
         <source>S, DB</source>
         <translation>S, dB</translation>
     </message>
     <message>
-        <location filename="../src/export.ui" line="117"/>
+        <location filename="../src/export.ui" line="137"/>
         <source>One-port S-parameter, Magnitude(dB)/Angle representation. (Touchstone .s1p)</source>
         <translation>1ポートSパラメータ、振幅(dB)/角度表示。(Touchstone .s1p)</translation>
     </message>
     <message>
-        <location filename="../src/export.ui" line="157"/>
+        <location filename="../src/export.ui" line="177"/>
         <source>APEK-EL impedance export, series resistance/reactance. (.nwl)</source>
-        <translation type="unfinished">APEK-ELインピーダンスエクスポート、直列抵抗/リアクタンス。(.nwl)</translation>
+        <translation>APEK-ELインピーダンスエクスポート、直列抵抗/リアクタンス。(.nwl)</translation>
     </message>
     <message>
-        <location filename="../src/export.ui" line="170"/>
+        <location filename="../src/export.ui" line="190"/>
         <source>S2P, RI</source>
         <translation>S2P, RI</translation>
     </message>
     <message>
-        <location filename="../src/export.ui" line="177"/>
+        <location filename="../src/export.ui" line="197"/>
         <source>Two-port S-parameters (S11, S21, S12, S22), Real/Imaginary representation. Touchstone File (.s2p) -- only shown for a measurement with real 2-port data</source>
         <translation>2ポートSパラメータ (S11, S21, S12, S22)、実数/虚数表示。Touchstoneファイル (.s2p) -- 実際の2ポートデータを持つ測定でのみ表示されます</translation>
     </message>
     <message>
-        <location filename="../src/export.ui" line="190"/>
+        <location filename="../src/export.ui" line="210"/>
         <source>S2P, MA</source>
         <translation>S2P, MA</translation>
     </message>
     <message>
-        <location filename="../src/export.ui" line="197"/>
+        <location filename="../src/export.ui" line="217"/>
         <source>Two-port S-parameters (S11, S21, S12, S22), Magnitude/Angle representation. Touchstone File (.s2p) -- only shown for a measurement with real 2-port data</source>
         <translation>2ポートSパラメータ (S11, S21, S12, S22)、振幅/角度表示。Touchstoneファイル (.s2p) -- 実際の2ポートデータを持つ測定でのみ表示されます</translation>
     </message>
     <message>
-        <location filename="../src/export.ui" line="210"/>
+        <location filename="../src/export.ui" line="230"/>
         <source>S2P, DB</source>
         <translation>S2P, dB</translation>
     </message>
     <message>
-        <location filename="../src/export.ui" line="217"/>
+        <location filename="../src/export.ui" line="237"/>
         <source>Two-port S-parameters (S11, S21, S12, S22), Magnitude(dB)/Angle representation. Touchstone File (.s2p) -- only shown for a measurement with real 2-port data</source>
         <translation>2ポートSパラメータ (S11, S21, S12, S22)、振幅(dB)/角度表示。Touchstoneファイル (.s2p) -- 実際の2ポートデータを持つ測定でのみ表示されます</translation>
     </message>
     <message>
-        <location filename="../src/export.ui" line="77"/>
+        <location filename="../src/export.ui" line="97"/>
         <source>One-port S-parameter, Real/Imaginary representation. Touchstone File (.s1p)</source>
-        <translation type="unfinished">1ポートSパラメータ、実部/虚部表示。Touchstoneファイル (.s1p)</translation>
+        <translation>1ポートSパラメータ、実部/虚部表示。Touchstoneファイル (.s1p)</translation>
     </message>
     <message>
-        <location filename="../src/export.ui" line="90"/>
+        <location filename="../src/export.ui" line="110"/>
         <source>S, MA</source>
         <translation>S, MA</translation>
     </message>
@@ -738,30 +843,36 @@ Type: %3</source>
 <context>
     <name>HidAnalyzer</name>
     <message>
-        <location filename="../analyzer/hid_analyzer.cpp" line="715"/>
-        <location filename="../analyzer/hid_analyzer.cpp" line="796"/>
+        <location filename="../analyzer/hid_analyzer.cpp" line="165"/>
+        <location filename="../analyzer/hid_analyzer.cpp" line="917"/>
+        <source>Analyzer detected but could not be opened -- it may be in use by another program (or another AntScopeZ window).</source>
+        <translation>アナライザーは検出されましたが開けませんでした -- 他のプログラム(または別のAntScopeZウィンドウ)が使用している可能性があります。</translation>
+    </message>
+    <message>
+        <location filename="../analyzer/hid_analyzer.cpp" line="754"/>
+        <location filename="../analyzer/hid_analyzer.cpp" line="835"/>
         <source>Warning</source>
-        <translation type="unfinished">警告</translation>
+        <translation>警告</translation>
     </message>
     <message>
-        <location filename="../analyzer/hid_analyzer.cpp" line="715"/>
+        <location filename="../analyzer/hid_analyzer.cpp" line="754"/>
         <source>Can&apos;t enter to boot mode!</source>
-        <translation type="unfinished">ブートモードに入れません！</translation>
+        <translation>ブートモードに入れません！</translation>
     </message>
     <message>
-        <location filename="../analyzer/hid_analyzer.cpp" line="793"/>
+        <location filename="../analyzer/hid_analyzer.cpp" line="832"/>
         <source>Finish</source>
-        <translation type="unfinished">完了</translation>
+        <translation>完了</translation>
     </message>
     <message>
-        <location filename="../analyzer/hid_analyzer.cpp" line="793"/>
+        <location filename="../analyzer/hid_analyzer.cpp" line="832"/>
         <source>Successfully updated!</source>
-        <translation type="unfinished">更新完了！</translation>
+        <translation>更新完了！</translation>
     </message>
     <message>
-        <location filename="../analyzer/hid_analyzer.cpp" line="796"/>
+        <location filename="../analyzer/hid_analyzer.cpp" line="835"/>
         <source>Update failed!</source>
-        <translation type="unfinished">更新に失敗！</translation>
+        <translation>更新に失敗！</translation>
     </message>
 </context>
 <context>
@@ -794,27 +905,27 @@ Type: %3</source>
     <message>
         <location filename="../src/inforequestdialog.ui" line="14"/>
         <source>Registration</source>
-        <translation type="unfinished">登録</translation>
+        <translation>登録</translation>
     </message>
     <message>
         <location filename="../src/inforequestdialog.ui" line="22"/>
         <source>Device name</source>
-        <translation type="unfinished">デバイス名</translation>
+        <translation>デバイス名</translation>
     </message>
     <message>
         <location filename="../src/inforequestdialog.ui" line="36"/>
         <source>Serial number</source>
-        <translation type="unfinished">シリアル番号</translation>
+        <translation>シリアル番号</translation>
     </message>
     <message>
         <location filename="../src/inforequestdialog.ui" line="50"/>
         <source>License name</source>
-        <translation type="unfinished">ライセンス名</translation>
+        <translation>ライセンス名</translation>
     </message>
     <message>
         <location filename="../src/inforequestdialog.cpp" line="11"/>
         <source>Register device</source>
-        <translation type="unfinished">デバイスを登録</translation>
+        <translation>デバイスを登録</translation>
     </message>
 </context>
 <context>
@@ -822,25 +933,25 @@ Type: %3</source>
     <message>
         <location filename="../src/licenseagent.cpp" line="18"/>
         <source>Timeout</source>
-        <translation type="unfinished">タイムアウト</translation>
+        <translation>タイムアウト</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="18"/>
         <location filename="../src/licenseagent.cpp" line="510"/>
         <source>Network timeout</source>
-        <translation type="unfinished">ネットワークタイムアウト</translation>
+        <translation>ネットワークタイムアウト</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="36"/>
         <location filename="../src/licenseagent.cpp" line="482"/>
         <location filename="../src/licenseagent.cpp" line="510"/>
         <source>Register application</source>
-        <translation type="unfinished">アプリケーションを登録</translation>
+        <translation>アプリケーションを登録</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="36"/>
         <source>Waiting for email confirmation...</source>
-        <translation type="unfinished">メール確認を待っています...</translation>
+        <translation>メール確認を待っています...</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="36"/>
@@ -854,29 +965,29 @@ Type: %3</source>
         <location filename="../src/licenseagent.cpp" line="734"/>
         <location filename="../src/licenseagent.cpp" line="744"/>
         <source>Cancel</source>
-        <translation type="unfinished">キャンセル</translation>
+        <translation>キャンセル</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="104"/>
         <location filename="../src/licenseagent.cpp" line="755"/>
         <location filename="../src/licenseagent.cpp" line="761"/>
         <source>Update license</source>
-        <translation type="unfinished">ライセンスを更新</translation>
+        <translation>ライセンスを更新</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="103"/>
         <source>Enter key</source>
-        <translation type="unfinished">キーを入力</translation>
+        <translation>キーを入力</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="382"/>
         <source>Request status B16</source>
-        <translation type="unfinished">リクエストステータス B16</translation>
+        <translation>リクエストステータス B16</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="382"/>
         <source>Something went wrong</source>
-        <translation type="unfinished">問題が発生しました</translation>
+        <translation>問題が発生しました</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="382"/>
@@ -887,41 +998,41 @@ Type: %3</source>
         <location filename="../src/licenseagent.cpp" line="761"/>
         <location filename="../src/licenseagent.cpp" line="781"/>
         <source>Ok</source>
-        <translation type="unfinished">OK</translation>
+        <translation>OK</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="432"/>
         <source>Error</source>
-        <translation type="unfinished">エラー</translation>
+        <translation>エラー</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="448"/>
         <source>Network error.</source>
-        <translation type="unfinished">ネットワークエラー。</translation>
+        <translation>ネットワークエラー。</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="448"/>
         <location filename="../src/licenseagent.cpp" line="784"/>
         <source>Close</source>
-        <translation type="unfinished">閉じる</translation>
+        <translation>閉じる</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="482"/>
         <source>Registration was successful</source>
-        <translation type="unfinished">登録が完了しました</translation>
+        <translation>登録が完了しました</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="531"/>
         <location filename="../src/licenseagent.cpp" line="570"/>
         <source>Device name </source>
-        <translation type="unfinished">デバイス名 </translation>
+        <translation>デバイス名 </translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="532"/>
         <location filename="../src/licenseagent.cpp" line="571"/>
         <source>
 Serial number </source>
-        <translation type="unfinished">
+        <translation>
 シリアル番号 </translation>
     </message>
     <message>
@@ -929,19 +1040,19 @@ Serial number </source>
         <location filename="../src/licenseagent.cpp" line="572"/>
         <source>
 License name </source>
-        <translation type="unfinished">
+        <translation>
 ライセンス名 </translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="534"/>
         <source>Device info</source>
-        <translation type="unfinished">デバイス情報</translation>
+        <translation>デバイス情報</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="534"/>
         <location filename="../src/licenseagent.cpp" line="575"/>
         <source>User Data update</source>
-        <translation type="unfinished">ユーザーデータの更新</translation>
+        <translation>ユーザーデータの更新</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="565"/>
@@ -955,7 +1066,7 @@ License name </source>
         <location filename="../src/licenseagent.cpp" line="738"/>
         <location filename="../src/licenseagent.cpp" line="744"/>
         <source>Register device</source>
-        <translation type="unfinished">デバイスを登録</translation>
+        <translation>デバイスを登録</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="565"/>
@@ -963,188 +1074,177 @@ License name </source>
         <location filename="../src/licenseagent.cpp" line="650"/>
         <location filename="../src/licenseagent.cpp" line="734"/>
         <source>Registration...</source>
-        <translation type="unfinished">登録中...</translation>
+        <translation>登録中...</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="573"/>
         <source>
 Purchrge date: </source>
-        <translation type="unfinished">
+        <translation>
 購入日: </translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="574"/>
         <source>
 Registration date: </source>
-        <translation type="unfinished">
+        <translation>
 登録日: </translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="575"/>
         <source>Update user data</source>
-        <translation type="unfinished">ユーザーデータを更新</translation>
+        <translation>ユーザーデータを更新</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="653"/>
         <location filename="../src/licenseagent.cpp" line="671"/>
         <source>Device name: </source>
-        <translation type="unfinished">デバイス名: </translation>
+        <translation>デバイス名: </translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="654"/>
         <location filename="../src/licenseagent.cpp" line="672"/>
         <source>Serial number: </source>
-        <translation type="unfinished">シリアル番号: </translation>
+        <translation>シリアル番号: </translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="655"/>
         <location filename="../src/licenseagent.cpp" line="676"/>
         <source>License name: </source>
-        <translation type="unfinished">ライセンス名: </translation>
+        <translation>ライセンス名: </translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="656"/>
         <location filename="../src/licenseagent.cpp" line="677"/>
         <source>Purcharge date: </source>
-        <translation type="unfinished">購入日: </translation>
+        <translation>購入日: </translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="657"/>
         <location filename="../src/licenseagent.cpp" line="678"/>
         <source>Registration date: </source>
-        <translation type="unfinished">登録日: </translation>
+        <translation>登録日: </translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="670"/>
         <source>Registration was successful
 </source>
-        <translation type="unfinished">登録が完了しました
+        <translation>登録が完了しました
 
 アナライザーを再接続してください。</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="692"/>
         <source>Wait for eMail confirmation...</source>
-        <translation type="unfinished">メール確認を待っています...</translation>
+        <translation>メール確認を待っています...</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="698"/>
         <location filename="../src/licenseagent.cpp" line="744"/>
         <source>Registration failed</source>
-        <translation type="unfinished">登録に失敗しました</translation>
+        <translation>登録に失敗しました</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="698"/>
         <source>Try again</source>
-        <translation type="unfinished">もう一度試す</translation>
+        <translation>もう一度試す</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="738"/>
         <source>eMail is not confirmed</source>
-        <translation type="unfinished">メールが確認されていません</translation>
+        <translation>メールが確認されていません</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="755"/>
         <source>License updating...</source>
-        <translation type="unfinished">ライセンスを更新中...</translation>
+        <translation>ライセンスを更新中...</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="761"/>
         <source>The update will not work until support is contacted</source>
-        <translation type="unfinished">サポートに連絡するまで更新は適用されません</translation>
+        <translation>サポートに連絡するまで更新は適用されません</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="781"/>
         <location filename="../src/licenseagent.cpp" line="784"/>
         <source>License renewal</source>
-        <translation type="unfinished">ライセンスの更新</translation>
+        <translation>ライセンスの更新</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="781"/>
         <source>The license update was successful
 
 You should reconnect analyzer.</source>
-        <translation type="unfinished">ライセンスの更新が完了しました
+        <translation>ライセンスの更新が完了しました
 
 アナライザーを再接続してください。</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="784"/>
         <source>The license is not updated</source>
-        <translation type="unfinished">ライセンスが更新されていません</translation>
+        <translation>ライセンスが更新されていません</translation>
     </message>
 </context>
 <context>
     <name>MainWindow</name>
     <message>
         <location filename="../src/mainwindow_settings.cpp" line="72"/>
-        <location filename="../src/mainwindow_settings.cpp" line="363"/>
+        <location filename="../src/mainwindow_settings.cpp" line="410"/>
         <source>Settings</source>
         <translation>設定</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1143"/>
-        <source>Export measurement results to PC</source>
-        <translation>測定結果を PC に書出す。</translation>
-    </message>
-    <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="39"/>
-        <location filename="../src/mainwindow_settings.cpp" line="359"/>
+        <location filename="../src/mainwindow_settings.cpp" line="406"/>
         <source>Export</source>
         <translation>書出し</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1135"/>
-        <source>Import measurement results from PC hard disk</source>
-        <translation>測定結果を PC のハード ディスクから読込む。</translation>
-    </message>
-    <message>
-        <location filename="../src/mainwindow.ui" line="1151"/>
+        <location filename="../src/mainwindow.ui" line="1118"/>
         <source>Printing (or saving to PDF) measurement results</source>
         <translation>測定結果の印刷 (または、pdf で保存）</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1159"/>
+        <location filename="../src/mainwindow.ui" line="1126"/>
         <source>Saving a program window with a chart on a PC</source>
         <translation>画面上のグラフをPCに保存</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_analyzer.cpp" line="165"/>
-        <location filename="../src/mainwindow_settings.cpp" line="361"/>
+        <location filename="../src/mainwindow_analyzer.cpp" line="216"/>
+        <location filename="../src/mainwindow_settings.cpp" line="408"/>
         <source>Screenshot</source>
         <translation>スクリーンショット</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1167"/>
+        <location filename="../src/mainwindow.ui" line="1134"/>
         <source>Screenshot of the current screen of  analyzer (not for all models)</source>
         <translation>アナライザー画面のスクリーンショット (一部機種で未対応)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1175"/>
+        <location filename="../src/mainwindow.ui" line="1142"/>
         <source>Loading saved measurement results from analyzer memory</source>
         <translation>アナライザーメモリーに保存の測定結果を読出し</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="76"/>
-        <location filename="../src/mainwindow.cpp" line="1224"/>
-        <location filename="../src/mainwindow.cpp" line="1274"/>
-        <location filename="../src/mainwindow.cpp" line="1309"/>
-        <location filename="../src/mainwindow.cpp" line="1332"/>
-        <location filename="../src/mainwindow.cpp" line="1354"/>
-        <location filename="../src/mainwindow.cpp" line="1402"/>
-        <location filename="../src/mainwindow.cpp" line="1454"/>
-        <location filename="../src/mainwindow_settings.cpp" line="321"/>
-        <location filename="../src/mainwindow_settings.cpp" line="323"/>
-        <location filename="../src/mainwindow_settings.cpp" line="325"/>
-        <location filename="../src/mainwindow_settings.cpp" line="327"/>
-        <location filename="../src/mainwindow_settings.cpp" line="329"/>
-        <location filename="../src/mainwindow_settings.cpp" line="332"/>
+        <location filename="../src/mainwindow.cpp" line="1313"/>
+        <location filename="../src/mainwindow.cpp" line="1369"/>
+        <location filename="../src/mainwindow.cpp" line="1404"/>
+        <location filename="../src/mainwindow.cpp" line="1427"/>
+        <location filename="../src/mainwindow.cpp" line="1449"/>
+        <location filename="../src/mainwindow.cpp" line="1497"/>
+        <location filename="../src/mainwindow.cpp" line="1561"/>
+        <location filename="../src/mainwindow_settings.cpp" line="338"/>
+        <location filename="../src/mainwindow_settings.cpp" line="340"/>
+        <location filename="../src/mainwindow_settings.cpp" line="342"/>
+        <location filename="../src/mainwindow_settings.cpp" line="344"/>
+        <location filename="../src/mainwindow_settings.cpp" line="346"/>
+        <location filename="../src/mainwindow_settings.cpp" line="349"/>
         <source>Frequency, kHz</source>
         <translation>周波数, KHz</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="133"/>
-        <location filename="../src/mainwindow.cpp" line="851"/>
+        <location filename="../src/mainwindow.cpp" line="934"/>
         <location filename="../src/mainwindow_frequency.cpp" line="43"/>
         <location filename="../src/mainwindow_frequency.cpp" line="46"/>
         <source>Center</source>
@@ -1178,7 +1278,7 @@ process in the settings menu!</source>
     <message>
         <location filename="../src/mainwindow.ui" line="291"/>
         <source>Set the default values of the measuring frequency range</source>
-        <translation type="unfinished">測定周波数範囲のデフォルト値を設定します</translation>
+        <translation>測定周波数範囲のデフォルト値を設定します</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="294"/>
@@ -1186,45 +1286,65 @@ process in the settings menu!</source>
         <translation>フルレンジ</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1204"/>
+        <location filename="../src/mainwindow.ui" line="1099"/>
+        <source>&amp;Open...</source>
+        <translation>開く...(&amp;O)</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.ui" line="1102"/>
+        <source>Open a saved measurement (AntScopeZ, Touchstone, CSV, or NWL)</source>
+        <translation>保存された測定を開く(AntScopeZ、Touchstone、CSV、またはNWL)</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.ui" line="1107"/>
+        <source>&amp;Save...</source>
+        <translation>保存...(&amp;S)</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.ui" line="1110"/>
+        <source>Save the selected measurement</source>
+        <translation>選択した測定を保存</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.ui" line="1171"/>
         <source>Entering the AntScopeZ program settings menu</source>
-        <translation type="unfinished">AntScopeZプログラムの設定メニューに入ります</translation>
+        <translation>AntScopeZプログラムの設定メニューに入ります</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="97"/>
         <source>Scan Mode</source>
-        <translation type="unfinished">スキャンモード</translation>
+        <translation>スキャンモード</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="110"/>
         <source>Choose how measurement frequency is entered: initial/final, or center/range</source>
-        <translation type="unfinished">測定周波数の入力方法を選択します: 開始/終了、または中心/範囲</translation>
+        <translation>測定周波数の入力方法を選択します: 開始/終了、または中心/範囲</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="114"/>
         <source>Start/Stop</source>
-        <translation type="unfinished">開始/終了</translation>
+        <translation>開始/終了</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="119"/>
         <source>Center/Range</source>
-        <translation type="unfinished">中心/範囲</translation>
+        <translation>中心/範囲</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="235"/>
         <source>Speed/Accuracy</source>
-        <translation type="unfinished">速度/精度</translation>
+        <translation>速度/精度</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="248"/>
         <source>Fast (fewer points) to Accurate (more points)</source>
-        <translation type="unfinished">高速（ポイント数少）から高精度（ポイント数多）まで</translation>
+        <translation>高速（ポイント数少）から高精度（ポイント数多）まで</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="327"/>
         <source>Run single measurement(F9)</source>
         <oldsource>Run single measurement</oldsource>
-        <translation type="unfinished">単発測定を実行(F9)</translation>
+        <translation>単発測定を実行(F9)</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="330"/>
@@ -1235,7 +1355,7 @@ process in the settings menu!</source>
         <location filename="../src/mainwindow.ui" line="364"/>
         <source>Run cyclic measurement(F10)</source>
         <oldsource>Run cyclic measurement</oldsource>
-        <translation type="unfinished">連続測定を実行(F10)</translation>
+        <translation>連続測定を実行(F10)</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="367"/>
@@ -1245,16 +1365,16 @@ process in the settings menu!</source>
     <message>
         <location filename="../src/mainwindow.ui" line="400"/>
         <source>Presets,kHz</source>
-        <translation type="unfinished">プリセット, kHz</translation>
+        <translation>プリセット, kHz</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="414"/>
         <source>Select a ham band to set the Start/Stop range</source>
-        <translation type="unfinished">アマチュア無線バンドを選択して開始/終了範囲を設定します</translation>
+        <translation>アマチュア無線バンドを選択して開始/終了範囲を設定します</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="494"/>
-        <location filename="../src/mainwindow.cpp" line="846"/>
+        <location filename="../src/mainwindow.cpp" line="929"/>
         <location filename="../src/mainwindow_frequency.cpp" line="35"/>
         <location filename="../src/mainwindow_frequency.cpp" line="38"/>
         <source>Start</source>
@@ -1262,7 +1382,7 @@ process in the settings menu!</source>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="499"/>
-        <location filename="../src/mainwindow.cpp" line="847"/>
+        <location filename="../src/mainwindow.cpp" line="930"/>
         <location filename="../src/mainwindow_frequency.cpp" line="36"/>
         <location filename="../src/mainwindow_frequency.cpp" line="39"/>
         <source>Stop</source>
@@ -1271,7 +1391,7 @@ process in the settings menu!</source>
     <message>
         <location filename="../src/mainwindow.ui" line="514"/>
         <source>Add a new preset</source>
-        <translation type="unfinished">新しいプリセットを追加</translation>
+        <translation>新しいプリセットを追加</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="517"/>
@@ -1281,18 +1401,18 @@ process in the settings menu!</source>
     <message>
         <location filename="../src/mainwindow.ui" line="524"/>
         <source>Delete selected preset</source>
-        <translation type="unfinished">選択したプリセットを削除</translation>
+        <translation>選択したプリセットを削除</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="527"/>
-        <location filename="../src/mainwindow.ui" line="734"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="702"/>
         <source>Delete</source>
         <translation>削除</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="534"/>
         <source>Move up selected preset</source>
-        <translation type="unfinished">選択したプリセットを上に移動</translation>
+        <translation>選択したプリセットを上に移動</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="537"/>
@@ -1310,479 +1430,539 @@ process in the settings menu!</source>
         <translation>名前</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="699"/>
-        <source>Open saved measurement file</source>
-        <translation type="unfinished">保存された測定ファイルを開く</translation>
-    </message>
-    <message>
-        <location filename="../src/mainwindow.ui" line="702"/>
-        <source>Open</source>
-        <translation>開く</translation>
-    </message>
-    <message>
-        <location filename="../src/mainwindow.ui" line="715"/>
-        <source>Save measurement results to PC hard disk</source>
-        <translation type="unfinished">測定結果をPCのハードディスクに保存</translation>
-    </message>
-    <message>
-        <location filename="../src/mainwindow.ui" line="718"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="55"/>
         <source>Save</source>
         <translation>保存</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="731"/>
-        <source>Delete selected measurement</source>
-        <translation type="unfinished">選択した測定を削除</translation>
-    </message>
-    <message>
-        <location filename="../src/mainwindow.ui" line="741"/>
-        <source>Clear window (delete all measurement results)</source>
-        <translation type="unfinished">ウィンドウをクリア（すべての測定結果を削除）</translation>
-    </message>
-    <message>
-        <location filename="../src/mainwindow.ui" line="744"/>
-        <source>Clear</source>
-        <translation>消去</translation>
-    </message>
-    <message>
-        <location filename="../src/mainwindow.ui" line="783"/>
+        <location filename="../src/mainwindow.ui" line="716"/>
         <source>Cursor Details</source>
-        <translation type="unfinished">カーソル詳細</translation>
+        <translation>カーソル詳細</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1059"/>
+        <location filename="../src/mainwindow.ui" line="1022"/>
         <source>&amp;File</source>
-        <translation type="unfinished">ファイル(&amp;F)</translation>
+        <translation>ファイル(&amp;F)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1076"/>
+        <location filename="../src/mainwindow.ui" line="1039"/>
         <source>&amp;Edit</source>
-        <translation type="unfinished">編集(&amp;E)</translation>
+        <translation>編集(&amp;E)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1082"/>
+        <location filename="../src/mainwindow.ui" line="1045"/>
         <source>&amp;View</source>
-        <translation type="unfinished">表示(&amp;V)</translation>
+        <translation>表示(&amp;V)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1097"/>
+        <location filename="../src/mainwindow.ui" line="1063"/>
         <source>&amp;Band Highlighting</source>
-        <translation type="unfinished">バンドハイライト(&amp;B)</translation>
+        <translation>バンドハイライト(&amp;B)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1102"/>
+        <location filename="../src/mainwindow.ui" line="1068"/>
         <source>&amp;Language</source>
-        <translation type="unfinished">言語(&amp;L)</translation>
+        <translation>言語(&amp;L)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1107"/>
+        <location filename="../src/mainwindow.ui" line="1073"/>
         <source>&amp;Theme</source>
-        <translation type="unfinished">テーマ(&amp;T)</translation>
+        <translation>テーマ(&amp;T)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1112"/>
+        <location filename="../src/mainwindow.ui" line="1078"/>
         <source>&amp;Tools</source>
         <translation>ツール(&amp;T)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1119"/>
+        <location filename="../src/mainwindow.ui" line="1085"/>
         <source>&amp;Help</source>
-        <translation type="unfinished">ヘルプ(&amp;H)</translation>
+        <translation>ヘルプ(&amp;H)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1132"/>
-        <source>&amp;Import Data...</source>
-        <translation type="unfinished">データのインポート...(&amp;I)</translation>
-    </message>
-    <message>
-        <location filename="../src/mainwindow.ui" line="1140"/>
-        <source>&amp;Export Data...</source>
-        <translation type="unfinished">データのエクスポート...(&amp;E)</translation>
-    </message>
-    <message>
-        <location filename="../src/mainwindow.ui" line="1148"/>
+        <location filename="../src/mainwindow.ui" line="1115"/>
         <source>&amp;Print...</source>
-        <translation type="unfinished">印刷...(&amp;P)</translation>
+        <translation>印刷...(&amp;P)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1156"/>
+        <location filename="../src/mainwindow.ui" line="1123"/>
         <source>&amp;Save Screenshot...</source>
-        <translation type="unfinished">スクリーンショットを保存...(&amp;S)</translation>
+        <translation>スクリーンショットを保存...(&amp;S)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1164"/>
+        <location filename="../src/mainwindow.ui" line="1131"/>
         <source>Screenshot from &amp;AA</source>
-        <translation type="unfinished">AAからスクリーンショット(&amp;A)</translation>
+        <translation>AAからスクリーンショット(&amp;A)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1172"/>
+        <location filename="../src/mainwindow.ui" line="1139"/>
         <source>&amp;Data from AA</source>
-        <translation type="unfinished">AAからのデータ(&amp;D)</translation>
+        <translation>AAからのデータ(&amp;D)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1180"/>
+        <location filename="../src/mainwindow.ui" line="1147"/>
         <source>Connect &amp;Analyzer...</source>
-        <translation type="unfinished">アナライザーに接続...(&amp;A)</translation>
+        <translation>アナライザーに接続...(&amp;A)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1185"/>
+        <location filename="../src/mainwindow.ui" line="1152"/>
         <source>&amp;Marker Comparison...</source>
         <translation>マーカー比較(&amp;M)...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1188"/>
+        <location filename="../src/mainwindow.ui" line="1155"/>
         <source>Compare two placed markers (frequency/SWR/RL/R/X, Q factor, equivalent L/C) and estimate an antenna trim to reach a target frequency</source>
         <translation>設置した2つのマーカーを比較(周波数/SWR/RL/R/X、Q値、等価L/C)し、目標周波数に到達するためのアンテナのトリム量を推定します</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1193"/>
+        <location filename="../src/mainwindow.ui" line="1160"/>
         <source>TDR &amp;Measurement...</source>
         <translation>TDR測定(&amp;M)...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1196"/>
+        <location filename="../src/mainwindow.ui" line="1163"/>
         <source>Set up and run a TDR scan (cable type/velocity factor, top frequency, points, window function, live unambiguous-range/resolution estimate), and after scanning: distance to the strongest reflection, open/short indication, and a velocity-factor calculator from a known cable length</source>
         <translation>TDRスキャンを設定して実行します(ケーブルの種類/速度係数、上限周波数、ポイント数、窓関数、リアルタイムの一意範囲/分解能の見積もり)。スキャン後は最も強い反射までの距離、オープン/ショートの表示、既知のケーブル長からの速度係数計算機能を提供します</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1201"/>
+        <location filename="../src/mainwindow.ui" line="1168"/>
         <source>&amp;Settings...</source>
-        <translation type="unfinished">設定...(&amp;S)</translation>
+        <translation>設定...(&amp;S)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1209"/>
+        <location filename="../src/mainwindow.ui" line="1176"/>
         <source>E&amp;xit</source>
-        <translation type="unfinished">終了(&amp;X)</translation>
+        <translation>終了(&amp;X)</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.ui" line="1181"/>
+        <source>&amp;About AntScopeZ...</source>
+        <translation>AntScopeZについて...(&amp;A)</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.ui" line="1186"/>
+        <source>&amp;User Guide</source>
+        <translation>ユーザーガイド(&amp;U)</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.ui" line="1197"/>
+        <source>Cursor &amp;Details</source>
+        <translation>カーソル詳細(&amp;D)</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.ui" line="1200"/>
+        <source>Show the Frequency/SWR/... readout panel</source>
+        <translation>周波数/SWR...の読み取りパネルを表示します</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.ui" line="1211"/>
+        <source>Show S21</source>
+        <translation>S21を表示</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1214"/>
-        <source>&amp;About AntScopeZ...</source>
-        <translation type="unfinished">AntScopeZについて...(&amp;A)</translation>
+        <source>Show the S21 (forward transmission) trace on the S21 tab</source>
+        <translation>S21タブにS21(順方向伝送)トレースを表示します</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1225"/>
-        <source>Cursor &amp;Details</source>
-        <translation type="unfinished">カーソル詳細(&amp;D)</translation>
+        <source>Show S12</source>
+        <translation>S12を表示</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1228"/>
-        <source>Show the Frequency/SWR/... readout panel</source>
-        <translation type="unfinished">周波数/SWR...の読み取りパネルを表示します</translation>
+        <source>Show the S12 (reverse transmission) trace on the S21 tab -- for a reciprocal (passive) device this is identical to S21, so it&apos;s off by default</source>
+        <translation>S21タブにS12(逆方向伝送)トレースを表示します -- 相反性のある(受動)デバイスではS21と同一になるため、デフォルトではオフです</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1239"/>
         <source>&amp;Markers Hint</source>
-        <translation type="unfinished">マーカーヒント(&amp;M)</translation>
+        <translation>マーカーヒント(&amp;M)</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1242"/>
         <source>Show the markers table popup</source>
-        <translation type="unfinished">マーカーテーブルのポップアップを表示します</translation>
+        <translation>マーカーテーブルのポップアップを表示します</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1253"/>
         <source>&amp;Cursor Params</source>
-        <translation type="unfinished">カーソルパラメータ(&amp;C)</translation>
+        <translation>カーソルパラメータ(&amp;C)</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1256"/>
         <source>Show brief params under the cursor</source>
-        <translation type="unfinished">カーソル位置の簡易パラメータを表示します</translation>
+        <translation>カーソル位置の簡易パラメータを表示します</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1264"/>
         <source>Show &amp;Band Name</source>
-        <translation type="unfinished">バンド名を表示(&amp;B)</translation>
+        <translation>バンド名を表示(&amp;B)</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1272"/>
         <source>&amp;Band Selector</source>
-        <translation type="unfinished">バンドセレクター(&amp;B)</translation>
+        <translation>バンドセレクター(&amp;B)</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1275"/>
         <source>Show the per-band Start/Stop selector above the Presets list</source>
-        <translation type="unfinished">プリセットリストの上にバンドごとの開始/終了セレクターを表示します</translation>
+        <translation>プリセットリストの上にバンドごとの開始/終了セレクターを表示します</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1280"/>
         <source>Edit &amp;ITU Bands...</source>
-        <translation type="unfinished">ITUバンドを編集...(&amp;I)</translation>
+        <translation>ITUバンドを編集...(&amp;I)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_analyzer.cpp" line="126"/>
+        <location filename="../src/mainwindow_analyzer.cpp" line="177"/>
         <source> - Analyzer not connected</source>
-        <translation type="unfinished"> - アナライザーが接続されていません</translation>
+        <translation> - アナライザーが接続されていません</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="720"/>
-        <location filename="../src/mainwindow_settings.cpp" line="348"/>
+        <location filename="../src/mainwindow.cpp" line="803"/>
+        <location filename="../src/mainwindow_settings.cpp" line="365"/>
         <source>Press F%1</source>
         <oldsource>Press(F%1)</oldsource>
-        <translation type="unfinished">F%1を押してください</translation>
+        <translation>F%1を押してください</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="845"/>
+        <location filename="../src/mainwindow.cpp" line="928"/>
         <location filename="../src/mainwindow_frequency.cpp" line="37"/>
         <source>Presets (limits), kHz</source>
-        <translation type="unfinished">プリセット（範囲）, kHz</translation>
+        <translation>プリセット（範囲）, kHz</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="850"/>
+        <location filename="../src/mainwindow.cpp" line="933"/>
         <location filename="../src/mainwindow_frequency.cpp" line="45"/>
         <source>Presets (center, range), kHz</source>
-        <translation type="unfinished">プリセット（中心、範囲）, kHz</translation>
+        <translation>プリセット（中心、範囲）, kHz</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="852"/>
+        <location filename="../src/mainwindow.cpp" line="935"/>
         <location filename="../src/mainwindow_frequency.cpp" line="47"/>
         <source>Range(+/-)</source>
-        <translation type="unfinished">範囲(+/-)</translation>
+        <translation>範囲(+/-)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1225"/>
-        <location filename="../src/mainwindow_settings.cpp" line="322"/>
-        <location filename="../src/mainwindow_settings.cpp" line="334"/>
+        <location filename="../src/mainwindow.cpp" line="1314"/>
+        <location filename="../src/mainwindow_settings.cpp" line="339"/>
+        <location filename="../src/mainwindow_settings.cpp" line="351"/>
         <location filename="../src/mainwindow_tabs.cpp" line="147"/>
         <source>SWR</source>
-        <translation type="unfinished">SWR</translation>
+        <translation>SWR</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1310"/>
-        <location filename="../src/mainwindow_settings.cpp" line="326"/>
+        <location filename="../src/mainwindow.cpp" line="1405"/>
+        <location filename="../src/mainwindow_settings.cpp" line="343"/>
         <source>Rs, Ohm</source>
         <translation>Rs, Ω</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1333"/>
-        <location filename="../src/mainwindow_settings.cpp" line="328"/>
+        <location filename="../src/mainwindow.cpp" line="1428"/>
+        <location filename="../src/mainwindow_settings.cpp" line="345"/>
         <source>Rp, Ohm</source>
         <translation>Rp, Ω</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1355"/>
-        <location filename="../src/mainwindow_settings.cpp" line="330"/>
+        <location filename="../src/mainwindow.cpp" line="1450"/>
+        <location filename="../src/mainwindow_settings.cpp" line="347"/>
         <source>RL, dB</source>
-        <translation type="unfinished">RL, dB</translation>
+        <translation>RL, dB</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1376"/>
-        <location filename="../src/mainwindow_settings.cpp" line="331"/>
+        <location filename="../src/mainwindow.cpp" line="1471"/>
+        <location filename="../src/mainwindow_settings.cpp" line="348"/>
         <source>Length, m</source>
         <translation>長さ、ｍ</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1390"/>
+        <location filename="../src/mainwindow.cpp" line="1485"/>
         <source>SR/IR</source>
-        <translation type="unfinished">SR/IR</translation>
+        <translation>SR/IR</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1395"/>
+        <location filename="../src/mainwindow.cpp" line="1490"/>
         <source>|Z|</source>
-        <translation type="unfinished">|Z|</translation>
+        <translation>|Z|</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1419"/>
+        <location filename="../src/mainwindow.cpp" line="1514"/>
         <source>S21, dB</source>
-        <translation type="unfinished">S21, dB</translation>
+        <translation>S21, dB</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1430"/>
+        <location filename="../src/mainwindow.cpp" line="1525"/>
         <source>Phase, deg</source>
         <translation>位相, deg</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_settings.cpp" line="335"/>
+        <location filename="../src/mainwindow_settings.cpp" line="352"/>
         <location filename="../src/mainwindow_tabs.cpp" line="169"/>
         <source>Phase</source>
         <translation>位相</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_settings.cpp" line="336"/>
+        <location filename="../src/mainwindow_settings.cpp" line="353"/>
         <location filename="../src/mainwindow_tabs.cpp" line="192"/>
         <source>Z=R+jX</source>
-        <translation type="unfinished">Z=R+jX</translation>
+        <translation>Z=R+jX</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_settings.cpp" line="337"/>
+        <location filename="../src/mainwindow_settings.cpp" line="354"/>
         <location filename="../src/mainwindow_tabs.cpp" line="214"/>
         <source>Z=R||+jX</source>
         <translation>R||+jX</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_settings.cpp" line="338"/>
+        <location filename="../src/mainwindow_settings.cpp" line="355"/>
         <location filename="../src/mainwindow_tabs.cpp" line="234"/>
         <source>RL</source>
-        <translation type="unfinished">RL</translation>
+        <translation>RL</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_settings.cpp" line="340"/>
+        <location filename="../src/mainwindow_settings.cpp" line="357"/>
         <location filename="../src/mainwindow_tabs.cpp" line="256"/>
         <source>S21</source>
-        <translation type="unfinished">S21</translation>
+        <translation>S21</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_settings.cpp" line="339"/>
+        <location filename="../src/mainwindow_settings.cpp" line="356"/>
         <location filename="../src/mainwindow_tabs.cpp" line="278"/>
         <source>TDR</source>
-        <translation type="unfinished">TDR</translation>
+        <translation>TDR</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_settings.cpp" line="341"/>
+        <location filename="../src/mainwindow_settings.cpp" line="358"/>
         <location filename="../src/mainwindow_tabs.cpp" line="300"/>
         <source>Smith</source>
         <translation>スミス</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_analyzer.cpp" line="159"/>
+        <location filename="../src/mainwindow_analyzer.cpp" line="118"/>
+        <source>USB</source>
+        <translation>USB</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow_analyzer.cpp" line="119"/>
+        <source>Serial</source>
+        <translation>Serial</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow_analyzer.cpp" line="120"/>
+        <source>NanoVNA ASCII</source>
+        <translation>NanoVNA ASCII</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow_analyzer.cpp" line="121"/>
+        <source>NanoVNA Binary</source>
+        <translation>NanoVNA Binary</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow_analyzer.cpp" line="122"/>
+        <source>Bluetooth</source>
+        <translation>Bluetooth</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow_analyzer.cpp" line="123"/>
+        <source>BLE</source>
+        <translation>BLE</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow_analyzer.cpp" line="124"/>
+        <source>Unknown</source>
+        <translation>不明</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow_analyzer.cpp" line="210"/>
         <source>Screen shot</source>
-        <translation type="unfinished">スクリーンショット</translation>
+        <translation>スクリーンショット</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_analyzer.cpp" line="159"/>
+        <location filename="../src/mainwindow_analyzer.cpp" line="210"/>
         <source>To get screenshots on this analyzer, you need to use the LCD2Clip utility from the https://rigexpert.com</source>
-        <translation type="unfinished">このアナライザーでスクリーンショットを取得するには、https://rigexpert.com のLCD2Clipユーティリティを使用する必要があります</translation>
+        <translation>このアナライザーでスクリーンショットを取得するには、https://rigexpert.com のLCD2Clipユーティリティを使用する必要があります</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="238"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="80"/>
+        <source>This measurement has unsaved changes. Delete it anyway?</source>
+        <translation>この測定には未保存の変更があります。それでも削除しますか?</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="81"/>
+        <source>%1 of these measurements have unsaved changes. Delete them anyway?</source>
+        <translation>これらの測定のうち%1件に未保存の変更があります。それでも削除しますか?</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="82"/>
+        <source>Unsaved changes</source>
+        <translation>未保存の変更</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="313"/>
         <source>Export PNG</source>
-        <translation type="unfinished">PNGをエクスポート</translation>
+        <translation>PNGをエクスポート</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="290"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="365"/>
         <source>SWR graph</source>
-        <translation type="unfinished">SWRグラフ</translation>
+        <translation>SWRグラフ</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="308"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="384"/>
         <source>Phase graph</source>
-        <translation type="unfinished">位相グラフ</translation>
+        <translation>位相グラフ</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="325"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="402"/>
         <source>RXZ graph</source>
-        <translation type="unfinished">RXZグラフ</translation>
+        <translation>RXZグラフ</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="342"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="420"/>
         <source>RXZ parallel graph</source>
-        <translation type="unfinished">RXZ並列グラフ</translation>
+        <translation>RXZ並列グラフ</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="359"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="438"/>
         <source>RL graph</source>
-        <translation type="unfinished">RLグラフ</translation>
+        <translation>RLグラフ</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="376"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="456"/>
         <source>S21 graph</source>
-        <translation type="unfinished">S21グラフ</translation>
+        <translation>S21グラフ</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="393"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="473"/>
         <source>TDR graph</source>
-        <translation type="unfinished">TDRグラフ</translation>
+        <translation>TDRグラフ</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="411"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="492"/>
         <source>Smith graph</source>
-        <translation type="unfinished">スミスチャート</translation>
+        <translation>スミスチャート</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="517"/>
-        <source>Save file</source>
-        <translation type="unfinished">ファイルを保存</translation>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="687"/>
+        <source>Select Color...</source>
+        <translation>色を選択...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="550"/>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="572"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="694"/>
+        <source>Rename...</source>
+        <translation>名前の変更...</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="698"/>
+        <source>Save as...</source>
+        <translation>名前を付けて保存...</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="709"/>
+        <source>Clear All</source>
+        <translation>すべてクリア</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="586"/>
         <source>Open file</source>
-        <translation type="unfinished">ファイル選択</translation>
+        <translation>ファイル選択</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_markers.cpp" line="51"/>
+        <location filename="../src/mainwindow_markers.cpp" line="52"/>
         <source>Maximum number of markers reached (%1) -- remove one, or raise the limit in Settings.</source>
-        <translation type="unfinished">マーカーの最大数（%1）に達しました。1つ削除するか、設定で上限を引き上げてください。</translation>
+        <translation>マーカーの最大数（%1）に達しました。1つ削除するか、設定で上限を引き上げてください。</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_markers.cpp" line="70"/>
+        <location filename="../src/mainwindow_markers.cpp" line="87"/>
         <source>Create marker</source>
-        <translation type="unfinished">マーカーを作成</translation>
+        <translation>マーカーを作成</translation>
     </message>
     <message>
         <location filename="../src/mainwindow_presets_bands.cpp" line="181"/>
         <source>Select a band</source>
-        <translation type="unfinished">バンドを選択</translation>
+        <translation>バンドを選択</translation>
     </message>
     <message>
         <location filename="../src/mainwindow_presets_bands.cpp" line="195"/>
         <source>%1 (%2 - %3 kHz)</source>
-        <translation type="unfinished">%1 (%2 - %3 kHz)</translation>
+        <translation>%1 (%2 - %3 kHz)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_settings.cpp" line="404"/>
+        <location filename="../src/mainwindow_settings.cpp" line="451"/>
         <source>Calibration Required</source>
-        <translation type="unfinished">キャリブレーションが必要です</translation>
+        <translation>キャリブレーションが必要です</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_settings.cpp" line="405"/>
+        <location filename="../src/mainwindow_settings.cpp" line="452"/>
         <source>This analyzer hasn&apos;t been calibrated yet.
 
 Connect it, then open Settings and go to the &quot;OSL Calibration&quot; tab to run the Calibration Wizard (or Open/Short/Load individually). That tab also shows the folder AntScopeZ is using for calibration files, if you&apos;re trying to place existing ones by hand.</source>
-        <translation type="unfinished">このアナライザーはまだキャリブレーションされていません。
+        <translation>このアナライザーはまだキャリブレーションされていません。
 
 接続してから設定を開き、「OSLキャリブレーション」タブでキャリブレーションウィザードを実行してください（または開放/短絡/負荷を個別に実行）。既存のキャリブレーションファイルを手動で配置する場合は、このタブにAntScopeZが使用しているフォルダーも表示されます。</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_multitab.cpp" line="111"/>
+        <location filename="../src/mainwindow_multitab.cpp" line="121"/>
         <source>Join </source>
-        <translation type="unfinished">結合 </translation>
+        <translation>結合 </translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_multitab.cpp" line="122"/>
+        <location filename="../src/mainwindow_multitab.cpp" line="132"/>
         <source>Close </source>
-        <translation type="unfinished">閉じる </translation>
+        <translation>閉じる </translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_multitab.cpp" line="128"/>
+        <location filename="../src/mainwindow_multitab.cpp" line="138"/>
         <source>Close all </source>
-        <translation type="unfinished">すべて閉じる </translation>
+        <translation>すべて閉じる </translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1455"/>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="435"/>
-        <location filename="../src/mainwindow_settings.cpp" line="343"/>
+        <location filename="../src/mainwindow.cpp" line="1562"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="516"/>
+        <location filename="../src/mainwindow_settings.cpp" line="360"/>
         <location filename="../src/mainwindow_tabs.cpp" line="328"/>
-        <location filename="../src/mainwindow_tabs.cpp" line="579"/>
+        <location filename="../src/mainwindow_tabs.cpp" line="597"/>
         <source>User defined</source>
-        <translation type="unfinished">ユーザー定義</translation>
+        <translation>ユーザー定義</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="596"/>
+        <location filename="../src/mainwindow.cpp" line="679"/>
         <source>File of AntScopeZ</source>
-        <translation type="unfinished">AntScopeZのファイル</translation>
+        <translation>AntScopeZのファイル</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1275"/>
-        <location filename="../src/mainwindow_settings.cpp" line="324"/>
+        <location filename="../src/mainwindow.cpp" line="412"/>
+        <source>Ready</source>
+        <translation>準備完了</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="414"/>
+        <location filename="../src/mainwindow_analyzer.cpp" line="112"/>
+        <source>Not connected</source>
+        <translation>未接続</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="1370"/>
+        <location filename="../src/mainwindow_settings.cpp" line="341"/>
         <source>Phase, Angle</source>
-        <translation type="unfinished">位相、角度</translation>
+        <translation>位相、角度</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="447"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="528"/>
         <location filename="../src/mainwindow_tabs.cpp" line="341"/>
         <source>Multi</source>
-        <translation type="unfinished">マルチ</translation>
+        <translation>マルチ</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_tabs.cpp" line="383"/>
+        <location filename="../src/mainwindow_tabs.cpp" line="387"/>
         <source>Move chart to the tab Multi</source>
-        <translation type="unfinished">グラフをマルチタブに移動</translation>
+        <translation>グラフをマルチタブに移動</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_tabs.cpp" line="394"/>
+        <location filename="../src/mainwindow_tabs.cpp" line="398"/>
         <source>Add multi-charts</source>
-        <translation type="unfinished">マルチグラフを追加</translation>
+        <translation>マルチグラフを追加</translation>
     </message>
     <message>
         <location filename="../src/mainwindow_scan.cpp" line="38"/>
@@ -1795,9 +1975,14 @@ Connect it, then open Settings and go to the &quot;OSL Calibration&quot; tab to 
         <translation>このスキャンは%1ポイントを要求します。これは設定されている警告しきい値の%2を超えています(設定 &gt; 一般)。ポイント数が多いと完了に時間がかかる場合があります。続行しますか?</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_scan.cpp" line="873"/>
+        <location filename="../src/mainwindow_scan.cpp" line="970"/>
+        <source>Analyzer Error</source>
+        <translation>アナライザーエラー</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow_scan.cpp" line="993"/>
         <source>Remains %1</source>
-        <translation type="unfinished">残り %1</translation>
+        <translation>残り %1</translation>
     </message>
 </context>
 <context>
@@ -1976,117 +2161,117 @@ Connect it, then open Settings and go to the &quot;OSL Calibration&quot; tab to 
 <context>
     <name>MarkersHeaderColumn</name>
     <message>
-        <location filename="../src/markerspopup.cpp" line="633"/>
+        <location filename="../src/markerspanel.cpp" line="255"/>
         <source>x</source>
-        <translation type="unfinished"></translation>
+        <translation>x</translation>
     </message>
     <message>
-        <location filename="../src/markerspopup.cpp" line="634"/>
+        <location filename="../src/markerspanel.cpp" line="256"/>
         <source>Marker</source>
-        <translation type="unfinished">マーカー</translation>
+        <translation>マーカー</translation>
     </message>
     <message>
-        <location filename="../src/markerspopup.cpp" line="635"/>
+        <location filename="../src/markerspanel.cpp" line="257"/>
         <source> # </source>
-        <translation type="unfinished"></translation>
+        <translation> No. </translation>
     </message>
     <message>
-        <location filename="../src/markerspopup.cpp" line="636"/>
+        <location filename="../src/markerspanel.cpp" line="258"/>
         <source>FQ, kHz</source>
-        <translation type="unfinished"></translation>
+        <translation>FQ, kHz</translation>
     </message>
     <message>
-        <location filename="../src/markerspopup.cpp" line="637"/>
+        <location filename="../src/markerspanel.cpp" line="259"/>
         <source>SWR</source>
-        <translation type="unfinished">SWR</translation>
+        <translation>SWR</translation>
     </message>
     <message>
-        <location filename="../src/markerspopup.cpp" line="638"/>
+        <location filename="../src/markerspanel.cpp" line="260"/>
         <source>RL, dB</source>
-        <translation type="unfinished">RL, dB</translation>
+        <translation>RL, dB</translation>
     </message>
     <message>
-        <location filename="../src/markerspopup.cpp" line="639"/>
+        <location filename="../src/markerspanel.cpp" line="261"/>
         <source>Phase°</source>
-        <translation type="unfinished"></translation>
+        <translation>位相°</translation>
     </message>
     <message>
-        <location filename="../src/markerspopup.cpp" line="640"/>
+        <location filename="../src/markerspanel.cpp" line="262"/>
         <source>R, Ohm</source>
-        <translation type="unfinished"></translation>
+        <translation>R, Ω</translation>
     </message>
     <message>
-        <location filename="../src/markerspopup.cpp" line="641"/>
+        <location filename="../src/markerspanel.cpp" line="263"/>
         <source>X, Ohm</source>
-        <translation type="unfinished"></translation>
+        <translation>X, Ω</translation>
     </message>
     <message>
-        <location filename="../src/markerspopup.cpp" line="642"/>
+        <location filename="../src/markerspanel.cpp" line="264"/>
         <source>Z, Ohm</source>
-        <translation type="unfinished"></translation>
+        <translation>Z, Ω</translation>
     </message>
     <message>
-        <location filename="../src/markerspopup.cpp" line="643"/>
+        <location filename="../src/markerspanel.cpp" line="265"/>
         <source>L, nH</source>
-        <translation type="unfinished"></translation>
+        <translation>L, nH</translation>
     </message>
     <message>
-        <location filename="../src/markerspopup.cpp" line="644"/>
+        <location filename="../src/markerspanel.cpp" line="266"/>
         <source>C, pF</source>
-        <translation type="unfinished"></translation>
+        <translation>C, pF</translation>
     </message>
     <message>
-        <location filename="../src/markerspopup.cpp" line="645"/>
+        <location filename="../src/markerspanel.cpp" line="267"/>
         <source>rho</source>
-        <translation type="unfinished"></translation>
+        <translation>rho</translation>
     </message>
     <message>
-        <location filename="../src/markerspopup.cpp" line="646"/>
+        <location filename="../src/markerspanel.cpp" line="268"/>
         <source>|Z|, Ohm</source>
-        <translation type="unfinished"></translation>
+        <translation>|Z|, Ω</translation>
     </message>
     <message>
-        <location filename="../src/markerspopup.cpp" line="647"/>
+        <location filename="../src/markerspanel.cpp" line="269"/>
         <source>R||, Ohm</source>
-        <translation type="unfinished"></translation>
+        <translation>R||, Ω</translation>
     </message>
     <message>
-        <location filename="../src/markerspopup.cpp" line="648"/>
+        <location filename="../src/markerspanel.cpp" line="270"/>
         <source>X||, Ohm</source>
-        <translation type="unfinished"></translation>
+        <translation>X||, Ω</translation>
     </message>
     <message>
-        <location filename="../src/markerspopup.cpp" line="649"/>
+        <location filename="../src/markerspanel.cpp" line="271"/>
         <source>Z||, Ohm</source>
-        <translation type="unfinished"></translation>
+        <translation>Z||, Ω</translation>
     </message>
     <message>
-        <location filename="../src/markerspopup.cpp" line="650"/>
+        <location filename="../src/markerspanel.cpp" line="272"/>
         <source>L||, nH</source>
-        <translation type="unfinished"></translation>
+        <translation>L||, nH</translation>
     </message>
     <message>
-        <location filename="../src/markerspopup.cpp" line="651"/>
+        <location filename="../src/markerspanel.cpp" line="273"/>
         <source>C||, pF</source>
-        <translation type="unfinished"></translation>
+        <translation>C||, pF</translation>
     </message>
     <message>
-        <location filename="../src/markerspopup.cpp" line="652"/>
+        <location filename="../src/markerspanel.cpp" line="274"/>
         <source>S21, dB</source>
         <translation>S21, dB</translation>
     </message>
     <message>
-        <location filename="../src/markerspopup.cpp" line="653"/>
+        <location filename="../src/markerspanel.cpp" line="275"/>
         <source>S21 Phase°</source>
         <translation>S21 位相°</translation>
     </message>
     <message>
-        <location filename="../src/markerspopup.cpp" line="654"/>
+        <location filename="../src/markerspanel.cpp" line="276"/>
         <source>S12, dB</source>
         <translation>S12, dB</translation>
     </message>
     <message>
-        <location filename="../src/markerspopup.cpp" line="655"/>
+        <location filename="../src/markerspanel.cpp" line="277"/>
         <source>S12 Phase°</source>
         <translation>S12 位相°</translation>
     </message>
@@ -2094,202 +2279,206 @@ Connect it, then open Settings and go to the &quot;OSL Calibration&quot; tab to 
 <context>
     <name>Measurements</name>
     <message>
-        <location filename="../src/measurements.cpp" line="210"/>
+        <location filename="../src/measurements.cpp" line="246"/>
         <source>Measurement name:</source>
-        <translation type="unfinished">測定名:</translation>
+        <translation>測定名:</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="226"/>
-        <location filename="../src/measurements.cpp" line="447"/>
-        <location filename="../src/measurements.cpp" line="453"/>
-        <location filename="../src/measurements.cpp" line="1617"/>
-        <source>
-Double-click an item to rescale the chart.
-Right-click an item to change color</source>
-        <translation type="unfinished">
-項目をダブルクリックするとグラフの縮尺を変更できます。
-項目を右クリックすると色を変更できます</translation>
-    </message>
-    <message>
-        <location filename="../src/measurements.cpp" line="272"/>
+        <location filename="../src/measurements.cpp" line="344"/>
         <location filename="../src/measurements_popups.cpp" line="320"/>
         <location filename="../src/measurements_popups.cpp" line="671"/>
         <location filename="../src/measurements_popups.cpp" line="1096"/>
         <source>Frequency</source>
-        <translation type="unfinished">周波数</translation>
+        <translation>周波数</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="273"/>
+        <location filename="../src/measurements.cpp" line="345"/>
         <location filename="../src/measurements_popups.cpp" line="321"/>
         <location filename="../src/measurements_popups.cpp" line="1097"/>
         <source>SWR</source>
-        <translation type="unfinished">SWR</translation>
+        <translation>SWR</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="274"/>
+        <location filename="../src/measurements.cpp" line="346"/>
         <location filename="../src/measurements_popups.cpp" line="322"/>
         <location filename="../src/measurements_popups.cpp" line="1098"/>
         <source>RL</source>
-        <translation type="unfinished">RL</translation>
+        <translation>RL</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="275"/>
+        <location filename="../src/measurements.cpp" line="347"/>
         <location filename="../src/measurements_popups.cpp" line="323"/>
         <location filename="../src/measurements_popups.cpp" line="1099"/>
         <source>Z</source>
-        <translation type="unfinished">Z</translation>
+        <translation>Z</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="277"/>
+        <location filename="../src/measurements.cpp" line="349"/>
         <location filename="../src/measurements_popups.cpp" line="325"/>
         <location filename="../src/measurements_popups.cpp" line="1101"/>
         <source>|rho|</source>
-        <translation type="unfinished">|rho|</translation>
+        <translation>|rho|</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="278"/>
+        <location filename="../src/measurements.cpp" line="350"/>
         <location filename="../src/measurements_popups.cpp" line="326"/>
         <location filename="../src/measurements_popups.cpp" line="1102"/>
         <source>Phase</source>
-        <translation type="unfinished">位相</translation>
+        <translation>位相</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="279"/>
+        <location filename="../src/measurements.cpp" line="351"/>
         <location filename="../src/measurements_popups.cpp" line="330"/>
         <location filename="../src/measurements_popups.cpp" line="1106"/>
         <source>C</source>
-        <translation type="unfinished">C</translation>
+        <translation>C</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="280"/>
+        <location filename="../src/measurements.cpp" line="352"/>
         <location filename="../src/measurements_popups.cpp" line="332"/>
         <location filename="../src/measurements_popups.cpp" line="1108"/>
         <source>Zpar</source>
-        <translation type="unfinished">Zpar</translation>
+        <translation>Zpar</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="281"/>
+        <location filename="../src/measurements.cpp" line="353"/>
         <location filename="../src/measurements_popups.cpp" line="336"/>
         <location filename="../src/measurements_popups.cpp" line="1112"/>
         <source>Cpar</source>
-        <translation type="unfinished">Cpar</translation>
+        <translation>Cpar</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="282"/>
+        <location filename="../src/measurements.cpp" line="354"/>
         <location filename="../src/measurements_popups.cpp" line="359"/>
         <location filename="../src/measurements_popups.cpp" line="1135"/>
         <source>Cable</source>
-        <translation type="unfinished">ケーブル</translation>
+        <translation>ケーブル</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="430"/>
-        <location filename="../src/measurements.cpp" line="1602"/>
+        <location filename="../src/measurements.cpp" line="584"/>
+        <location filename="../src/measurements.cpp" line="1850"/>
         <source>FQ:%1kHz SW:%2kHz Points:%3</source>
-        <translation type="unfinished">FQ:%1kHz SW:%2kHz ポイント数:%3</translation>
+        <translation>FQ:%1kHz SW:%2kHz ポイント数:%3</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="436"/>
-        <location filename="../src/measurements.cpp" line="1608"/>
+        <location filename="../src/measurements.cpp" line="590"/>
+        <location filename="../src/measurements.cpp" line="1856"/>
         <source>Start:%1kHz Stop:%2kHz Points:%3</source>
-        <translation type="unfinished">開始:%1kHz 終了:%2kHz ポイント数:%3</translation>
+        <translation>開始:%1kHz 終了:%2kHz ポイント数:%3</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="523"/>
+        <location filename="../src/measurements.cpp" line="279"/>
+        <location filename="../src/measurements.cpp" line="701"/>
         <source>S21 (dB)</source>
         <translation>S21 (dB)</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="525"/>
+        <location filename="../src/measurements.cpp" line="264"/>
+        <location filename="../src/measurements.cpp" line="601"/>
+        <location filename="../src/measurements.cpp" line="607"/>
+        <location filename="../src/measurements.cpp" line="1865"/>
+        <source>
+Double-click an item to rescale the chart.
+Right-click an item for more options</source>
+        <translation>
+項目をダブルクリックするとチャートが再スケールされます。
+項目を右クリックすると他のオプションが表示されます</translation>
+    </message>
+    <message>
+        <location filename="../src/measurements.cpp" line="280"/>
+        <location filename="../src/measurements.cpp" line="703"/>
         <source>S21 (deg)</source>
         <translation>S21 (deg)</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="528"/>
+        <location filename="../src/measurements.cpp" line="281"/>
+        <location filename="../src/measurements.cpp" line="706"/>
         <source>S12 (dB)</source>
         <translation>S12 (dB)</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="530"/>
+        <location filename="../src/measurements.cpp" line="282"/>
+        <location filename="../src/measurements.cpp" line="708"/>
         <source>S12 (deg)</source>
         <translation>S12 (deg)</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="535"/>
+        <location filename="../src/measurements.cpp" line="713"/>
         <location filename="../src/measurements_popups.cpp" line="539"/>
         <source>Impulse response</source>
         <translation>インパルス応答</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="537"/>
+        <location filename="../src/measurements.cpp" line="715"/>
         <location filename="../src/measurements_popups.cpp" line="540"/>
         <source>Step response</source>
         <translation>ステップ応答</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="276"/>
-        <location filename="../src/measurements.cpp" line="539"/>
+        <location filename="../src/measurements.cpp" line="348"/>
+        <location filename="../src/measurements.cpp" line="717"/>
         <location filename="../src/measurements_popups.cpp" line="324"/>
         <location filename="../src/measurements_popups.cpp" line="541"/>
         <location filename="../src/measurements_popups.cpp" line="1100"/>
         <source>|Z|</source>
-        <translation type="unfinished">|Z|</translation>
+        <translation>|Z|</translation>
     </message>
     <message>
         <location filename="../src/measurements_popups.cpp" line="328"/>
         <location filename="../src/measurements_popups.cpp" line="1104"/>
         <source>L</source>
-        <translation type="unfinished">L</translation>
+        <translation>L</translation>
     </message>
     <message>
         <location filename="../src/measurements_popups.cpp" line="334"/>
         <location filename="../src/measurements_popups.cpp" line="1110"/>
         <source>Lpar</source>
-        <translation type="unfinished">Lpar</translation>
+        <translation>Lpar</translation>
     </message>
     <message>
         <location filename="../src/measurements_popups.cpp" line="344"/>
         <location filename="../src/measurements_popups.cpp" line="1120"/>
         <source>m</source>
-        <translation type="unfinished">m</translation>
+        <translation>m</translation>
     </message>
     <message>
         <location filename="../src/measurements_popups.cpp" line="347"/>
         <location filename="../src/measurements_popups.cpp" line="1123"/>
         <source>ft</source>
-        <translation type="unfinished">ft</translation>
+        <translation>ft</translation>
     </message>
     <message>
         <location filename="../src/measurements_popups.cpp" line="359"/>
         <location filename="../src/measurements_popups.cpp" line="1135"/>
         <source>length(1/4) = %1 %2, length(1/2) = %3 %4</source>
-        <translation type="unfinished">長さ(1/4) = %1 %2, 長さ(1/2) = %3 %4</translation>
+        <translation>長さ(1/4) = %1 %2, 長さ(1/2) = %3 %4</translation>
     </message>
     <message>
         <location filename="../src/measurements_popups.cpp" line="536"/>
         <source>Distance</source>
-        <translation type="unfinished">距離</translation>
+        <translation>距離</translation>
     </message>
     <message>
         <location filename="../src/measurements_popups.cpp" line="537"/>
         <source>Distance in air</source>
-        <translation type="unfinished">空気中の距離</translation>
+        <translation>空気中の距離</translation>
     </message>
     <message>
         <location filename="../src/measurements_popups.cpp" line="538"/>
         <source>Time</source>
-        <translation type="unfinished">時間</translation>
+        <translation>時間</translation>
     </message>
     <message>
         <location filename="../src/measurements_popups.cpp" line="547"/>
         <source>Distance = %1 %2
 |Z| = %3 Ohm</source>
-        <translation type="unfinished">距離 = %1 %2
+        <translation>距離 = %1 %2
 |Z| = %3 Ω</translation>
     </message>
     <message>
         <location filename="../src/measurements_popups.cpp" line="672"/>
         <source>S21</source>
-        <translation type="unfinished">S21</translation>
+        <translation>S21</translation>
     </message>
     <message>
         <location filename="../src/measurements_popups.cpp" line="673"/>
@@ -2315,71 +2504,71 @@ Right-click an item to change color</source>
     <message>
         <location filename="../src/measurements_io.cpp" line="98"/>
         <source>Couldn&apos;t open saved file.</source>
-        <translation type="unfinished">保存されたファイルを開けませんでした。</translation>
+        <translation>保存されたファイルを開けませんでした。</translation>
     </message>
     <message>
         <location filename="../src/measurements_io.cpp" line="112"/>
         <source>The saved file is too short.</source>
-        <translation type="unfinished">保存されたファイルが短すぎます。</translation>
+        <translation>保存されたファイルが短すぎます。</translation>
     </message>
     <message>
-        <location filename="../src/measurements_io.cpp" line="136"/>
+        <location filename="../src/measurements_io.cpp" line="137"/>
         <source>Load measurement</source>
-        <translation type="unfinished">測定を読み込む</translation>
+        <translation>測定を読み込む</translation>
     </message>
     <message>
         <location filename="../src/measurements_autocal.cpp" line="31"/>
-        <location filename="../src/measurements_io.cpp" line="137"/>
+        <location filename="../src/measurements_io.cpp" line="138"/>
         <location filename="../src/measurements_tdr.cpp" line="428"/>
         <source>please wait ....</source>
-        <translation type="unfinished">お待ちください ....</translation>
+        <translation>お待ちください ....</translation>
     </message>
     <message>
-        <location filename="../src/measurements_io.cpp" line="150"/>
+        <location filename="../src/measurements_io.cpp" line="151"/>
         <source>loaded %1 dots, from %2</source>
-        <translation type="unfinished">%2から%1ポイントを読み込みました</translation>
+        <translation>%2から%1ポイントを読み込みました</translation>
     </message>
     <message>
-        <location filename="../src/measurements_io.cpp" line="963"/>
+        <location filename="../src/measurements_io.cpp" line="968"/>
         <source>Load data</source>
-        <translation type="unfinished">データを読み込む</translation>
+        <translation>データを読み込む</translation>
     </message>
     <message>
-        <location filename="../src/measurements_io.cpp" line="963"/>
+        <location filename="../src/measurements_io.cpp" line="968"/>
         <source>Oops, this format is not supported!</source>
-        <translation type="unfinished">このフォーマットはサポートされていません！</translation>
+        <translation>このフォーマットはサポートされていません！</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="1550"/>
-        <location filename="../src/measurements.cpp" line="1572"/>
+        <location filename="../src/measurements.cpp" line="1798"/>
+        <location filename="../src/measurements.cpp" line="1820"/>
         <source>Length, m</source>
         <translation>長さ、m</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="1554"/>
-        <location filename="../src/measurements.cpp" line="1572"/>
+        <location filename="../src/measurements.cpp" line="1802"/>
+        <location filename="../src/measurements.cpp" line="1820"/>
         <source>Length, feet</source>
         <translation>長さ、フィート</translation>
     </message>
     <message>
         <location filename="../src/measurements_tdr.cpp" line="427"/>
         <source>TDR measuring</source>
-        <translation type="unfinished">TDR測定中</translation>
+        <translation>TDR測定中</translation>
     </message>
     <message>
         <location filename="../src/measurements_tdr.cpp" line="477"/>
         <source>processed %1 dots, from %2</source>
-        <translation type="unfinished">%2から%1ポイントを処理しました</translation>
+        <translation>%2から%1ポイントを処理しました</translation>
     </message>
     <message>
         <location filename="../src/measurements_autocal.cpp" line="30"/>
         <source>Auto calibration</source>
-        <translation type="unfinished">自動キャリブレーション</translation>
+        <translation>自動キャリブレーション</translation>
     </message>
     <message>
         <location filename="../src/measurements_autocal.cpp" line="53"/>
         <source>Iteration %1. %2</source>
-        <translation type="unfinished">繰り返し %1。%2</translation>
+        <translation>繰り返し %1。%2</translation>
     </message>
     <message>
         <location filename="../src/measurements_farend.cpp" line="266"/>
@@ -2389,7 +2578,7 @@ Right-click an item to change color</source>
     <message>
         <location filename="../src/measurements_farend.cpp" line="272"/>
         <source>Export</source>
-        <translation type="unfinished">書出し</translation>
+        <translation>書出し</translation>
     </message>
 </context>
 <context>
@@ -2397,12 +2586,40 @@ Right-click an item to change color</source>
     <message>
         <location filename="../src/modelesspopup.ui" line="51"/>
         <source>Cancel</source>
-        <translation type="unfinished">キャンセル</translation>
+        <translation>キャンセル</translation>
     </message>
     <message>
         <location filename="../src/modelesspopup.ui" line="58"/>
         <source>Ok</source>
-        <translation type="unfinished">OK</translation>
+        <translation>OK</translation>
+    </message>
+</context>
+<context>
+    <name>NanovnaAnalyzer</name>
+    <message>
+        <location filename="../analyzer/nanovna_analyzer.cpp" line="434"/>
+        <source>NanoVNA binary scan reply didn&apos;t match the request (mask %1 vs %2, points %3 vs %4) -- falling back to ASCII scanning.</source>
+        <translation>NanoVNAバイナリスキャンの応答がリクエストと一致しません(マスク%1対%2、ポイント%3対%4) -- ASCIIスキャンにフォールバックします。</translation>
+    </message>
+    <message>
+        <location filename="../analyzer/nanovna_analyzer.cpp" line="646"/>
+        <source>ASCII+Binary</source>
+        <translation>ASCII+Binary</translation>
+    </message>
+    <message>
+        <location filename="../analyzer/nanovna_analyzer.cpp" line="647"/>
+        <source>ASCII</source>
+        <translation>ASCII</translation>
+    </message>
+    <message>
+        <location filename="../analyzer/nanovna_analyzer.cpp" line="648"/>
+        <source>Legacy</source>
+        <translation>Legacy</translation>
+    </message>
+    <message>
+        <location filename="../analyzer/nanovna_analyzer.cpp" line="650"/>
+        <source>Unknown</source>
+        <translation>不明</translation>
     </message>
 </context>
 <context>
@@ -2451,25 +2668,25 @@ Right-click an item to change color</source>
         <location filename="../src/print.ui" line="195"/>
         <source>Save as
 .png</source>
-        <translation type="unfinished">名前を付けて保存
+        <translation>名前を付けて保存
 .png</translation>
     </message>
     <message>
         <location filename="../src/print.ui" line="209"/>
         <source>Save as
 .pdf</source>
-        <translation type="unfinished">名前を付けて保存
+        <translation>名前を付けて保存
 .pdf</translation>
     </message>
     <message>
-        <location filename="../src/print.cpp" line="349"/>
+        <location filename="../src/print.cpp" line="367"/>
         <source>Export PDF</source>
-        <translation type="unfinished">PDFをエクスポート</translation>
+        <translation>PDFをエクスポート</translation>
     </message>
     <message>
-        <location filename="../src/print.cpp" line="397"/>
+        <location filename="../src/print.cpp" line="415"/>
         <source>Export PNG</source>
-        <translation type="unfinished">PNGをエクスポート</translation>
+        <translation>PNGをエクスポート</translation>
     </message>
 </context>
 <context>
@@ -2478,7 +2695,7 @@ Right-click an item to change color</source>
         <location filename="../src/ProgressDlg.cpp" line="11"/>
         <location filename="../src/ProgressDlg.cpp" line="12"/>
         <source></source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
 </context>
 <context>
@@ -2486,7 +2703,7 @@ Right-click an item to change color</source>
     <message>
         <location filename="../src/screenshot.ui" line="26"/>
         <source>Screenshot</source>
-        <translation type="unfinished">スクリーンショット</translation>
+        <translation>スクリーンショット</translation>
     </message>
     <message>
         <location filename="../src/screenshot.ui" line="57"/>
@@ -2506,12 +2723,12 @@ Right-click an item to change color</source>
     <message>
         <location filename="../src/screenshot.ui" line="85"/>
         <source>To clipboard</source>
-        <translation type="unfinished">クリップボードへ</translation>
+        <translation>クリップボードへ</translation>
     </message>
     <message>
         <location filename="../src/screenshot.ui" line="112"/>
         <source>Refresh</source>
-        <translation type="unfinished">更新</translation>
+        <translation>更新</translation>
     </message>
     <message>
         <location filename="../src/screenshot.ui" line="132"/>
@@ -2519,35 +2736,35 @@ Right-click an item to change color</source>
         <translation>終了</translation>
     </message>
     <message>
-        <location filename="../src/screenshot.cpp" line="124"/>
-        <location filename="../src/screenshot.cpp" line="567"/>
+        <location filename="../src/screenshot.cpp" line="140"/>
+        <location filename="../src/screenshot.cpp" line="583"/>
         <source>Image added to clipboard</source>
         <translation>クリップボードに画像追加</translation>
     </message>
     <message>
-        <location filename="../src/screenshot.cpp" line="195"/>
-        <location filename="../src/screenshot.cpp" line="625"/>
+        <location filename="../src/screenshot.cpp" line="211"/>
+        <location filename="../src/screenshot.cpp" line="641"/>
         <source>Export PDF</source>
-        <translation type="unfinished">PDFをエクスポート</translation>
+        <translation>PDFをエクスポート</translation>
     </message>
     <message>
-        <location filename="../src/screenshot.cpp" line="608"/>
+        <location filename="../src/screenshot.cpp" line="624"/>
         <source>Save as BMP</source>
-        <translation type="unfinished">BMPとして保存</translation>
+        <translation>BMPとして保存</translation>
     </message>
     <message>
-        <location filename="../src/screenshot.cpp" line="649"/>
-        <location filename="../src/screenshot.cpp" line="659"/>
+        <location filename="../src/screenshot.cpp" line="665"/>
+        <location filename="../src/screenshot.cpp" line="675"/>
         <source>Error</source>
         <translation>エラー</translation>
     </message>
     <message>
-        <location filename="../src/screenshot.cpp" line="649"/>
+        <location filename="../src/screenshot.cpp" line="665"/>
         <source>Screenshot not supported on this device.</source>
-        <translation type="unfinished">このデバイスではスクリーンショットはサポートされていません。</translation>
+        <translation>このデバイスではスクリーンショットはサポートされていません。</translation>
     </message>
     <message>
-        <location filename="../src/screenshot.cpp" line="659"/>
+        <location filename="../src/screenshot.cpp" line="675"/>
         <source>Error while make screenshot. Please try again.</source>
         <translation>スクリーンショット作成中にエラー発生。再試行下さい。</translation>
     </message>
@@ -2555,49 +2772,49 @@ Right-click an item to change color</source>
 <context>
     <name>SelectDeviceDialog</name>
     <message>
-        <location filename="../src/selectdevicedialog.cpp" line="187"/>
+        <location filename="../src/selectdevicedialog.cpp" line="208"/>
         <source>Select device</source>
-        <translation type="unfinished">デバイスを選択</translation>
+        <translation>デバイスを選択</translation>
     </message>
     <message>
         <location filename="../src/selectdevicedialog.ui" line="14"/>
         <source>Connect Analyzer</source>
-        <translation type="unfinished">アナライザーに接続</translation>
+        <translation>アナライザーに接続</translation>
     </message>
     <message>
         <location filename="../src/selectdevicedialog.ui" line="32"/>
         <source>Select HID device</source>
-        <translation type="unfinished">HIDデバイスを選択</translation>
+        <translation>HIDデバイスを選択</translation>
     </message>
     <message>
         <location filename="../src/selectdevicedialog.ui" line="35"/>
         <source>USB</source>
-        <translation type="unfinished">USB</translation>
+        <translation>USB</translation>
     </message>
     <message>
         <location filename="../src/selectdevicedialog.ui" line="42"/>
         <source>Select COM-port</source>
-        <translation type="unfinished">COMポートを選択</translation>
+        <translation>COMポートを選択</translation>
     </message>
     <message>
         <location filename="../src/selectdevicedialog.ui" line="45"/>
         <source>COM</source>
-        <translation type="unfinished">COM</translation>
+        <translation>COM</translation>
     </message>
     <message>
         <location filename="../src/selectdevicedialog.ui" line="52"/>
         <source>Select Bluetooth Low Energy device</source>
-        <translation type="unfinished">Bluetooth Low Energyデバイスを選択</translation>
+        <translation>Bluetooth Low Energyデバイスを選択</translation>
     </message>
     <message>
         <location filename="../src/selectdevicedialog.ui" line="55"/>
         <source>BLE</source>
-        <translation type="unfinished">BLE</translation>
+        <translation>BLE</translation>
     </message>
     <message>
         <location filename="../src/selectdevicedialog.ui" line="95"/>
         <source>Use same selection for future connections</source>
-        <translation type="unfinished">今後の接続でもこの選択を使用する</translation>
+        <translation>今後の接続でもこの選択を使用する</translation>
     </message>
     <message>
         <location filename="../src/selectdevicedialog.ui" line="102"/>
@@ -2612,53 +2829,53 @@ Right-click an item to change color</source>
     <message>
         <location filename="../src/selectdevicedialog.ui" line="134"/>
         <source>Connect</source>
-        <translation type="unfinished">接続</translation>
+        <translation>接続</translation>
     </message>
     <message>
         <location filename="../src/selectdevicedialog.ui" line="141"/>
         <source>Scan</source>
-        <translation type="unfinished">スキャン</translation>
+        <translation>スキャン</translation>
     </message>
     <message>
         <location filename="../src/selectdevicedialog.ui" line="148"/>
         <source>Cancel</source>
-        <translation type="unfinished">キャンセル</translation>
+        <translation>キャンセル</translation>
     </message>
     <message>
-        <location filename="../src/selectdevicedialog.cpp" line="149"/>
+        <location filename="../src/selectdevicedialog.cpp" line="170"/>
         <source>This version of the operating system does not guarantee the correct operation of the BLE.</source>
-        <translation type="unfinished">このバージョンのオペレーティングシステムでは、BLEの正常な動作は保証されません。</translation>
+        <translation>このバージョンのオペレーティングシステムでは、BLEの正常な動作は保証されません。</translation>
     </message>
     <message>
-        <location filename="../src/selectdevicedialog.cpp" line="185"/>
+        <location filename="../src/selectdevicedialog.cpp" line="206"/>
         <source>Serial number does not match the type of device</source>
-        <translation type="unfinished">シリアル番号がデバイスの種類と一致しません</translation>
+        <translation>シリアル番号がデバイスの種類と一致しません</translation>
     </message>
     <message>
-        <location filename="../src/selectdevicedialog.cpp" line="236"/>
+        <location filename="../src/selectdevicedialog.cpp" line="273"/>
         <source>Device name</source>
-        <translation type="unfinished">デバイス名</translation>
+        <translation>デバイス名</translation>
     </message>
     <message>
-        <location filename="../src/selectdevicedialog.cpp" line="237"/>
-        <location filename="../src/selectdevicedialog.cpp" line="342"/>
+        <location filename="../src/selectdevicedialog.cpp" line="274"/>
+        <location filename="../src/selectdevicedialog.cpp" line="425"/>
         <source>Serial number</source>
-        <translation type="unfinished">シリアル番号</translation>
+        <translation>シリアル番号</translation>
     </message>
     <message>
-        <location filename="../src/selectdevicedialog.cpp" line="242"/>
+        <location filename="../src/selectdevicedialog.cpp" line="280"/>
         <source>Port name</source>
-        <translation type="unfinished">ポート名</translation>
+        <translation>ポート名</translation>
     </message>
     <message>
-        <location filename="../src/selectdevicedialog.cpp" line="295"/>
+        <location filename="../src/selectdevicedialog.cpp" line="378"/>
         <source>Name</source>
-        <translation type="unfinished">名前</translation>
+        <translation>名前</translation>
     </message>
     <message>
-        <location filename="../src/selectdevicedialog.cpp" line="296"/>
+        <location filename="../src/selectdevicedialog.cpp" line="379"/>
         <source>Address</source>
-        <translation type="unfinished">アドレス</translation>
+        <translation>アドレス</translation>
     </message>
 </context>
 <context>
@@ -2674,12 +2891,12 @@ Right-click an item to change color</source>
         <translation>一般</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="96"/>
+        <location filename="../src/settings.ui" line="176"/>
         <source>Measurement system</source>
-        <translation type="unfinished">測定システム</translation>
+        <translation>測定システム</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="112"/>
+        <location filename="../src/settings.ui" line="192"/>
         <source>Metric</source>
         <translation>メートル法</translation>
     </message>
@@ -2694,838 +2911,906 @@ Right-click an item to change color</source>
         <translation>Ω</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2136"/>
+        <location filename="../src/settings.ui" line="2276"/>
         <source>Updates</source>
         <translation>更新</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2266"/>
+        <location filename="../src/settings.ui" line="2406"/>
         <source>Info</source>
         <translation>情報</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2279"/>
+        <location filename="../src/settings.ui" line="2419"/>
         <source>Analyzer model:</source>
         <translation>アナライザー名</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2321"/>
+        <location filename="../src/settings.ui" line="2461"/>
         <source>Serial number:</source>
         <translation>シリアル番号</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2345"/>
+        <location filename="../src/settings.ui" line="2485"/>
         <source>Update from file</source>
         <translation>ファイルで更新</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2361"/>
+        <location filename="../src/settings.ui" line="2501"/>
         <source>Browse</source>
         <translation>検索</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2382"/>
-        <location filename="../src/settings.cpp" line="550"/>
+        <location filename="../src/settings.ui" line="2522"/>
+        <location filename="../src/settings.cpp" line="584"/>
         <source>Update</source>
         <translation>更新</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2181"/>
+        <location filename="../src/settings.ui" line="2321"/>
         <source>Version:</source>
         <translation>バージョン</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="920"/>
+        <location filename="../src/settings.ui" line="1060"/>
         <source>OSL Calibration</source>
         <translation>OSL較正</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="928"/>
+        <location filename="../src/settings.ui" line="1068"/>
         <source>Calibration Wizard</source>
         <translation>較正ウィザード</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="943"/>
+        <location filename="../src/settings.ui" line="1083"/>
         <source>Start</source>
         <translation>開始</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="992"/>
-        <location filename="../src/settings.cpp" line="568"/>
-        <location filename="../src/settings.cpp" line="638"/>
+        <location filename="../src/settings.ui" line="1132"/>
+        <location filename="../src/settings.cpp" line="602"/>
+        <location filename="../src/settings.cpp" line="672"/>
         <source>Open</source>
         <translation>開放</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2060"/>
+        <location filename="../src/settings.ui" line="2200"/>
         <source>Com/Serial</source>
         <translation>Com/シリアル</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2073"/>
+        <location filename="../src/settings.ui" line="2213"/>
         <source>USB/HID</source>
         <translation>USB/HID</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2086"/>
+        <location filename="../src/settings.ui" line="2226"/>
         <source>NanoVNA</source>
         <translation>NanoVNA</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2099"/>
+        <location filename="../src/settings.ui" line="2239"/>
         <source>BLE/Bluetooth</source>
         <translation>BLE/Bluetooth</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2112"/>
+        <location filename="../src/settings.ui" line="2252"/>
         <source>BLE Pings</source>
         <translation>BLE Ping</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2142"/>
+        <location filename="../src/settings.ui" line="2282"/>
         <source>Notice:  The items on this page use the internet to send and receive information about you and your devices.  This may include email addresses, software versions, analyzer details, serial numbers and other information not deemed to be of sensitive nature.  This data may traverse the internet unencrypted if the vendor has not enabled SSL security.</source>
         <translation>注意: このページの項目は、あなたとあなたのデバイスに関する情報を送受信するためにインターネットを使用します。これにはメールアドレス、ソフトウェアバージョン、アナライザーの詳細、シリアル番号、その他機密性が高いとはみなされない情報が含まれる場合があります。ベンダーがSSLセキュリティを有効にしていない場合、このデータは暗号化されずにインターネットを通過する可能性があります。</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2237"/>
+        <location filename="../src/settings.ui" line="2377"/>
         <source>RigExpert Specific Features</source>
         <translation>RigExpert固有の機能</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2300"/>
+        <location filename="../src/settings.ui" line="2440"/>
         <source>Firmware version:</source>
-        <translation type="unfinished">ファームウェアバージョン:</translation>
+        <translation>ファームウェアバージョン:</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="963"/>
+        <location filename="../src/settings.ui" line="1103"/>
         <source>Points</source>
-        <translation type="unfinished">ポイント数</translation>
+        <translation>ポイント数</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="117"/>
+        <location filename="../src/settings.ui" line="197"/>
         <source>Imperial</source>
-        <translation type="unfinished">ヤード・ポンド法</translation>
+        <translation>ヤード・ポンド法</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="127"/>
-        <location filename="../src/settings.ui" line="143"/>
+        <location filename="../src/settings.ui" line="207"/>
+        <location filename="../src/settings.ui" line="223"/>
         <source>The maximum number of simultaneously displayed measurements</source>
-        <translation type="unfinished">同時に表示できる測定の最大数</translation>
+        <translation>同時に表示できる測定の最大数</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="146"/>
+        <location filename="../src/settings.ui" line="226"/>
         <source>Max measurements</source>
-        <translation type="unfinished">最大測定数</translation>
+        <translation>最大測定数</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1713"/>
+        <location filename="../src/settings.ui" line="1853"/>
         <source>Don&apos;t restrict frequency</source>
-        <translation type="unfinished">周波数を制限しない</translation>
+        <translation>周波数を制限しない</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1001"/>
-        <location filename="../src/settings.ui" line="1062"/>
-        <location filename="../src/settings.ui" line="1120"/>
+        <location filename="../src/settings.ui" line="1141"/>
+        <location filename="../src/settings.ui" line="1202"/>
+        <location filename="../src/settings.ui" line="1260"/>
         <source>Not chosen</source>
-        <translation type="unfinished">未選択</translation>
+        <translation>未選択</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1030"/>
-        <location filename="../src/settings.ui" line="1088"/>
-        <location filename="../src/settings.ui" line="1146"/>
+        <location filename="../src/settings.ui" line="1170"/>
+        <location filename="../src/settings.ui" line="1228"/>
+        <location filename="../src/settings.ui" line="1286"/>
         <source>Open file</source>
         <translation>ファイル選択</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1043"/>
+        <location filename="../src/settings.ui" line="1183"/>
         <source>Start Open Calibration</source>
         <translation>開放較正の開始</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1053"/>
-        <location filename="../src/settings.cpp" line="648"/>
+        <location filename="../src/settings.ui" line="1193"/>
+        <location filename="../src/settings.cpp" line="682"/>
         <source>Short</source>
         <translation>短絡</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1101"/>
+        <location filename="../src/settings.ui" line="1241"/>
         <source>Start Short Calibration</source>
         <translation>短絡較正の開始</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1111"/>
-        <location filename="../src/settings.cpp" line="658"/>
+        <location filename="../src/settings.ui" line="1251"/>
+        <location filename="../src/settings.cpp" line="692"/>
         <source>Load</source>
         <translation>負荷</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1159"/>
+        <location filename="../src/settings.ui" line="1299"/>
         <source>Start Load Calibration</source>
         <translation>負荷較正の開始</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1179"/>
+        <location filename="../src/settings.ui" line="1319"/>
         <source>Cable</source>
         <translation>ケーブル</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1450"/>
+        <location filename="../src/settings.ui" line="1590"/>
         <source>Velocity factor</source>
         <translation>速度係数</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1620"/>
+        <location filename="../src/settings.ui" line="1760"/>
         <source>Cable length</source>
         <translation>ケーブル長</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2414"/>
-        <location filename="../src/settings.cpp" line="268"/>
+        <location filename="../src/settings.ui" line="2554"/>
+        <location filename="../src/settings.cpp" line="292"/>
         <source>Register application</source>
-        <translation type="unfinished">アプリケーションを登録</translation>
+        <translation>アプリケーションを登録</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2421"/>
+        <location filename="../src/settings.ui" line="2561"/>
         <source>Match license</source>
-        <translation type="unfinished">ライセンスを照合</translation>
+        <translation>ライセンスを照合</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2444"/>
+        <location filename="../src/settings.ui" line="2584"/>
         <source>Register device</source>
-        <translation type="unfinished">デバイスを登録</translation>
+        <translation>デバイスを登録</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2437"/>
+        <location filename="../src/settings.ui" line="2577"/>
         <source>Update license</source>
-        <translation type="unfinished">ライセンスを更新</translation>
+        <translation>ライセンスを更新</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2430"/>
+        <location filename="../src/settings.ui" line="2570"/>
         <source>Device info</source>
-        <translation type="unfinished">デバイス情報</translation>
+        <translation>デバイス情報</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="254"/>
+        <location filename="../src/settings.ui" line="394"/>
         <source>Data folder</source>
-        <translation type="unfinished">データフォルダ</translation>
+        <translation>データフォルダ</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="281"/>
+        <location filename="../src/settings.ui" line="421"/>
         <source>Browse...</source>
-        <translation type="unfinished">参照...</translation>
+        <translation>参照...</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="290"/>
+        <location filename="../src/settings.ui" line="430"/>
         <source>Save actions update this folder</source>
-        <translation type="unfinished">保存操作でこのフォルダを更新する</translation>
+        <translation>保存操作でこのフォルダを更新する</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="314"/>
+        <location filename="../src/settings.ui" line="454"/>
         <source>Themes</source>
-        <translation type="unfinished">テーマ</translation>
+        <translation>テーマ</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="324"/>
+        <location filename="../src/settings.ui" line="464"/>
         <source>Theme</source>
-        <translation type="unfinished">テーマ</translation>
+        <translation>テーマ</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="344"/>
+        <location filename="../src/settings.ui" line="484"/>
         <source>Window Background</source>
-        <translation type="unfinished">ウィンドウの背景</translation>
+        <translation>ウィンドウの背景</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="366"/>
-        <location filename="../src/settings.ui" line="397"/>
-        <location filename="../src/settings.ui" line="428"/>
-        <location filename="../src/settings.ui" line="459"/>
-        <location filename="../src/settings.ui" line="490"/>
-        <location filename="../src/settings.ui" line="521"/>
-        <location filename="../src/settings.ui" line="555"/>
+        <location filename="../src/settings.ui" line="506"/>
+        <location filename="../src/settings.ui" line="537"/>
+        <location filename="../src/settings.ui" line="568"/>
+        <location filename="../src/settings.ui" line="599"/>
+        <location filename="../src/settings.ui" line="630"/>
+        <location filename="../src/settings.ui" line="661"/>
+        <location filename="../src/settings.ui" line="695"/>
         <source>#000000</source>
-        <translation type="unfinished">#000000</translation>
+        <translation>#000000</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="375"/>
+        <location filename="../src/settings.ui" line="515"/>
         <source>Text</source>
-        <translation type="unfinished">テキスト</translation>
+        <translation>テキスト</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="406"/>
+        <location filename="../src/settings.ui" line="546"/>
         <source>Text Muted</source>
-        <translation type="unfinished">テキスト（ミュート）</translation>
+        <translation>テキスト（ミュート）</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="437"/>
+        <location filename="../src/settings.ui" line="577"/>
         <source>Border</source>
-        <translation type="unfinished">枠線</translation>
+        <translation>枠線</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="468"/>
+        <location filename="../src/settings.ui" line="608"/>
         <source>Chart Background</source>
-        <translation type="unfinished">グラフの背景</translation>
+        <translation>グラフの背景</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="499"/>
+        <location filename="../src/settings.ui" line="639"/>
         <source>Marker</source>
-        <translation type="unfinished">マーカー</translation>
+        <translation>マーカー</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="581"/>
+        <location filename="../src/settings.ui" line="721"/>
         <source>Default</source>
-        <translation type="unfinished">デフォルト</translation>
+        <translation>デフォルト</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="601"/>
+        <location filename="../src/settings.ui" line="741"/>
         <source>Cancel</source>
-        <translation type="unfinished">キャンセル</translation>
+        <translation>キャンセル</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="611"/>
+        <location filename="../src/settings.ui" line="751"/>
         <source>Save</source>
-        <translation type="unfinished">保存</translation>
+        <translation>保存</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="622"/>
+        <location filename="../src/settings.ui" line="762"/>
         <source>Example</source>
-        <translation type="unfinished">例</translation>
+        <translation>例</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="633"/>
-        <location filename="../src/settings.ui" line="678"/>
-        <location filename="../src/settings.ui" line="701"/>
+        <location filename="../src/settings.ui" line="773"/>
+        <location filename="../src/settings.ui" line="818"/>
+        <location filename="../src/settings.ui" line="841"/>
         <source>Enabled</source>
-        <translation type="unfinished">有効</translation>
+        <translation>有効</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="643"/>
-        <location filename="../src/settings.ui" line="691"/>
-        <location filename="../src/settings.ui" line="717"/>
+        <location filename="../src/settings.ui" line="783"/>
+        <location filename="../src/settings.ui" line="831"/>
+        <location filename="../src/settings.ui" line="857"/>
         <source>Disabled</source>
-        <translation type="unfinished">無効</translation>
+        <translation>無効</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="732"/>
+        <location filename="../src/settings.ui" line="872"/>
         <source>Sample chart</source>
-        <translation type="unfinished">サンプルグラフ</translation>
+        <translation>サンプルグラフ</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="795"/>
+        <location filename="../src/settings.ui" line="935"/>
         <source>1</source>
-        <translation type="unfinished">1</translation>
+        <translation>1</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="835"/>
+        <location filename="../src/settings.ui" line="975"/>
         <source>Markers</source>
-        <translation type="unfinished">マーカー</translation>
+        <translation>マーカー</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="852"/>
-        <location filename="../src/settings.ui" line="868"/>
+        <location filename="../src/settings.ui" line="992"/>
+        <location filename="../src/settings.ui" line="1008"/>
         <source>The maximum number of markers that can be placed at once</source>
-        <translation type="unfinished">一度に配置できるマーカーの最大数</translation>
+        <translation>一度に配置できるマーカーの最大数</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="909"/>
+        <location filename="../src/settings.ui" line="1049"/>
         <source>Available</source>
-        <translation type="unfinished">利用可能</translation>
+        <translation>利用可能</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="912"/>
+        <location filename="../src/settings.ui" line="1052"/>
         <source>Selected</source>
-        <translation type="unfinished">選択済み</translation>
+        <translation>選択済み</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1169"/>
+        <location filename="../src/settings.ui" line="1309"/>
         <source>TextLabel</source>
-        <translation type="unfinished">TextLabel</translation>
+        <translation>TextLabel</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1317"/>
+        <location filename="../src/settings.ui" line="1457"/>
         <source>Conductive loss</source>
         <translation>導体損失</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1363"/>
+        <location filename="../src/settings.ui" line="1503"/>
         <source>Dielectric loss</source>
         <translation>誘電体損失</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1418"/>
+        <location filename="../src/settings.ui" line="1558"/>
         <source>dB/100feet</source>
         <translation>dB/100フィート</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1423"/>
+        <location filename="../src/settings.ui" line="1563"/>
         <source>dB/feet</source>
         <translation>dB/フィート</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1428"/>
+        <location filename="../src/settings.ui" line="1568"/>
         <source>dB/100m</source>
         <translation>dB/100メータ</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1433"/>
+        <location filename="../src/settings.ui" line="1573"/>
         <source>dB/m</source>
         <translation>dB/メータ</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1441"/>
+        <location filename="../src/settings.ui" line="1581"/>
         <source>at</source>
-        <translation type="unfinished">における</translation>
+        <translation>における</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1252"/>
+        <location filename="../src/settings.ui" line="1392"/>
         <source>any frequency</source>
         <translation>全周波数</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1293"/>
+        <location filename="../src/settings.ui" line="1433"/>
         <source>MHz</source>
-        <translation type="unfinished">MHz</translation>
+        <translation>MHz</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1466"/>
+        <location filename="../src/settings.ui" line="1606"/>
         <source>Transmission line options</source>
         <translation>電送線オプション</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1588"/>
+        <location filename="../src/settings.ui" line="1728"/>
         <source>Do nothing</source>
         <translation>何もしない</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1556"/>
+        <location filename="../src/settings.ui" line="1696"/>
         <source>Subtract cable</source>
         <translation>ケーブル値を引く</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1572"/>
+        <location filename="../src/settings.ui" line="1712"/>
         <source>Add cable</source>
         <translation>ケーブル値を加える</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1658"/>
+        <location filename="../src/settings.ui" line="1798"/>
         <source>Export</source>
-        <translation type="unfinished">書出し</translation>
+        <translation>書出し</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1665"/>
+        <location filename="../src/settings.ui" line="1805"/>
         <source>Update graphs</source>
         <translation>グラフ更新&quot;</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1706"/>
+        <location filename="../src/settings.ui" line="1846"/>
         <source>Use customized analyzer</source>
-        <translation type="unfinished">カスタムアナライザーを使用する</translation>
+        <translation>カスタムアナライザーを使用する</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="334"/>
-        <location filename="../src/settings.ui" line="1722"/>
+        <location filename="../src/settings.ui" line="474"/>
+        <location filename="../src/settings.ui" line="1862"/>
         <source>Name</source>
-        <translation type="unfinished">名前</translation>
+        <translation>名前</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="164"/>
+        <location filename="../src/settings.ui" line="98"/>
+        <location filename="../src/settings.ui" line="108"/>
+        <source>How long a scan can go without receiving any data before it&apos;s treated as failed (device unreachable, or busy -- held open by another program or another AntScopeZ window).</source>
+        <translation>スキャンがデータを受信しないまま失敗と見なされるまでの時間(デバイスに到達できない、または他のプログラムや別のAntScopeZウィンドウによって使用中でビジー状態)。</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="101"/>
+        <source>Analyzer timeout:</source>
+        <translation>アナライザーのタイムアウト:</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="124"/>
+        <source>sec</source>
+        <translation>秒</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="146"/>
+        <source>Shows additional, more technical analyzer error messages (BLE connection/protocol errors) in the analyzer error dialog. Off by default -- these are frequent and low-level enough to be more noise than help for most day-to-day use. The small set of always-shown messages (analyzer busy/unreachable) aren&apos;t affected by this.</source>
+        <translation>アナライザーエラーダイアログに、より技術的な追加のアナライザーエラーメッセージ(BLE接続/プロトコルエラー)を表示します。デフォルトではオフです -- これらは頻繁で低レベルすぎるため、日常的な使用ではヘルプというよりノイズになりがちです。常に表示される少数のメッセージ(アナライザーがビジー/到達不能)はこれの影響を受けません。</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="149"/>
+        <source>Report Detailed Errors</source>
+        <translation>詳細なエラーを報告</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="156"/>
+        <source>Neither the classic ASCII nor the V2/LiteVNA64 binary NanoVNA protocol has a wire-level &quot;abort a scan in progress&quot; command -- once asked for N points, the device (real or emulated) is going to send all of them. By default, stopping a scan early waits out whatever&apos;s still outstanding and quietly discards it. Checking this instead closes and reopens the connection right away, which is often faster for a large scan -- but isn&apos;t guaranteed to make every device actually discard what it already queued internally, only that AntScopeZ itself stops listening and resyncs cleanly on the next connect.</source>
+        <translation>従来のASCIIプロトコルもV2/LiteVNA64バイナリNanoVNAプロトコルも、進行中のスキャンを中止するワイヤレベルのコマンドを持っていません -- N点を要求すると、デバイス(実機またはエミュレータ)はそのすべてを送信します。デフォルトでは、スキャンを早期に停止すると、残っているデータを待ち切ってから静かに破棄します。これをオンにすると、代わりに接続をすぐに閉じて再度開きます。これは大きなスキャンでは高速な場合が多いですが、デバイスが内部でキューに入れたデータを実際に破棄することを保証するものではなく、保証されるのはAntScopeZ自身が受信を停止し、次の接続時に正しく再同期することだけです。</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="159"/>
+        <source>Use reconnect to drain unwanted data</source>
+        <translation>再接続を使用して不要なデータを排出する</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="166"/>
+        <source>A measurement is &quot;dirty&quot; if it came from a scan or was renamed since it was last saved -- shown as a trailing &quot; *&quot; in the measurements list&apos;s Points column. Warns before Delete/Clear All would discard any dirty measurement.</source>
+        <translation>測定は、スキャンから取得されたか、最後に保存されてから名前が変更された場合に&quot;未保存&quot;になります -- 測定リストのPoints列の末尾に&quot; *&quot;として表示されます。未保存の測定を削除/すべてクリアする前に警告します。</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="169"/>
+        <source>Warn before deleting or clearing dirty measurements</source>
+        <translation>未保存の測定を削除またはクリアする前に警告する</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="237"/>
+        <location filename="../src/settings.ui" line="253"/>
+        <source>Line width (pixels) for the currently-selected measurement&apos;s traces</source>
+        <translation>現在選択されている測定のトレースの線幅(ピクセル)</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="256"/>
+        <source>Selected measurement line width</source>
+        <translation>選択した測定の線幅</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="267"/>
+        <location filename="../src/settings.ui" line="283"/>
+        <source>Line width (pixels) for every other loaded measurement&apos;s traces</source>
+        <translation>他の読み込み済み測定のトレースの線幅(ピクセル)</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="286"/>
+        <source>Other measurements&apos; line width</source>
+        <translation>その他の測定の線幅</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="304"/>
         <source>Scanning</source>
         <translation>スキャン</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="175"/>
-        <location filename="../src/settings.ui" line="185"/>
+        <location filename="../src/settings.ui" line="315"/>
+        <location filename="../src/settings.ui" line="325"/>
         <source>The Points field/slider&apos;s practical ceiling (50-10000). Lower this if your device or scan speed doesn&apos;t need the full range.</source>
         <translation>ポイント数フィールド/スライダーの実用的な上限(50〜10000)。デバイスやスキャン速度がフルレンジを必要としない場合は、この値を下げてください。</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="178"/>
+        <location filename="../src/settings.ui" line="318"/>
         <source>Scanning points maximum</source>
         <translation>スキャンポイント数の最大値</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="195"/>
-        <location filename="../src/settings.ui" line="205"/>
+        <location filename="../src/settings.ui" line="335"/>
+        <location filename="../src/settings.ui" line="345"/>
         <source>Starting a scan requesting more points than this pops a confirm/cancel warning first (50-10000).</source>
         <translation>この値より多いポイント数を要求するスキャンを開始すると、最初に確認/キャンセルの警告が表示されます(50〜10000)。</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="198"/>
+        <location filename="../src/settings.ui" line="338"/>
         <source>Warn for scans above</source>
         <translation>次を超えるスキャンで警告する</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="215"/>
-        <location filename="../src/settings.ui" line="225"/>
+        <location filename="../src/settings.ui" line="355"/>
+        <location filename="../src/settings.ui" line="365"/>
         <source>How many points a single sweep request actually carries to the device (50-10000). A scan asking for more gets split into multiple sequential sweeps and stitched together.</source>
         <translation>1回のスイープ要求で実際にデバイスに送信されるポイント数です(50〜10000)。これを超えるポイント数を要求するスキャンは、複数の連続したスイープに分割され、結合されます。</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="218"/>
+        <location filename="../src/settings.ui" line="358"/>
         <source>Analyzer maximum number of points</source>
         <translation>アナライザーの最大ポイント数</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="235"/>
+        <location filename="../src/settings.ui" line="375"/>
         <source>Lets Ctrl+scroll/Ctrl+/- zoom the SWR/Z=R+jX/Z=R‖jX/RL charts&apos; Y-axis, and plain scroll zoom the TDR chart&apos;s distance axis, past their normal preset limits.</source>
         <translation>Ctrl+スクロール/Ctrl+/-でSWR/Z=R+jX/Z=R‖jX/RLグラフのY軸を、通常のスクロールでTDRグラフの距離軸を、通常のプリセット範囲を超えてズームできるようにします。</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="238"/>
+        <location filename="../src/settings.ui" line="378"/>
         <source>Allow extended chart zoom</source>
         <translation>拡張グラフズームを許可</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="530"/>
+        <location filename="../src/settings.ui" line="670"/>
         <source>Editable field/control fill (QLineEdit/QSpinBox/QComboBox&apos;s Base -- was computed automatically from Window Background before this, now a real, directly-editable color).</source>
         <translation>編集可能なフィールド/コントロールの塗りつぶし色(QLineEdit/QSpinBox/QComboBoxのBase -- 以前はウィンドウの背景から自動計算されていましたが、現在は直接編集可能な実際の色です)。</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="533"/>
+        <location filename="../src/settings.ui" line="673"/>
         <source>Base (editable fields)</source>
         <translation>ベース(編集可能フィールド)</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="654"/>
+        <location filename="../src/settings.ui" line="794"/>
         <source>Editable field (Base)</source>
         <translation>編集可能フィールド(ベース)</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="657"/>
+        <location filename="../src/settings.ui" line="797"/>
         <source>Editable</source>
         <translation>編集可能</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="664"/>
+        <location filename="../src/settings.ui" line="804"/>
         <source>Locked field (e.g. Settings &gt; Cable&apos;s Preset mode)</source>
         <translation>ロックされたフィールド(例: 設定 &gt; ケーブルのプリセットモード)</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="667"/>
+        <location filename="../src/settings.ui" line="807"/>
         <source>Locked</source>
         <translation>ロック済み</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="841"/>
+        <location filename="../src/settings.ui" line="981"/>
         <source>Marker behavior</source>
         <translation>マーカーの動作</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="871"/>
+        <location filename="../src/settings.ui" line="1011"/>
         <source>Maximum number of markers</source>
         <translation>マーカーの最大数</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="893"/>
+        <location filename="../src/settings.ui" line="1033"/>
         <source>After a single/full scan finishes, place a marker at the frequency with the lowest SWR -- only if a marker slot is free (see &quot;Maximum number of markers&quot; above). Never fires during a Continuous scan.</source>
         <translation>単発/フルスキャンが完了した後、SWRが最も低い周波数にマーカーを配置します -- ただしマーカーのスロットに空きがある場合のみです(上記の「マーカーの最大数」を参照)。連続スキャン中は動作しません。</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="896"/>
+        <location filename="../src/settings.ui" line="1036"/>
         <source>Automatically set a marker at the lowest SWR</source>
         <translation>最も低いSWRに自動的にマーカーを設定する</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1187"/>
+        <location filename="../src/settings.ui" line="1327"/>
         <source>Pick a cable type below -- velocity factor, R0, and loss figures are filled in from it and can&apos;t be hand-edited while Preset is selected.</source>
         <translation>以下でケーブルの種類を選択してください -- 速度係数、R0、損失値はそこから自動入力され、プリセットが選択されている間は手動編集できません。</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1190"/>
+        <location filename="../src/settings.ui" line="1330"/>
         <source>Preset</source>
         <translation>プリセット</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1197"/>
+        <location filename="../src/settings.ui" line="1337"/>
         <source>Enter velocity factor, R0, and loss figures by hand -- e.g. from a manufacturer datasheet for a cable not in the preset list, or a velocity factor solved from Tools &gt; TDR Analysis.</source>
         <translation>速度係数、R0、損失値を手動で入力します -- 例えば、プリセットリストにないケーブルのメーカーのデータシートから、またはツール &gt; TDR解析で求めた速度係数から入力します。</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1200"/>
+        <location filename="../src/settings.ui" line="1340"/>
         <source>Custom</source>
         <translation>カスタム</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1241"/>
+        <location filename="../src/settings.ui" line="1381"/>
         <source>Cable specifications</source>
         <translation>ケーブル仕様</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1396"/>
+        <location filename="../src/settings.ui" line="1536"/>
         <source>Cable R0 (ohm)</source>
         <translation>ケーブルR0(Ω)</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1487"/>
+        <location filename="../src/settings.ui" line="1627"/>
         <source>Remove this cable&apos;s modeled effect, showing the antenna&apos;s true impedance at its own terminals (de-embedding) -- use when you measured through a known feedline.</source>
         <translation>このケーブルのモデル化された影響を取り除き、アンテナ自身の端子における真のインピーダンスを表示します(デエンベディング) -- 既知のフィーダーラインを通して測定した場合に使用します。</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1509"/>
+        <location filename="../src/settings.ui" line="1649"/>
         <source>Use the measured impedance as-is -- no cable model applied.</source>
         <translation>測定したインピーダンスをそのまま使用します -- ケーブルモデルは適用されません。</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1610"/>
+        <location filename="../src/settings.ui" line="1750"/>
         <source>Project a bare measurement forward through this modeled cable, showing what the radio end would actually see (embedding).</source>
         <translation>生の測定値をこのモデル化されたケーブルを通して前方に投影し、無線機側が実際に見る値を表示します(エンベディング)。</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1675"/>
+        <location filename="../src/settings.ui" line="1815"/>
         <source>Developer</source>
-        <translation type="unfinished">開発者</translation>
+        <translation>開発者</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1681"/>
+        <location filename="../src/settings.ui" line="1821"/>
         <source>Custom Analyzer</source>
-        <translation type="unfinished">カスタムアナライザー</translation>
+        <translation>カスタムアナライザー</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1690"/>
-        <location filename="../src/settings.ui" line="2172"/>
+        <location filename="../src/settings.ui" line="1830"/>
+        <location filename="../src/settings.ui" line="2312"/>
         <source>This feature is currently under development.</source>
-        <translation type="unfinished">この機能は現在開発中です。</translation>
+        <translation>この機能は現在開発中です。</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1746"/>
+        <location filename="../src/settings.ui" line="1886"/>
         <source>Prototype</source>
-        <translation type="unfinished">プロトタイプ</translation>
+        <translation>プロトタイプ</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1767"/>
+        <location filename="../src/settings.ui" line="1907"/>
         <source>Frequency(kHz)</source>
-        <translation type="unfinished">周波数(kHz)</translation>
+        <translation>周波数(kHz)</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1779"/>
-        <location filename="../src/settings.ui" line="1930"/>
+        <location filename="../src/settings.ui" line="1919"/>
+        <location filename="../src/settings.ui" line="2070"/>
         <source>Min</source>
-        <translation type="unfinished">最小</translation>
+        <translation>最小</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1786"/>
-        <location filename="../src/settings.ui" line="1957"/>
+        <location filename="../src/settings.ui" line="1926"/>
+        <location filename="../src/settings.ui" line="2097"/>
         <source>Max</source>
-        <translation type="unfinished">最大</translation>
+        <translation>最大</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1802"/>
+        <location filename="../src/settings.ui" line="1942"/>
         <source>LCD screen</source>
-        <translation type="unfinished">LCD画面</translation>
+        <translation>LCD画面</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1814"/>
+        <location filename="../src/settings.ui" line="1954"/>
         <source>Width</source>
-        <translation type="unfinished">幅</translation>
+        <translation>幅</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1834"/>
+        <location filename="../src/settings.ui" line="1974"/>
         <source>Height</source>
-        <translation type="unfinished">高さ</translation>
+        <translation>高さ</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1863"/>
+        <location filename="../src/settings.ui" line="2003"/>
         <source>New</source>
-        <translation type="unfinished">新規</translation>
+        <translation>新規</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1870"/>
+        <location filename="../src/settings.ui" line="2010"/>
         <source>Remove</source>
-        <translation type="unfinished">削除</translation>
+        <translation>削除</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1890"/>
+        <location filename="../src/settings.ui" line="2030"/>
         <source>Apply</source>
-        <translation type="unfinished">適用</translation>
+        <translation>適用</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1901"/>
+        <location filename="../src/settings.ui" line="2041"/>
         <source>Auto calibration</source>
-        <translation type="unfinished">自動キャリブレーション</translation>
+        <translation>自動キャリブレーション</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1910"/>
+        <location filename="../src/settings.ui" line="2050"/>
         <source>Length</source>
-        <translation type="unfinished">長さ</translation>
+        <translation>長さ</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1984"/>
+        <location filename="../src/settings.ui" line="2124"/>
         <source>Steps</source>
-        <translation type="unfinished">ステップ数</translation>
+        <translation>ステップ数</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1920"/>
+        <location filename="../src/settings.ui" line="2060"/>
         <source>Resistance</source>
-        <translation type="unfinished">抵抗</translation>
+        <translation>抵抗</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2045"/>
+        <location filename="../src/settings.ui" line="2185"/>
         <source>Debug Logging</source>
-        <translation type="unfinished">デバッグログ</translation>
+        <translation>デバッグログ</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2214"/>
+        <location filename="../src/settings.ui" line="2354"/>
         <source>Not implemented yet</source>
-        <translation type="unfinished">未実装です</translation>
+        <translation>未実装です</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2217"/>
+        <location filename="../src/settings.ui" line="2357"/>
         <source>Check for Software Updates</source>
-        <translation type="unfinished">ソフトウェアの更新を確認</translation>
+        <translation>ソフトウェアの更新を確認</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2254"/>
+        <location filename="../src/settings.ui" line="2394"/>
         <source>WARNING: Firmware updates are disabled due to possible permanent corruption of your analyzer should it fail. Please contact your vendor for assistance if you should seek a firmware update.</source>
-        <translation type="unfinished">警告: 更新に失敗するとアナライザーが永久的に破損する可能性があるため、ファームウェアの更新は無効になっています。ファームウェアの更新が必要な場合は、販売店にお問い合わせください。</translation>
+        <translation>警告: 更新に失敗するとアナライザーが永久的に破損する可能性があるため、ファームウェアの更新は無効になっています。ファームウェアの更新が必要な場合は、販売店にお問い合わせください。</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2400"/>
-        <location filename="../src/settings.cpp" line="436"/>
+        <location filename="../src/settings.ui" line="2540"/>
+        <location filename="../src/settings.cpp" line="470"/>
         <source>Check for firmware updates</source>
-        <translation type="unfinished">ファームウェアの更新を確認</translation>
+        <translation>ファームウェアの更新を確認</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2158"/>
+        <location filename="../src/settings.ui" line="2298"/>
         <source>AntScopeZ</source>
-        <translation type="unfinished">AntScopeZ</translation>
+        <translation>AntScopeZ</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2499"/>
+        <location filename="../src/settings.ui" line="2639"/>
         <source>Close</source>
-        <translation type="unfinished">閉じる</translation>
+        <translation>閉じる</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="103"/>
+        <location filename="../src/settings.cpp" line="108"/>
         <source>Choose file</source>
         <translation>ファイル選択</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="190"/>
-        <location filename="../src/settings.cpp" line="1327"/>
+        <location filename="../src/settings.cpp" line="214"/>
+        <location filename="../src/settings.cpp" line="1361"/>
         <source>Change parameters or choose from list...</source>
         <translation>パラメータ変更またはファイルから選択</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="95"/>
-        <location filename="../src/settings.cpp" line="259"/>
+        <location filename="../src/settings.cpp" line="100"/>
+        <location filename="../src/settings.cpp" line="283"/>
         <source>Change application registration</source>
-        <translation type="unfinished">アプリケーションの登録を変更</translation>
+        <translation>アプリケーションの登録を変更</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="172"/>
+        <location filename="../src/settings.cpp" line="195"/>
         <source>Choose data folder</source>
-        <translation type="unfinished">データフォルダを選択</translation>
+        <translation>データフォルダを選択</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="269"/>
+        <location filename="../src/settings.cpp" line="293"/>
         <source>Do you want to register the application?</source>
-        <translation type="unfinished">アプリケーションを登録しますか？</translation>
+        <translation>アプリケーションを登録しますか？</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="272"/>
+        <location filename="../src/settings.cpp" line="296"/>
         <source>Registration</source>
-        <translation type="unfinished">登録</translation>
+        <translation>登録</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="273"/>
+        <location filename="../src/settings.cpp" line="297"/>
         <source>Remind later?</source>
-        <translation type="unfinished">後で通知しますか？</translation>
+        <translation>後で通知しますか？</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="417"/>
-        <location filename="../src/settings.cpp" line="441"/>
+        <location filename="../src/settings.cpp" line="451"/>
+        <location filename="../src/settings.cpp" line="475"/>
         <source>Checking</source>
         <translation>チェック中</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="541"/>
+        <location filename="../src/settings.cpp" line="575"/>
         <source>Updating...</source>
-        <translation type="unfinished">更新中...</translation>
+        <translation>更新中...</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="569"/>
-        <location filename="../src/settings.cpp" line="639"/>
+        <location filename="../src/settings.cpp" line="603"/>
+        <location filename="../src/settings.cpp" line="673"/>
         <source>Please connect OPEN standard and press OK.</source>
         <translation>測定端を開放してOKボタンを押す。</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="649"/>
+        <location filename="../src/settings.cpp" line="683"/>
         <source>Please connect SHORT standard and press OK.</source>
         <translation>測定端を短絡してOKボタンを押す。</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="659"/>
+        <location filename="../src/settings.cpp" line="693"/>
         <source>Please connect LOAD standard and press OK.</source>
         <translation>測定端に負荷を接続してOKボタンを押す。</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="679"/>
+        <location filename="../src/settings.cpp" line="713"/>
         <source>Open &apos;open calibration&apos; file</source>
         <translation>開く &apos;開放較正&apos; ファイル</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="695"/>
+        <location filename="../src/settings.cpp" line="729"/>
         <source>Open &apos;short calibration&apos; file</source>
         <translation>開く &apos;短絡較正&apos; ファイル</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="712"/>
+        <location filename="../src/settings.cpp" line="746"/>
         <source>Open &apos;load calibration&apos; file</source>
         <translation>開く &apos;負荷較正&apos; ファイル</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="750"/>
+        <location filename="../src/settings.cpp" line="784"/>
         <source>m</source>
         <translation>m</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="750"/>
+        <location filename="../src/settings.cpp" line="784"/>
         <source>ft</source>
         <translation>ft</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="924"/>
+        <location filename="../src/settings.cpp" line="958"/>
         <source>Ideal 50-Ohm cable</source>
         <translation>理想50Ωケーブル</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="925"/>
+        <location filename="../src/settings.cpp" line="959"/>
         <source>Ideal 50-Ohm cable, 50, 0.66, 0.0, 0.0, 0, 0</source>
         <translation>理想50Ωケーブル, 50, 0.66, 0.0, 0.0, 0, 0</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="926"/>
+        <location filename="../src/settings.cpp" line="960"/>
         <source>Ideal 75-Ohm cable</source>
         <translation>理想75Ωケーブル</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="927"/>
+        <location filename="../src/settings.cpp" line="961"/>
         <source>Ideal 75-Ohm cable, 75, 0.66, 0.0, 0.0, 0, 0</source>
         <translation>理想75Ωケーブル, 75, 0.66, 0.0, 0.0, 0, 0</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="928"/>
+        <location filename="../src/settings.cpp" line="962"/>
         <source>Ideal 25-Ohm cable</source>
         <translation>理想25Ωケーブル</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="929"/>
+        <location filename="../src/settings.cpp" line="963"/>
         <source>Ideal 25-Ohm cable, 25, 0.66, 0.0, 0.0, 0, 0</source>
         <translation>理想25Ωケーブル, 25, 0.66, 0.0, 0.0, 0, 0</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="930"/>
+        <location filename="../src/settings.cpp" line="964"/>
         <source>Ideal 37.5-Ohm cable</source>
         <translation>理想37.5Ωケーブル</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="931"/>
+        <location filename="../src/settings.cpp" line="965"/>
         <source>Ideal 37.5-Ohm cable, 37.5, 0.66, 0.0, 0.0, 0, 0</source>
         <translation>理想37.5Ωケーブル, 37.5, 0.66, 0.0, 0.0, 0, 0</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="940"/>
+        <location filename="../src/settings.cpp" line="974"/>
         <source>Can&apos;t open file</source>
-        <translation type="unfinished">ファイルを開けません</translation>
+        <translation>ファイルを開けません</translation>
     </message>
 </context>
 <context>
@@ -3731,57 +4016,57 @@ Right-click an item to change color</source>
     <message>
         <location filename="../src/unitrequestdialog.ui" line="14"/>
         <source>Update user data</source>
-        <translation type="unfinished">ユーザーデータを更新</translation>
+        <translation>ユーザーデータを更新</translation>
     </message>
     <message>
         <location filename="../src/unitrequestdialog.ui" line="22"/>
         <source>User name</source>
-        <translation type="unfinished">ユーザー名</translation>
+        <translation>ユーザー名</translation>
     </message>
     <message>
         <location filename="../src/unitrequestdialog.ui" line="32"/>
         <source>Email</source>
-        <translation type="unfinished">メールアドレス</translation>
+        <translation>メールアドレス</translation>
     </message>
     <message>
         <location filename="../src/unitrequestdialog.ui" line="49"/>
         <source>Serial number</source>
-        <translation type="unfinished">シリアル番号</translation>
+        <translation>シリアル番号</translation>
     </message>
     <message>
         <location filename="../src/unitrequestdialog.ui" line="63"/>
         <source>License name</source>
-        <translation type="unfinished">ライセンス名</translation>
+        <translation>ライセンス名</translation>
     </message>
     <message>
         <location filename="../src/unitrequestdialog.ui" line="77"/>
         <source>Purcharge date(dd/mm/yyyy)</source>
-        <translation type="unfinished">購入日(dd/mm/yyyy)</translation>
+        <translation>購入日(dd/mm/yyyy)</translation>
     </message>
     <message>
         <location filename="../src/unitrequestdialog.ui" line="91"/>
         <source>Cancel</source>
-        <translation type="unfinished">キャンセル</translation>
+        <translation>キャンセル</translation>
     </message>
     <message>
         <location filename="../src/unitrequestdialog.ui" line="98"/>
         <source>Ok</source>
-        <translation type="unfinished">OK</translation>
+        <translation>OK</translation>
     </message>
     <message>
         <location filename="../src/unitrequestdialog.cpp" line="29"/>
         <source></source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../src/unitrequestdialog.cpp" line="29"/>
         <source>Email address should be valid</source>
-        <translation type="unfinished">有効なメールアドレスを入力してください</translation>
+        <translation>有効なメールアドレスを入力してください</translation>
     </message>
     <message>
         <location filename="../src/unitrequestdialog.cpp" line="34"/>
         <source>Wrong email address</source>
-        <translation type="unfinished">メールアドレスが正しくありません</translation>
+        <translation>メールアドレスが正しくありません</translation>
     </message>
 </context>
 <context>
@@ -3818,26 +4103,45 @@ Right-click an item to change color</source>
     </message>
 </context>
 <context>
+    <name>UserGuideDialog</name>
+    <message>
+        <location filename="../src/userguidedialog.cpp" line="15"/>
+        <source>User Guide</source>
+        <translation>ユーザーガイド</translation>
+    </message>
+    <message>
+        <location filename="../src/userguidedialog.cpp" line="38"/>
+        <source>Couldn&apos;t find the user guide.
+
+Expected it at:
+%1</source>
+        <translation>ユーザーガイドが見つかりませんでした。
+
+次の場所にあるはずです:
+%1</translation>
+    </message>
+</context>
+<context>
     <name>dlgProgress</name>
     <message>
         <location filename="../src/ProgressDlg.ui" line="17"/>
         <source>Dialog</source>
-        <translation type="unfinished">Dialog</translation>
+        <translation>Dialog</translation>
     </message>
     <message>
         <location filename="../src/ProgressDlg.ui" line="71"/>
         <source>StatusInfo</source>
-        <translation type="unfinished">StatusInfo</translation>
+        <translation>StatusInfo</translation>
     </message>
     <message>
         <location filename="../src/ProgressDlg.ui" line="78"/>
         <source>ActionInfo:</source>
-        <translation type="unfinished">ActionInfo:</translation>
+        <translation>ActionInfo:</translation>
     </message>
     <message>
         <location filename="../src/ProgressDlg.ui" line="111"/>
         <source>Stop</source>
-        <translation type="unfinished">停止</translation>
+        <translation>停止</translation>
     </message>
 </context>
 </TS>
