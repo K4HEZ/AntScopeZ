@@ -34,6 +34,10 @@ extern int g_analyzerMaxPoints; // see mainwindow.cpp
 extern bool g_extendedChartZoom; // see mainwindow.cpp
 extern int g_analyzerTimeoutSec; // see mainwindow.cpp
 extern bool g_reconnectToDrain; // see mainwindow.cpp
+extern double g_phaseAxisMin; // see mainwindow.cpp
+extern double g_phaseAxisMax; // see mainwindow.cpp
+extern double g_zAxisMin; // see mainwindow.cpp
+extern double g_zAxisMax; // see mainwindow.cpp
 extern QString appendSpaces(const QString& number);
 int Settings::m_serialIndex = 0;
 bool Settings::m_licenseUpdateBlocked = false;
@@ -143,6 +147,10 @@ Settings::Settings(QWidget *parent) :
     // session-only in-memory-only behavior they had before.
     ui->checkBoxReportDetailedErrors->setChecked(DebugLog::detailedErrorsEnabled());
     ui->checkBoxReconnectToDrain->setChecked(g_reconnectToDrain);
+    ui->lineEditPhaseAxisMin->setText(QString::number(g_phaseAxisMin));
+    ui->lineEditPhaseAxisMax->setText(QString::number(g_phaseAxisMax));
+    ui->lineEditZAxisMin->setText(QString::number(g_zAxisMin));
+    ui->lineEditZAxisMax->setText(QString::number(g_zAxisMax));
     m_settings->endGroup();
 
     // Debug Logging (Developer tab) -- deliberately NOT persisted to the
@@ -222,6 +230,10 @@ Settings::Settings(QWidget *parent) :
     connect(ui->lineEditScanPointsMax, &QLineEdit::editingFinished, this, &Settings::on_scanPointsMaxFinished);
     connect(ui->lineEditScanWarnThreshold, &QLineEdit::editingFinished, this, &Settings::on_scanWarnThresholdFinished);
     connect(ui->lineEditAnalyzerMaxPoints, &QLineEdit::editingFinished, this, &Settings::on_analyzerMaxPointsFinished);
+    connect(ui->lineEditPhaseAxisMin, &QLineEdit::editingFinished, this, &Settings::on_phaseAxisMinFinished);
+    connect(ui->lineEditPhaseAxisMax, &QLineEdit::editingFinished, this, &Settings::on_phaseAxisMaxFinished);
+    connect(ui->lineEditZAxisMin, &QLineEdit::editingFinished, this, &Settings::on_zAxisMinFinished);
+    connect(ui->lineEditZAxisMax, &QLineEdit::editingFinished, this, &Settings::on_zAxisMaxFinished);
 
     ui->cableComboBox->addItem(tr("Change parameters or choose from list..."));
     ui->cableComboBox->setMaxVisibleItems(20);
@@ -411,6 +423,10 @@ Settings::~Settings()
     m_settings->setValue("extendedChartZoom", g_extendedChartZoom);
     m_settings->setValue("reportDetailedErrors", DebugLog::detailedErrorsEnabled());
     m_settings->setValue("reconnectToDrain", g_reconnectToDrain);
+    // g_phaseAxisMin/Max and g_zAxisMin/Max, like g_analyzerTimeoutSec just
+    // above, are persisted from MainWindow's own save routine instead of
+    // here -- their on_..Finished() handlers below already keep the
+    // globals themselves current the moment the field loses focus.
 
     m_settings->setValue("currentIndex",ui->tabWidget->currentIndex());
     m_settings->endGroup();
@@ -1886,6 +1902,52 @@ void Settings::on_analyzerTimeoutFinished()
     value = qBound(1, value, 300);
     ui->lineEdit_analyzerTimeout->setText(QString::number(value));
     g_analyzerTimeoutSec = value;
+    emit paramsChanged();
+}
+
+// Phase chart Y-axis min/max and Z=R+jX/Z=R||jX charts' shared Y-axis
+// min/max (Settings > Advanced, "Chart Y-Axis Ranges") -- see #45/#49/#50.
+// Each pair is clamped independently to a generous absolute range, then
+// against its partner field (min must stay below max and vice versa) so
+// MainWindow's clampAxisRange() (mainwindow.cpp) never gets handed an
+// inverted or zero-width span. Not qBound()'d against each other's
+// *current* value in a single step -- editing min first and immediately
+// hitting an already-too-low max would otherwise fight over an ordering
+// that hasn't been entered yet, so each side only pulls back far enough
+// to stay strictly on its own side of the other.
+void Settings::on_phaseAxisMinFinished()
+{
+    int value = ui->lineEditPhaseAxisMin->text().toInt();
+    value = qBound(-360, value, ui->lineEditPhaseAxisMax->text().toInt() - 1);
+    ui->lineEditPhaseAxisMin->setText(QString::number(value));
+    g_phaseAxisMin = value;
+    emit paramsChanged();
+}
+
+void Settings::on_phaseAxisMaxFinished()
+{
+    int value = ui->lineEditPhaseAxisMax->text().toInt();
+    value = qBound(ui->lineEditPhaseAxisMin->text().toInt() + 1, value, 360);
+    ui->lineEditPhaseAxisMax->setText(QString::number(value));
+    g_phaseAxisMax = value;
+    emit paramsChanged();
+}
+
+void Settings::on_zAxisMinFinished()
+{
+    int value = ui->lineEditZAxisMin->text().toInt();
+    value = qBound(-1000000, value, ui->lineEditZAxisMax->text().toInt() - 1);
+    ui->lineEditZAxisMin->setText(QString::number(value));
+    g_zAxisMin = value;
+    emit paramsChanged();
+}
+
+void Settings::on_zAxisMaxFinished()
+{
+    int value = ui->lineEditZAxisMax->text().toInt();
+    value = qBound(ui->lineEditZAxisMin->text().toInt() + 1, value, 1000000);
+    ui->lineEditZAxisMax->setText(QString::number(value));
+    g_zAxisMax = value;
     emit paramsChanged();
 }
 

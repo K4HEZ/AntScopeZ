@@ -81,6 +81,24 @@ int g_analyzerTimeoutSec = 8;
 // Moved here from a Developer-tab, session-only checkbox 2026-09-04; now
 // an ordinary persisted preference like the rest of this block.
 bool g_reconnectToDrain = false;
+// Phase chart's Y-axis min/max (Settings > Advanced) -- was a fixed
+// +/-180 degrees baked into clampAxisRange()'s call for m_phaseWidget->
+// yAxis (see setWidgetsSettings()). Issue #49 originally asked to just
+// widen the hardcoded default to +/-190 (so a real +/-180 reading isn't
+// drawn clipped at the plot edge); #45's discussion superseded that with
+// "make it a real setting, keep today's +/-180 default" instead. Passed
+// to clampAxisRange() by pointer (not value) so a change made while the
+// app is running takes effect without needing setWidgetsSettings() to
+// re-run -- see clampAxisRange()'s pointer overload.
+double g_phaseAxisMin = -180;
+double g_phaseAxisMax = 180;
+// Z=R+jX / Z=R||jX charts' shared Y-axis min/max (Settings > Advanced) --
+// same story as the phase pair above, but for m_rsWidget/m_rpWidget's
+// yAxis clamp (was a fixed +/-2000 ohms). #50 originally asked to just
+// raise the hardcoded ceiling to 5000; #45's discussion superseded that
+// with "make it a real setting, keep today's +/-2000 default" instead.
+double g_zAxisMin = -2000;
+double g_zAxisMax = 2000;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -322,6 +340,10 @@ MainWindow::MainWindow(QWidget *parent) :
     g_analyzerTimeoutSec = m_settings->value("analyzerTimeoutSec", 8).toInt();
     DebugLog::setDetailedErrorsEnabled(m_settings->value("reportDetailedErrors", false).toBool());
     g_reconnectToDrain = m_settings->value("reconnectToDrain", false).toBool();
+    g_phaseAxisMin = m_settings->value("phaseAxisMin", -180).toDouble();
+    g_phaseAxisMax = m_settings->value("phaseAxisMax", 180).toDouble();
+    g_zAxisMin = m_settings->value("zAxisMin", -2000).toDouble();
+    g_zAxisMax = m_settings->value("zAxisMax", 2000).toDouble();
     m_activeThemeIndex = m_settings->value("activeTheme", 0).toInt();
     m_settings->endGroup();
 
@@ -1138,6 +1160,10 @@ MainWindow::~MainWindow()
     m_settings->setValue("analyzerTimeoutSec", g_analyzerTimeoutSec);
     m_settings->setValue("reportDetailedErrors", DebugLog::detailedErrorsEnabled());
     m_settings->setValue("reconnectToDrain", g_reconnectToDrain);
+    m_settings->setValue("phaseAxisMin", g_phaseAxisMin);
+    m_settings->setValue("phaseAxisMax", g_phaseAxisMax);
+    m_settings->setValue("zAxisMin", g_zAxisMin);
+    m_settings->setValue("zAxisMax", g_zAxisMax);
     m_settings->endGroup();
 
     m_settings->beginGroup("Cable");
@@ -1354,6 +1380,38 @@ static void clampAxisRange(QCPAxis *axis, double min, double max)
     });
 }
 
+// Pointer overload for axes whose clamp bounds can change at runtime via
+// a Settings > Advanced control -- the Phase chart (g_phaseAxisMin/Max)
+// and the Z=R+jX / Z=R||jX charts (g_zAxisMin/Max, shared by both), see
+// their declarations above. Re-reads *min/*max on every rangeChanged
+// tick instead of baking a snapshot into the closure the way the
+// literal-double overload above does, so a value picked in Settings
+// takes effect immediately -- setWidgetsSettings() below only ever runs
+// once, at startup, so it can't be relied on to re-apply a later change.
+static void clampAxisRange(QCPAxis *axis, const double *min, const double *max)
+{
+    QObject::connect(axis, QOverload<const QCPRange&>::of(&QCPAxis::rangeChanged),
+                      axis, [axis, min, max](const QCPRange &newRange) {
+        const double lo = *min;
+        const double hi = *max;
+        const double minSpan = (hi - lo) * 1e-6;
+        double lower = newRange.lower;
+        double upper = newRange.upper;
+        bool outOfBounds = false;
+        if (lower < lo) { lower = lo; outOfBounds = true; }
+        if (upper > hi) { upper = hi; outOfBounds = true; }
+        if (upper - lower < minSpan)
+        {
+            double center = qBound(lo + minSpan / 2.0, (lower + upper) / 2.0, hi - minSpan / 2.0);
+            lower = center - minSpan / 2.0;
+            upper = center + minSpan / 2.0;
+            outOfBounds = true;
+        }
+        if (outOfBounds && upper > lower)
+            axis->setRange(lower, upper);
+    });
+}
+
 void MainWindow::setWidgetsSettings()
 {
     QPen pen;
@@ -1437,7 +1495,7 @@ void MainWindow::setWidgetsSettings()
 
     //-------Phase Widget---------------------------------------------
     m_phaseWidget->addGraph();//graph(0)
-    setBands(m_phaseWidget, bands, -180, 180);
+    setBands(m_phaseWidget, bands, g_phaseAxisMin, g_phaseAxisMax);
     m_phaseWidget->graph(0)->setPen(pen);
     m_phaseWidget->xAxis->setLabel(tr("Frequency, kHz"));
     m_phaseWidget->yAxis->setLabel(tr("Phase, Angle"));
@@ -1454,12 +1512,12 @@ void MainWindow::setWidgetsSettings()
     // code also went through on every interactive tick, not just app code.
     // Restored as clampAxisRange() (above setWidgetsSettings()) instead of
     // back inside qcustomplot.cpp/.h -- see that function's comment.
-    m_phaseWidget->yAxis->setRange(-180, 180);
+    m_phaseWidget->yAxis->setRange(g_phaseAxisMin, g_phaseAxisMax);
     m_phaseWidget->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
     m_phaseWidget->axisRect()->setRangeZoom(Qt::Horizontal);
     m_phaseWidget->axisRect()->setRangeDrag(Qt::Horizontal | Qt::Vertical);
     clampAxisRange(m_phaseWidget->xAxis, 0, 10000000);
-    clampAxisRange(m_phaseWidget->yAxis, -180, 180);
+    clampAxisRange(m_phaseWidget->yAxis, &g_phaseAxisMin, &g_phaseAxisMax);
     // See m_swrWidget->xAxis->setNumberFormat()'s comment just above.
     m_phaseWidget->xAxis->setNumberFormat("f");
     m_phaseWidget->xAxis->setNumberPrecision(0);
@@ -1472,7 +1530,7 @@ void MainWindow::setWidgetsSettings()
     //-------RSeries Widget------------------------------------------------
     m_rsWidget->addGraph();//graph(0)
     m_rsWidget->setAutoAddPlottableToLegend(false);
-    setBands(m_rsWidget, bands, -2000, 2000);
+    setBands(m_rsWidget, bands, g_zAxisMin, g_zAxisMax);
     m_rsWidget->graph(0)->setPen(pen);
     m_rsWidget->xAxis->setLabel(tr("Frequency, kHz"));
     m_rsWidget->yAxis->setLabel(tr("Rs, Ohm"));
@@ -1482,7 +1540,7 @@ void MainWindow::setWidgetsSettings()
     m_rsWidget->axisRect()->setRangeZoom(Qt::Horizontal);
     m_rsWidget->axisRect()->setRangeDrag(Qt::Horizontal | Qt::Vertical);
     clampAxisRange(m_rsWidget->xAxis, 0, 10000000);
-    clampAxisRange(m_rsWidget->yAxis, -2000, 2000);
+    clampAxisRange(m_rsWidget->yAxis, &g_zAxisMin, &g_zAxisMax);
     // See m_swrWidget->xAxis->setNumberFormat()'s comment above.
     m_rsWidget->xAxis->setNumberFormat("f");
     m_rsWidget->xAxis->setNumberPrecision(0);
@@ -1495,7 +1553,7 @@ void MainWindow::setWidgetsSettings()
     //-------RParallel Widget------------------------------------------------
     m_rpWidget->addGraph();//graph(0)
     m_rpWidget->setAutoAddPlottableToLegend(false);
-    setBands(m_rpWidget, bands, -2000, 2000);
+    setBands(m_rpWidget, bands, g_zAxisMin, g_zAxisMax);
     m_rpWidget->graph(0)->setPen(pen);
     m_rpWidget->xAxis->setLabel(tr("Frequency, kHz"));
     m_rpWidget->yAxis->setLabel(tr("Rp, Ohm"));
@@ -1505,7 +1563,7 @@ void MainWindow::setWidgetsSettings()
     m_rpWidget->axisRect()->setRangeZoom(Qt::Horizontal);
     m_rpWidget->axisRect()->setRangeDrag(Qt::Horizontal | Qt::Vertical);
     clampAxisRange(m_rpWidget->xAxis, 0, 10000000);
-    clampAxisRange(m_rpWidget->yAxis, -2000, 2000);
+    clampAxisRange(m_rpWidget->yAxis, &g_zAxisMin, &g_zAxisMax);
     // See m_swrWidget->xAxis->setNumberFormat()'s comment above.
     m_rpWidget->xAxis->setNumberFormat("f");
     m_rpWidget->xAxis->setNumberPrecision(0);

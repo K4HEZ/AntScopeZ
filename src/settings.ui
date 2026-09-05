@@ -2341,7 +2341,7 @@
              <string>Z=R+jX / Z=R‖jX charts' Y-axis lower bound, in ohms. Defaults to -2000, the app's historical fixed range.</string>
             </property>
             <property name="maxLength">
-             <number>7</number>
+             <number>8</number>
             </property>
            </widget>
           </item>
@@ -2361,7 +2361,7 @@
              <string>Z=R+jX / Z=R‖jX charts' Y-axis upper bound, in ohms. Defaults to 2000, the app's historical fixed range.</string>
             </property>
             <property name="maxLength">
-             <number>7</number>
+             <number>8</number>
             </property>
            </widget>
           </item>
