@@ -25,6 +25,11 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   other 3 (plus Rename and a new Select Color...) are a right-click menu
   on the table now -- Select Color..., Rename..., Save as..., Delete,
   Clear All. The Delete key still deletes the selected measurement.
+- Markers list: selection mode changed from cell-select to row-select
+  (so right-click context menu picks an entire marker row, not an
+  individual cell). Right-click menu added with "Clear All Markers"
+  (removes all) and "Clear Empty Markers" (removes only those with no
+  valid data across any measurement).
 - A measurement now tracks whether it's "dirty" (scanned or renamed
   since it was last saved, or never saved at all) -- shown as a trailing
   " *" in the Points column. Deleting or clearing a dirty measurement

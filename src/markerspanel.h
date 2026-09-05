@@ -72,10 +72,15 @@ public slots:
 protected:
     void createHeader();
     QString formatText(int type, QVariant val);
+    void contextMenuEvent(QContextMenuEvent *event) override;
 
 signals:
     void removeMarker(int);
     void changeColumns();
+
+private slots:
+    void on_clearAllMarkers();
+    void on_clearEmptyMarkers();
 
 private:
     QVBoxLayout* m_layout;
@@ -90,6 +95,9 @@ private:
     QList<int> m_columnTypes;
 
     QSettings *m_settings;
+
+    // Detect which markers have no valid data across all measurements
+    QSet<int> getEmptyMarkers() const;
 };
 
 #endif // MARKERSPANEL_H
