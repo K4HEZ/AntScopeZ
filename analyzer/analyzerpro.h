@@ -19,6 +19,24 @@ class AnalyzerPro : public QObject
     quint32 m_analyzerModel;
     quint32 m_chartCounter;
     bool m_isMeasuring=false;
+    // Set by on_stopMeasure() (Esc, re-clicking Single, Settings' "just in
+    // case" call, the watchdog) and cleared the moment a new measurement
+    // actually starts (setIsMeasuring(true), centralized here same as
+    // kickWatchdog()/stopWatchdog() below) -- the completeMeasurement
+    // lambda in connectSignals() checks THIS, not plain m_isMeasuring, to
+    // decide whether a NanovnaAnalyzer::completeMeasurement() signal is
+    // stale. It has to be a separate flag: m_isMeasuring is *also* cleared
+    // by on_newData()'s own chartCounter-vs-dotsNumber completion check,
+    // which -- confirmed live, issue #42 -- fires for the NanoVNA fast
+    // "scan" path's own final point (the device returns dotsNumber+1
+    // points, matching StitchSegment's own "device returns dots+1"
+    // comment above), moments *before* the device's trailing "ch>" prompt
+    // reaches finishMeasurementSegment(). Using m_isMeasuring there meant
+    // that ordinary, non-stopped completion looked identical to a stale
+    // post-Stop signal, so measurementCompleteNano() -- the Remote API's
+    // only signal for a NanoVNA sweep_done event -- silently never fired
+    // even though the sweep had genuinely finished.
+    bool m_measurementStopped=false;
     bool m_isContinuos=false;
     quint32 m_dotsNumber;
     bool m_getAnalyzerData=false;
