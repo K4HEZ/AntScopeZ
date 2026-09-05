@@ -131,13 +131,14 @@
         <widget class="QLabel" name="label_2">
          <property name="maximumSize">
           <size>
-           <width>120</width>
+           <width>140</width>
            <height>16777215</height>
           </size>
          </property>
          <property name="styleSheet">
           <string notr="true">background-color: 	#0057B7;
-color: #ffffff;</string>
+color: #ffffff;
+padding: 5px;</string>
          </property>
          <property name="text">
           <string notr="true">Slava Ukraini!</string>
@@ -151,13 +152,14 @@ color: #ffffff;</string>
         <widget class="QLabel" name="label_3">
          <property name="maximumSize">
           <size>
-           <width>120</width>
+           <width>140</width>
            <height>16777215</height>
           </size>
          </property>
          <property name="styleSheet">
           <string notr="true">background-color: #ffd700;
 color: #000000;
+padding: 5px;
 </string>
          </property>
          <property name="text">
