@@ -189,6 +189,16 @@ void MarkersPanel::updateInfo(QList<QList<QVariant>>& info)
             row++;
         }
     }
+
+    // createHeader()'s own resizeColumnsToContents() only ever sees empty
+    // cells (this function, not updateMarkers(), is what actually fills
+    // in real values) -- so a column stayed sized to just its header
+    // label's width forever, however wide the real numbers turned out to
+    // be, until the user manually widened it themselves. Interactive
+    // resize mode (createHeader()) means this doesn't fight a manual
+    // resize permanently -- it just gets recomputed fresh next time real
+    // data changes, same as it would on first load.
+    m_table->resizeColumnsToContents();
 }
 
 void MarkersPanel::clearTable(void)

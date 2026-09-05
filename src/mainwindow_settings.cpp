@@ -188,8 +188,6 @@ void MainWindow::on_actionSettings_triggered()
     //ui->checkBoxCalibration->setEnabled(m_calibration->isCalibrationPerformed());
     //ui->checkBoxCalibration->setChecked(false);//m_calibration->getCalibrationEnabled());
 
-    ui->measurmentsDeleteBtn->setEnabled(!m_analyzer->isMeasuring());
-    ui->measurmentsClearBtn->setEnabled(!m_analyzer->isMeasuring());
     m_measurements->on_redrawGraphs(false);
     updateGraph();
     if (m_markers->markersHintEnabled()) {

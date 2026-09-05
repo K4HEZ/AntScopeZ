@@ -101,6 +101,24 @@ public:
     void setCalibration(Calibration * _calibration);
     bool getCalibrationEnabled(void);
     void deleteRow(int row);
+    // Prompts for a new name and applies it (table cell, tooltip, S21
+    // legend/graph names, dirty flag) -- was the measurements table's
+    // pencil-column (COL_MENU) click handler; that column's gone now,
+    // this is called directly from the right-click context menu's
+    // "Rename..." (MainWindow::on_tableWidgetMeasurmentsContextMenu())
+    // with the row under the cursor.
+    void renameMeasurement(int row);
+    // Called by every one of Export's format-button handlers (export.cpp)
+    // on a successful (non-cancelled) save -- see measurement::dirty's own
+    // comment: "any file save clears the dirty flag" is Harold's call,
+    // 2026-09-06, now that Import/Export are really just Open/Save (no
+    // more "saving" vs. "exporting" distinction). number is a plain
+    // m_measurements/table row (0=oldest), same as Export's own
+    // m_measureNumber actually resolves to when it reaches exportData()/
+    // exportSParamData()/saveData() -- see clearDirty()'s own comment in
+    // measurements.cpp for why that's not the same as what
+    // getMeasurement() would need.
+    void clearDirty(int number);
     // S21 tab's legend shows only the currently-selected measurement's 4
     // traces (S21/S12 dB+deg), not every measurement at once -- with
     // several measurements loaded, a legend row per trace per measurement

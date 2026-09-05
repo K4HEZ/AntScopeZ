@@ -34,6 +34,7 @@ extern int g_analyzerMaxPoints; // see mainwindow.cpp
 extern bool g_extendedChartZoom; // see mainwindow.cpp
 extern int g_analyzerTimeoutSec; // see mainwindow.cpp
 extern bool g_reconnectToDrain; // see mainwindow.cpp
+extern bool g_warnDirtyDelete; // see mainwindow.cpp
 extern QString appendSpaces(const QString& number);
 int Settings::m_serialIndex = 0;
 bool Settings::m_licenseUpdateBlocked = false;
@@ -143,6 +144,7 @@ Settings::Settings(QWidget *parent) :
     // session-only in-memory-only behavior they had before.
     ui->checkBoxReportDetailedErrors->setChecked(DebugLog::detailedErrorsEnabled());
     ui->checkBoxReconnectToDrain->setChecked(g_reconnectToDrain);
+    ui->checkBoxWarnDirtyDelete->setChecked(g_warnDirtyDelete);
     m_settings->endGroup();
 
     // Debug Logging (Developer tab) -- deliberately NOT persisted to the
@@ -383,6 +385,7 @@ Settings::~Settings()
     g_extendedChartZoom = ui->checkBoxExtendedChartZoom->isChecked();
     DebugLog::setDetailedErrorsEnabled(ui->checkBoxReportDetailedErrors->isChecked());
     g_reconnectToDrain = ui->checkBoxReconnectToDrain->isChecked();
+    g_warnDirtyDelete = ui->checkBoxWarnDirtyDelete->isChecked();
 
     m_settings->beginGroup("Settings");
     m_settings->setValue("restrictFq", m_restrictFq);
@@ -397,6 +400,7 @@ Settings::~Settings()
     m_settings->setValue("extendedChartZoom", g_extendedChartZoom);
     m_settings->setValue("reportDetailedErrors", DebugLog::detailedErrorsEnabled());
     m_settings->setValue("reconnectToDrain", g_reconnectToDrain);
+    m_settings->setValue("warnDirtyDelete", g_warnDirtyDelete);
 
     m_settings->setValue("currentIndex",ui->tabWidget->currentIndex());
     m_settings->endGroup();

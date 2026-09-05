@@ -223,59 +223,84 @@ void Measurements::setWidgets(CustomPlot * swr,   CustomPlot * phase,
         //m_graphBriefHint->setTextColor("black");
         setBriefHintColor();
     }
-    connect(m_tableWidget, &QTableWidget::cellClicked, [=](int row, int col) {
-        if (col == COL_MENU) {
-            measurement& mm = m_measurements[row];
-            QString prefix;
-            QString name = mm.name;
-            int pos = name.indexOf("> ");
-            if (pos != -1) {
-                prefix = name.left(pos+2);
-                name = name.mid(pos+2);
-            }
-            QInputDialog dlg;
-            QString text;
-            dlg.setLabelText(tr("Measurement name:"));
-            dlg.setTextValue(name);
-            if (dlg.exec() == QDialog::Accepted) {
-                text = dlg.textValue();
-            }
+}
 
-            if (!text.isEmpty()) {
-                mm.name = prefix + text;
+// Was the click handler for the measurements table's now-removed pencil
+// column (COL_MENU) -- rename lives on the right-click context menu now
+// (MainWindow::on_tableWidgetMeasurmentsContextMenu()), which calls this
+// directly with the row under the cursor instead of a clicked cell's.
+void Measurements::renameMeasurement(int row)
+{
+    if (row < 0 || row >= m_measurements.length())
+        return;
+    measurement& mm = m_measurements[row];
+    QString prefix;
+    QString name = mm.name;
+    int pos = name.indexOf("> ");
+    if (pos != -1) {
+        prefix = name.left(pos+2);
+        name = name.mid(pos+2);
+    }
+    QInputDialog dlg;
+    QString text;
+    dlg.setLabelText(tr("Measurement name:"));
+    dlg.setTextValue(name);
+    if (dlg.exec() == QDialog::Accepted) {
+        text = dlg.textValue();
+    }
 
-                m_tableWidget->setColumnWidth(COL_NAME, COL_NAME_WD);
-                QTableWidgetItem* itm = m_tableWidget->item(row, COL_NAME);
-                QFontMetrics fm(itm->font());
-                int width = COL_NAME_WD;
-                QString elided = fm.elidedText(mm.name, Qt::ElideRight, width);
-                m_tableWidget->item(row, COL_NAME)->setText(elided);
+    if (!text.isEmpty()) {
+        mm.name = prefix + text;
+        mm.dirty = true; // see measurement::dirty's own comment
+        m_tableWidget->item(row, COL_POINTS)->setText(pointsCellText(mm));
 
-                QString str = mm.name + tr("\nDouble-click an item to rescale the chart.\nRight-click an item to change color");
-                m_tableWidget->item(row, COL_NAME)->setToolTip(str);
+        m_tableWidget->setColumnWidth(COL_NAME, COL_NAME_WD);
+        QTableWidgetItem* itm = m_tableWidget->item(row, COL_NAME);
+        QFontMetrics fm(itm->font());
+        int width = COL_NAME_WD;
+        QString elided = fm.elidedText(mm.name, Qt::ElideRight, width);
+        m_tableWidget->item(row, COL_NAME)->setText(elided);
 
-                // S21 tab's legend labels this measurement's 4 graphs with
-                // its name as a prefix -- see on_newMeasurement()'s
-                // identical s21NamePrefix. Keep them in sync on rename
-                // regardless of whether this row is the one currently
-                // shown in the legend: updateS21Legend()'s
-                // QCPPlottableLegendItem reads each graph's name() live at
-                // paint time, so a graph whose name was never updated
-                // would still show the old one whenever its row is next
-                // selected.
-                int s21Base = row*4 + 1;
-                if (s21Base+3 < m_s21Widget->graphCount()) {
-                    const QString s21NamePrefix = mm.name.isEmpty() ? QString() : (mm.name + QStringLiteral(" - "));
-                    m_s21Widget->graph(s21Base+0)->setName(s21NamePrefix + tr("S21 (dB)"));
-                    m_s21Widget->graph(s21Base+1)->setName(s21NamePrefix + tr("S21 (deg)"));
-                    m_s21Widget->graph(s21Base+2)->setName(s21NamePrefix + tr("S12 (dB)"));
-                    m_s21Widget->graph(s21Base+3)->setName(s21NamePrefix + tr("S12 (deg)"));
-                    m_s21Widget->replot();
-                }
-            }
+        QString str = mm.name + tr("\nDouble-click an item to rescale the chart.\nRight-click an item for more options");
+        m_tableWidget->item(row, COL_NAME)->setToolTip(str);
+
+        // S21 tab's legend labels this measurement's 4 graphs with
+        // its name as a prefix -- see on_newMeasurement()'s
+        // identical s21NamePrefix. Keep them in sync on rename
+        // regardless of whether this row is the one currently
+        // shown in the legend: updateS21Legend()'s
+        // QCPPlottableLegendItem reads each graph's name() live at
+        // paint time, so a graph whose name was never updated
+        // would still show the old one whenever its row is next
+        // selected.
+        int s21Base = row*4 + 1;
+        if (s21Base+3 < m_s21Widget->graphCount()) {
+            const QString s21NamePrefix = mm.name.isEmpty() ? QString() : (mm.name + QStringLiteral(" - "));
+            m_s21Widget->graph(s21Base+0)->setName(s21NamePrefix + tr("S21 (dB)"));
+            m_s21Widget->graph(s21Base+1)->setName(s21NamePrefix + tr("S21 (deg)"));
+            m_s21Widget->graph(s21Base+2)->setName(s21NamePrefix + tr("S12 (dB)"));
+            m_s21Widget->graph(s21Base+3)->setName(s21NamePrefix + tr("S12 (deg)"));
+            m_s21Widget->replot();
         }
-    });
+    }
+}
 
+// See measurements.h's own comment. number is a plain m_measurements/
+// table row (0=oldest) -- despite Export's own updateDetails()/
+// suggestedPath() resolving m_measureNumber via getMeasurement() (which
+// indexes backwards from newest), the actual export/save calls
+// (exportData()/exportSParamData()/saveData()) all bounds-check and index
+// it directly against m_measurements, unreversed -- confirmed by reading
+// each. Matches deleteMeasurementRow()'s own row, mainwindow_measurements_
+// io.cpp.
+void Measurements::clearDirty(int number)
+{
+    if (number < 0 || number >= m_measurements.length())
+        return;
+    measurement& mm = m_measurements[number];
+    mm.dirty = false;
+    if (m_tableWidget != nullptr && number < m_tableWidget->rowCount() && m_tableWidget->item(number, COL_POINTS) != nullptr)
+        m_tableWidget->item(number, COL_POINTS)->setText(pointsCellText(mm));
 }
 
 // See the comment on m_graphHintBox/m_graphHintLabel's constructor spot
@@ -534,7 +559,11 @@ QString Measurements::pointsCellText(const measurement& mm)
 {
     if (mm.dataRX.isEmpty())
         return "--";
-    return QString::number(mm.dataRX.length()) + (mm.dataSParam.isEmpty() ? " (s1p)" : " (s2p)");
+    QString text = QString::number(mm.dataRX.length()) + (mm.dataSParam.isEmpty() ? " (s1p)" : " (s2p)");
+    // See measurement::dirty's own comment.
+    if (mm.dirty)
+        text += " *";
+    return text;
 }
 
 void Measurements::on_newMeasurement(QString name, qint64 from, qint64 to, qint32 dots)
@@ -569,13 +598,13 @@ void Measurements::on_newMeasurement(QString name, qint64 from, qint64 to, qint3
     QTableWidgetItem *item = m_tableWidget->item(row,COL_NAME);
 
     //item->setToolTip(tips);
-    QString str = name + tr("\nDouble-click an item to rescale the chart.\nRight-click an item to change color");
+    QString str = name + tr("\nDouble-click an item to rescale the chart.\nRight-click an item for more options");
     item->setToolTip(str);
     for (int i=0; i<m_tableWidget->rowCount(); i++)
     {
         QTableWidgetItem *item = m_tableWidget->item(i,COL_NAME);
         QString name = item->text();
-        QString str = name + tr("\nDouble-click an item to rescale the chart.\nRight-click an item to change color");
+        QString str = name + tr("\nDouble-click an item to rescale the chart.\nRight-click an item for more options");
         item->setToolTip(str);
     }
     m_measuringInProgress = true;
@@ -786,24 +815,18 @@ void Measurements::on_newMeasurement(QString name)
         m_measurements.last().name = nextName;
         m_tableWidget->setRowCount(0);
 
-        QIcon icon;
-        icon.addPixmap(QPixmap(":/new/prefix1/pencil.png"), QIcon::Normal, QIcon::Off);
-
         const int cell_side = 24;
         m_tableWidget->setColumnCount(MEASUREMENTS_TABLE_COLUMNS);
-        m_tableWidget->setIconSize(QSize(16, 16));
         m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_VISIBLE, QHeaderView::Fixed);
         // Interactive, not Fixed: the Name column's width was previously
         // locked, so a long measurement name (elided to fit) couldn't be
         // widened to actually read it -- user-draggable now.
         m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_NAME, QHeaderView::Interactive);
         m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_POINTS, QHeaderView::Fixed);
-        m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_MENU, QHeaderView::Fixed);
         m_tableWidget->horizontalHeader()->resizeSection(COL_VISIBLE, cell_side);
         // Was 50 -- wide enough for a bare point count, not for the
         // "(s1p)"/"(s2p)" tag now appended (see pointsCellText()).
         m_tableWidget->horizontalHeader()->resizeSection(COL_POINTS, 75);
-        m_tableWidget->horizontalHeader()->resizeSection(COL_MENU, cell_side);
 
         m_tableWidget->setRowCount(m_measurements.length());
         for(int i = 0; i < m_measurements.length(); ++i)
@@ -833,11 +856,6 @@ void Measurements::on_newMeasurement(QString name)
             item->setTextAlignment(Qt::AlignCenter);
             item->setText(pointsCellText(mm));
             m_tableWidget->setItem(i,COL_POINTS, item);
-
-            item = new QTableWidgetItem();
-            item->setIcon(icon);
-            item->setSizeHint(QSize(cell_side, cell_side));
-            m_tableWidget->setItem(i,COL_MENU, item);
         }
 
         m_tableWidget->reset();
@@ -1844,7 +1862,7 @@ void Measurements::on_isRangeChanged(bool _range)
         QTableWidgetItem *item = m_tableWidget->item(i,COL_NAME);
         //item->setToolTip(tips);
         QString name = item->text();
-        QString str = name + tr("\nDouble-click an item to rescale the chart.\nRight-click an item to change color");
+        QString str = name + tr("\nDouble-click an item to rescale the chart.\nRight-click an item for more options");
         item->setToolTip(str);
     }
 }

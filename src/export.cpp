@@ -92,6 +92,34 @@ QString Export::suggestedPath(const QString &ext) const
     return FileDialog::withExtension(FileDialog::userDataDir() + "/" + name, ext);
 }
 
+// AntScopeZ's own format -- listed first (export.ui). Not "most
+// complete": saveData() writes the same frequency/R/X fields CSV/NWL/S1P
+// do (see its own body, measurements_io.cpp), just as JSON doubles
+// instead of rounded text (2-4 digits for those) -- a difference not
+// actually worth promoting as an advantage, since real measurement
+// precision is well below where 2-4 rounded digits would even show it
+// (Harold's correction, 2026-09-06: don't oversell unrounded-ness as
+// data quality). Never touches dataSParam either way -- a 2-port
+// measurement's S21/S12/S22 aren't in an .asd file at all; S2P is the
+// one with genuinely more data than this, not the other way around.
+// saveData(), not exportData()/exportSParamData() like every other button
+// here: a different Measurements method (JSON, not Touchstone/CSV/NWL),
+// but m_measureNumber means the same plain row to all of them regardless
+// (see Measurements::clearDirty()'s own comment).
+void Export::on_asdBtn_clicked()
+{
+    if(m_measurements != NULL)
+    {
+        QString path = FileDialog::getSaveFileName(this, tr("Save"), suggestedPath("asd"), "AntScopeZ (*.asd)");
+        if(!path.isEmpty())
+        {
+            FileDialog::noteUserDataDirIfEnabled(path);
+            m_measurements->saveData(m_measureNumber, path);
+            m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
+        }
+    }
+}
+
 void Export::on_csvBtn_clicked()
 {
     if(m_measurements != NULL)
@@ -101,6 +129,7 @@ void Export::on_csvBtn_clicked()
         {
             FileDialog::noteUserDataDirIfEnabled(path);
             m_measurements->exportData(path, 0, m_measureNumber, m_bApplyCable);
+            m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
         }
     }
 }
@@ -115,6 +144,7 @@ void Export::on_nwlBtn_clicked()
         {
             FileDialog::noteUserDataDirIfEnabled(path);
             m_measurements->exportData(path, 0, m_measureNumber, m_bApplyCable);
+            m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
         }
     }
 }
@@ -134,6 +164,7 @@ void Export::on_zRiBtn_clicked()
             FileDialog::noteUserDataDirIfEnabled(path);
             m_measurements->exportData(path, 0, m_measureNumber,
                                        m_bApplyCable, m_description);
+            m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
         }
     }
 }
@@ -151,6 +182,7 @@ void Export::on_sRiBtn_clicked()
 
             FileDialog::noteUserDataDirIfEnabled(path);
             m_measurements->exportData(path, 1, m_measureNumber, m_bApplyCable, m_description);
+            m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
         }
     }
 }
@@ -168,6 +200,7 @@ void Export::on_sMaBtn_clicked()
 
             FileDialog::noteUserDataDirIfEnabled(path);
             m_measurements->exportData(path, 2, m_measureNumber, m_bApplyCable, m_description);
+            m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
         }
     }
 }
@@ -185,6 +218,7 @@ void Export::on_sDbBtn_clicked()
 
             FileDialog::noteUserDataDirIfEnabled(path);
             m_measurements->exportData(path, 3, m_measureNumber, m_bApplyCable, m_description);
+            m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
         }
     }
 }
@@ -202,6 +236,7 @@ void Export::on_s2pRiBtn_clicked()
 
             FileDialog::noteUserDataDirIfEnabled(path);
             m_measurements->exportSParamData(path, 0, m_measureNumber, m_description);
+            m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
         }
     }
 }
@@ -219,6 +254,7 @@ void Export::on_s2pMaBtn_clicked()
 
             FileDialog::noteUserDataDirIfEnabled(path);
             m_measurements->exportSParamData(path, 1, m_measureNumber, m_description);
+            m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
         }
     }
 }
@@ -236,6 +272,7 @@ void Export::on_s2pDbBtn_clicked()
 
             FileDialog::noteUserDataDirIfEnabled(path);
             m_measurements->exportSParamData(path, 2, m_measureNumber, m_description);
+            m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
         }
     }
 }

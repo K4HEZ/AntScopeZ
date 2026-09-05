@@ -129,6 +129,7 @@ void Measurements::loadData(QString path)
         QString nextName = QString("%1> %2").arg(next, 2, 10, QChar('0')).arg(list.last());
         //on_newMeasurement(nextName);
         on_newMeasurement(nextName, fqMinHz, fqMaxHz, dots);
+        m_measurements.last().dirty = false; // loaded from a file, see measurement::dirty's own comment
 
         ProgressDlg* progressDlg = new ProgressDlg();
         progressDlg->setValue(0);
@@ -384,6 +385,7 @@ void Measurements::importData(QString _name, bool /*user_format*/)
         list = _name.split("\\");
     }
     on_newMeasurement(list.last());
+    m_measurements.last().dirty = false; // loaded from a file, see measurement::dirty's own comment
 
     QFile file(_name);
     bool result = file.open(QFile::ReadOnly);
@@ -808,6 +810,7 @@ void Measurements::importData(QString _name)
         }while (!line.isNull());
 
         on_newMeasurement(list.last(), static_cast<qint64>(fqMin*1000000), static_cast<qint64>(fqMax*1000000), iPoints);
+        m_measurements.last().dirty = false; // loaded from a file, see measurement::dirty's own comment
         foreach (auto data, rawArray) {
             on_newData(data);
         }
@@ -899,6 +902,7 @@ void Measurements::importData(QString _name)
                 }
             }
             on_newMeasurement(list.last(), static_cast<qint64>(fqMin*1000000), static_cast<qint64>(fqMax*1000000), rawArray.length());
+            m_measurements.last().dirty = false; // loaded from a file, see measurement::dirty's own comment
             foreach (auto data, rawArray) {
                 on_newData(data);
             }
@@ -953,6 +957,7 @@ void Measurements::importData(QString _name)
                 }
             }
             on_newMeasurement(list.last(), static_cast<qint64>(fqMin*1000000), static_cast<qint64>(fqMax*1000000), rawArray.length());
+            m_measurements.last().dirty = false; // loaded from a file, see measurement::dirty's own comment
             foreach (auto data, rawArray) {
                 on_newData(data);
             }

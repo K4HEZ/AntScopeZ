@@ -643,7 +643,7 @@ process in the settings menu!</string>
               <number>0</number>
              </property>
              <property name="columnCount">
-              <number>4</number>
+              <number>3</number>
              </property>
              <attribute name="horizontalHeaderCascadingSectionResizes">
               <bool>true</bool>
@@ -670,11 +670,6 @@ process in the settings menu!</string>
              </column>
              <column>
               <property name="text">
-               <string/>
-              </property>
-             </column>
-             <column>
-              <property name="text">
                <string>Name</string>
               </property>
              </column>
@@ -684,68 +679,6 @@ process in the settings menu!</string>
               </property>
              </column>
             </widget>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_7">
-             <item>
-              <widget class="QPushButton" name="measurementsOpenBtn">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="toolTip">
-                <string>Open saved measurement file</string>
-               </property>
-               <property name="text">
-                <string>Open</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="measurmentsSaveBtn">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="toolTip">
-                <string>Save measurement results to PC hard disk</string>
-               </property>
-               <property name="text">
-                <string>Save</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="measurmentsDeleteBtn">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="toolTip">
-                <string>Delete selected measurement</string>
-               </property>
-               <property name="text">
-                <string>Delete</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="measurmentsClearBtn">
-               <property name="toolTip">
-                <string>Clear window (delete all measurement results)</string>
-               </property>
-               <property name="text">
-                <string>Clear</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
            </item>
           </layout>
          </item>
@@ -1163,18 +1096,18 @@ process in the settings menu!</string>
   </widget>
   <action name="actionImport">
    <property name="text">
-    <string>&amp;Import Data...</string>
+    <string>&amp;Open...</string>
    </property>
    <property name="toolTip">
-    <string>Import measurement results from PC hard disk</string>
+    <string>Open a saved measurement (AntScopeZ, Touchstone, CSV, or NWL)</string>
    </property>
   </action>
   <action name="actionExport">
    <property name="text">
-    <string>&amp;Export Data...</string>
+    <string>&amp;Save...</string>
    </property>
    <property name="toolTip">
-    <string>Export measurement results to PC</string>
+    <string>Save the selected measurement</string>
    </property>
   </action>
   <action name="actionPrint">
@@ -1374,10 +1307,6 @@ process in the settings menu!</string>
   <tabstop>presetsDeleteBtn</tabstop>
   <tabstop>pressetsUpBtn</tabstop>
   <tabstop>tableWidget_measurments</tabstop>
-  <tabstop>measurementsOpenBtn</tabstop>
-  <tabstop>measurmentsSaveBtn</tabstop>
-  <tabstop>measurmentsDeleteBtn</tabstop>
-  <tabstop>measurmentsClearBtn</tabstop>
  </tabstops>
  <resources>
   <include location="res.qrc"/>

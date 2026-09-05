@@ -81,6 +81,10 @@ int g_analyzerTimeoutSec = 8;
 // Moved here from a Developer-tab, session-only checkbox 2026-09-04; now
 // an ordinary persisted preference like the rest of this block.
 bool g_reconnectToDrain = false;
+// See measurement::dirty's own comment -- gates the confirm-before-discard
+// warning in MainWindow::deleteMeasurementRow()/clearAllMeasurements()
+// (mainwindow_measurements_io.cpp). Settings > General.
+bool g_warnDirtyDelete = true;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -301,6 +305,7 @@ MainWindow::MainWindow(QWidget *parent) :
     g_analyzerTimeoutSec = m_settings->value("analyzerTimeoutSec", 8).toInt();
     DebugLog::setDetailedErrorsEnabled(m_settings->value("reportDetailedErrors", false).toBool());
     g_reconnectToDrain = m_settings->value("reconnectToDrain", false).toBool();
+    g_warnDirtyDelete = m_settings->value("warnDirtyDelete", true).toBool();
     m_activeThemeIndex = m_settings->value("activeTheme", 0).toInt();
     m_settings->endGroup();
 
@@ -322,9 +327,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->continuousStartBtn->setEnabled(false);
     ui->actionAnalyzerData->setEnabled(false);
     ui->actionScreenshotAA->setEnabled(false);
-    ui->measurmentsSaveBtn->setEnabled(false);    
-    ui->measurmentsDeleteBtn->setEnabled(false);
-    ui->measurmentsClearBtn->setEnabled(false);
     ui->actionExport->setEnabled(false);
     ui->fullBtn->setEnabled(false);
 
@@ -333,7 +335,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // Same Tab-traps-focus-inside default as tableWidget_presets -- see
     // Presets::setTable() for the full explanation.
     ui->tableWidget_measurments->setTabKeyNavigation(false);
-    //ui->tableWidget_measurments->setToolTip(tr("Double-click an item to rescale the chart.\nRight-click an item to change color"));
+    //ui->tableWidget_measurments->setToolTip(tr("Double-click an item to rescale the chart.\nRight-click an item for more options"));
     ui->tableWidget_measurments->setToolTip("");
     ui->tableWidget_measurments->setContextMenuPolicy(Qt::CustomContextMenu);
     //ui->tableWidget_measurments->setItemDelegateForColumn(COL_NAME, new ElideDelegate(ui->tableWidget_measurments));
@@ -660,8 +662,6 @@ MainWindow::MainWindow(QWidget *parent) :
 //        // at load time
 //        w->blockSignals(false);
 //    });
-
-    connect(ui->measurmentsClearBtn, &QPushButton::clicked, this, &MainWindow::measurementsClearBtn_clicked);
 
 #ifdef Q_OS_WIN
     // Registers .asd as a AntScopeZ-associated file type via the real
@@ -1080,6 +1080,7 @@ MainWindow::~MainWindow()
     m_settings->setValue("analyzerTimeoutSec", g_analyzerTimeoutSec);
     m_settings->setValue("reportDetailedErrors", DebugLog::detailedErrorsEnabled());
     m_settings->setValue("reconnectToDrain", g_reconnectToDrain);
+    m_settings->setValue("warnDirtyDelete", g_warnDirtyDelete);
     m_settings->endGroup();
 
     m_settings->beginGroup("Cable");

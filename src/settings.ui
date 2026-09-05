@@ -161,6 +161,16 @@
             </widget>
            </item>
            <item>
+            <widget class="QCheckBox" name="checkBoxWarnDirtyDelete">
+             <property name="toolTip">
+              <string>A measurement is "dirty" if it came from a scan or was renamed since it was last saved -- shown as a trailing " *" in the measurements list's Points column. Warns before Delete/Clear All would discard any dirty measurement.</string>
+             </property>
+             <property name="text">
+              <string>Warn before deleting or clearing dirty measurements</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QGroupBox" name="groupBox_7">
              <property name="title">
               <string>Measurement system</string>

@@ -1,7 +1,6 @@
 <RCC>
     <qresource prefix="/new/prefix1">
         <file>logo_watermark.png</file>
-        <file>pencil.png</file>
         <file>AntScopeZ.png</file>
     </qresource>
 </RCC>

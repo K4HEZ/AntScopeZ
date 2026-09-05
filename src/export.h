@@ -57,6 +57,7 @@ private:
     void updateDetails();
 
 private slots:
+    void on_asdBtn_clicked();
     void on_csvBtn_clicked();
     void on_zRiBtn_clicked();
     void on_sRiBtn_clicked();
