@@ -69,6 +69,19 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_version">
      <item>
+      <spacer name="horizontalSpacer_versionLeft">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
       <widget class="QLabel" name="label_version">
        <property name="text">
         <string>Version:</string>
@@ -131,14 +144,14 @@
         <widget class="QLabel" name="label_2">
          <property name="minimumSize">
           <size>
-           <width>141</width>
-           <height>47</height>
+           <width>114</width>
+           <height>38</height>
           </size>
          </property>
          <property name="maximumSize">
           <size>
-           <width>141</width>
-           <height>47</height>
+           <width>114</width>
+           <height>38</height>
           </size>
          </property>
          <property name="styleSheet">
@@ -158,14 +171,14 @@ padding: 5px;</string>
         <widget class="QLabel" name="label_3">
          <property name="minimumSize">
           <size>
-           <width>141</width>
-           <height>47</height>
+           <width>114</width>
+           <height>38</height>
           </size>
          </property>
          <property name="maximumSize">
           <size>
-           <width>141</width>
-           <height>47</height>
+           <width>114</width>
+           <height>38</height>
           </size>
          </property>
          <property name="styleSheet">
