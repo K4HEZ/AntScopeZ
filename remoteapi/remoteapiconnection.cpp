@@ -117,6 +117,15 @@ void RemoteApiConnection::onNewData(RawData rawData)
 
 void RemoteApiConnection::onNewSParamPoint(SParamPoint sp)
 {
+    // See SParamPoint::skipRedraw's own comment (analyzer/analyzerparameters.h)
+    // -- on NanoVNA's fast "scan" path, newData() and newSParamPoint() fire
+    // back-to-back for this exact same point. onNewData() above already
+    // pushed/counted it; without this, every fast-path point was pushed and
+    // appended to m_lastPoints twice (#43). Mirrors the same check
+    // Measurements::on_newSParamPoint() (src/measurements.cpp) already does.
+    if (sp.skipRedraw)
+        return;
+
     QJsonObject point;
     point.insert("freq_hz", sp.fq * MHZ_TO_HZ);
     QJsonObject s11;
