@@ -142,8 +142,8 @@ color: #ffffff;</string>
          <property name="text">
           <string notr="true">Slava Ukraini!</string>
          </property>
-         <property name="indent">
-          <number>5</number>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignCenter</set>
          </property>
         </widget>
        </item>
@@ -164,10 +164,7 @@ color: #000000;
           <string>Glory to Ukraine!</string>
          </property>
          <property name="alignment">
-          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-         </property>
-         <property name="indent">
-          <number>5</number>
+          <set>Qt::AlignmentFlag::AlignCenter</set>
          </property>
         </widget>
        </item>
