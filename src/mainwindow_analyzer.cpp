@@ -77,24 +77,20 @@ void MainWindow::on_analyzerNameFound(QString name)
     // (Settings::checkUpdatesBtn() -> AnalyzerPro::on_checkUpdatesBtn_clicked(),
     // wired up below).
 
-    // Was a name.contains("NanoVNA") substring check -- classic NanoVNA's
-    // slow serial-shell protocol is the actual reason for this cap, not its
-    // name, and that stopped being a reliable proxy the moment NanoVNA V2 /
-    // LiteVNA64 support (NanovnaV2Analyzer, connectionType() ==
-    // ReDeviceInfo::NANOV2) landed: "NanoVNA V2" matched the substring and
-    // got needlessly locked to 100 points despite the protocol supporting
-    // up to ~1023 (V2) / ~25601 (LiteVNA64); "LiteVNA64" didn't match at
-    // all, missing the cap inconsistently in the other direction. Keying
-    // this on connectionType() instead identifies exactly the protocol
-    // this cap is actually about.
-    if (m_analyzer->connectionType() == ReDeviceInfo::NANO) {
-        ui->lineEdit_points->setEnabled(false);
-        ui->speedAccuracySlider->setEnabled(false);
-        setDotsNumber(100);
-    } else {
-        ui->lineEdit_points->setEnabled(true);
-        ui->speedAccuracySlider->setEnabled(true);
-    }
+    // Classic NanoVNA used to be hardcoded to a 100-point ceiling with the
+    // Points field disabled entirely (first a name.contains("NanoVNA")
+    // substring check, later keyed on connectionType() == ReDeviceInfo::NANO
+    // once that substring check started mismatching NanoVNA V2/LiteVNA64).
+    // Dropped 2026-09-06: the classic ASCII protocol has no actual
+    // point-count ceiling of its own -- 100 was a conservative guess about
+    // its slow per-point serial-shell round trips, but plenty of real
+    // classic-ASCII analyzers natively support 201/401/801+ points, and a
+    // scan that's genuinely too slow for someone's hardware is exactly what
+    // Settings > General's "Analyzer maximum number of points" + scan
+    // stitching already exists to handle -- same as every other connection
+    // type, no special-case needed here.
+    ui->lineEdit_points->setEnabled(true);
+    ui->speedAccuracySlider->setEnabled(true);
     m_calibration->init(m_analyzer->getSerialNumber());
     updateConnectionStatusLabel();
 }
