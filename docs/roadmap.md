@@ -1,17 +1,18 @@
 ---
 layout: default
-title: Use Case Catalog
+title: Use Cases & Outstanding Work
 ---
 
-# AntScopeZ use-case catalog (working doc)
+# AntScopeZ use cases & outstanding work (working doc)
 
 Not end-user documentation -- that's `docs/user-guide.md`, organized by
 *feature*. This is organized by *goal* ("I want to accomplish X"),
 specifically to drive feature planning: for each real thing a user
 might be trying to do, what's the procedure today, and does AntScopeZ
-actually cover it yet. Pulled together 2026-08-19 as prep work before
-planning S22 exposure, so gaps get spotted deliberately instead of
-being discovered one bug report at a time.
+actually cover it yet. Also folds in (2026-09-06, merged from a
+separate `todo.txt`) the handful of outstanding items that aren't
+use-case-shaped -- open questions, unfinished QA passes -- so there's
+one place to check for "what's not done yet" instead of two.
 
 Status legend: ✅ works today -- ⚠️ partially/awkwardly -- ❌ not
 possible today.
@@ -27,7 +28,7 @@ possible today.
 | 5 | Determine antenna Q / usable bandwidth | Marker Comparison's Q field, or eyeball Phase-crossing steepness | Phase, Marker Comparison | ✅ |
 | 6 | Compare two antennas/configurations side by side | Check multiple Measurements rows visible on one chart | any chart, Multi | ✅ |
 | 7 | Watch a match improve in real time while physically adjusting it | Continuous scan mode | SWR (or any chart) | ✅ |
-| 8 | Log/export a measurement for a report or later reference | Export (CSV/NWL/Touchstone), Save (.asd), Print, Save Screenshot | File menu | ✅ |
+| 8 | Log/export a measurement for a report or later reference | File > Save (or right-click a row > Save as...) -- one dialog for every format, including AntScopeZ's own .asd; Print, Save Screenshot | File menu, right-click menu | ✅ (Import/Export renamed Open/Save 2026-09-06 -- one dialog per direction now, not a separate quick-.asd path plus a different multi-format one) |
 | 9 | Retrieve scans already stored on the analyzer itself | Data from AA | File > Data from AA | ✅ |
 | 10 | Correct for the analyzer's own measurement error | OSL calibration, then check the Calibration box | Settings > OSL Calibration | ✅ |
 | 11 | Target scans to a specific ham band quickly | Band selector fills Start/Stop | Presets panel | ✅ |
@@ -49,13 +50,13 @@ possible today.
 | # | Use case | How today | Charts/tools | Status |
 |---|---|---|---|---|
 | 19 | Verify a filter/attenuator's passband or insertion loss vs frequency | Import a `.s2p`, read S21 magnitude -- or, on NanoVNA-family hardware, a live scan now populates real S21 directly (unvalidated, see row 28) | S21 tab | ✅ (shipped 2026-08-19; live NanoVNA path added 2026-08-31) |
-| 20 | Sanity-check S21≈S12 (reciprocity) for a passive device | Both traced on the same S21 tab (dashed/solid) | S21 tab | ✅ for imported `.s2p` data. Not meaningful on a live NanoVNA scan -- that path is forward-only and hardcodes S12 to 0 (see row 28), so it can never actually show S21≈S12, only S21 against a flat zero line. |
+| 20 | Sanity-check S21≈S12 (reciprocity) for a passive device | View > Show S12 (off by default -- S12 duplicates S21 exactly for any reciprocal device, so it's opt-in); both traces solid, distinct colors (dashed-vs-solid dropped 2026-09-06, no longer needed) | S21 tab | ✅ for imported `.s2p` data. Not meaningful on a live NanoVNA scan -- that path is forward-only and hardcodes S12 to 0 (see row 28), so it can never actually show S21≈S12, only S21 against a flat zero line. |
 | 21 | Track a frequency point's S21/S12 across the Markers table / cursor hover | Marker Comparison table columns, Cursor Details | S21 tab, Markers | ✅ (shipped 2026-08-19). Same caveat as row 20 -- the S12 column reads real data from an imported `.s2p`, but is always 0 on a live NanoVNA scan. |
 | 22 | Check the DUT's *output*-port match (S22) | -- | -- | ❌ deferred -- and now a *double* gap, not a single one: no live-capture path produces real S22 either (NanoVNA's row 28 addition is forward-only S11+S21, S22 hardcoded to 0 in `nanovna_analyzer.cpp`), and even an imported `.s2p` file's real S22 is parsed and re-exportable but never surfaced anywhere in the UI (no chart, no column) |
 | 23 | Sanity-check a device is electrically symmetric (S11≈S22) | -- | -- | ❌ same gap as above |
 | 24 | Design a matching network for a 2-port device's output side | -- | -- | ❌ same gap |
 | 25 | Read group delay / phase linearity through a device | -- | -- | ❌ explicitly deferred in the 2-port plan |
-| 26 | Compare S21 alongside another chart in Multi view | -- | -- | ❌ S21 is explicitly excluded from Multi's join menu (`mainwindow_multitab.cpp`) |
+| 26 | Compare S21 alongside another chart in Multi view | Right-click the S21 tab > "Move chart to the tab Multi", same as any other chart | S21 tab, Multi | ✅ (fixed 2026-09-06 -- S21 used to be excluded from Multi's join menu entirely, which also meant joining it via the *other* "move to Multi" menu, then using Multi's own "Close all", could permanently strand the tab hidden with no way back; both fixed together, S21 is a fully symmetric Multi-tab participant now) |
 | 27 | Export imported 2-port data back out (S11/S21/S12/S22), in RI, MA, or DB | Export dialog's S2P RI/MA/DB buttons (only shown for a 2-port measurement) | File > Export | ✅ (shipped 2026-08-19, `exportSParamData()`) |
 | 28 | Capture 2-port data live from real hardware | NanoVNA-family (classic ASCII *and* V2/binary): `data 1` after the normal S11 pass (classic), or S11+S21 together per FIFO record (V2), plus an opportunistic ASCII/binary `scan` fast path where classic firmware supports it | any 1-port chart + S21 tab (NanoVNA only) | ⚠️ split by device family. **NanoVNA-family: ✅** classic ASCII shipped 2026-08-31, since exercised against real NanoVNA-H4 hardware (two real bugs found and fixed 2026-09-02 -- see [[nanovna-two-port-work-deferred]]); V2/binary (`nanovna_v2_analyzer.cpp`) shipped 2026-09-03, so far only tested against the companion NanoVNA emulator, not real V2/LiteVNA64 hardware. Both forward-only: S12/S22 are hardcoded to `(0,0)`, not a full 4-parameter capture. **RigExpert-family: ❌** still a dead end on this user's hardware -- `FDB` (S21) *and* `EFRX` (User Defined tab) both return "Error.Not recognized" on the only device tested (RigExpert Match RFE, confirmed 2026-08-19/20). See [[s21-and-user-defined-live-capture-deferred]]. (Row 29's stitching still doesn't reach either path -- `on_measureUser()`/EFRX already routes through `startStitchedMeasure()`, `on_measureS21()`/FDB doesn't, and NanoVNA's own scan pipeline is separate again.) |
 | 35 | Import a 2-port *Z-parameter* Touchstone file (`# ... Z RI ...`, 9-value rows) correctly | -- | -- | ❌ real gap found 2026-08-19 -- Z21/Z12/Z22 are a different quantity than S21/S12/S22 (would need actual Z-to-S 2-port matrix conversion); guarded against silent mislabeling (skipped, not shown as wrong data) rather than fixed. S-parameter 2-port files (the overwhelmingly common case) are unaffected. |
@@ -65,84 +66,52 @@ possible today.
 
 | # | Use case | How today | Charts/tools | Status |
 |---|---|---|---|---|
-| 30 | Understand why a scan is slow or appears hung | A scan that goes silent past Settings > General > "Analyzer timeout" (default 8s) now fails with a proper non-modal error dialog -- timestamped, with whatever diagnostic detail is available -- instead of leaving the busy indicator/wait cursor stuck forever. Stopping a scan that's still delivering data (neither NanoVNA protocol has a wire-level abort) now visibly shows "draining" progress in the status bar and disables scan controls until it's genuinely done, instead of looking stopped while still silently discarding incoming points -- bounded by the same watchdog | Settings > General, analyzer error dialog, status bar | ✅ (watchdog shipped 2026-09-01 -- `AnalyzerPro` scan-silence watchdog; USB/HID and Serial connections also now detect "device present but busy" specifically, both at launch and while polling. Drain-aware stop shipped 2026-09-03/04 -- `AnalyzerPro::beginDraining()`/`stopCommandAbortsDevice()`, optional "Use reconnect to drain unwanted data" in Settings > General) |
+| 30 | Understand why a scan is slow or appears hung | A scan that goes silent past Settings > General > "Analyzer timeout" (default 8s) now fails with a proper non-modal error dialog -- timestamped, with whatever diagnostic detail is available -- instead of leaving the busy indicator/wait cursor stuck forever. Stopping a scan that's still delivering data (neither NanoVNA protocol has a wire-level abort) now visibly shows "draining" progress in the status bar and disables scan controls until it's genuinely done, instead of looking stopped while still silently discarding incoming points -- bounded by the same watchdog | Settings > General, analyzer error dialog, status bar | ✅ (watchdog shipped 2026-09-01 -- `AnalyzerPro` scan-silence watchdog; USB/HID and Serial connections also now detect "device present but busy" specifically, both at launch and while polling. Drain-aware stop shipped 2026-09-03/04 -- `AnalyzerPro::beginDraining()`/`stopCommandAbortsDevice()`, optional "Use reconnect to drain unwanted data" in Settings > General). ⚠️ Genuinely aborting a *very* large (~10000-point) scan mid-flight is still unfixed -- draining/reconnect both wait out or discard what's already in transit, but a prior attempt at a true wire-level-independent early exit (processEvents()+early-exit in the NanoVNA parse loops) broke real hardware badly (wouldn't start, needed multiple reconnects, stop didn't drain) and was fully reverted 2026-09-05. Leading suspect, unconfirmed: `QEventLoop::ExcludeSocketNotifiers` may be blocking something in the connect/handshake/drain path that genuinely depends on socket-notifier events firing during that window. Needs a fresh root-cause pass before retrying. |
 | 31 | Reliable auto-reconnect after a dropped/power-cycled analyzer | -- | -- | ⚠️ known gap, unchanged -- row 30's "device present but busy" detection helps diagnose a stuck connect attempt but doesn't make the reconnect itself more reliable |
 | 38 | Get remote help from a more experienced ham -- let them drive your analyzer software over the network while you handle the physical antenna/hardware end | -- | -- | ❌ parked idea (2026-08-20), not scoped or designed -- see [[remote-network-control-idea]]. Would supersede, not extend, an existing but abandoned narrow UDP bridge (see [[s21-and-user-defined-live-capture-deferred]]-adjacent findings in `BUILDINFO.md`). |
+| 42 | Configure how AntScopeZ handles analyzer errors (retry/reconnect behavior) | -- | -- | ❌ planned, not started (2026-09-06) -- Settings dialog rework: rename the "Developer" tab to "Analyzer" (it's really just Custom Analyzer/prototype settings now, Debug Logging and the error-handling checkboxes already live on the General tab) and add real retry/reconnect settings there. Feeds directly into row 31's gap. |
+| 43 | Manually disconnect from the analyzer without closing the app | -- | -- | ❌ planned, not started (2026-09-06) -- there's a Connect Analyzer... action but no matching Disconnect; `on_deviceDisconnected()` today only handles an unexpected drop, not a user-requested one. Add an explicit Connect/Disconnect mechanism. |
 
 ## Visual / UI
 
 | # | Use case | How today | Charts/tools | Status |
 |---|---|---|---|---|
-| 32 | Tell overlapping measurement traces apart at a glance | `getColor()` palette | any multi-trace chart | ⚠️ known collision bug, task #11 -- "not ready to fix it" |
-| 33 | Keep the Markers table visible without it floating awkwardly over the chart | Docked into a resizable splitter under the plot tabs as a normal themed table; visibility follows the View > Markers Hint checkbox alone | Markers panel | ✅ (shipped 2026-09-01 -- `MarkersPopUp`, a translucent floating `Qt::Tool` window, retired in favor of `MarkersPanel`, a plain child widget styled for free by the app's existing Fusion/palette theming) |
+| 32 | Tell overlapping measurement traces apart at a glance | `getColor()` palette; on the S21 tab specifically, selecting a measurement brings its traces to the front (z-order) and every trace is fully opaque | any multi-trace chart | ✅ (getColor()'s red-collapse fixed 2026-09-04; S21-specific z-order-on-select and opacity fixes 2026-09-05/06 -- opacity replaced a permanent semi-transparency that had traded "one trace fully hides another" for "two overlapping traces blend into an unlabeled third color") |
+| 41 | Know at a glance whether a measurement has unsaved changes | Points column shows a trailing " *" for a dirty measurement (scanned or renamed since last saved) | Measurements panel | ✅ (shipped 2026-09-06 -- `measurement::dirty`; deleting/clearing a dirty measurement also warns first, gated by a Settings > General checkbox, default on) |
+| 33 | Keep the Markers table visible without it floating awkwardly over the chart | Docked into a resizable splitter under the plot tabs as a normal themed table; visibility follows the View > Markers Hint checkbox alone; columns auto-widen to fit real data on every refresh | Markers panel | ✅ (shipped 2026-09-01 -- `MarkersPopUp`, a translucent floating `Qt::Tool` window, retired in favor of `MarkersPanel`, a plain child widget styled for free by the app's existing Fusion/palette theming. Column auto-resize fixed 2026-09-06 -- previously only sized once, to the header label's width.) |
+
+## Other outstanding items
+
+Things that don't fit the use-case table shape above, but still need
+action:
+
+- **qt.conf reference in `user-guide.md`** -- open question, unresolved:
+  is it actually obsolete? Needs checking against the current
+  build/deploy setup before editing the doc either way.
+- **Measurements file I/O rework needs a real live test pass.**
+  Implemented 2026-09-06 (rows 8 and 41 above; see `CHANGELOG.md` for
+  the full shape), but not yet exercised end-to-end by hand: rename,
+  save in every format including the new .asd button, delete/clear both
+  with and without dirty measurements present, the warn-before-discard
+  checkbox itself, the new combined "All supported files" Open filter,
+  and right-click on an empty row vs. a real one.
 
 ## Notes
 
-Rows 22-24 (S22) are the reason this doc exists -- nothing lets a user
-look at a 2-port device's output port at all, not a workaround-but-
-clunky case, a flat ❌. Row 27 (2-port export) and row 26 (Multi view)
-are adjacent gaps worth keeping in view when S22 does get designed --
-whatever data model it uses should be export- and Multi-view-compatible
-without another rework. Row 34 (the Points-column s1p/s2p tag) turned
-out to be a real prerequisite for row 27, not just adjacent to it --
-`Export::updateDetails()` reads that tag to decide whether to show the
-S2P button at all.
+Row 22-24's gap (S22) is the single largest one left: nothing lets a
+user look at a 2-port device's output port at all, not a
+workaround-but-clunky case, a flat ❌. Row 27 (2-port export) and row 26
+(Multi view) are adjacent gaps worth keeping in view when S22 does get
+designed -- whatever data model it uses should be export- and
+Multi-view-compatible without another rework. Row 34 (the Points-column
+s1p/s2p tag) turned out to be a real prerequisite for row 27, not just
+adjacent to it -- `Export::updateDetails()` reads that tag to decide
+whether to show the S2P button at all.
 
-## Changelog cross-reference
-
-Rows above get their "shipped"/"fixed" status kept in sync with
-`CHANGELOG.md` as work lands; this section is just a quick index into
-*why* a given row changed, for anything not obvious from the row itself.
-
-- **2026-08-21, TDR rework:** dedicated `Tools > TDR Measurement` dialog
-  (`TdrScanPanel`/`TdrScanDialog`), window-function picker (row 17),
-  automatic fault-vs-known-cable-length flag (row 14), impedance (Ohms)
-  readout (row 12 -- accuracy is a still-open question, not a quick win).
-  Full history, including two hardware-confirmed bugs found along the
-  way, in the `tdr-scan-rework-plan` memory.
-- **2026-08-31, NanoVNA live 2-port:** real S11+S21 requested on every
-  NanoVNA-family scan (`data 1`, plus an opportunistic ASCII/binary
-  `scan` fast path), row 28's NanoVNA half. Shipped ahead of hardware
-  validation -- see [[nanovna-two-port-work-deferred]].
-- **2026-09-01, released as 2.2.3:** scan-silence watchdog + a proper
-  error dialog (row 30); Markers table docked into the main window
-  (row 33); plus assorted reliability fixes not tied to a specific row
-  -- Esc/Stop actually stopping a scan, a marker-placement crash, a
-  double-free on close, Continuous mode's Points column updating on
-  stop, empty scans no longer left in the Measurements list -- and an
-  in-app Help > User Guide viewer.
-- **2026-09-02, NanoVNA-H4 hardware arrives:** the classic ASCII NanoVNA
-  path exercised against real hardware for the first time; two real bugs
-  found and fixed (0 Hz reported for the first swept point; a race on the
-  first Single-click right after connecting, root-caused live via gdb).
-  See [[nanovna-two-port-work-deferred]].
-- **2026-09-03, NanoVNA V2/LiteVNA64 + assorted NanoVNA-family fixes:**
-  binary register+FIFO protocol support (`nanovna_v2_analyzer.cpp`, row
-  28's V2 half), built and verified against a companion NanoVNA emulator
-  (ASCII and binary, plus fault injection) rather than real V2 hardware --
-  Connect Analyzer gained a dev-only "(dev emulator)" row for this, shown
-  only while the emulator's actually running. Testing against it surfaced
-  several real, pre-existing bugs: a stitched-sweep race that only ever
-  showed the first segment's data on any NanoVNA-family device (row 29);
-  a TDR scan against a NanoVNA-family device that could get permanently
-  stuck (Stop unresponsive); TDR's Result groupbox not refreshing after a
-  normally-completed NanoVNA scan; a port-reuse race reconnecting to a
-  different analyzer type at the same port path.
-- **2026-09-03/04, drain-aware scan stop:** stopping a scan mid-flight
-  now visibly drains instead of looking hung (row 30's second half).
-  Several real bugs found testing it against the emulator: draining
-  always timing out on devices that actually do have a wire-level abort
-  (HID/Serial, e.g. Match); a status-bar ordering bug that always
-  computed "how many points remain" as the full original count instead
-  of what was genuinely still in flight; Settings dialog force-resetting
-  every Developer-tab checkbox (and, for one of them, the real
-  underlying flag too) on every single reopen, not just once per launch.
-- **2026-09-04, Settings reorg + a real 2-marker bug:** "Report Detailed
-  Errors" and "Use reconnect to drain unwanted data" moved from
-  Developer to General tab, now persisted to the ini instead of
-  session-only; BLE Pings' own default fixed (was `true`, contradicting
-  its own "defaults unchecked" comment). Also found: a V2/binary scan
-  placed two "lowest SWR" auto-markers per scan instead of one --
-  `MainWindow::on_measurementComplete()`'s NanoVNA-family early-return
-  only ever checked the classic `NANO` enum value, never the newer
-  `NANOV2`.
+Related, still-open design question: whether a truly symmetric 2-port
+device (real dual-source hardware, or a documented DUT-flip-and-combine
+workflow) should get independent Port1(S11)/Port2(S22) toggles on
+*every* chart (SWR/RL/Smith/Rs/Rp), not just the S21 tab. Renaming the
+"S21" tab itself (e.g. to "2Port") was discussed and deliberately not
+done 2026-09-05/06, pending that broader question -- a name change now
+would likely need revisiting anyway once S22 lands.
