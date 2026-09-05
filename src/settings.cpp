@@ -177,9 +177,14 @@ Settings::Settings(QWidget *parent) :
 
     // Error Reporting & Logging -- same session-only/off-by-default
     // convention as Debug Logging just above (see DebugLog::
-    // setDetailedErrorsEnabled()'s comment).
-    ui->checkBoxReportDetailedErrors->setChecked(false);
-    DebugLog::setDetailedErrorsEnabled(false);
+    // setDetailedErrorsEnabled()'s comment). Issue #46: this used to
+    // hardcode setChecked(false)/setDetailedErrorsEnabled(false)
+    // unconditionally here, unlike the Debug Logging checkboxes just above
+    // which read back DebugLog's current state -- so reopening Settings
+    // silently turned detailed error reporting back off even within the
+    // same session, not just reset the checkbox's visual state. Read back
+    // DebugLog::detailedErrorsEnabled() instead, matching the others.
+    ui->checkBoxReportDetailedErrors->setChecked(DebugLog::detailedErrorsEnabled());
     connect(ui->checkBoxReportDetailedErrors, &QCheckBox::clicked, DebugLog::setDetailedErrorsEnabled);
 
     // "Data folder" -- the single UserDataDir every save/export/screenshot
