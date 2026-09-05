@@ -110,6 +110,17 @@ public:
     // out-of-range row, e.g. after the last measurement is deleted) to
     // just clear the legend.
     void updateS21Legend(int row);
+    // Independent show/hide for the S21 vs S12 traces across every
+    // measurement on the S21 tab (View menu's Show S21/Show S12 actions,
+    // mainwindow.cpp) -- replaces permanent semi-transparency as the fix
+    // for two different measurements' overlapping traces blending into
+    // an unlabeled third color (reported 2026-09-06). Recomputes every
+    // row's actual graph visibility (this toggle AND'ed with that row's
+    // own visibility checkbox, toggleVisibility()) and replots.
+    void setS21ShowS21(bool show);
+    void setS21ShowS12(bool show);
+    bool getS21ShowS21(void) const { return m_s21ShowS21; }
+    bool getS21ShowS12(void) const { return m_s21ShowS12; }
     void setFarEndMeasurement (qint32 mode) { m_farEndMeasurement=mode; }
     qint32 getFarEndMeasurement (void) {return m_farEndMeasurement;}
     // getMeasurement(number) indexes backwards from the newest entry --
@@ -360,6 +371,23 @@ private:
 
     bool m_graphHintEnabled;
     bool m_graphBriefHintEnabled;
+
+    // S21 tab: independent show/hide for the S21 vs S12 traces (View
+    // menu's Show S21/Show S12 actions) -- see setS21ShowS21()/
+    // setS21ShowS12()'s own comment for why this exists (2026-09-06,
+    // replacing permanent semi-transparency as the fix for S21/S12
+    // overlap). Default S21 on/S12 off: S12 duplicates S21 for any
+    // reciprocal (passive) device -- the common case for this
+    // instrument -- so showing it is opt-in, not on by default.
+    bool m_s21ShowS21 = true;
+    bool m_s21ShowS12 = false;
+    // Applies m_s21ShowS21/m_s21ShowS12 (AND'ed with each row's own
+    // visibility checkbox) to every measurement's 4 S21 graphs at once --
+    // shared by setS21ShowS21()/setS21ShowS12() (a global toggle changed)
+    // and on_newMeasurement() (a new row needs its initial visibility to
+    // already match the current toggle state, not QCPGraph's own
+    // default-visible).
+    void updateS21GraphVisibility();
 
     volatile bool m_calibrationMode;
 

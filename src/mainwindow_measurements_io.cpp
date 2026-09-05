@@ -157,9 +157,34 @@ void MainWindow::on_tableWidget_measurments_cellClicked(int row, int column)
                 int s21Base = (i-1)*4 + 1;
                 if (s21Base+3 < m_s21Widget->graphCount()) {
                     for (int ii=0; ii<4; ii++) {
-                        QPen s21OwnPen = m_s21Widget->graph(s21Base+ii)->pen();
+                        QCPGraph* g = m_s21Widget->graph(s21Base+ii);
+                        QPen s21OwnPen = g->pen();
                         s21OwnPen.setWidth(pen_width);
-                        m_s21Widget->graph(s21Base+ii)->setPen(s21OwnPen);
+                        g->setPen(s21OwnPen);
+
+                        // Selecting a measurement should bring its S21
+                        // traces to the front of the chart's paint order,
+                        // not just thicken its pen -- QCustomPlot paints a
+                        // layer's graphs in the order they were added, so
+                        // an older (but now selected) measurement's traces
+                        // would otherwise still render underneath every
+                        // measurement scanned after it. setLayer(layer())
+                        // re-appends this graph to the end of its own
+                        // layer's paint-order list (QCPLayerable::
+                        // moveToLayer(layer, false)'s public wrapper) --
+                        // safe regardless of visibility (hidden graphs are
+                        // gated separately, by realVisibility(), so this
+                        // still takes effect for a currently-hidden row --
+                        // the likely next action is checking its
+                        // visibility box on, and it should already be on
+                        // top when that happens) and regardless of order
+                        // relative to graph(index) numbering (QCustomPlot::
+                        // graph()/graphCount() read a separate list, mGraphs,
+                        // only touched by add/removeGraph(), never by
+                        // moveToLayer()/setLayer() -- confirmed against
+                        // qcustomplot.cpp).
+                        if ((i-1) == row && g->layer())
+                            g->setLayer(g->layer());
                     }
                 }
 

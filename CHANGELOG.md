@@ -36,12 +36,35 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 - Renaming a measurement (the pencil icon) didn't rename it on the S21
   tab's legend -- that measurement's 4 graphs (S21/S12 dB+deg) kept
   showing the name it was scanned with.
+- S21 tab: two different measurements' overlapping traces (e.g. one
+  green, one red) blended into an unlabeled third color (e.g. orange) --
+  every trace was semi-transparent so a reciprocal device's identical
+  S21/S12 wouldn't fully hide each other. Traces are fully opaque now
+  that S12 defaults off (see below), so the common overlap case mostly
+  doesn't reach the chart at the same time to begin with.
+- Joining the S21 tab into the Multi tab (right-click it directly ->
+  "Move chart to the tab Multi") then using the Multi tab's own "Close
+  all"/"Close S21" could permanently strand the S21 tab hidden with no
+  way to get it back. S21 is now a fully, symmetrically supported
+  Join/Close target, and is always visible to begin with (matching
+  every other chart tab) rather than hidden until first used.
 
 ### Added
+
+- View menu: independent "Show S21"/"Show S12" toggles for the S21
+  tab (default S21 on, S12 off) -- S12 duplicates S21 exactly for any
+  reciprocal (passive) device, the common case for this instrument, so
+  showing it is opt-in now instead of a permanent transparent overlay.
 
 - Measurements list: the rename pencil moved to the left of the Name
   column (was to the right, past Points); the panel is also a bit wider
   so all 4 columns fit without a horizontal scrollbar.
+- S21 tab: selecting a measurement now brings its 4 traces to the front
+  of the chart, not just thickening their pen -- previously an older
+  measurement's traces stayed underneath every measurement scanned
+  after it even while selected. Applies even if the measurement is
+  currently hidden, so its traces are already on top the moment its
+  visibility checkbox is turned on.
 
 - Settings > General: "Selected measurement line width" / "Other
   measurements' line width" spinboxes (1-10px) -- was hardcoded (5/2).

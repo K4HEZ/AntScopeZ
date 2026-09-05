@@ -611,6 +611,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->actionMarkersHint->setChecked(m_markers->getMarkersHintEnabled());
     connect(ui->actionMarkersHint, &QAction::toggled, m_markers, &Markers::setMarkersHintEnabled);
 
+    ui->actionShowS21->setChecked(m_measurements->getS21ShowS21());
+    connect(ui->actionShowS21, &QAction::toggled, m_measurements, &Measurements::setS21ShowS21);
+    ui->actionShowS12->setChecked(m_measurements->getS21ShowS12());
+    connect(ui->actionShowS12, &QAction::toggled, m_measurements, &Measurements::setS21ShowS12);
+
     // Show Band Name: same "show-band-name" QSettings key and reload-bands
     // side effect the removed checkBoxBandName triggered via Settings'
     // own connect() lambda + reloadBands signal (see mainwindow_settings.cpp's

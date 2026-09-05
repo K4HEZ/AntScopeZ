@@ -114,6 +114,8 @@ Measurements::Measurements(QObject *parent) : QObject(parent),
     m_settings->beginGroup("Measurements");
     m_graphHintEnabled = m_settings->value("GraphHintEnabled",true).toBool();
     m_graphBriefHintEnabled = m_settings->value("GraphBriefHintEnabled",true).toBool();
+    m_s21ShowS21 = m_settings->value("S21ShowS21",true).toBool();
+    m_s21ShowS12 = m_settings->value("S21ShowS12",false).toBool();
     m_settings->endGroup();
 
     m_settings->beginGroup("Cable");
@@ -154,6 +156,8 @@ Measurements::~Measurements()
     m_settings->beginGroup("Measurements");
     m_settings->setValue("GraphHintEnabled",m_graphHintEnabled);
     m_settings->setValue("GraphBriefHintEnabled",m_graphBriefHintEnabled);
+    m_settings->setValue("S21ShowS21",m_s21ShowS21);
+    m_settings->setValue("S21ShowS12",m_s21ShowS12);
     m_settings->endGroup();
 
     m_settings->beginGroup("OneFqWidget");
@@ -460,8 +464,66 @@ void Measurements::updateS21Legend(int row)
     int base = row*4 + 1; // +1: graph(0) is a non-measurement placeholder, see mainwindow.cpp
     if (base+3 >= m_s21Widget->graphCount())
         return;
-    for (int i = 0; i < 4; i++)
+    // Skip whichever pair (S21 dB/deg, S12 dB/deg) is currently toggled
+    // off (setS21ShowS21()/setS21ShowS12()) -- a legend entry for a trace
+    // that isn't actually drawn is just confusing.
+    for (int i = 0; i < 4; i++) {
+        if ((i < 2 && !m_s21ShowS21) || (i >= 2 && !m_s21ShowS12))
+            continue;
         m_s21Widget->legend->addItem(new QCPPlottableLegendItem(m_s21Widget->legend, m_s21Widget->graph(base+i)));
+    }
+}
+
+void Measurements::setS21ShowS21(bool show)
+{
+    m_s21ShowS21 = show;
+    updateS21GraphVisibility();
+}
+
+void Measurements::setS21ShowS12(bool show)
+{
+    m_s21ShowS12 = show;
+    updateS21GraphVisibility();
+}
+
+// See measurements.h's own comment on the m_s21ShowS21/m_s21ShowS12
+// declarations for why this exists.
+void Measurements::updateS21GraphVisibility()
+{
+    if (m_s21Widget == nullptr)
+        return;
+    for (int row = 0; row < m_measurements.length(); row++) {
+        int base = row*4 + 1; // +1: graph(0) is a non-measurement placeholder, see mainwindow.cpp
+        if (base+3 >= m_s21Widget->graphCount())
+            continue;
+        bool rowVisible = m_measurements.at(row).visible;
+        m_s21Widget->graph(base+0)->setVisible(rowVisible && m_s21ShowS21); // S21 dB
+        m_s21Widget->graph(base+1)->setVisible(rowVisible && m_s21ShowS21); // S21 deg
+        m_s21Widget->graph(base+2)->setVisible(rowVisible && m_s21ShowS12); // S12 dB
+        m_s21Widget->graph(base+3)->setVisible(rowVisible && m_s21ShowS12); // S12 deg
+    }
+    // The legend's contents (which of a selected row's 4 entries show)
+    // depend on these same toggles -- refresh whichever row is actually
+    // selected, same as on_tableWidget_measurments_cellClicked() would.
+    // Was m_tableWidget->currentRow() -- wrong: every row-selecting call
+    // in this file (here included, via on_newMeasurement()/deleteRow())
+    // selects via selectionModel()->select(..., Select | Rows), which
+    // never sets Qt's separate "current index" concept, only a real
+    // mouse click does. currentRow() (== currentIndex().row()) stayed -1
+    // until the user clicked a row by hand, which is exactly why the
+    // legend only ever came back after doing that -- confirmed live
+    // 2026-09-06. selectedRows() reflects the actual (highlighted)
+    // selection regardless of how it was set, empty is the correct "no
+    // selection" case here (updateS21Legend() already treats an
+    // out-of-range row as "just clear it").
+    int selectedRow = -1;
+    if (m_tableWidget != nullptr && m_tableWidget->selectionModel() != nullptr) {
+        QModelIndexList sel = m_tableWidget->selectionModel()->selectedRows();
+        if (!sel.isEmpty())
+            selectedRow = sel.first().row();
+    }
+    updateS21Legend(selectedRow);
+    m_s21Widget->replot();
 }
 
 // See measurements.h -- one shared formatter for the 3 places that write
@@ -670,25 +732,29 @@ void Measurements::on_newMeasurement(QString name)
 
     QPen s21Pen;
     s21Pen.setWidth(ACTIVE_GRAPH_PEN_WIDTH);
-    // All 4 solid now -- S21 used to be dashed and S12 solid so a
-    // reciprocal network (S21==S12, the normal case for passive
-    // components: cables, filters, attenuators) wouldn't paint an
-    // opaque S12 directly over an identical, fully-hidden S21. That
-    // reasoning predated getColor() reliably giving each of the 4 traces
-    // its own distinct hue (see getColor()'s own comment, fixed
-    // 2026-09-04) -- before that fix, indices past the palette collapsed
-    // to the same red, which is presumably why dashing was added as
-    // insurance in the first place. Color alone now tells S21 from S12
-    // apart even when the two curves perfectly overlap, and a thick
-    // (ACTIVE_GRAPH_PEN_WIDTH) dashed line reads poorly at typical zoom
-    // levels -- the dashes themselves were the reported complaint.
-    //
-    // getColor()'s palette isn't uniformly transparent -- index 3
-    // (QColor(255,127,0,255)) is the one fully-opaque entry, everything
-    // else alpha 150. Force a consistent, semi-transparent alpha on all 4
-    // traces here so overlap is never a fully-opaque line hiding another,
-    // regardless of which getColor() index a given trace lands on.
-    auto s21Color = [](int idx) { QColor c = getColor(idx); c.setAlpha(150); return c; };
+    // All 4 solid and fully opaque -- S21 used to be dashed and every
+    // trace semi-transparent (alpha 150) so a reciprocal network
+    // (S21==S12, the normal case for passive components: cables,
+    // filters, attenuators) wouldn't paint an opaque S12 directly over
+    // an identical, fully-hidden S21. Dropped the dash 2026-09-04 (color
+    // alone was judged enough to tell S21 from S12 apart); the
+    // transparency stayed, but that just traded "S21 fully hidden" for a
+    // different, equally confusing problem -- two *different*
+    // measurements' overlapping traces blend into a third color with no
+    // matching legend entry (reported 2026-09-06: a green and a red
+    // measurement's traces showing orange). Force full opacity here
+    // instead: with the S12 toggle now defaulting off (see
+    // setShowS21()/setShowS12()), the common reciprocal-overlap case
+    // mostly doesn't even reach the chart at the same time anymore, and
+    // when S12 *is* turned on for a genuinely non-reciprocal device
+    // (amplifier, isolator), the two curves are expected to diverge
+    // rather than coincide, so opaque-hiding-opaque isn't the live
+    // concern that it was.
+    // getColor()'s own palette isn't uniformly opaque either (index 3 is
+    // the only alpha-255 entry, everything else alpha 150) -- force full
+    // opacity explicitly rather than just trusting whatever a given
+    // index happens to return.
+    auto s21Color = [](int idx) { QColor c = getColor(idx); c.setAlpha(255); return c; };
     s21Pen.setStyle(Qt::SolidLine);
     s21Pen.setColor(s21Color(m_currentIndex));
     m_s21Widget->graph(s21GraphCount-4)->setPen(s21Pen); // S21 dB
@@ -779,6 +845,13 @@ void Measurements::on_newMeasurement(QString name)
         m_tableWidget->selectionModel()->select(myIndex,QItemSelectionModel::Select | QItemSelectionModel::Rows);
         m_tableWidget->scrollToBottom();
     }
+
+    // New measurement's 4 S21 graphs default to QCPGraph's own
+    // visible=true regardless of the current S21/S12 toggles -- apply the
+    // real combined visibility now rather than leaving them briefly wrong
+    // until some other action (a table click, a checkbox) happens to
+    // recompute it.
+    updateS21GraphVisibility();
 
     // A new measurement is always the selected one (table selection above,
     // when it runs; singlePoint/name-empty measurements skip that block but
@@ -1934,11 +2007,14 @@ void Measurements::toggleVisibility(int row, bool _state)
         m_rlWidget->graph(row+1)->setVisible(_state);
         mm.smithCurve->setVisible(_state);
 
+        // Combined with the global S21/S12 toggles (setS21ShowS21()/
+        // setS21ShowS12()) -- this row's own checkbox can't force a
+        // trace on that the S21 tab currently has toggled off entirely.
         int row2 = row*4 + 1; // 4 graphs per measurement now, not 2 -- see deleteRow()'s own comment
-        m_s21Widget->graph(row2+0)->setVisible(_state);
-        m_s21Widget->graph(row2+1)->setVisible(_state);
-        m_s21Widget->graph(row2+2)->setVisible(_state);
-        m_s21Widget->graph(row2+3)->setVisible(_state);
+        m_s21Widget->graph(row2+0)->setVisible(_state && m_s21ShowS21);
+        m_s21Widget->graph(row2+1)->setVisible(_state && m_s21ShowS21);
+        m_s21Widget->graph(row2+2)->setVisible(_state && m_s21ShowS12);
+        m_s21Widget->graph(row2+3)->setVisible(_state && m_s21ShowS12);
 
         int row1 = row*3 + 1;
         m_rpWidget->graph(row1+0)->setVisible(_state);

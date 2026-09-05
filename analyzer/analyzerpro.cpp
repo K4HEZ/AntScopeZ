@@ -974,10 +974,6 @@ void AnalyzerPro::setCalibrationMode(bool enabled)
 
 void AnalyzerPro::setIsMeasuring (bool _isMeasuring)
 {
-    // TEMPORARY (2026-09-05, see popupindicator.cpp's own comment) --
-    // correlates against the busy-indicator instrumentation there.
-    qDebug().noquote() << QDateTime::currentDateTime().toString("hh:mm:ss.zzz")
-        << "[BUSY] AnalyzerPro::setIsMeasuring(" << _isMeasuring << ")";
     m_isMeasuring = _isMeasuring;
     if(m_baseAnalyzer != nullptr)
     {

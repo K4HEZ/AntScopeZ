@@ -2,17 +2,6 @@
 #include <QPainter>
 #include <QApplication>
 #include <QGuiApplication>
-#include <QDateTime>
-#include <QDebug>
-
-// TEMPORARY instrumentation (2026-09-05) -- root-caused now (see
-// showIndicator()'s own comment) via a live run's timestamped [BUSY] log
-// lined up against the wire-level chunk timing. Kept for one more
-// confirmation pass; remove once the QGuiApplication::sync() fix below is
-// confirmed live.
-#define POPUP_INDICATOR_DEBUG(msg) \
-    qDebug().noquote() << QDateTime::currentDateTime().toString("hh:mm:ss.zzz") << "[BUSY]" << msg
-
 
 PopUpIndicator* PopUpIndicator::m_popUpIndicator = nullptr;
 
@@ -45,14 +34,11 @@ void PopUpIndicator::paintEvent(QPaintEvent *event)
 
 void PopUpIndicator::showIndicator(QWidget* parent)
 {
-    POPUP_INDICATOR_DEBUG("showIndicator() called, wasNull=" << (m_popUpIndicator == nullptr));
     if (m_popUpIndicator == nullptr)
         m_popUpIndicator = new PopUpIndicator(parent);
     QPoint pt = m_popUpIndicator->parentWidget()->mapToGlobal(QPoint(10, 10));
     m_popUpIndicator->move(pt.x(), pt.y());
     m_popUpIndicator->show();
-    POPUP_INDICATOR_DEBUG("showIndicator() after show(): isVisible=" << m_popUpIndicator->isVisible()
-        << "pos=" << pt << "size=" << m_popUpIndicator->size());
     QApplication::setOverrideCursor(Qt::WaitCursor);
 
     // Root-caused 2026-09-05 via a live [BUSY]-tagged debug run: on a
@@ -79,12 +65,10 @@ void PopUpIndicator::showIndicator(QWidget* parent)
     // one particular chunk's synchronous burst turns out to be.
     QApplication::processEvents();
     QGuiApplication::sync();
-    POPUP_INDICATOR_DEBUG("showIndicator() after sync(): isVisible=" << m_popUpIndicator->isVisible());
 }
 
 void PopUpIndicator::hideIndicator(QWidget* parent)
 {
-    POPUP_INDICATOR_DEBUG("hideIndicator() called, wasNull=" << (m_popUpIndicator == nullptr));
     if (m_popUpIndicator == nullptr)
         m_popUpIndicator = new PopUpIndicator(parent);
     QApplication::restoreOverrideCursor();

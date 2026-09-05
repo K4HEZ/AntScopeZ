@@ -1119,6 +1119,9 @@ process in the settings menu!</string>
     <addaction name="actionBandSelector"/>
     <addaction name="menuBandHighlighting"/>
     <addaction name="separator"/>
+    <addaction name="actionShowS21"/>
+    <addaction name="actionShowS12"/>
+    <addaction name="separator"/>
     <addaction name="menuLanguage"/>
     <addaction name="menuTheme"/>
    </widget>
@@ -1262,6 +1265,34 @@ process in the settings menu!</string>
    </property>
    <property name="toolTip">
     <string>Show the Frequency/SWR/... readout panel</string>
+   </property>
+  </action>
+  <action name="actionShowS21">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show S21</string>
+   </property>
+   <property name="toolTip">
+    <string>Show the S21 (forward transmission) trace on the S21 tab</string>
+   </property>
+  </action>
+  <action name="actionShowS12">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Show S12</string>
+   </property>
+   <property name="toolTip">
+    <string>Show the S12 (reverse transmission) trace on the S21 tab -- for a reciprocal (passive) device this is identical to S21, so it's off by default</string>
    </property>
   </action>
   <action name="actionMarkersHint">

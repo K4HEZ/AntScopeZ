@@ -78,8 +78,18 @@ QMenu& MainWindow::menuMultiTab(QMenu &menu)
             if (tab_name == "tab_user")
                 continue;
 #endif
-            if (tab_name == "tab_s21")
-                continue;
+            // tab_s21 used to be excluded here too (with no comment ever
+            // explaining why, unlike tab_tdr's real, documented reason
+            // below) -- but the *other* "join a chart to Multi" menu
+            // (right-click directly on a tab, mainwindow_tabs.cpp) never
+            // had the matching exclusion, so S21 could still be joined
+            // that way. Once joined, tab_title (built by *this* loop)
+            // never had a "tab_s21" entry to find, so "Close all"/"Close
+            // S21" always resolved to a wrong/default (0, "") pair
+            // instead of S21's own tab index -- stranding it hidden with
+            // no menu path left to re-show it (requested fix, 2026-09-06:
+            // make S21 fully, symmetrically supported here instead of
+            // patching the other menu to match the exclusion).
             // tab_title also drives the "Close X" label/target below for
             // whatever is already in m_multiTabData.tabs, so tab_tdr must
             // stay in this map even though it can't be offered as a new

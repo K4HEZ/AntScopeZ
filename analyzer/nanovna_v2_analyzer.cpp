@@ -2,8 +2,6 @@
 #include <qserialport.h>
 #include <QtEndian>
 #include <cmath>
-#include <QDateTime>
-#include <QDebug>
 #include "debuglog.h"
 
 namespace {
@@ -269,9 +267,6 @@ void NanovnaV2Analyzer::startMeasure(qint64 fqFrom, qint64 fqTo, int dotsNumber,
 
 void NanovnaV2Analyzer::requestFifoChunk()
 {
-    // TEMPORARY (2026-09-05, see popupindicator.cpp's own comment).
-    qDebug().noquote() << QDateTime::currentDateTime().toString("hh:mm:ss.zzz")
-        << "[BUSY] requestFifoChunk() pointsRemaining=" << m_pointsRemaining;
     const int count = std::min(255, m_pointsRemaining); // count is a single byte on the wire
     QByteArray cmd;
     cmd.append(char(CMD_READFIFO));
@@ -288,9 +283,6 @@ void NanovnaV2Analyzer::processFifoChunk()
 {
     const int count = m_fifoExpectedBytes / FIFO_RECORD_SIZE;
     const int pointsAlreadyDelivered = (m_dotsNumber + 1) - m_pointsRemaining;
-    // TEMPORARY (2026-09-05, see popupindicator.cpp's own comment).
-    qDebug().noquote() << QDateTime::currentDateTime().toString("hh:mm:ss.zzz")
-        << "[BUSY] processFifoChunk() start, count=" << count << "pointsAlreadyDelivered=" << pointsAlreadyDelivered;
 
     const char* p = m_incomingBuffer.constData();
     for (int i = 0; i < count; ++i) {
@@ -323,10 +315,6 @@ void NanovnaV2Analyzer::processFifoChunk()
     m_pointsRemaining -= count;
     m_fifoExpectedBytes = -1;
     Q_UNUSED(pointsAlreadyDelivered)
-
-    // TEMPORARY (2026-09-05, see popupindicator.cpp's own comment).
-    qDebug().noquote() << QDateTime::currentDateTime().toString("hh:mm:ss.zzz")
-        << "[BUSY] processFifoChunk() done emitting" << count << "points, pointsRemaining=" << m_pointsRemaining;
 
     if (m_pointsRemaining > 0) {
         requestFifoChunk();

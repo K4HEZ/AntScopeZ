@@ -260,3 +260,105 @@
       was the one currently selected, see item 4 above) kept showing the
       name the measurement was scanned with, not whatever it was renamed
       to.
+
+7) S21 tab: selecting a measurement (on_tableWidget_measurments_
+   cellClicked(), mainwindow_measurements_io.cpp) now also brings its 4
+   S21 graphs to the front of the chart's paint order, not just
+   thickening their pen -- requested 2026-09-05, "even if they aren't
+   visible, because the next action is likely the user clicking the
+   checkbox to make it visible". QCustomPlot paints a layer's graphs in
+   add order, so an older (but selected) measurement's traces used to
+   stay underneath every measurement scanned after it regardless of
+   selection. g->setLayer(g->layer()) (QCPLayerable::moveToLayer(layer,
+   false)'s public wrapper) re-appends a graph to the end of its own
+   layer's paint-order list -- verified against qcustomplot.cpp that
+   this only touches QCPLayer::mChildren, never QCustomPlot's separate
+   mGraphs list that graph(index)/graphCount() actually read, so the
+   row*4+1 indexing convention (toggleVisibility()/updateS21Legend()/
+   deleteRow()/this same handler) is unaffected. Also confirmed safe for
+   a currently-hidden row: visibility is gated independently via
+   QCPLayerable's own realVisibility(), orthogonal to paint-order
+   position. No existing helper for this anywhere in the app (grepped:
+   zero hits for moveToLayer/moveAbove/moveBelow outside qcustomplot.*
+   itself) -- new territory, kept to this one call site.
+   -- Turned out the z-order fix alone didn't fix the reported "orange
+      line" symptom -- reported again 2026-09-06: two measurements (one
+      green, one red) still blended to orange. Root cause wasn't z-order
+      (paint order) but opacity: every S21 trace was semi-transparent
+      (alpha 150, s21Color() in on_newMeasurement()) so even correctly
+      painted-on-top, the selected measurement's color let ~40% of
+      whatever's underneath show through. See item 8 below -- fixed by
+      removing the transparency, once S12 (the trace the transparency
+      existed for) defaulted off.
+
+8) S21 tab, several related changes requested/reported 2026-09-06:
+   -- Removed the S21/S12 trace transparency entirely (measurements.cpp's
+      s21Color(), on_newMeasurement()) -- alpha 150 on every trace was
+      there so an opaque S12 wouldn't fully hide an identical S21 for a
+      reciprocal (passive) device (S21==S12 by the reciprocity theorem --
+      the normal case for cables/filters/attenuators/baluns, the
+      overwhelming majority of what this instrument measures). Traded
+      one problem for another: two *different* measurements' traces
+      blending into an unlabeled third color (reported both as item 7's
+      "orange line" and again after the z-order fix). Now alpha 255
+      (fully opaque) always. Safe now that S12 defaults off (see below):
+      the common reciprocal-overlap case mostly doesn't reach the chart
+      simultaneously anymore, and when S12 is turned on for a genuinely
+      non-reciprocal device (amp, isolator), the curves are expected to
+      diverge rather than coincide.
+   -- New independent Show S21/Show S12 toggles (View menu:
+      actionShowS21/actionShowS12, mainwindow.ui) -- default S21 on/S12
+      off, persisted (Measurements ctor/dtor, "Measurements" ini group,
+      S21ShowS21/S21ShowS12 keys, same pattern as GraphHintEnabled).
+      Wired straight to new Measurements::setS21ShowS21()/setS21ShowS12()
+      (mainwindow.cpp, same connect(...,&QAction::toggled,...) pattern as
+      actionGraphHint). New Measurements::updateS21GraphVisibility()
+      applies both toggles, AND'ed with each row's own visibility
+      checkbox, to every measurement's 4 S21 graphs at once, and refreshes
+      the legend/replots; toggleVisibility() (the per-row checkbox) and
+      on_newMeasurement() (a new row's initial state) both route through
+      the same AND'ed logic now instead of unconditional setVisible().
+      updateS21Legend() also skips legend entries for whichever pair is
+      currently toggled off. Rationale for the defaults: S12 duplicates
+      S21 for the common (reciprocal) case, so showing it is opt-in.
+   -- Fixed: joining the S21 tab into the Multi tab (right-click directly
+      on the S21 tab -> "Move chart to the tab Multi", mainwindow_tabs.cpp)
+      then "Close all"/"Close S21" from the Multi tab's own menu
+      (menuMultiTab(), mainwindow_multitab.cpp) could permanently strand
+      the S21 tab hidden with no way to get it back. Root cause: tab_s21
+      was excluded from menuMultiTab()'s own Join-list construction (no
+      comment ever explained why, unlike tab_tdr's real, documented
+      exclusion reason right next to it) but *not* from the other,
+      separate "join a chart to Multi" menu (right-click directly on a
+      tab) -- so S21 could still get joined, but tab_title (built by the
+      excluded loop) never had an entry for it, so Close all/Close S21
+      resolved to a wrong/default (index 0, empty title) pair instead of
+      S21's real tab index. Fixed by removing the exclusion instead of
+      propagating it to the other menu -- S21 is now a fully, symmetrically
+      supported Join/Close target like every other regular tab.
+   -- S21 tab is now always visible (mainwindow_tabs.cpp), not hidden
+      until a measurement had real 2-port data -- matches every other
+      chart tab (SWR/Phase/Rs/Rp/RL/TDR/Smith) and was part of what made
+      the above bug unrecoverable (no visible tab left to even try
+      fixing the join state from). The two setTabVisible(s21, true)
+      call sites (mainwindow.cpp, mainwindow_measurements_io.cpp) are
+      now harmless no-ops, left in place rather than removed.
+   -- Discussed, not yet decided: renaming the "S21" tab (it's arguably
+      always shown 2-port S21+S12 data, not just S21) -- "2Port" floated
+      as a candidate. Not going ahead with this -- see the broader "how
+      should a true symmetric 2-port device look in AntScopeZ" discussion
+      (SWR/RL/Smith/Rs/Rp would each want independent Port1(S11)/
+      Port2(S22) toggles too, same shape as this item's S21/S12 ones, if
+      real dual-source hardware or a DUT-flip-and-combine workflow ever
+      lands) -- a name change now would likely need revisiting anyway.
+   -- Fixed 2026-09-06: the Show S21/Show S12 toggles could leave the
+      legend empty (turn S12 off -> empty; turn it back on -> still
+      empty) unless a measurement row had been manually clicked at least
+      once. Root cause: updateS21GraphVisibility()'s legend refresh used
+      m_tableWidget->currentRow() (Qt's "current index", -1 until a real
+      mouse click sets it) instead of the actual selection --
+      on_newMeasurement()/deleteRow() (and everything else in this file)
+      select a row via selectionModel()->select(..., Select | Rows),
+      which never touches "current index" at all. Now reads
+      selectionModel()->selectedRows() instead, which reflects the real
+      (highlighted) selection regardless of how it was set.

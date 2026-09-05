@@ -352,10 +352,14 @@ void MainWindow::createTabs (QString sequence)
 //    ui->tabWidget->widget(ui->tabWidget->indexOf(m_tab_user))->setVisible(false);
 #endif
 #endif
-    // Hidden by default -- only worth showing once a measurement actually
-    // has real 2-port data (see MainWindow::on_importFinished(), which
-    // shows it as soon as a .s2p import populates dataSParam).
-    ui->tabWidget->setTabVisible(ui->tabWidget->indexOf(m_tab_s21), false);
+    // Was hidden until a measurement had real 2-port data -- always
+    // visible now, same as every other chart tab (SWR/Phase/Rs/Rp/RL/
+    // TDR/Smith), requested 2026-09-06. Hiding it made it reachable only
+    // via the two setTabVisible(..., true) call sites that show it again
+    // (mainwindow.cpp/mainwindow_measurements_io.cpp) -- neither of which
+    // undoes it being joined into the Multi tab (see menuMultiTab()'s own
+    // comment), so a S21-tab-into-Multi join followed by "Close all"
+    // could strand it hidden with no menu path left to re-show it.
 
     setChartBackground(Style::theme().chartBackground);
 
