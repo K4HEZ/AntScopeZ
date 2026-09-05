@@ -129,10 +129,16 @@
        </property>
        <item>
         <widget class="QLabel" name="label_2">
+         <property name="minimumSize">
+          <size>
+           <width>141</width>
+           <height>47</height>
+          </size>
+         </property>
          <property name="maximumSize">
           <size>
-           <width>140</width>
-           <height>16777215</height>
+           <width>141</width>
+           <height>47</height>
           </size>
          </property>
          <property name="styleSheet">
@@ -150,10 +156,16 @@ padding: 5px;</string>
        </item>
        <item>
         <widget class="QLabel" name="label_3">
+         <property name="minimumSize">
+          <size>
+           <width>141</width>
+           <height>47</height>
+          </size>
+         </property>
          <property name="maximumSize">
           <size>
-           <width>140</width>
-           <height>16777215</height>
+           <width>141</width>
+           <height>47</height>
           </size>
          </property>
          <property name="styleSheet">
