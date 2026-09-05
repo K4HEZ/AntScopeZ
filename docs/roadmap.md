@@ -88,9 +88,6 @@ possible today.
 Things that don't fit the use-case table shape above, but still need
 action:
 
-- **qt.conf reference in `user-guide.md`** -- open question, unresolved:
-  is it actually obsolete? Needs checking against the current
-  build/deploy setup before editing the doc either way.
 - **Measurements file I/O rework needs a real live test pass.**
   Implemented 2026-09-06 (rows 8 and 41 above; see `CHANGELOG.md` for
   the full shape), but not yet exercised end-to-end by hand: rename,

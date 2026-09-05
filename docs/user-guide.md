@@ -1262,8 +1262,8 @@ session's own testing.
 | Path | What's there |
 |---|---|
 | `/usr/bin/AntScopeZ` | A thin wrapper script -- sets `LD_LIBRARY_PATH` to the bundled Qt below, then execs the real binary |
-| `/usr/bin/AntScopeZ.bin` | The actual executable |
-| `/usr/bin/qt.conf` | Points Qt's own plugin/library lookup at the bundled copies instead of any system Qt |
+| `/usr/lib/x86_64-linux-gnu/antscopez/AntScopeZ.bin` | The actual executable (deliberately placed in libdir instead of bindir to scope qt.conf to this app only) |
+| `/usr/lib/x86_64-linux-gnu/antscopez/qt.conf` | Points Qt's own plugin/library lookup at the bundled copies instead of any system Qt (placed next to the executable so it only affects AntScopeZ, not other Qt applications in /usr/bin) |
 | `/usr/lib/x86_64-linux-gnu/antscopez/` | AntScopeZ's own private copy of the Qt 6.11 libraries and plugins it was built/packaged against -- see [Qt version](https://github.com/K4HEZ/AntScopeZ#qt-version) for why it's bundled rather than linked against whatever Qt the system has |
 | `/usr/share/antscopez/` | Read-only shared data: `cables.txt`, `itu-regions-defaults.txt`, and every `QtLanguage_<code>.qm` / `qtbase_<code>.qm` translation file |
 | `/usr/share/applications/antscopez.desktop` | The desktop entry (app menu listing) |
