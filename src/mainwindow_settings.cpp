@@ -17,6 +17,10 @@ extern QString appendSpaces(const QString& number);
 extern bool g_usbOnly;
 extern int g_maxMeasurements; // see measurements.cpp
 extern int g_pointsMax; // see mainwindow.cpp
+extern double g_phaseAxisMin; // see mainwindow.cpp
+extern double g_phaseAxisMax; // see mainwindow.cpp
+extern double g_zAxisMin; // see mainwindow.cpp
+extern double g_zAxisMax; // see mainwindow.cpp
 extern QMap<QString, QString> g_mapTabPlotNames; // see mainwindow.cpp
 extern void setAbsoluteFqMaximum();
 extern bool g_bAA55modeNewProtocol;
@@ -255,6 +259,20 @@ void MainWindow::on_settingsParamsChanged()
         // effect right away instead of only on the next scan.
         ui->speedAccuracySlider->setMaximum(g_pointsMax);
         setDotsNumber(m_dotsNumber);
+
+        // Same immediate-effect reasoning as the slider just above --
+        // g_phaseAxisMin/Max and g_zAxisMin/Max are already updated (see
+        // Settings::on_phaseAxisMinFinished() et al.), and the axes'
+        // clampAxisRange() closures already read them by pointer so future
+        // zoom/pan stays correctly bounded -- but the *currently displayed*
+        // range still needs an explicit setRange() to reflect a narrower
+        // (or wider) bound right away instead of only on the next restart.
+        m_phaseWidget->yAxis->setRange(g_phaseAxisMin, g_phaseAxisMax);
+        m_rsWidget->yAxis->setRange(qMax(-m_rsZoomState * 80.0, g_zAxisMin), qMin(m_rsZoomState * 80.0, g_zAxisMax));
+        m_rpWidget->yAxis->setRange(qMax(-m_rpZoomState * 80.0, g_zAxisMin), qMin(m_rpZoomState * 80.0, g_zAxisMax));
+        m_phaseWidget->replot();
+        m_rsWidget->replot();
+        m_rpWidget->replot();
 
         m_cableVelFactor = m_settingsDialog->getCableVelFactor();
         m_cableResistance = m_settingsDialog->getCableResistance();

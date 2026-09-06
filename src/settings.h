@@ -228,6 +228,10 @@ private slots:
     void on_scanPointsMaxFinished();
     void on_scanWarnThresholdFinished();
     void on_analyzerMaxPointsFinished();
+    void on_phaseAxisMinFinished();
+    void on_phaseAxisMaxFinished();
+    void on_zAxisMinFinished();
+    void on_zAxisMaxFinished();
     void on_exportCableSettings();
 //    void on_connectNanovna();
 //    void on_connectSerial();
