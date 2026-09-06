@@ -388,8 +388,18 @@ QJsonObject RemoteApiConnection::cmdConnect(const QJsonObject& request, QString*
     // reflects real state -- the "connected" event every open connection
     // also receives (onAnalyzerFound()) is a broadcast for observers, not
     // this response's own source of truth.
+    //
+    // HID is the one exception: HidAnalyzer::connectAnalyzer() finds a
+    // matching device and emits BaseAnalyzer::analyzerFound synchronously,
+    // inline, and on_connectDevice() above already wires that straight
+    // through to this same AnalyzerPro::analyzerFound signal before
+    // returning -- so a HID connect only needs this manual re-emit skipped,
+    // or every subscribed client gets the "connected" event twice per
+    // request. Serial/NanoVNA only emit their analyzerFound asynchronously,
+    // from later device replies parsed on the wire, so they still need it.
     m_mainWindow->analyzer()->on_connectDevice(dlg.analyzer());
-    emit m_mainWindow->analyzer()->analyzerFound(selected->index());
+    if (type != ReDeviceInfo::HID)
+        emit m_mainWindow->analyzer()->analyzerFound(selected->index());
 
     QJsonObject result;
     result.insert("connected", m_mainWindow->isAnalyzerConnected());

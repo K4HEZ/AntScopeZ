@@ -4,7 +4,6 @@
 #include <QCoreApplication>
 #include <QHeaderView>
 #include <QMenu>
-#include <QContextMenuEvent>
 #include <algorithm>
 
 QMap<int, QString> MarkersHeaderColumn::m_mapHeader;
@@ -72,6 +71,10 @@ void MarkersPanel::on_customContextMenuRequested(const QPoint& pos)
     QMenu menu(this);
     QAction* clearAll = menu.addAction(tr("Clear All"));
     connect(clearAll, &QAction::triggered, this, &MarkersPanel::clearAllMarkers);
+    // "Clear Empty Markers" used to live on contextMenuEvent(), but m_table's
+    // CustomContextMenu policy (above) consumes the event before it can ever
+    // reach that override -- folded in here instead so it's reachable again.
+    menu.addAction(tr("Clear Empty Markers"), this, &MarkersPanel::on_clearEmptyMarkers);
     menu.exec(m_table->viewport()->mapToGlobal(pos));
 }
 
@@ -276,14 +279,6 @@ QMap<int, QString>& MarkersHeaderColumn::headerMap()
     return m_mapHeader;
 }
 
-void MarkersPanel::contextMenuEvent(QContextMenuEvent *event)
-{
-    QMenu menu;
-    menu.addAction(tr("Clear All Markers"), this, &MarkersPanel::on_clearAllMarkers);
-    menu.addAction(tr("Clear Empty Markers"), this, &MarkersPanel::on_clearEmptyMarkers);
-    menu.exec(event->globalPos());
-}
-
 QSet<int> MarkersPanel::getEmptyMarkers() const
 {
     QSet<int> empty;
@@ -326,23 +321,6 @@ QSet<int> MarkersPanel::getEmptyMarkers() const
     }
 
     return empty;
-}
-
-void MarkersPanel::on_clearAllMarkers()
-{
-    // Remove all markers: iterate backwards to avoid index shifting issues.
-    // Marker numbers (1, 2, 3...) are 1-based, but removeMarker() expects
-    // 0-based list indices, so subtract 1.
-    for (int i = m_table->rowCount() - 1; i >= 0; --i) {
-        QTableWidgetItem* numItem = m_table->item(i, 1);
-        if (numItem != nullptr) {
-            bool ok = false;
-            int markerNum = numItem->text().toInt(&ok);
-            if (ok) {
-                emit removeMarker(markerNum - 1);
-            }
-        }
-    }
 }
 
 void MarkersPanel::on_clearEmptyMarkers()

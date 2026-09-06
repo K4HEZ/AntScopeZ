@@ -919,12 +919,20 @@ MainWindow::MainWindow(QWidget *parent) :
     // instead of ripping it out now only to re-add it later. The toggle
     // handler just below (which DOES still write this key on every
     // uncheck/recheck) is completely unchanged -- unchecking Band
-    // Selector still works normally for the rest of this run, it's only
-    // the value this block starts from on the *next* launch that's now
-    // ignored.
+    // Selector still works normally for the rest of this run.
+    //
+    // The forced value IS written back to the ini (unlike the first cut of
+    // this stopgap): populateBandSelector() re-reads this same key on every
+    // band-region switch (Settings' region combo, Band Highlighting menu,
+    // Edit ITU Bands...), so leaving the ini untouched meant the very next
+    // region switch after startup silently re-hid the selector, undoing
+    // this override within seconds. Writing it keeps the two in sync for
+    // the rest of this run; the real long-term question (should this
+    // persist across restarts at all) is still open.
     {
         m_settings->beginGroup("Settings");
         bool bandSelectorEnabledPersisted = m_settings->value("band-selector-enabled", false).toBool();
+        m_settings->setValue("band-selector-enabled", true);
         m_settings->endGroup();
         qDebug() << "Band Selector: ini had band-selector-enabled ="
                  << bandSelectorEnabledPersisted

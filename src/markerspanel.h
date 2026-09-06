@@ -71,7 +71,6 @@ public slots:
 protected:
     void createHeader();
     QString formatText(int type, QVariant val);
-    void contextMenuEvent(QContextMenuEvent *event) override;
 
 signals:
     void removeMarker(int);
@@ -80,7 +79,6 @@ signals:
     void clearAllMarkers();
 
 private slots:
-    void on_clearAllMarkers();
     void on_clearEmptyMarkers();
 
 private:

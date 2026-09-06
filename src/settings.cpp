@@ -189,7 +189,15 @@ Settings::Settings(QWidget *parent) :
     // hardcoded reset.
     ui->debugLogBleShowPingsCheckBox->setChecked(DebugLog::bleShowPings());
     ui->debugLogBleShowPingsCheckBox->setEnabled(ui->debugLogBleCheckBox->isChecked());
-    DebugLog::setBleShowPings(false);
+    // Issue #40's own rule applied at load time too: BLE Pings has no
+    // business being on while BLE/Bluetooth logging itself is off. Was
+    // `DebugLog::setBleShowPings(false)` unconditionally here, which reset
+    // the underlying flag on every Settings open even while BLE logging was
+    // still on -- checkbox showed checked, but logging had silently stopped.
+    if (!ui->debugLogBleCheckBox->isChecked()) {
+        ui->debugLogBleShowPingsCheckBox->setChecked(false);
+        DebugLog::setBleShowPings(false);
+    }
     // Was: connect(..., &QCheckBox::setEnabled) directly -- only toggled
     // *enabled*, so unchecking BLE/Bluetooth after BLE Pings had been
     // turned on left it disabled but still checked (and DebugLog still

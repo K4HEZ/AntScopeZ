@@ -365,25 +365,7 @@ void NanovnaAnalyzer::startMeasure(qint64 fqFrom, qint64 fqTo, int dotsNumber, b
     Q_UNUSED (frx)
     m_fqFrom = fqFrom;
     m_fqTo = fqTo;
-    // Issue #37: the device itself enforces a hard point-count range and
-    // errors out on anything outside it -- confirmed live 2026-09-05, a
-    // 500-point request from the S21 tab got back the device's own plain-
-    // text "sweep points exceeds range 401" reply, which parseBinaryScan()
-    // then misread as a corrupt binary header (see its comment). AnalyzerPro's
-    // generic multi-segment stitching (buildStitchSegments()) can't fix this
-    // properly on its own: it decides when to advance to the next segment by
-    // counting points through on_newData(), but NanoVNA's real completion
-    // signal (finishMeasurementSegment(), on the device's "ch>" prompt) fires
-    // per scan command with no awareness of a multi-segment plan -- wiring
-    // that up correctly is tracked separately (full stitching support for
-    // NANO, see the GH issue). For now, just clamp to the device's own real
-    // range rather than stitch: a request outside [50, 401] gets the
-    // nearest in-range value, trading resolution for actually completing
-    // instead of erroring out. 50 and 401 are the device's confirmed real
-    // floor/ceiling on real hardware (2026-09-05).
-    constexpr int kNanoMinPoints = 50;
-    constexpr int kNanoMaxPoints = 401;
-    m_dotsNumber = qBound(kNanoMinPoints, dotsNumber, kNanoMaxPoints);
+    m_dotsNumber = dotsNumber;
     m_isMeasuring = true;
     m_listFQ.clear();
     m_s11Buffer.clear();
@@ -391,11 +373,33 @@ void NanovnaAnalyzer::startMeasure(qint64 fqFrom, qint64 fqTo, int dotsNumber, b
 
     switch (m_scanSupport) {
     case ScanSupport::AsciiAndBinary:
-        startScanSweep(true);
+    case ScanSupport::AsciiOnly: {
+        // Issue #37: the "scan" command itself enforces a hard point-count
+        // range and errors out on anything outside it -- confirmed live
+        // 2026-09-05, a 500-point request from the S21 tab got back the
+        // device's own plain-text "sweep points exceeds range 401" reply,
+        // which parseBinaryScan() then misread as a corrupt binary header
+        // (see its comment). AnalyzerPro's generic multi-segment stitching
+        // (buildStitchSegments()) can't fix this properly on its own: it
+        // decides when to advance to the next segment by counting points
+        // through on_newData(), but NanoVNA's real completion signal
+        // (finishMeasurementSegment(), on the device's "ch>" prompt) fires
+        // per scan command with no awareness of a multi-segment plan --
+        // wiring that up correctly is tracked separately (full stitching
+        // support for NANO, see the GH issue). For now, just clamp to the
+        // device's own real range rather than stitch: a request outside
+        // [50, 401] gets the nearest in-range value, trading resolution for
+        // actually completing instead of erroring out. 50 and 401 are the
+        // device's confirmed real floor/ceiling for this command on real
+        // hardware (2026-09-05). This clamp is specific to "scan" -- the
+        // classic "sweep" fallback below is a different device command with
+        // no confirmed ceiling, so it gets the caller's request unclamped.
+        constexpr int kNanoMinPoints = 50;
+        constexpr int kNanoMaxPoints = 401;
+        m_dotsNumber = qBound(kNanoMinPoints, dotsNumber, kNanoMaxPoints);
+        startScanSweep(m_scanSupport == ScanSupport::AsciiAndBinary);
         break;
-    case ScanSupport::AsciiOnly:
-        startScanSweep(false);
-        break;
+    }
     case ScanSupport::Unsupported:
     case ScanSupport::Unknown:
     default:
