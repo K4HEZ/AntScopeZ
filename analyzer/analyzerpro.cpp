@@ -2,12 +2,15 @@
 #include "popupindicator.h"
 #include "customanalyzer.h"
 #include <QDateTime>
+#include <QDebug>
 #include <QDir>
 #include <QStandardPaths>
+#include <memory>
 #include "Notification.h"
 #include "hid_analyzer.h"
 #include "com_analyzer.h"
 #include "nanovna_analyzer.h"
+#include "nanovna_v2_analyzer.h"
 #include "ble_analyzer.h"
 #include "settings.h"
 
@@ -64,6 +67,16 @@ ReDeviceInfo::InterfaceType AnalyzerPro::connectionType()
     if (m_baseAnalyzer != nullptr)
         return m_baseAnalyzer->connectionType();
     return ReDeviceInfo::WRONG;
+}
+
+QString AnalyzerPro::scanCapabilityDescription() const
+{
+    if (m_baseAnalyzer != nullptr && m_baseAnalyzer->connectionType() == ReDeviceInfo::NANO) {
+        NanovnaAnalyzer* nano = qobject_cast<NanovnaAnalyzer*>(m_baseAnalyzer);
+        if (nano != nullptr)
+            return nano->scanCapabilityDescription();
+    }
+    return QString();
 }
 
 double AnalyzerPro::getVersion() const
@@ -249,6 +262,7 @@ void AnalyzerPro::clearStitchState()
     m_stitchSegments.clear();
     m_stitchIndex = 0;
     m_stitchSegCounter = 0;
+    m_stitchSweepComplete = true;
 }
 
 void AnalyzerPro::buildStitchSegments(qint64 fqFrom, qint64 fqTo, qint32 totalDots)
@@ -304,11 +318,26 @@ void AnalyzerPro::advanceStitchSegmentIfNeeded()
         return;
     m_stitchSegCounter++;
     const StitchSegment& seg = m_stitchSegments.at(m_stitchIndex);
-    if (m_stitchSegCounter > (quint32)seg.dots && m_stitchIndex + 1 < m_stitchSegments.size()) {
-        m_stitchIndex++;
-        m_stitchSegCounter = 0;
-        const StitchSegment& next = m_stitchSegments.at(m_stitchIndex);
-        m_baseAnalyzer->startMeasure(next.fqFrom, next.fqTo, next.dots);
+    if (m_stitchSegCounter > (quint32)seg.dots) {
+        if (m_stitchIndex + 1 < m_stitchSegments.size()) {
+            // More segments queued -- the current segment's own analyzer
+            // backend is about to fire its own completeMeasurement()/
+            // measurementCompleteNano() once its request-level framing
+            // settles (e.g. NanovnaAnalyzer's "ch> " prompt,
+            // NanovnaV2Analyzer's FIFO byte count reaching zero), same as
+            // it would for a real final segment -- that signal is an
+            // internal segment boundary, not the real end of the stitched
+            // sweep. isStitchedSweepComplete() reflects that until the
+            // *next* segment's own completion arrives and this function
+            // sets it back to true below.
+            m_stitchSweepComplete = false;
+            m_stitchIndex++;
+            m_stitchSegCounter = 0;
+            const StitchSegment& next = m_stitchSegments.at(m_stitchIndex);
+            m_baseAnalyzer->startMeasure(next.fqFrom, next.fqTo, next.dots);
+        } else {
+            m_stitchSweepComplete = true; // genuinely the last segment
+        }
     }
 }
 
@@ -322,8 +351,108 @@ void AnalyzerPro::stopWatchdog()
     m_watchdogTimer->stop();
 }
 
+quint32 AnalyzerPro::remainingPointsInCurrentRequest() const
+{
+    if (!m_stitchSegments.isEmpty()) {
+        const StitchSegment& seg = m_stitchSegments.at(m_stitchIndex);
+        const quint32 segTotal = quint32(seg.dots) + 1; // both endpoints inclusive, same convention as everywhere else
+        return (m_stitchSegCounter < segTotal) ? (segTotal - m_stitchSegCounter) : 0;
+    }
+    // Mirrors on_newData()'s own finNum math so "how many more until it
+    // would have declared completion" stays consistent with what actually
+    // decides completion.
+    const quint32 finNum = m_calibrationMode ? m_dotsNumber : (m_dotsNumber > 0 ? m_dotsNumber - 1 : 0);
+    const quint32 total = finNum + 1;
+    return (m_chartCounter < total) ? (total - m_chartCounter) : 0;
+}
+
+void AnalyzerPro::beginDraining(quint32 total)
+{
+    m_drainTotal = total;
+    m_drainReceived = 0;
+    if (m_drainTotal == 0) {
+        // Nothing was actually outstanding (e.g. stopped right on a point
+        // boundary) -- no need to enter the draining state at all.
+        stopWatchdog();
+        emit statusMessageChanged(tr("Ready"));
+        return;
+    }
+    m_isDraining = true;
+    kickWatchdog(); // fresh timeout window for the drain itself
+    emit drainingChanged(true);
+    emit statusMessageChanged(tr("Stopping — draining remaining data (%1/%2 points)...")
+                                   .arg(m_drainReceived)
+                                   .arg(m_drainTotal));
+}
+
+void AnalyzerPro::beginReconnectDrain()
+{
+    m_isDraining = true;
+    kickWatchdog();
+    emit drainingChanged(true);
+    emit statusMessageChanged(tr("Stopping — reconnecting to abandon remaining data..."));
+
+    m_baseAnalyzer->closeComPort();
+
+    // One-shot: the next successful (re)connect, from any cause, counts as
+    // "reconnect drain done". finishDraining()'s own m_isDraining guard
+    // makes this harmless if it somehow fires after the drain already
+    // ended some other way (e.g. the watchdog gave up first).
+    auto conn = std::make_shared<QMetaObject::Connection>();
+    *conn = connect(this, &AnalyzerPro::analyzerFound, this, [this, conn](int) {
+        disconnect(*conn);
+        finishDraining(tr("Ready"));
+    });
+
+    QTimer::singleShot(200, this, [this]() {
+        if (m_baseAnalyzer != nullptr)
+            m_baseAnalyzer->connectAnalyzer();
+    });
+}
+
+void AnalyzerPro::announceScanProgress()
+{
+    const quint32 finNum = m_calibrationMode ? m_dotsNumber : (m_dotsNumber > 0 ? m_dotsNumber - 1 : 0);
+    const quint32 total = finNum + 1;
+    emit statusMessageChanged(tr("Scanning (%1/%2 points)...").arg(m_chartCounter + 1).arg(total));
+}
+
+void AnalyzerPro::advanceDraining()
+{
+    m_drainReceived++;
+    if (m_drainReceived >= m_drainTotal) {
+        finishDraining(tr("Ready"));
+        return;
+    }
+    emit statusMessageChanged(tr("Stopping — draining remaining data (%1/%2 points)...")
+                                   .arg(m_drainReceived)
+                                   .arg(m_drainTotal));
+}
+
+void AnalyzerPro::finishDraining(const QString& reason)
+{
+    if (!m_isDraining)
+        return; // already finished (or never started) -- see beginReconnectDrain()'s comment
+    stopWatchdog();
+    m_isDraining = false;
+    m_drainTotal = 0;
+    m_drainReceived = 0;
+    emit drainingChanged(false);
+    emit statusMessageChanged(reason);
+}
+
 void AnalyzerPro::on_watchdogTimeout()
 {
+    // The bounded worst case for a drain that never completes -- device
+    // disconnected, powered off, user action on the device, whatever.
+    // Distinct from a fresh communications error below: we were already
+    // trying to stop, so give up quietly instead of alarming the user with
+    // the same message a brand-new failure would get.
+    if (m_isDraining) {
+        finishDraining(tr("Stopped by timeout (device stopped responding)."));
+        return;
+    }
+
     // Can race a scan that finished/was cancelled in the same tick the
     // timer was already queued to fire -- stopWatchdog() should have caught
     // it first, but this is the backstop.
@@ -362,6 +491,8 @@ void AnalyzerPro::on_measure (qint64 fqFrom, qint64 fqTo, qint32 dotsNumber)
             m_baseAnalyzer->setIsFRXMode(true);
             startStitchedMeasure(fqFrom, fqTo, dotsNumber);
             PopUpIndicator::setIndicatorVisible(true);
+            kickWatchdog();
+            emit statusMessageChanged(tr("Scanning (%1 points)...").arg(dotsNumber));
             return;
         }
     }
@@ -385,6 +516,8 @@ void AnalyzerPro::on_measureS21 (qint64 fqFrom, qint64 fqTo, qint32 dotsNumber)
             m_baseAnalyzer->setIsS21Mode(true);
             m_baseAnalyzer->startMeasure(fqFrom, fqTo, m_dotsNumber);
             PopUpIndicator::setIndicatorVisible(true);
+            kickWatchdog();
+            emit statusMessageChanged(tr("Scanning S21 (%1 points)...").arg(m_dotsNumber));
             return;
         }
     }
@@ -402,6 +535,8 @@ void AnalyzerPro::on_measureContinuous(qint64 fqFrom, qint64 fqTo, qint32 dotsNu
         {
             startStitchedMeasure(fqFrom, fqTo, dotsNumber);
             PopUpIndicator::setIndicatorVisible(true);
+            kickWatchdog();
+            emit statusMessageChanged(tr("Scanning continuously (%1 points)...").arg(dotsNumber));
             return;
         }
     }
@@ -422,6 +557,8 @@ void AnalyzerPro::on_measureUser (qint64 fqFrom, qint64 fqTo, qint32 dotsNumber)
             m_baseAnalyzer->setIsFRXMode(false);
             startStitchedMeasure(fqFrom, fqTo, dotsNumber);
             PopUpIndicator::setIndicatorVisible(true);
+            kickWatchdog();
+            emit statusMessageChanged(tr("Scanning (%1 points)...").arg(dotsNumber));
             return;
         }
     }
@@ -447,6 +584,8 @@ void AnalyzerPro::on_measureOneFq(QWidget* /*parent*/, qint64 fqFrom, qint32 dot
     {
         m_baseAnalyzer->setIsFRXMode(true);
         m_baseAnalyzer->startMeasureOneFq(fqFrom,m_dotsNumber);
+        kickWatchdog();
+        emit statusMessageChanged(tr("Scanning single frequency..."));
     }
 }
 
@@ -469,6 +608,20 @@ void AnalyzerPro::on_stopMeasure()
     // completion check also legitimately clears for a real, non-stopped
     // finish).
     m_measurementStopped = true;
+
+    // Snapshot before m_chartCounter/clearStitchState() reset below --
+    // remainingPointsInCurrentRequest() (and so beginDraining()) needs to
+    // know how many points are still outstanding in the currently in-flight
+    // request alone (not the whole original scan, if stitched), which it
+    // can only read from m_chartCounter/m_stitchSegCounter *before* they're
+    // zeroed. Getting this ordering backwards (chartCounter already 0 ->
+    // "remaining" always reads as the full original total, however much of
+    // that had already arrived before Stop was clicked) is exactly what
+    // made draining always undercount what was really left and time out
+    // waiting for points that were never actually coming -- confirmed live
+    // 2026-09-04.
+    quint32 remainingPoints = wasMeasuring ? remainingPointsInCurrentRequest() : 0;
+
     setIsMeasuring(false);
     m_chartCounter = 0;
     clearStitchState();
@@ -478,6 +631,38 @@ void AnalyzerPro::on_stopMeasure()
     }
     if (wasMeasuring)
         emit measurementComplete();
+
+    // Deliberately *after* measurementComplete() -- that signal's own
+    // handlers (MainWindow::on_measurementComplete()/on_measurementCompleteNano())
+    // re-enable the scan buttons as part of normal completion; entering the
+    // draining state afterward correctly re-disables them for its duration
+    // instead of racing with (and losing to) that re-enable.
+    // stopCommandAbortsDevice() -- HID/Serial (the base implementation
+    // sends a real "off\r") and any other backend that genuinely tells the
+    // device to stop have nothing left to drain: the device was just told
+    // to stop and will comply, so waiting for "whatever's still
+    // outstanding" would wait for data that's now never coming, guaranteed
+    // to time out. Only backends confirmed to have no real wire-level
+    // abort (NanovnaAnalyzer, NanovnaV2Analyzer, BleAnalyzer) need this at
+    // all. Confirmed live 2026-09-04: a real Match device (HID) timed out
+    // every time here before this check existed.
+    if (wasMeasuring && m_baseAnalyzer != nullptr && !m_baseAnalyzer->stopCommandAbortsDevice()) {
+        extern bool g_reconnectToDrain; // Settings > General, see mainwindow.cpp
+        if (g_reconnectToDrain) {
+            beginReconnectDrain();
+        } else {
+            beginDraining(remainingPoints);
+        }
+    } else {
+        stopWatchdog();
+        // No draining needed (device already genuinely stopped, or nothing
+        // was measuring in the first place) -- without this, the status
+        // bar just sat on whatever "Scanning (N/Total points)..." text was
+        // last shown, forever, since nothing else here ever resets it.
+        // Confirmed live 2026-09-04.
+        if (wasMeasuring)
+            emit statusMessageChanged(tr("Ready"));
+    }
 }
 
 void AnalyzerPro::updateFirmware (QIODevice *fw)
@@ -517,9 +702,15 @@ void AnalyzerPro::on_newData(RawData _rawData)
     // which calls Markers::autoPlaceAtLowestSwr() every time -- confirmed
     // 2026-09-01 live (BLE, Single scan interrupted mid-sweep -> 5 markers,
     // one per leftover point until every slot filled, instead of the one
-    // real completion). Ignore it outright instead of half-processing it.
-    if (!m_isMeasuring)
+    // real completion). Ignore it outright instead of half-processing it --
+    // except while actually draining (m_isDraining), where this is exactly
+    // the expected/wanted data: advanceDraining() counts it and updates the
+    // status bar, then discards it same as before.
+    if (!m_isMeasuring) {
+        if (m_isDraining)
+            advanceDraining();
         return;
+    }
 
     //qDebug() << "AnalyzerPro::on_newData" << _rawData.fq << _rawData.r << _rawData.x << (m_chartCounter) << (m_dotsNumber);
     // A point actually arrived -- the device (and whatever's holding it) is
@@ -542,20 +733,26 @@ void AnalyzerPro::on_newData(RawData _rawData)
         setIsMeasuring(false);
         PopUpIndicator::setIndicatorVisible(false);
         clearStitchState();
+        emit statusMessageChanged(tr("Ready"));
         if(!m_calibrationMode)
         {
             emit measurementComplete();
         }
         return;
     }
+    announceScanProgress();
     m_chartCounter++;
 }
 
 void AnalyzerPro::on_newS21Data(S21Data _s21Data)
 {
-    // See on_newData()'s own comment -- same leftover-data-after-stop guard.
-    if (!m_isMeasuring)
+    // See on_newData()'s own comment -- same leftover-data-after-stop guard
+    // (and same m_isDraining exception).
+    if (!m_isMeasuring) {
+        if (m_isDraining)
+            advanceDraining();
         return;
+    }
 
     kickWatchdog(); // see on_newData()'s comment
     emit newS21Data (_s21Data);
@@ -568,12 +765,14 @@ void AnalyzerPro::on_newS21Data(S21Data _s21Data)
         m_chartCounter = 0;
         setIsMeasuring(false);
         PopUpIndicator::setIndicatorVisible(false);
+        emit statusMessageChanged(tr("Ready"));
         if(!m_calibrationMode)
         {
             emit measurementComplete();
         }
         return;
     }
+    announceScanProgress();
     m_chartCounter++;
 }
 
@@ -602,9 +801,13 @@ void AnalyzerPro::on_newSParamPoint(SParamPoint sp)
 
 void AnalyzerPro::on_newUserData(RawData _rawData, UserData _userData)
 {
-    // See on_newData()'s own comment -- same leftover-data-after-stop guard.
-    if (!m_isMeasuring)
+    // See on_newData()'s own comment -- same leftover-data-after-stop guard
+    // (and same m_isDraining exception).
+    if (!m_isMeasuring) {
+        if (m_isDraining)
+            advanceDraining();
         return;
+    }
 
     kickWatchdog(); // see on_newData()'s comment
     advanceStitchSegmentIfNeeded();
@@ -615,12 +818,14 @@ void AnalyzerPro::on_newUserData(RawData _rawData, UserData _userData)
         m_chartCounter = 0;
         PopUpIndicator::setIndicatorVisible(false);
         clearStitchState();
+        emit statusMessageChanged(tr("Ready"));
         if(!m_calibrationMode)
         {
             emit measurementComplete();
         }
     }else
     {
+        emit statusMessageChanged(tr("Scanning (%1/%2 points)...").arg(m_chartCounter).arg(m_dotsNumber+1));
         emit newUserData (_rawData, _userData);
     }
 }
@@ -794,6 +999,10 @@ void AnalyzerPro::setCalibrationMode(bool enabled)
 
 void AnalyzerPro::setIsMeasuring (bool _isMeasuring)
 {
+    // TEMPORARY (2026-09-05, see popupindicator.cpp's own comment) --
+    // correlates against the busy-indicator instrumentation there.
+    qDebug().noquote() << QDateTime::currentDateTime().toString("hh:mm:ss.zzz")
+        << "[BUSY] AnalyzerPro::setIsMeasuring(" << _isMeasuring << ")";
     m_isMeasuring = _isMeasuring;
     if(m_baseAnalyzer != nullptr)
     {
@@ -962,6 +1171,22 @@ bool AnalyzerPro::createDevice(const SelectionParameters& param, BaseAnalyzer* a
     if (tmp != nullptr) {
         emit tmp->analyzerDisconnected();
         tmp->disconnect();
+        // Synchronous, not left to tmp's destructor -- deleteLater() defers
+        // destruction to the next event-loop pass, so without this the old
+        // analyzer's QSerialPort (if it has one) can still be holding its
+        // port open at the exact moment the *new* analyzer's own
+        // connectAnalyzer() tries to open a port of its own, right below in
+        // this same function, synchronously. Invisible with real hardware
+        // (a fresh connection is essentially never to the identical port
+        // path a moment after disconnecting from it under a different
+        // analyzer type) but trivially reproducible with a single
+        // multi-protocol dev target sitting at a fixed path -- confirmed
+        // live 2026-09-03 reconnecting the NanoVNA emulator from classic to
+        // V2: every write from NanovnaV2Analyzer's very first byte failed
+        // with "device not open" because the prior NanovnaAnalyzer's
+        // QSerialPort hadn't actually closed yet. closeComPort() is a
+        // virtual BaseAnalyzer no-op by default, safe to call unconditionally.
+        tmp->closeComPort();
         tmp->deleteLater();
     }
     m_baseAnalyzer = nullptr;
@@ -990,6 +1215,11 @@ bool AnalyzerPro::createDevice(const SelectionParameters& param, BaseAnalyzer* a
     case ReDeviceInfo::NANO:
     {
         m_baseAnalyzer = new NanovnaAnalyzer(this);
+    }
+        break;
+    case ReDeviceInfo::NANOV2:
+    {
+        m_baseAnalyzer = new NanovnaV2Analyzer(this);
     }
         break;
     case ReDeviceInfo::BLE:

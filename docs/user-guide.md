@@ -138,32 +138,45 @@ current catalog before relying on them.
 - Touch
 - Touch E-Ink
 
-### Other brands
+### NanoVNA
 
-- **NanoVNA** -- the open-source/DIY VNA project. Handled by its own
-  dedicated `analyzer/nanovna_analyzer.cpp` class, entirely separate
-  connection/protocol handling from the RigExpert-oriented analyzer
-  classes. Detected via USB VID:PID `0483:5740` -- STMicroelectronics'
-  generic "Virtual COM Port" demo ID, not a NanoVNA-specific registered
-  one, which nearly the whole NanoVNA ecosystem ships unmodified (few
-  variants bothered registering their own USB VID), so this is a broad
-  but imprecise family match rather than a specific-model check. Speaks
-  the original ASCII shell protocol (`info`/`sweep`/`frequencies`/`data`
-  over what's really a USB CDC-ACM serial port, not a distinct native-USB
-  path) -- the lowest common denominator most of the family (NanoVNA,
-  NanoVNA-H, NanoVNA-H4, DiSlord's fork, most clones) has stayed
-  backward-compatible with, with an opportunistic upgrade to a faster
-  ASCII/binary `scan` command where the connected firmware supports it.
-  Requests real 2-port S11+S21 data on every sweep (not just S11) --
-  new, and not yet validated against real hardware. The `info` response's
-  `Board:` line reports the actual connected firmware/hardware string if
-  you need to confirm exactly what's plugged in.
+The open-source/DIY VNA project, and its clones -- entirely separate
+connection/protocol handling from the RigExpert-oriented analyzer classes
+above (`analyzer/nanovna_analyzer.cpp`, `analyzer/nanovna_v2_analyzer.cpp`).
+Two independent protocol families, both supported:
+
+- **Classic ASCII shell** (`info`/`sweep`/`frequencies`/`data` over what's
+  really a USB CDC-ACM serial port) -- expected to work on **NanoVNA,
+  NanoVNA-H, NanoVNA-H4, DiSlord's fork, and most other clones**. Detected
+  via USB VID:PID `0483:5740`, STMicroelectronics' generic "Virtual COM
+  Port" demo ID rather than a NanoVNA-specific one, which nearly the whole
+  classic ecosystem ships unmodified -- a broad family match, not a
+  specific-model check. Requests real 2-port S11+S21 data on every sweep
+  (not just S11), with an opportunistic upgrade to a faster ASCII/binary
+  `scan` command where the connected firmware supports it. The `info`
+  response's `Board:` line reports the actual connected firmware/hardware
+  string if you need to confirm exactly what's plugged in.
+- **V2/binary register+FIFO protocol** -- expected to work on **NanoVNA
+  V2, SAA-2, and LiteVNA64**. Detected via USB VID:PID `04B4:0008`;
+  distinguishes V2 from LiteVNA64 at connect time via a hardware/firmware
+  version register read. Also requests real 2-port S11+S21 on every
+  sweep. Not yet validated against real V2/LiteVNA64 hardware.
+
+Neither family's on-device-screenshot support is implemented.
+
+### Other devices
+
 - **WilsonPro CAA** -- Wilson Electronics' own brand (cellular
   signal-booster company), not RigExpert. Detected via its own
   serial-number prefix alongside the RigExpert ones, which suggests a
   RigExpert-manufactured unit sold under WilsonPro's branding
   (OEM/white-label) rather than an independent protocol implementation --
   inferred from the code pattern, not confirmed.
+- **NanoVNA emulator** -- a companion dev-only tool that emulates a
+  NanoVNA (both protocol families) over a local pty, used to test
+  AntScopeZ's NanoVNA support without real hardware. Connect Analyzer
+  offers it as a "(dev emulator)" row, but only while the emulator's
+  actually running -- not something you'd see or use day-to-day.
 
 ### Anything else
 
@@ -396,6 +409,8 @@ theme's colors, see the new [Themes tab](#themes-tab) below.
 | Allow extended chart zoom | Off by default. Lets Ctrl+scroll/Ctrl+`+`/`-` zoom the SWR, Z=R+jX, Z=R‖jX, and RL charts' Y-axis past their normal preset limits (e.g. SWR down to a 0.1-wide window instead of 0.4, RL out to unlimited dB instead of capping at 50), and lets plain scroll zoom the TDR chart's distance axis out past 1000m -- see [Keyboard and mouse shortcuts](#keyboard-and-mouse-shortcuts-in-the-plot-area) |
 | System impedance | The reference impedance (default 50Ω) everything -- SWR, Smith chart center, RL -- is calculated against |
 | Analyzer timeout | Seconds a scan can go without receiving a single data point before AntScopeZ treats it as failed and shows an error, instead of leaving the busy indicator/wait cursor stuck forever (device unreachable, or busy -- already held open by another program or another AntScopeZ window). Default 8 |
+| Report Detailed Errors | Off by default. AntScopeZ always shows a small set of analyzer error messages regardless of this setting (busy/unreachable device, see [Connecting to your analyzer](#connecting-to-your-analyzer)); turning this on additionally surfaces BLE's own, more technical connection/protocol errors in that same dialog -- useful when chasing a flaky BLE connection, more detail than most day-to-day use needs otherwise |
+| Use reconnect to drain unwanted data | Off by default. Neither NanoVNA protocol (classic ASCII or V2/binary) has a wire-level "abort a scan in progress" command -- once asked for N points, the device is going to send all of them. By default, stopping a scan early just waits out whatever's still outstanding and quietly discards it (see [Scan modes](#scan-modes-single-vs-continuous)). Checking this instead closes and reopens the connection right away, often faster for a large scan, but not guaranteed to make every device actually discard what it already queued internally |
 | Data folder (with Browse...) | Where save/export/screenshot dialogs across the app default to -- see [Files and directories](#files-and-directories) |
 | Save actions update this folder | Off by default. When on, completing a *save* (not Open/Import) somewhere else moves Data folder there too, so it follows you; when off, Data folder only changes when you set it here yourself |
 
@@ -549,25 +564,21 @@ A fifth, indented checkbox under BLE/Bluetooth, **Show ping/keepalive
 traffic**, is only enabled while BLE logging itself is on. BLE sends a
 small keepalive packet once a second to detect a dropped connection;
 useful to confirm it's alive, but it drowns out everything else in a
-longer capture. Checked (shown) by default -- uncheck it to filter
-just the pings out, without turning BLE logging off entirely. Serial,
-USB/HID, and NanoVNA don't have an equivalent filter: their traffic
-(including their own periodic keepalives) is always logged in full.
+longer capture. Unchecked (hidden) by default -- check it to include
+the pings if you actually need them, otherwise BLE logging stays
+readable during a longer capture. Serial, USB/HID, and NanoVNA don't
+have an equivalent filter: their traffic (including their own periodic
+keepalives) is always logged in full.
 
-These checkboxes are session-only by design -- they always start
-unchecked when you open AntScopeZ, regardless of how you left them
-last time, so logging never keeps running silently in the background
-across restarts. Turn them back on each time you actually want to
-capture something.
-
-**Error Reporting & Logging** -- one checkbox, **Report Detailed
-Errors**, off by default. AntScopeZ always shows a small set of
-analyzer error messages regardless of this setting (busy/unreachable
-device, see [Connecting to your analyzer](#connecting-to-your-analyzer));
-turning this on additionally surfaces BLE's own, more technical
-connection/protocol errors in that same dialog -- useful when chasing a
-flaky BLE connection, more detail than most day-to-day use needs
-otherwise. Session-only, same convention as Debug Logging above.
+These four checkboxes (and Show ping/keepalive traffic) are session-only
+by design -- they always start unchecked when you open AntScopeZ,
+regardless of how you left them last time, so logging never keeps
+running silently in the background across restarts. Turn them back on
+each time you actually want to capture something. **Report Detailed
+Errors** and **Use reconnect to drain unwanted data** used to live here
+too, but are ordinary user-facing preferences, not debug-only ones --
+they moved to [General tab](#general-tab) and persist across restarts
+like the rest of that tab.
 
 ### Updates tab
 
@@ -734,6 +745,19 @@ Continuous, watch the SWR dip move in real time as you adjust, and stop
 it once you're happy. Only when it's stopped (or you run a fresh Single
 scan) does the result settle as one finished entry in the Measurements
 list.
+
+**Stopping a scan early** (Esc, or re-clicking Single/Continuous mid-scan)
+usually stops immediately. The one exception is a NanoVNA-family device
+(classic ASCII or V2/binary) mid-way through a large point count: neither
+protocol has a wire-level "abort," so once asked for N points the device
+is sending all of them regardless. In that case, the status bar shows
+"draining" progress while AntScopeZ quietly waits out and discards
+whatever's still incoming, and scan-triggering controls stay disabled
+until it's genuinely done (bounded by Analyzer timeout, so a device that
+goes silent mid-drain doesn't wait forever). Settings → General → "Use
+reconnect to drain unwanted data" switches to closing and reopening the
+connection instead, often faster for a large scan, though not guaranteed
+to make every device actually discard what it already queued internally.
 
 ## One Fq: live single-frequency readout
 

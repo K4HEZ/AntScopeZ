@@ -11,6 +11,7 @@
 #include "filedialog.h"
 #include "editbandsdialog.h"
 #include "remoteapi/remoteapiserver.h"
+#include "debuglog.h"
 #include <QWindow>
 #include <QActionGroup>
 
@@ -84,6 +85,11 @@ int g_remoteApiPort = 7443;
 // continuous sweep won't trip it. See AnalyzerPro's watchdog timer
 // (analyzer/analyzerpro.cpp).
 int g_analyzerTimeoutSec = 8;
+// "Use reconnect to drain unwanted data" (Settings > General) -- see
+// AnalyzerPro::beginReconnectDrain()'s comment for what this changes.
+// Moved here from a Developer-tab, session-only checkbox 2026-09-04; now
+// an ordinary persisted preference like the rest of this block.
+bool g_reconnectToDrain = false;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -314,6 +320,8 @@ MainWindow::MainWindow(QWidget *parent) :
     // not the -developer command-line flag.
     m_fqRestrict = m_settings->value("restrictFq", true).toBool();
     g_maxMeasurements = m_settings->value("maxMeasurements", MAX_MEASUREMENTS).toInt();
+    g_activeGraphPenWidth = m_settings->value("activeGraphPenWidth", g_activeGraphPenWidth).toInt();
+    g_inactiveGraphPenWidth = m_settings->value("inactiveGraphPenWidth", g_inactiveGraphPenWidth).toInt();
     g_maxMarkers = m_settings->value("maxMarkers", MAX_MARKERS).toInt();
     g_autoMarkerAtLowestSwr = m_settings->value("autoMarkerAtLowestSwr", true).toBool();
     g_pointsMax = m_settings->value("pointsMax", 1000).toInt();
@@ -323,6 +331,8 @@ MainWindow::MainWindow(QWidget *parent) :
     g_remoteApiEnabled = m_settings->value("remoteApiEnabled", false).toBool();
     g_remoteApiPort = m_settings->value("remoteApiPort", 7443).toInt();
     g_analyzerTimeoutSec = m_settings->value("analyzerTimeoutSec", 8).toInt();
+    DebugLog::setDetailedErrorsEnabled(m_settings->value("reportDetailedErrors", false).toBool());
+    g_reconnectToDrain = m_settings->value("reconnectToDrain", false).toBool();
     m_activeThemeIndex = m_settings->value("activeTheme", 0).toInt();
     m_settings->endGroup();
 
@@ -419,6 +429,20 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this,&MainWindow::measureOneFq, m_analyzer,&AnalyzerPro::on_measureOneFq);
     connect(m_analyzer, &AnalyzerPro::signalMeasurementError, this, &MainWindow::onMeasurementError);
     connect(m_analyzer, &AnalyzerPro::signalAnalyzerError, this, &MainWindow::onAnalyzerError);
+    connect(m_analyzer, &AnalyzerPro::drainingChanged, this, &MainWindow::onAnalyzerDrainingChanged);
+    connect(m_analyzer, &AnalyzerPro::statusMessageChanged, this, &MainWindow::onAnalyzerStatusMessageChanged);
+
+    // Permanent status-bar labels -- see their declaration comment
+    // (mainwindow.h) for why m_statusLabel is general-purpose, not
+    // draining-only. QMainWindow::statusBar() lazily creates the bar
+    // itself on first call; mainwindow.ui never declared one.
+    // insertPermanentWidget(0, ...) puts the connection-info label to the
+    // *left* of the scan-status one (permanent widgets are ordered
+    // left-to-right in the order they occupy the bar's right-hand group).
+    m_statusLabel = new QLabel(tr("Ready"), this);
+    statusBar()->addPermanentWidget(m_statusLabel);
+    m_connectionStatusLabel = new QLabel(tr("Not connected"), this);
+    statusBar()->insertPermanentWidget(0, m_connectionStatusLabel);
 
     // g_remoteApiEnabled/g_remoteApiPort were already read from QSettings
     // above (the earlier "Settings" group block) by the time this runs.
@@ -1138,6 +1162,8 @@ MainWindow::~MainWindow()
     m_settings->beginGroup("Settings");
     m_settings->setValue("restrictFq", m_fqRestrict);
     m_settings->setValue("maxMeasurements", g_maxMeasurements);
+    m_settings->setValue("activeGraphPenWidth", g_activeGraphPenWidth);
+    m_settings->setValue("inactiveGraphPenWidth", g_inactiveGraphPenWidth);
     m_settings->setValue("maxMarkers", g_maxMarkers);
     m_settings->setValue("autoMarkerAtLowestSwr", g_autoMarkerAtLowestSwr);
     m_settings->setValue("pointsMax", g_pointsMax);
@@ -1147,6 +1173,8 @@ MainWindow::~MainWindow()
     m_settings->setValue("remoteApiEnabled", g_remoteApiEnabled);
     m_settings->setValue("remoteApiPort", g_remoteApiPort);
     m_settings->setValue("analyzerTimeoutSec", g_analyzerTimeoutSec);
+    m_settings->setValue("reportDetailedErrors", DebugLog::detailedErrorsEnabled());
+    m_settings->setValue("reconnectToDrain", g_reconnectToDrain);
     m_settings->endGroup();
 
     m_settings->beginGroup("Cable");

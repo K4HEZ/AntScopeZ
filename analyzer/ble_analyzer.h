@@ -160,6 +160,11 @@ protected:
     bool checkCRC(const QByteArray& data);
     void returnCRC(const QByteArray& data);
     void setInnerScan(bool _state) { m_innerScan = _state; }
+    // No real wire-level abort sent today -- see BaseAnalyzer's own
+    // comment on this method. (BLE_CANCEL_CMD exists in this protocol's
+    // command set above but stopMeasure() doesn't currently send it --
+    // separate, pre-existing question, not touched here.)
+    bool stopCommandAbortsDevice() const override { return false; }
 
 public slots:
     void searchAnalyzer();

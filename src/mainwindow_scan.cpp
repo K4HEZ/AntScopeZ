@@ -471,37 +471,58 @@ void MainWindow::on_tdrStopRequested()
     ui->measurmentsSaveBtn->setEnabled(true);
 }
 
+// AnalyzerPro::drainingChanged() -- see AnalyzerPro::m_isDraining's own
+// comment. Disabling every scan-triggering control here (not just the one
+// the user actually clicked) is deliberate: a second command landing on
+// the wire while the device is still mid-drain is exactly the kind of
+// desync that produced real protocol garbage earlier in this project's
+// history (a mismatched device profile mid-stream).
+void MainWindow::onAnalyzerDrainingChanged(bool draining)
+{
+    ui->singleStart->setEnabled(!draining);
+    ui->continuousStartBtn->setEnabled(!draining);
+    ui->fullBtn->setEnabled(!draining);
+    if (m_tdrScanDialog != nullptr)
+        m_tdrScanDialog->panel()->setScanning(draining);
+}
+
+void MainWindow::onAnalyzerStatusMessageChanged(const QString& text)
+{
+    m_statusLabel->setText(text);
+}
+
 void MainWindow::on_measurementComplete()
 {
-    if (m_analyzer->connectionType() == ReDeviceInfo::NANO)
+    // A stitched (multi-segment) sweep's analyzer backend fires this exact
+    // signal once per individual segment on its way to being stitched into
+    // one continuous result, not just on the truly final one -- without
+    // this guard, the *first* segment's completion alone would run every
+    // finalize step below (UI resets, setIsMeasuring(false), etc.), and
+    // AnalyzerPro::on_newData()'s own "!m_isMeasuring -> ignore as stale
+    // leftover data" guard would then silently discard every subsequent
+    // segment's points for the rest of the sweep. Confirmed live
+    // 2026-09-03: a NanoVNA V2 sweep split across two stitched segments
+    // only ever showed the first segment's data on the chart. See
+    // AnalyzerPro::isStitchedSweepComplete()'s own comment.
+    if (m_analyzer != nullptr && !m_analyzer->isStitchedSweepComplete())
         return;
-    // One Fq mode (Start==Stop or Range==0) isn't gated by g_developerMode
-    // -- it's reachable in the shipped build regardless. Every wire request
-    // is a single FRX1 now (see on_startOneFq()), so "one batch" here means
-    // one point -- looping (Single: m_oneFqRemaining more times; Continuous:
-    // forever) happens app-side by re-triggering on_startOneFq() from here,
-    // not by asking the device for a bigger batch.
-    //
-    // m_measurements.last() note (why this can't just fall through to the
-    // normal Continuous-scan completion path below): One Fq's on_newData()
-    // never adds anything to m_measurements (it short-circuits straight to
-    // updateOneFqWidget()), so Measurements::on_continueMeasurement()'s
-    // m_measurements.last() would assert on an empty list. Confirmed via
-    // coredumpctl/gdb backtrace, 2026-08-20.
-    if (m_measurements->isOneFqMode()) {
-        if (!m_bInterrupted && (m_isContinuos || m_oneFqRemaining > 1)) {
-            int remaining = m_isContinuos ? 0 : m_oneFqRemaining - 1;
-            on_startOneFq(m_oneFqFreq, remaining, m_isContinuos);
-            return;
-        }
-        on_continuousStartBtn_clicked(false);
-        return;
-    }
 
     // TdrScanPanel-triggered scan -- see m_isTdrScanning's comment in
     // mainwindow.h for why this can't be inferred from the current tab. No
     // Continuous mode (removed 2026-08-21) -- every TDR scan finalizes
     // here, nothing to re-trigger.
+    //
+    // Deliberately checked *before* the NANO early-return below: a NanoVNA-
+    // type connection still emits this exact (non-Nano) measurementComplete()
+    // signal when a scan is stopped early -- AnalyzerPro::on_stopMeasure()'s
+    // "if (wasMeasuring) emit measurementComplete();" -- and a NanoVNA scan's
+    // own normal completion (on_measurementCompleteNano()) never touches
+    // m_isTdrScanning at all. If this ran after the NANO check, a TDR scan
+    // against a NanoVNA device could never finalize either way: the progress
+    // dialog (frameless, window-modal, Esc deliberately disabled -- see
+    // ProgressDlg::reject()) and the panel's Scan button would both stay
+    // stuck with no UI path left to recover. Confirmed live 2026-09-03
+    // against the NanoVNA emulator -- had to kill the process.
     if (m_isTdrScanning) {
         m_measurements->stopTDRProgress();
         m_measurements->on_measurementComplete();
@@ -533,6 +554,43 @@ void MainWindow::on_measurementComplete()
                 m_measurements->setCableVelFactor(savedVf);
             });
         }
+        return;
+    }
+
+    // NanoVNA-family (both classic ASCII and V2/binary) finalizes through
+    // on_measurementCompleteNano() instead, driven by the backend's own
+    // completeMeasurement() signal -- see AnalyzerPro::connectSignals()'s
+    // completeMeasurement lambda. This early-return only ever checked NANO,
+    // not NANOV2 (added later as its own enum value, see redeviceinfo.h),
+    // so a V2/binary scan fell through all the way to this function's own
+    // autoPlaceAtLowestSwr() call below *and* on_measurementCompleteNano()'s
+    // -- two markers placed per scan instead of one. Classic ASCII never
+    // showed this because it actually matched NANO and returned here.
+    // Confirmed live 2026-09-04 against the NanoVNA emulator's binary
+    // profile.
+    if (m_analyzer->connectionType() == ReDeviceInfo::NANO ||
+        m_analyzer->connectionType() == ReDeviceInfo::NANOV2)
+        return;
+    // One Fq mode (Start==Stop or Range==0) isn't gated by g_developerMode
+    // -- it's reachable in the shipped build regardless. Every wire request
+    // is a single FRX1 now (see on_startOneFq()), so "one batch" here means
+    // one point -- looping (Single: m_oneFqRemaining more times; Continuous:
+    // forever) happens app-side by re-triggering on_startOneFq() from here,
+    // not by asking the device for a bigger batch.
+    //
+    // m_measurements.last() note (why this can't just fall through to the
+    // normal Continuous-scan completion path below): One Fq's on_newData()
+    // never adds anything to m_measurements (it short-circuits straight to
+    // updateOneFqWidget()), so Measurements::on_continueMeasurement()'s
+    // m_measurements.last() would assert on an empty list. Confirmed via
+    // coredumpctl/gdb backtrace, 2026-08-20.
+    if (m_measurements->isOneFqMode()) {
+        if (!m_bInterrupted && (m_isContinuos || m_oneFqRemaining > 1)) {
+            int remaining = m_isContinuos ? 0 : m_oneFqRemaining - 1;
+            on_startOneFq(m_oneFqFreq, remaining, m_isContinuos);
+            return;
+        }
+        on_continuousStartBtn_clicked(false);
         return;
     }
 
@@ -672,16 +730,24 @@ void MainWindow::on_measurementComplete()
 
 void MainWindow::on_measurementCompleteNano()
 {
-    // TdrScanPanel-triggered scan -- see the identical branch/comment in
-    // on_measurementComplete(). That function early-returns for NANO
-    // connections (see its own comment above), so its m_isTdrScanning
-    // branch never runs for a NanoVNA TDR scan -- confirmed as issue #30:
-    // without this, m_isTdrScanning stayed true forever and
-    // TdrScanPanel's controls (Cable Type/Vel. Factor/Points/re-scan)
-    // stayed disabled after the first NanoVNA TDR measurement, since
-    // nothing ever called setScanning(false) for that connection type.
-    // Duplicated rather than shared for the same reason as the #33 fix
-    // just below: on_measurementComplete() returns before reaching here.
+    // See the identical guard/comment at the top of on_measurementComplete()
+    // -- same reasoning, this is the *other* completion signal a stitched
+    // NanoVNA-family sweep's intermediate segments fire on their way
+    // through.
+    if (m_analyzer != nullptr && !m_analyzer->isStitchedSweepComplete())
+        return;
+
+    // TdrScanPanel-triggered scan -- see the matching comment and TDR
+    // finalize block in on_measurementComplete(). That function early-
+    // returns for NANO connections, so its m_isTdrScanning branch never
+    // runs for a NanoVNA TDR scan -- confirmed as issue #30: without this,
+    // m_isTdrScanning stayed true forever and TdrScanPanel's controls
+    // (Cable Type/Vel. Factor/Points/re-scan) stayed disabled after the
+    // first NanoVNA TDR measurement, since nothing ever called
+    // setScanning(false) for that connection type. Duplicated rather than
+    // shared for the same reason as the #33 fix and the graph(0)-clear fix
+    // a few lines down are duplicated too: on_measurementComplete() returns
+    // before reaching here.
     if (m_isTdrScanning) {
         m_measurements->stopTDRProgress();
         m_measurements->on_measurementComplete();

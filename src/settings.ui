@@ -141,6 +141,26 @@
             </layout>
            </item>
            <item>
+            <widget class="QCheckBox" name="checkBoxReportDetailedErrors">
+             <property name="toolTip">
+              <string>Shows additional, more technical analyzer error messages (BLE connection/protocol errors) in the analyzer error dialog. Off by default -- these are frequent and low-level enough to be more noise than help for most day-to-day use. The small set of always-shown messages (analyzer busy/unreachable) aren't affected by this.</string>
+             </property>
+             <property name="text">
+              <string>Report Detailed Errors</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="checkBoxReconnectToDrain">
+             <property name="toolTip">
+              <string>Neither the classic ASCII nor the V2/LiteVNA64 binary NanoVNA protocol has a wire-level "abort a scan in progress" command -- once asked for N points, the device (real or emulated) is going to send all of them. By default, stopping a scan early waits out whatever's still outstanding and quietly discards it. Checking this instead closes and reopens the connection right away, which is often faster for a large scan -- but isn't guaranteed to make every device actually discard what it already queued internally, only that AntScopeZ itself stops listening and resyncs cleanly on the next connect.</string>
+             </property>
+             <property name="text">
+              <string>Use reconnect to drain unwanted data</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QGroupBox" name="groupBox_7">
              <property name="title">
               <string>Measurement system</string>
@@ -194,6 +214,66 @@
                   </property>
                   <property name="text">
                    <string>Max measurements</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_37">
+                <item>
+                 <widget class="QSpinBox" name="spinBoxActiveLineWidth">
+                  <property name="toolTip">
+                   <string>Line width (pixels) for the currently-selected measurement's traces</string>
+                  </property>
+                  <property name="minimum">
+                   <number>1</number>
+                  </property>
+                  <property name="maximum">
+                   <number>10</number>
+                  </property>
+                  <property name="value">
+                   <number>5</number>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label_activeLineWidth">
+                  <property name="toolTip">
+                   <string>Line width (pixels) for the currently-selected measurement's traces</string>
+                  </property>
+                  <property name="text">
+                   <string>Selected measurement line width</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_lineWidthInactive">
+                <item>
+                 <widget class="QSpinBox" name="spinBoxInactiveLineWidth">
+                  <property name="toolTip">
+                   <string>Line width (pixels) for every other loaded measurement's traces</string>
+                  </property>
+                  <property name="minimum">
+                   <number>1</number>
+                  </property>
+                  <property name="maximum">
+                   <number>10</number>
+                  </property>
+                  <property name="value">
+                   <number>2</number>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label_inactiveLineWidth">
+                  <property name="toolTip">
+                   <string>Line width (pixels) for every other loaded measurement's traces</string>
+                  </property>
+                  <property name="text">
+                   <string>Other measurements' line width</string>
                   </property>
                  </widget>
                 </item>
@@ -2208,41 +2288,6 @@
              <string>BLE Pings</string>
             </property>
            </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="groupBoxErrorReporting">
-         <property name="title">
-          <string>Error Reporting &amp; Logging</string>
-         </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_errorReporting">
-          <property name="topMargin">
-           <number>20</number>
-          </property>
-          <item>
-           <widget class="QCheckBox" name="checkBoxReportDetailedErrors">
-            <property name="toolTip">
-             <string>Shows additional, more technical analyzer error messages (BLE connection/protocol errors) in the analyzer error dialog. Off by default -- these are frequent and low-level enough to be more noise than help for most day-to-day use. The small set of always-shown messages (analyzer busy/unreachable) aren't affected by this.</string>
-            </property>
-            <property name="text">
-             <string>Report Detailed Errors</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer_errorReporting">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
           </item>
          </layout>
         </widget>

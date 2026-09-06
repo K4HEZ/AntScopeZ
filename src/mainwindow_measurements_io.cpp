@@ -131,6 +131,10 @@ void MainWindow::on_tableWidget_measurments_cellClicked(int row, int column)
     Q_UNUSED(column)
     int count = m_swrWidget->graphCount();
 
+    // S21 tab's legend follows the selected row too -- see measurements.h's
+    // updateS21Legend() comment.
+    m_measurements->updateS21Legend(row);
+
     if(count > 0)
     {
         for(int i = 1; i < count; ++i)
@@ -143,8 +147,22 @@ void MainWindow::on_tableWidget_measurments_cellClicked(int row, int column)
                 m_swrWidget->graph(i)->setPen(pen);
                 m_phaseWidget->graph(i)->setPen(pen);
                 m_rlWidget->graph(i)->setPen(pen);
-                m_s21Widget->graph(i)->setPen(pen);
                 m_measurements->getMeasurement(count - 2 - (i-1))->smithCurve->setPen(pen);
+
+                // S21 tab: 4 graphs/measurement (S21/S12 dB+deg), not 1 --
+                // was m_s21Widget->graph(i)->setPen(pen), only touching 1 of
+                // the 4 and pasting in m_swrWidget's own color, stale from
+                // when S21 had 1 graph/measurement (see todo.txt). row*4+1
+                // matches toggleVisibility()/updateS21Legend()'s indexing;
+                // each graph keeps its own color/style, width only.
+                int s21Base = (i-1)*4 + 1;
+                if (s21Base+3 < m_s21Widget->graphCount()) {
+                    for (int ii=0; ii<4; ii++) {
+                        QPen s21OwnPen = m_s21Widget->graph(s21Base+ii)->pen();
+                        s21OwnPen.setWidth(pen_width);
+                        m_s21Widget->graph(s21Base+ii)->setPen(s21OwnPen);
+                    }
+                }
 
                 for (int ii=0; ii<3; ii++) {
                     pen = m_rpWidget->graph(j+ii)->pen();

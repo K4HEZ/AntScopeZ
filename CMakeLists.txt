@@ -177,6 +177,7 @@ set(ANTSCOPE_SOURCES
     analyzer/customanalyzer.cpp
     analyzer/hid_analyzer.cpp
     analyzer/nanovna_analyzer.cpp
+    analyzer/nanovna_v2_analyzer.cpp
     analyzer/updater/aa230firmwareupdater.cpp
     analyzer/updater/aa30zerofirmwareupdater.cpp
     analyzer/updater/downloader.cpp
@@ -248,6 +249,7 @@ set(ANTSCOPE_HEADERS
     analyzer/customanalyzer.h
     analyzer/hid_analyzer.h
     analyzer/nanovna_analyzer.h
+    analyzer/nanovna_v2_analyzer.h
     analyzer/usbhid/hidapi/hidapi.h
     analyzer/updater/aa230firmwareupdater.h
     analyzer/updater/aa30zerofirmwareupdater.h

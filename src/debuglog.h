@@ -26,16 +26,12 @@ class DebugLog
 {
 public:
     static void setSerialEnabled(bool enabled);
-    static void setUsbHidEnabled(bool enabled);
-    static void setBleEnabled(bool enabled);
-    static void setNanovnaEnabled(bool enabled);
-    // Readback for each of the four above -- lets a UI that displays these
-    // (Settings' Debug Logging checkboxes) reflect state set some other way
-    // (e.g. the -comserial/-usbhid/-nanovna/-ble CLI flags, main.cpp) instead
-    // of just assuming "off" whenever it's (re)constructed.
     static bool serialEnabled();
+    static void setUsbHidEnabled(bool enabled);
     static bool usbHidEnabled();
+    static void setBleEnabled(bool enabled);
     static bool bleEnabled();
+    static void setNanovnaEnabled(bool enabled);
     static bool nanovnaEnabled();
 
     // BLE's once-a-second keepalive ping (BleAnalyzer::sendPing(),
@@ -49,19 +45,22 @@ public:
     // identification reply -- so it's deliberately NOT filtered: Serial
     // TX and RX are always logged in full.
     static void setBleShowPings(bool show);
+    static bool bleShowPings();
 
-    // "Report Detailed Errors" (Settings > Developer > Error Reporting &
-    // Logging), same session-only/off-by-default convention as the Debug
-    // Logging checkboxes above -- gates whether BleAnalyzer::setError()'s
-    // (ble_analyzer.cpp) fairly technical, frequent BLE-stack-level errors
-    // reach the user-facing analyzer error dialog (MainWindow::
-    // onAnalyzerError()) at all. Off by default: those messages used to be
-    // compiled out entirely outside a #ifdef _DEBUG build; this replaces
-    // that compile-time gate with a runtime one now that they have a real
-    // dialog to appear in, without making them appear for every user by
-    // default. Doesn't affect the small set of always-shown messages
-    // (analyzer busy/unreachable) -- see onAnalyzerError()'s own comment
-    // for why those aren't considered "detailed".
+    // "Report Detailed Errors" (Settings > General, moved from Developer >
+    // Error Reporting & Logging 2026-09-04) -- gates whether BleAnalyzer::
+    // setError()'s (ble_analyzer.cpp) fairly technical, frequent
+    // BLE-stack-level errors reach the user-facing analyzer error dialog
+    // (MainWindow::onAnalyzerError()) at all. Off by default: those
+    // messages used to be compiled out entirely outside a #ifdef _DEBUG
+    // build; this replaces that compile-time gate with a runtime one now
+    // that they have a real dialog to appear in, without making them
+    // appear for every user by default. Doesn't affect the small set of
+    // always-shown messages (analyzer busy/unreachable) -- see
+    // onAnalyzerError()'s own comment for why those aren't considered
+    // "detailed". Persisted to the ini (MainWindow's load/save, and
+    // Settings::~Settings() on close) unlike the raw TX/RX Debug Logging
+    // checkboxes above, which stay deliberately session-only.
     static void setDetailedErrorsEnabled(bool enabled);
     static bool detailedErrorsEnabled();
 

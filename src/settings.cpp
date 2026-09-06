@@ -24,6 +24,8 @@ extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
                             QMessageBox::StandardButton defaultButton = QMessageBox::NoButton);
 extern bool g_developerMode;
 extern int g_maxMeasurements; // see measurements.cpp
+extern int g_activeGraphPenWidth; // see measurements.cpp
+extern int g_inactiveGraphPenWidth; // see measurements.cpp
 extern int g_maxMarkers; // see markers.cpp
 extern bool g_autoMarkerAtLowestSwr; // see markers.cpp
 extern int g_pointsMax; // see mainwindow.cpp
@@ -33,6 +35,7 @@ extern bool g_extendedChartZoom; // see mainwindow.cpp
 extern bool g_remoteApiEnabled; // see mainwindow.cpp
 extern int g_remoteApiPort; // see mainwindow.cpp
 extern int g_analyzerTimeoutSec; // see mainwindow.cpp
+extern bool g_reconnectToDrain; // see mainwindow.cpp
 extern QString appendSpaces(const QString& number);
 int Settings::m_serialIndex = 0;
 bool Settings::m_licenseUpdateBlocked = false;
@@ -126,6 +129,8 @@ Settings::Settings(QWidget *parent) :
     // directly now; nothing left here to display or wire up for them.
 
     ui->spinBoxMeasurements->setValue(g_maxMeasurements);
+    ui->spinBoxActiveLineWidth->setValue(g_activeGraphPenWidth);
+    ui->spinBoxInactiveLineWidth->setValue(g_inactiveGraphPenWidth);
     ui->spinBoxMaxMarkers->setValue(g_maxMarkers);
     ui->checkBoxAutoMarkerLowestSwr->setChecked(g_autoMarkerAtLowestSwr);
     ui->lineEditScanPointsMax->setText(QString::number(g_pointsMax));
@@ -135,6 +140,13 @@ Settings::Settings(QWidget *parent) :
     ui->checkBoxRemoteApiEnabled->setChecked(g_remoteApiEnabled);
     ui->spinBoxRemoteApiPort->setValue(g_remoteApiPort);
     ui->lineEdit_analyzerTimeout->setText(QString::number(g_analyzerTimeoutSec));
+    // Moved here from the Developer tab 2026-09-04 -- these are ordinary
+    // user-facing preferences, not debug/developer-only knobs, and now
+    // persist to the ini like the rest of the General tab (read here on
+    // open, written back in ~Settings() on close) instead of the
+    // session-only in-memory-only behavior they had before.
+    ui->checkBoxReportDetailedErrors->setChecked(DebugLog::detailedErrorsEnabled());
+    ui->checkBoxReconnectToDrain->setChecked(g_reconnectToDrain);
     m_settings->endGroup();
 
     // Debug Logging (Developer tab) -- deliberately NOT persisted to the
@@ -144,7 +156,13 @@ Settings::Settings(QWidget *parent) :
     // QSettings. Read back DebugLog's own current state rather than just
     // assuming unchecked -- it can already be true here, e.g. the
     // -comserial/-usbhid/-nanovna/-ble CLI flags (main.cpp) set it before
-    // Settings is ever opened.
+    // Settings is ever opened, and this dialog itself is reconstructed
+    // fresh every time Settings is opened (not a singleton reused across
+    // opens), so hardcoding setChecked(false) -- as this used to -- reset
+    // the *visible* checkbox on every reopen too, not just once per
+    // launch, regardless of whether logging was actually still running
+    // underneath. Confirmed live 2026-09-04: checked "NanoVNA", closed
+    // Settings, reopened it, box was back to unchecked.
     ui->debugLogSerialCheckBox->setChecked(DebugLog::serialEnabled());
     ui->debugLogUsbHidCheckBox->setChecked(DebugLog::usbHidEnabled());
     ui->debugLogBleCheckBox->setChecked(DebugLog::bleEnabled());
@@ -156,11 +174,10 @@ Settings::Settings(QWidget *parent) :
 
     // BLE's once-a-second keepalive ping is real traffic but drowns out
     // everything else in a long capture -- see DebugLog::setBleShowPings().
-    // Only meaningful (and only enabled) while BLE logging itself is on;
-    // defaults unchecked (hidden) since it's just noise in the common case
-    // of chasing a real BLE bug, same opt-in-per-session spirit as the rest
-    // of this group.
-    ui->debugLogBleShowPingsCheckBox->setChecked(false);
+    // Only meaningful while BLE logging itself is on -- same
+    // read-current-state fix as the four checkboxes above, not a
+    // hardcoded reset.
+    ui->debugLogBleShowPingsCheckBox->setChecked(DebugLog::bleShowPings());
     ui->debugLogBleShowPingsCheckBox->setEnabled(ui->debugLogBleCheckBox->isChecked());
     DebugLog::setBleShowPings(false);
     // Was: connect(..., &QCheckBox::setEnabled) directly -- only toggled
@@ -178,13 +195,6 @@ Settings::Settings(QWidget *parent) :
         }
     });
     connect(ui->debugLogBleShowPingsCheckBox, &QCheckBox::clicked, DebugLog::setBleShowPings);
-
-    // Error Reporting & Logging -- same session-only/off-by-default
-    // convention as Debug Logging just above (see DebugLog::
-    // setDetailedErrorsEnabled()'s comment).
-    ui->checkBoxReportDetailedErrors->setChecked(false);
-    DebugLog::setDetailedErrorsEnabled(false);
-    connect(ui->checkBoxReportDetailedErrors, &QCheckBox::clicked, DebugLog::setDetailedErrorsEnabled);
 
     // "Data folder" -- the single UserDataDir every save/export/screenshot
     // dialog now defaults to (see FileDialog::userDataDir()), replacing the
@@ -378,6 +388,8 @@ Settings::~Settings()
     CustomAnalyzer::save();
 
     g_maxMeasurements = ui->spinBoxMeasurements->value();
+    g_activeGraphPenWidth = ui->spinBoxActiveLineWidth->value();
+    g_inactiveGraphPenWidth = ui->spinBoxInactiveLineWidth->value();
     g_maxMarkers = ui->spinBoxMaxMarkers->value();
     g_autoMarkerAtLowestSwr = ui->checkBoxAutoMarkerLowestSwr->isChecked();
     // Re-read (not just trust the editingFinished handlers) in case the
@@ -394,10 +406,14 @@ Settings::~Settings()
     // m_mainWindow is the same static instance pointer analyzerFound()
     // and friends already rely on elsewhere in this file.
     MainWindow::m_mainWindow->setRemoteApiEnabled(g_remoteApiEnabled, static_cast<quint16>(g_remoteApiPort));
+    DebugLog::setDetailedErrorsEnabled(ui->checkBoxReportDetailedErrors->isChecked());
+    g_reconnectToDrain = ui->checkBoxReconnectToDrain->isChecked();
 
     m_settings->beginGroup("Settings");
     m_settings->setValue("restrictFq", m_restrictFq);
     m_settings->setValue("maxMeasurements", g_maxMeasurements);
+    m_settings->setValue("activeGraphPenWidth", g_activeGraphPenWidth);
+    m_settings->setValue("inactiveGraphPenWidth", g_inactiveGraphPenWidth);
     m_settings->setValue("autoMarkerAtLowestSwr", g_autoMarkerAtLowestSwr);
     m_settings->setValue("maxMarkers", g_maxMarkers);
     m_settings->setValue("pointsMax", g_pointsMax);
@@ -406,6 +422,8 @@ Settings::~Settings()
     m_settings->setValue("extendedChartZoom", g_extendedChartZoom);
     m_settings->setValue("remoteApiEnabled", g_remoteApiEnabled);
     m_settings->setValue("remoteApiPort", g_remoteApiPort);
+    m_settings->setValue("reportDetailedErrors", DebugLog::detailedErrorsEnabled());
+    m_settings->setValue("reconnectToDrain", g_reconnectToDrain);
 
     m_settings->setValue("currentIndex",ui->tabWidget->currentIndex());
     m_settings->endGroup();

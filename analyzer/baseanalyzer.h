@@ -36,6 +36,21 @@ public:
     virtual void setTakeData(bool _state) { m_isTakeData = _state; }
     virtual bool refreshConnection() { return false; }
     virtual bool connectAnalyzer() = 0;
+    // True if this backend's stopMeasure() actually tells the device (over
+    // the wire) to stop producing more data -- the base implementation
+    // below does (sends "off\r"), so this defaults true. NanovnaAnalyzer,
+    // NanovnaV2Analyzer, and BleAnalyzer override it false: none of those
+    // protocols has a real wire-level abort, so their own stopMeasure()
+    // overrides are just a local flag with no wire command (confirmed for
+    // all three; see each one's own stopMeasure() comment).
+    // AnalyzerPro::on_stopMeasure() uses this to decide whether there's
+    // anything left to actually drain after stopping -- assuming every
+    // backend behaves like the no-abort ones (as this project's draining
+    // feature originally did) means waiting for data that a device just
+    // told to stop will never send, guaranteeing a timeout instead of a
+    // clean "Ready". Confirmed live 2026-09-04 against a real Match
+    // device.
+    virtual bool stopCommandAbortsDevice() const { return true; }
     virtual void disconnectAnalyzer() = 0;
     ReDeviceInfo::InterfaceType connectionType() { return m_type; }
 

@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QStyleFactory>
 #include <QCheckBox>
+#include <QLabel>
 #include <QPushButton>
 #include <QShortcut>
 #include <QMessageBox>
@@ -49,15 +50,19 @@
 #define POINTS_MAX 10000
 
 #define MEASUREMENTS_TABLE_COLUMNS 4
+// Order here is the on-screen column order (every table-building/-updating
+// site uses these symbolic names, not hardcoded indices, so reordering the
+// enum alone reorders the columns) -- COL_MENU (the rename pencil) moved
+// left of COL_NAME 2026-09-05, was to its right.
 enum {
     COL_VISIBLE,
+    COL_MENU,
     COL_NAME,
     // Actual points received for that scan (Measurements::on_measurementComplete()) --
     // "--" until the scan finishes. Added to make a device silently returning
     // fewer points than requested (see analyzer/nanovna_analyzer.cpp,
     // HID/BLE transports) visible without reading a debug log.
-    COL_POINTS,
-    COL_MENU
+    COL_POINTS
 
 };
 #define COL_NAME_WD 150
@@ -194,6 +199,17 @@ private:
     TdrScanDialog *m_tdrScanDialog = nullptr;
 
     Print *m_print = nullptr;
+
+    // Permanent status-bar widgets. m_connectionStatusLabel (left, inserted
+    // before m_statusLabel) shows model/connection type/protocol -- updated
+    // on connect/disconnect via updateConnectionStatusLabel(). m_statusLabel
+    // (right) shows AnalyzerPro::statusMessageChanged()'s text -- currently
+    // scan-start/draining progress, but deliberately general-purpose, not a
+    // one-off "draining" widget -- see the design discussion this came out
+    // of for other fields planned to live here later.
+    QLabel *m_connectionStatusLabel = nullptr;
+    QLabel *m_statusLabel = nullptr;
+    void updateConnectionStatusLabel();
 
     bool m_isContinuos = false;
     int m_dotsNumber = 50;
@@ -535,6 +551,13 @@ private slots:
     void onMeasurementError();
     void onAnalyzerError(const QString& error);
     void on_tableWidgetMeasurmentsContextMenu(const QPoint& pos);
+    // AnalyzerPro::drainingChanged()/statusMessageChanged() -- see
+    // AnalyzerPro::m_isDraining's own comment. Applies uniformly regardless
+    // of which stop trigger fired (Esc, re-clicking Single, closing a
+    // dialog mid-scan, ...) since they all already funnel through
+    // AnalyzerPro::on_stopMeasure().
+    void onAnalyzerDrainingChanged(bool draining);
+    void onAnalyzerStatusMessageChanged(const QString& text);
 
     // multi-tab
 #ifndef NO_MULTITAB

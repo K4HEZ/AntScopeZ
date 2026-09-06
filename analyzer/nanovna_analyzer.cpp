@@ -358,7 +358,25 @@ void NanovnaAnalyzer::startMeasure(qint64 fqFrom, qint64 fqTo, int dotsNumber, b
     Q_UNUSED (frx)
     m_fqFrom = fqFrom;
     m_fqTo = fqTo;
-    m_dotsNumber = dotsNumber;
+    // Issue #37: the device itself enforces a hard point-count range and
+    // errors out on anything outside it -- confirmed live 2026-09-05, a
+    // 500-point request from the S21 tab got back the device's own plain-
+    // text "sweep points exceeds range 401" reply, which parseBinaryScan()
+    // then misread as a corrupt binary header (see its comment). AnalyzerPro's
+    // generic multi-segment stitching (buildStitchSegments()) can't fix this
+    // properly on its own: it decides when to advance to the next segment by
+    // counting points through on_newData(), but NanoVNA's real completion
+    // signal (finishMeasurementSegment(), on the device's "ch>" prompt) fires
+    // per scan command with no awareness of a multi-segment plan -- wiring
+    // that up correctly is tracked separately (full stitching support for
+    // NANO, see the GH issue). For now, just clamp to the device's own real
+    // range rather than stitch: a request outside [50, 401] gets the
+    // nearest in-range value, trading resolution for actually completing
+    // instead of erroring out. 50 and 401 are the device's confirmed real
+    // floor/ceiling on real hardware (2026-09-05).
+    constexpr int kNanoMinPoints = 50;
+    constexpr int kNanoMaxPoints = 401;
+    m_dotsNumber = qBound(kNanoMinPoints, dotsNumber, kNanoMaxPoints);
     m_isMeasuring = true;
     m_listFQ.clear();
     m_s11Buffer.clear();
@@ -752,6 +770,17 @@ void NanovnaAnalyzer::detectPorts()
         if (vendorIdentifier == NANOVNA_VID && productIdentifier == NANOVNA_PID) {
             NanovnaAnalyzer::m_listNanovnaPorts << info;
         }
+    }
+}
+
+QString NanovnaAnalyzer::scanCapabilityDescription() const
+{
+    switch (m_scanSupport) {
+    case ScanSupport::AsciiAndBinary: return tr("ASCII+Binary");
+    case ScanSupport::AsciiOnly:      return tr("ASCII");
+    case ScanSupport::Unsupported:    return tr("Legacy");
+    case ScanSupport::Unknown:
+    default:                          return tr("Unknown");
     }
 }
 

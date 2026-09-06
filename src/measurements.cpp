@@ -9,6 +9,10 @@
 extern bool g_developerMode;
 extern QMap<QString, QString> g_mapTabPlotNames;
 int g_maxMeasurements = MAX_MEASUREMENTS;
+// See measurements.h's ACTIVE_GRAPH_PEN_WIDTH/INACTIVE_GRAPH_PEN_WIDTH --
+// defaults match the values these replaced.
+int g_activeGraphPenWidth = 5;
+int g_inactiveGraphPenWidth = 2;
 extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
                             QString title, QString text,
                             QMessageBox::StandardButtons buttons = QMessageBox::Ok,
@@ -50,7 +54,27 @@ QColor getColor(int _index)
     // MAX_COLOR, which is out of range on its own. Both previously reached
     // QColor::fromHsv() with an invalid hue (issue #35, reported during a
     // screenshot). Clamp the divisor and wrap the hue into [0, MAX_COLOR).
-    int colorCount = qMax(g_maxMeasurements-4, 1);
+    //
+    // colorCount must cover every index this function could actually be
+    // asked for, not just one slot per measurement. SWR/Phase/RL/Smith
+    // each request a single getColor(m_currentIndex) per measurement, but
+    // the S21 tab's 4 traces (on_newMeasurement()'s s21Color(idx..idx+3))
+    // reach 3 higher than that -- m_currentIndex itself only ever climbs
+    // to g_maxMeasurements (on_newMeasurement()'s own wraparound), so
+    // g_maxMeasurements+3 is the true highest index in play, and the
+    // fixed 5-entry palette above already covers indices 0-4, leaving
+    // (g_maxMeasurements+3)-5+1 = g_maxMeasurements-1 generated colors
+    // actually needed. The previous g_maxMeasurements-4 was sized for a
+    // 1-slot/measurement caller only: at the shipped default
+    // g_maxMeasurements=5 that made colorCount exactly 1, so `jump` was
+    // 360 and *every* index >=5 landed on the same hue (0, pure red) --
+    // not a rare collision, deterministic every time, and the direct
+    // cause of the S21 tab's later measurements all rendering identically
+    // red (found/fixed 2026-09-04, alongside giving S21 real per-
+    // measurement legend entries in on_newMeasurement() so this is at
+    // least visible in the legend even where colors still land close
+    // together for very large measurement counts).
+    int colorCount = qMax(g_maxMeasurements-1, 1);
     const int MAX_COLOR = 360;
     const int MIN_COLOR = 0;
     double jump = (MAX_COLOR-MIN_COLOR) / (colorCount*1.0);
@@ -225,6 +249,25 @@ void Measurements::setWidgets(CustomPlot * swr,   CustomPlot * phase,
 
                 QString str = mm.name + tr("\nDouble-click an item to rescale the chart.\nRight-click an item to change color");
                 m_tableWidget->item(row, COL_NAME)->setToolTip(str);
+
+                // S21 tab's legend labels this measurement's 4 graphs with
+                // its name as a prefix -- see on_newMeasurement()'s
+                // identical s21NamePrefix. Keep them in sync on rename
+                // regardless of whether this row is the one currently
+                // shown in the legend: updateS21Legend()'s
+                // QCPPlottableLegendItem reads each graph's name() live at
+                // paint time, so a graph whose name was never updated
+                // would still show the old one whenever its row is next
+                // selected.
+                int s21Base = row*4 + 1;
+                if (s21Base+3 < m_s21Widget->graphCount()) {
+                    const QString s21NamePrefix = mm.name.isEmpty() ? QString() : (mm.name + QStringLiteral(" - "));
+                    m_s21Widget->graph(s21Base+0)->setName(s21NamePrefix + tr("S21 (dB)"));
+                    m_s21Widget->graph(s21Base+1)->setName(s21NamePrefix + tr("S21 (deg)"));
+                    m_s21Widget->graph(s21Base+2)->setName(s21NamePrefix + tr("S12 (dB)"));
+                    m_s21Widget->graph(s21Base+3)->setName(s21NamePrefix + tr("S12 (deg)"));
+                    m_s21Widget->replot();
+                }
             }
         }
     });
@@ -386,19 +429,39 @@ void Measurements::deleteRow(int row)
             m_tdrWidget->legend->addItem(new QCPPlottableLegendItem(m_tdrWidget->legend, m_tdrWidget->graph(2)));
             m_tdrWidget->legend->addItem(new QCPPlottableLegendItem(m_tdrWidget->legend, m_tdrWidget->graph(3)));
 
-            m_s21Widget->legend->addItem(new QCPPlottableLegendItem(m_s21Widget->legend, m_s21Widget->graph(1)));
-            m_s21Widget->legend->addItem(new QCPPlottableLegendItem(m_s21Widget->legend, m_s21Widget->graph(2)));
-            m_s21Widget->legend->addItem(new QCPPlottableLegendItem(m_s21Widget->legend, m_s21Widget->graph(3)));
-            m_s21Widget->legend->addItem(new QCPPlottableLegendItem(m_s21Widget->legend, m_s21Widget->graph(4)));
+            // m_s21Widget isn't repaired here -- unlike Rs/Rp/TDR's fixed
+            // template, its legend is rebuilt from scratch by
+            // updateS21Legend() below every time the selection moves.
         }
         int selRow = (row >= m_measurements.length()) ? (row-1) : row;
         QModelIndex myIndex = m_tableWidget->model()->index( selRow, 0,
                                                              QModelIndex());
         m_tableWidget->selectionModel()->select(myIndex,
                                     QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        updateS21Legend(selRow);
     }
 
     m_tableWidget->setRowCount(m_measurements.length());
+}
+
+// Rebuilds m_s21Widget's legend from scratch to show only row's 4 graphs
+// (S21 dB/deg, S12 dB/deg) -- see measurements.h's comment on why (revert
+// of the 2026-09-04 "every measurement gets a legend row" change). row is
+// a plain m_measurements/table index, same as on_tableWidget_measurments_
+// cellClicked()'s "row"; anything out of [0, length) just clears the
+// legend (e.g. the last measurement was just deleted).
+void Measurements::updateS21Legend(int row)
+{
+    if (m_s21Widget == nullptr || m_s21Widget->legend == nullptr)
+        return;
+    m_s21Widget->legend->clearItems();
+    if (row < 0 || row >= m_measurements.length())
+        return;
+    int base = row*4 + 1; // +1: graph(0) is a non-measurement placeholder, see mainwindow.cpp
+    if (base+3 >= m_s21Widget->graphCount())
+        return;
+    for (int i = 0; i < 4; i++)
+        m_s21Widget->legend->addItem(new QCPPlottableLegendItem(m_s21Widget->legend, m_s21Widget->graph(base+i)));
 }
 
 // See measurements.h -- one shared formatter for the 3 places that write
@@ -488,14 +551,30 @@ void Measurements::on_newMeasurement(QString name)
     if(m_swrWidget->graphCount() > 1)
     {
         pen = m_swrWidget->graph()->pen();
-        pen.setWidth(3);
+        // Was a bare 3, not g_inactiveGraphPenWidth (2 by default) -- this
+        // demotes the previous "current" measurement to inactive width the
+        // moment a new one starts, same event on_tableWidget_measurments_
+        // cellClicked() demotes it for on a manual row click, so it should
+        // use the same setting.
+        pen.setWidth(g_inactiveGraphPenWidth);
         m_swrWidget->graph()->setPen(pen);
         m_phaseWidget->graph()->setPen(pen);
         m_rlWidget->graph()->setPen(pen);
-        m_s21Widget->graph()->setPen(pen);
         m_smithWidget->graph()->setPen(pen);
         m_measurements.at(m_measurements.length()-2).smithCurve->setPen(pen);
-    }    
+
+        // S21 tab: 4 graphs/measurement now, not 1 -- was clobbering just
+        // the previous measurement's last graph (S12 deg) with m_swrWidget's
+        // own color, same stale-indexing/wrong-pen-source bug as
+        // on_tableWidget_measurments_cellClicked() (see todo.txt). Width
+        // only, each graph keeps its own color/style.
+        int s21PrevCount = m_s21Widget->graphCount();
+        for (int k = 1; k <= 4 && s21PrevCount-k >= 0; k++) {
+            QPen s21OldPen = m_s21Widget->graph(s21PrevCount-k)->pen();
+            s21OldPen.setWidth(g_inactiveGraphPenWidth);
+            m_s21Widget->graph(s21PrevCount-k)->setPen(s21OldPen);
+        }
+    }
     m_swrWidget->addGraph();
     m_swrWidget->graph()->setAntialiasedFill(false);
     m_swrWidget->graph()->setName(name);
@@ -525,24 +604,31 @@ void Measurements::on_newMeasurement(QString name)
     m_rpWidget->graph()->setName("|Zp|");
     m_rlWidget->addGraph();
 
-    // Only the first measurement's 4 traces get legend entries (a
-    // per-quantity template, same as Rs/Rp/TDR below/above) -- not one
-    // set per measurement, which would just duplicate the same 4 labels.
-    m_s21Widget->setAutoAddPlottableToLegend(m_s21Widget->legend->itemCount() < 4);
+    // Each measurement's 4 graphs still get a real, name-prefixed setName()
+    // below (used by updateS21Legend()), but auto-add is off -- with
+    // several measurements loaded, a legend row per trace per measurement
+    // (found 2026-09-04 while fixing getColor()'s red-collapse bug) was
+    // technically correct but unreadable. updateS21Legend() rebuilds the
+    // legend from scratch to show only the currently-selected measurement's
+    // 4 entries; it's called below once this measurement's graphs/pens are
+    // set up, and again whenever the selected row changes (table click,
+    // deleteRow()).
+    m_s21Widget->setAutoAddPlottableToLegend(false);
     // 4 graphs per measurement now (S21/S12 magnitude+phase, from a real
     // 2-port import's complex data -- see SParamPoint/populateSParamData()),
     // not the old 2 (live-only, magnitude+"stage", see S21Data's comment).
     // Magnitude (dB) traces share the default axis; phase (degrees) traces
     // use yAxis2, same as the old "Stage" trace did for its own scale.
+    const QString s21NamePrefix = name.isEmpty() ? QString() : (name + QStringLiteral(" - "));
     m_s21Widget->addGraph();
-    m_s21Widget->graph()->setName(tr("S21 (dB)"));
+    m_s21Widget->graph()->setName(s21NamePrefix + tr("S21 (dB)"));
     m_s21Widget->addGraph();
-    m_s21Widget->graph()->setName(tr("S21 (deg)"));
+    m_s21Widget->graph()->setName(s21NamePrefix + tr("S21 (deg)"));
     m_s21Widget->graph()->setValueAxis(m_s21Widget->yAxis2);
     m_s21Widget->addGraph();
-    m_s21Widget->graph()->setName(tr("S12 (dB)"));
+    m_s21Widget->graph()->setName(s21NamePrefix + tr("S12 (dB)"));
     m_s21Widget->addGraph();
-    m_s21Widget->graph()->setName(tr("S12 (deg)"));
+    m_s21Widget->graph()->setName(s21NamePrefix + tr("S12 (deg)"));
     m_s21Widget->graph()->setValueAxis(m_s21Widget->yAxis2);
 
     m_tdrWidget->setAutoAddPlottableToLegend(m_tdrWidget->legend->itemCount() < 3);
@@ -598,28 +684,30 @@ void Measurements::on_newMeasurement(QString name)
 
     QPen s21Pen;
     s21Pen.setWidth(ACTIVE_GRAPH_PEN_WIDTH);
-    // S21 dashed, S12 solid -- distinct by line style as well as color.
-    // For a reciprocal network (S21==S12, the normal case for passive
-    // components: cables, filters, attenuators, not just a quirk of one
-    // test file) the two traces are numerically identical, and S12 is
-    // always added after S21 (on_newMeasurement()), so without this it
-    // paints directly over an indistinguishable, fully hidden S21.
+    // All 4 solid now -- S21 used to be dashed and S12 solid so a
+    // reciprocal network (S21==S12, the normal case for passive
+    // components: cables, filters, attenuators) wouldn't paint an
+    // opaque S12 directly over an identical, fully-hidden S21. That
+    // reasoning predated getColor() reliably giving each of the 4 traces
+    // its own distinct hue (see getColor()'s own comment, fixed
+    // 2026-09-04) -- before that fix, indices past the palette collapsed
+    // to the same red, which is presumably why dashing was added as
+    // insurance in the first place. Color alone now tells S21 from S12
+    // apart even when the two curves perfectly overlap, and a thick
+    // (ACTIVE_GRAPH_PEN_WIDTH) dashed line reads poorly at typical zoom
+    // levels -- the dashes themselves were the reported complaint.
     //
     // getColor()'s palette isn't uniformly transparent -- index 3
     // (QColor(255,127,0,255)) is the one fully-opaque entry, everything
-    // else alpha 150. Dashing alone doesn't help against a 100%-opaque
-    // line: it still fully covers whatever's underneath even in the
-    // gaps between dashes, since directly beneath a gap is the same
-    // curve at the same position. Force a consistent, semi-transparent
-    // alpha on all 4 traces here so this doesn't depend on which
-    // getColor() index a given trace happens to land on.
+    // else alpha 150. Force a consistent, semi-transparent alpha on all 4
+    // traces here so overlap is never a fully-opaque line hiding another,
+    // regardless of which getColor() index a given trace lands on.
     auto s21Color = [](int idx) { QColor c = getColor(idx); c.setAlpha(150); return c; };
-    s21Pen.setStyle(Qt::DashLine);
+    s21Pen.setStyle(Qt::SolidLine);
     s21Pen.setColor(s21Color(m_currentIndex));
     m_s21Widget->graph(s21GraphCount-4)->setPen(s21Pen); // S21 dB
     s21Pen.setColor(s21Color(m_currentIndex+1));
     m_s21Widget->graph(s21GraphCount-3)->setPen(s21Pen); // S21 deg
-    s21Pen.setStyle(Qt::SolidLine);
     s21Pen.setColor(s21Color(m_currentIndex+2));
     m_s21Widget->graph(s21GraphCount-2)->setPen(s21Pen); // S12 dB
     s21Pen.setColor(s21Color(m_currentIndex+3));
@@ -705,6 +793,11 @@ void Measurements::on_newMeasurement(QString name)
         m_tableWidget->selectionModel()->select(myIndex,QItemSelectionModel::Select | QItemSelectionModel::Rows);
         m_tableWidget->scrollToBottom();
     }
+
+    // A new measurement is always the selected one (table selection above,
+    // when it runs; singlePoint/name-empty measurements skip that block but
+    // still get their own 4 S21 graphs, so still need a legend switch).
+    updateS21Legend(m_measurements.length()-1);
 }
 
 

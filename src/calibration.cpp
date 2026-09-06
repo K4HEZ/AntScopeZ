@@ -316,6 +316,12 @@ void Calibration::on_startCalibrationShort()
     m_dotsCount = 0;
     m_onlyOneCalib = true;
     m_shortData.clear();
+    // Was missing -- on_startCalibrationOpen() (the only one of the 3
+    // "Calibrate X" buttons that had it) shows the busy indicator right
+    // before starting its capture; this one silently never did, so
+    // calibrating Short alone never lit the indicator for its whole
+    // capture (see todo.txt).
+    PopUpIndicator::showIndicator();
     if(m_analyzer != NULL)
     {
         emit setCalibrationMode(true);
@@ -329,6 +335,8 @@ void Calibration::on_startCalibrationLoad()
     m_dotsCount = 0;
     m_onlyOneCalib = true;
     m_loadData.clear();
+    // Was missing -- see on_startCalibrationShort()'s comment just above.
+    PopUpIndicator::showIndicator();
     if(m_analyzer != NULL)
     {
         emit setCalibrationMode(true);

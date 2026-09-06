@@ -62,11 +62,20 @@ public:
     virtual bool refreshConnection();
     virtual bool connectAnalyzer();
     virtual void disconnectAnalyzer();
+    // No real wire-level abort in this protocol -- see BaseAnalyzer's own
+    // comment on this method.
+    bool stopCommandAbortsDevice() const override { return false; }
 
     static void detectPorts();
     static QList<QSerialPortInfo> availablePorts() { return m_listNanovnaPorts; }
     static int portsCount() { return m_listNanovnaPorts.size(); }
     static bool isConnected() { return m_isConnected; }
+
+    // Human-readable description of what this connection's "scan"
+    // capability probe settled on -- for MainWindow's connection-info
+    // status label. Returns a plain string rather than exposing the
+    // private ScanSupport enum itself.
+    QString scanCapabilityDescription() const;
 
 private:
     QSerialPort * m_comPort;

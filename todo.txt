@@ -1,0 +1,262 @@
+1) SWR band needs to be anchored 0-10, as its too easy to move vertical scale.
+   -- fixed 2026-09-02 on develop: mainwindow.cpp's setWidgetsSettings() had
+      the SWR chart's rangeDrag enabled on both axes; dropped Vertical so a
+      plain click-drag can't pan the Y-axis off its 1-10 clamp anymore.
+
+2) Bandnames don't populate on initial load:
+   -- turned out to be a symptom of #1 (chart panned off-center), not a
+      real bug. No action needed.
+
+3)  reference to qt.conf in user-guide is obsolete?
+
+4)  S21 tab trace colors diverge to red (no legend entry for it) once 3+
+    measurements are loaded at once -- found 2026-09-04 while eyeballing
+    NanoVnaEmulator scenario imports. Two compounding bugs in
+    measurements.cpp, both AntScopeZ-side (not the emulator/scenario files):
+    a) getColor()'s (measurements.cpp:33-62) out-of-range fallback:
+       colorCount = qMax(g_maxMeasurements-4, 1) -- at the default
+       g_maxMeasurements=5 this is 1, making jump=360/1, so *every* index
+       >=5 lands on hue 0 (pure red), deterministically, not a rare
+       collision.
+    b) S21 tab specifically burns the palette 4x faster than every other
+       tab: each measurement's S21dB/S21deg/S12dB/S12deg take a 4-wide
+       window (idx..idx+3, measurements.cpp:604-611), but m_currentIndex
+       only advances by 1 per measurement (measurements.cpp:548-550) --
+       consecutive measurements' windows overlap 3-of-4 slots and run past
+       the 5-entry palette starting at measurement #2, hitting the (a)
+       fallback by measurement #3-5. SWR/Phase/RL/Smith use a plain
+       getColor(m_currentIndex) (one slot/measurement, no overlap) so
+       they don't have this second problem, just (a) eventually.
+    Also: S21 tab's legend is gated to exactly 4 entries, added only for
+    measurement #1 (setAutoAddPlottableToLegend(itemCount()<4),
+    measurements.cpp:517) -- every later measurement's 4 S21 traces get
+    real colors (including the red-fallback ones) with *no* legend row at
+    all, unlike SWR/Phase/RL/Smith which never disable auto-add and so
+    label every measurement correctly.
+    -- (b)'s legend half fixed 2026-09-04: m_s21Widget now auto-adds a
+       real, name-prefixed legend entry per measurement (setAutoAddPlott-
+       ableToLegend(true), permanently, plus each setName() call prefixed
+       with that measurement's own name) instead of a fixed 4-row generic
+       template, and no longer needs deleteRow()'s legend-repair hack --
+       QCustomPlot cleans up a plottable's own legend entry when its graph
+       is removed. Every trace is identifiable now, red or not.
+    -- (a) fixed 2026-09-04 too: getColor()'s colorCount is now
+       qMax(g_maxMeasurements-1, 1), sized off the true highest index any
+       caller reaches (g_maxMeasurements+3, from the S21 tab's 4-wide
+       window) rather than g_maxMeasurements-4 (correct only for a
+       1-slot/measurement caller). At the shipped default
+       g_maxMeasurements=5 this raises colorCount from 1 (jump=360,
+       everything collapsed to hue 0) to 4 (jump=90, indices 5-8 spread
+       across 4 distinct hues) -- each measurement's 4 S21 traces now get
+       at most one hue landing on that rotation's red, not all 4.
+    -- Both halves confirmed working 2026-09-04, but parked: with several
+       measurements loaded the S21 tab (4 name-prefixed legend rows per
+       measurement, generated-hue colors) is technically correct but hard
+       to read/use in practice. Left in place as-is rather than reverted --
+       revisit the design later (fewer/shorter legend labels? one legend
+       row per measurement instead of 4? cap how many measurements' S21
+       traces show at once?) rather than iterating further blind.
+    -- 2026-09-05: the "revisit the design" above is done. getColor()/
+       generateColors() colors are unchanged (that part was correct), but
+       the legend itself is reverted to showing only one measurement at a
+       time -- the currently-selected one (table click, or the
+       just-completed scan by default), same "selected" concept
+       on_tableWidget_measurments_cellClicked() already uses for pen
+       width. New Measurements::updateS21Legend(row) rebuilds m_s21Widget's
+       legend from scratch for that row's 4 graphs; m_s21Widget's
+       setAutoAddPlottableToLegend is back to false. Called from
+       on_newMeasurement() (new measurement becomes selected),
+       deleteRow() (selection may shift), and MainWindow::
+       on_tableWidget_measurments_cellClicked() (user clicks a row).
+    -- Noticed 2026-09-05, fixed same day (see below): on_tableWidget_
+       measurments_cellClicked() (mainwindow_measurements_io.cpp) was
+       still only touching m_s21Widget->graph(i) (1 graph) per selected/
+       deselected measurement, copying in m_swrWidget's own pen (wrong
+       color source too) -- stale from when S21 had 1 graph/measurement,
+       not today's 4 (S21 dB/deg, S12 dB/deg). Now uses the same row*4+1
+       base as toggleVisibility()/updateS21Legend(), touching each of the
+       4 graphs' own pen (width only, color/style untouched).
+    -- 2026-09-05: ACTIVE_GRAPH_PEN_WIDTH(5)/INACTIVE_GRAPH_PEN_WIDTH(2)
+       (measurements.h) are user-settable now -- Settings > General:
+       "Selected measurement line width" / "Other measurements' line
+       width" (spinBoxActiveLineWidth/spinBoxInactiveLineWidth, 1-10,
+       same load/save pattern as spinBoxMeasurements/g_maxMeasurements).
+       The macros now expand to g_activeGraphPenWidth/
+       g_inactiveGraphPenWidth (measurements.cpp) instead of hardcoded
+       literals, so every existing call site picked this up for free.
+       Also fixed on_newMeasurement()'s demotion of the previous "current"
+       measurement to inactive width: was a bare pen.setWidth(3) (not
+       even INACTIVE_GRAPH_PEN_WIDTH's old 2) that also clobbered the
+       previous measurement's *last* S21 graph (S12 deg) with
+       m_swrWidget's own color -- same category of stale-indexing bug as
+       the cellClicked() one above. Now demotes width only, on all 4 of
+       the previous measurement's own S21 graphs, each keeping its own
+       color/style.
+    -- 2026-09-05: dropped the S21/S12 dashed-vs-solid distinction --
+       on_newMeasurement()'s s21Pen is Qt::SolidLine for all 4 traces now,
+       not DashLine for S21 + SolidLine for S12. That distinction existed
+       so a reciprocal network (S21==S12, the normal passive-component
+       case) wouldn't paint an opaque S12 directly over an identical,
+       fully-hidden S21 -- reasoning that predated getColor() reliably
+       giving each of the 4 traces its own distinct hue (fixed above,
+       2026-09-04). A thick (ACTIVE_GRAPH_PEN_WIDTH) dashed line reads
+       poorly at typical zoom -- the reported "dotted line isn't working
+       well" complaint. Color (plus the alpha-150 forced on all 4, so
+       overlap is never fully opaque) should be enough now; worth
+       double-checking against a real reciprocal-network capture.
+    -- Found while fixing the above, not fixed (separate code path, out
+       of scope for this pass): MainWindow::on_actionPrint_triggered()'s
+       "tab_s21" branch (mainwindow_measurements_io.cpp) still iterates
+       m_s21Widget's raw graphs 1:1 against table rows
+       (index(i-1, COL_NAME)) to build each legend label for the printed
+       chart -- correct when S21 was 1 graph/measurement, wrong now that
+       it's 4 (every row past the first gets 3 labels off by an
+       increasing amount). Needs the same row=(i-1)/4 remap as the fixes
+       above.
+
+5) Busy indicator (the red dot PopUpIndicator draws at m_swrWidget's own
+   upper-left corner, see popupindicator.cpp) -- reported 2026-09-05 as
+   "only lights up during the last portion of the scanning/plotting
+   activity".
+   -- First pass misdiagnosed this: grepped PopUpIndicator call sites in
+      src/*.cpp only, missed analyzer/analyzerpro.cpp entirely, and
+      concluded (wrongly) that it was calibration-only. It's actually
+      shown/hidden around every ordinary scan too (on_measure()/
+      on_measureS21()/on_measureContinuous()/on_measureUser(), analyzer/
+      analyzerpro.cpp) -- the Short/Load calibration asymmetry fix above
+      still stands on its own merits, just wasn't the reported bug.
+   -- Corrected diagnosis, from the user's own precise repro (a 400-point
+      SWR scan, indicator dark for points 0-255, lit for 256-400): traced
+      to NanovnaV2Analyzer::requestFifoChunk() (nanovna_v2_analyzer.cpp)
+      -- the V2/LiteVNA64 binary protocol's READFIFO count is a single
+      byte on the wire, so a >255-point sweep is always fetched as 2+
+      chunks (255, then the remainder) entirely internally -- AnalyzerPro
+      and its stitching (g_analyzerMaxPoints) never see this at all, it's
+      a lower tier. Root cause: PopUpIndicator::showIndicator()'s
+      QWidget::show() only *posts* a show/paint event; the window isn't
+      actually mapped/painted until the event loop next spins.
+      processFifoChunk()'s per-point emitPoint() calls run in a tight
+      synchronous loop (up to 255 back-to-back on_newData()/chart-replot
+      cycles) with no gap for the event loop to catch up until the
+      request boundary between chunks -- which is exactly the idle gap
+      (waiting on the next chunk's bytes over the wire) that finally let
+      the window get its first paint.
+   -- processEvents() fix (above) confirmed NOT sufficient -- user
+      retested live (real hardware, wire-level READFIFO log alongside):
+      still dark for the whole first 255-point chunk, only appears once
+      the second (146-point) chunk starts. Whatever's actually happening
+      isn't just "the window's first paint got delayed a few ms" --
+      re-audited every PopUpIndicator call site again from scratch and
+      found one more that earlier passes missed both times:
+      AnalyzerPro::setIsMeasuring() itself unconditionally calls
+      PopUpIndicator::setIndicatorVisible(_isMeasuring) (line ~981) --
+      redundant with on_measure()'s own explicit show call a few lines
+      later (both fire "true" once, at the very start), and every
+      "false" call is one of the same already-audited completion/stop
+      paths. Doesn't explain the timing on its own either.
+   -- Genuinely stuck without live data -- statically, every show(true)
+      call happens once, right at scan start (before any wire I/O for
+      the first chunk even goes out, since NanovnaV2Analyzer::
+      sendCommandBytes() is a plain async QSerialPort::write(), not
+      blocking), and every hide(false) call is gated to true completion
+      or an explicit stop/interrupt. Nothing in the code should be able
+      to produce "dark for chunk 1, lit for chunk 2". Rather than a
+      3rd blind guess, added TEMPORARY qDebug() instrumentation (tagged
+      "[BUSY]", timestamped hh:mm:ss.zzz to line up against the wire-
+      level chunk log) at every show/hide call and at NanovnaV2Analyzer's
+      requestFifoChunk()/processFifoChunk() chunk boundaries
+      (popupindicator.cpp, analyzerpro.cpp's setIsMeasuring(),
+      nanovna_v2_analyzer.cpp) -- run from a terminal so qDebug output is
+      visible, reproduce the same scan, and the interleaved timestamps
+      should show exactly which call (if any) is missing/out of order.
+      Remove all of it once this is actually root-caused.
+   -- Root-caused 2026-09-05 from that live [BUSY] log (real hardware +
+      dev emulator, run from a terminal): showIndicator() genuinely ran
+      at scan start, and isVisible() was already true well before chunk
+      1 began -- Qt's own bookkeeping was correct the whole time. What
+      the log actually revealed: processFifoChunk() costs ~20ms/point,
+      confirmed from its own start/done timestamps (255 points -> 5.05s;
+      146 points -> 2.85s, both ~20ms/point) -- one single synchronous
+      call per chunk, no event-loop turn between points (each point's
+      emitPoint() triggers a full chart replot inline). QApplication::
+      processEvents() (the first fix) only dispatches whatever's already
+      queued in Qt's own event queue -- it doesn't wait for a round trip
+      to the X11/Wayland compositor, and that round trip's result never
+      arrived before the ~5s freeze began, starving the indicator's
+      first-ever paint for the freeze's *entire* duration. It only
+      actually got painted for the first time in the brief gap between
+      chunks -- and, like any window whose owning process has stopped
+      pumping the event loop, kept showing that one frame right through
+      the second chunk's own ~2.85s freeze, which is what made it look
+      like it "started working" exactly at the chunk boundary.
+   -- Fixed: showIndicator() now also calls QGuiApplication::sync()
+      after processEvents() -- the documented way to force that round
+      trip to actually complete before returning, so the first paint can
+      no longer land inside a freeze regardless of how long one
+      particular chunk's synchronous burst turns out to be. [BUSY]
+      logging kept in place (now also logs isVisible() post-sync()) for
+      one more live confirmation pass; remove once confirmed.
+   -- Separate finding, deliberately NOT touching the per-point replot()
+      cost itself: Harold wants to keep every point drawn live as it
+      arrives, even at ~20ms/point. Instead, made Stop responsive without
+      changing that: NanovnaV2Analyzer::processFifoChunk()'s per-point
+      loop (and NanovnaAnalyzer::parseBinaryScan()'s equivalent, classic-
+      protocol binary-scan loop -- same pattern, and its m_binaryPoints
+      can be the *entire* scan in one reply, e.g. all 10000 points, not
+      capped at 255 like V2's wire-level FIFO count, so it was arguably
+      the worse offender for "can't cancel a big scan") now call
+      QCoreApplication::processEvents(QEventLoop::ExcludeSocketNotifiers)
+      once per point and `break` if isMeasuring() has gone false. No new
+      "abandon the rest" logic needed: AnalyzerPro::on_newData()'s
+      existing stale-data-after-stop guard already turns every further
+      emitPoint() in the same burst into a cheap no-op (no replot) the
+      moment the Stop click's handler runs mid-loop and flips
+      isMeasuring() -- break just skips the now-pointless remaining
+      per-point math on top of that. NanovnaV2Analyzer::
+      processFifoChunk() additionally skips requesting the *next* FIFO
+      chunk once stopped (nothing to actually drain either way -- a
+      chunk not yet requested has nothing in flight on the wire to wait
+      out). ExcludeSocketNotifiers: lets the Stop click (an ordinary UI
+      event) through while keeping a hypothetical early/unsolicited
+      readyRead() for the same port from reentering mid-parse. Not yet
+      confirmed live -- the "unable to cancel a 10000-point scan" repro
+      that prompted this needs a real retest.
+   -- REVERTED 2026-09-05, same day: broke real hardware badly -- "scan
+      won't start... multiple attempts to reconnect to get it working,
+      stopping a scan doesn't drain." Both loops (NanovnaV2Analyzer::
+      processFifoChunk(), NanovnaAnalyzer::parseBinaryScan()) are back to
+      exactly what they were before this attempt -- no
+      QCoreApplication::processEvents()/isMeasuring()-check/break, no
+      QCoreApplication include, in either file. Root cause of the
+      regression not yet diagnosed -- the ExcludeSocketNotifiers
+      reasoning (blocks readyRead() from reentering) is the prime suspect
+      for "won't start"/"needs reconnects": *something* in the connect/
+      handshake or drain path may depend on socket-notifier events firing
+      during what looks like an ordinary processEvents() pump elsewhere,
+      or reentering processFifoChunk()/parseBinaryScan() itself (already
+      mid-parse of one chunk) via a nested readyRead() might not be as
+      safe as assumed if events *other* than sockets still let unrelated
+      code run that touches the same parse state. Needs a real
+      root-cause pass before trying again, not just a retry -- the busy-
+      indicator sync() fix and [BUSY] debug logging (separate files,
+      untouched by this revert) are still in place and still awaiting
+      their own live confirmation.
+
+6) Measurements listbox (tableWidget_measurments, groupBox_Measure) --
+   requested 2026-09-05:
+   -- Rename pencil (COL_MENU) moved left of the Name column -- was
+      Visible/Name/Points/Menu, now Visible/Menu/Name/Points. Pure enum
+      reorder (mainwindow.h's COL_* enum; every call site already used
+      the symbolic names, not hardcoded indices) plus matching the .ui's
+      static per-column header text to the new order.
+   -- groupBox_Measure's maximumSize width bumped 330->370 so all 4
+      columns (24+24+150+75 content, plus frame/scrollbar/group-box
+      padding overhead) fit without a horizontal scrollbar clipping the
+      last one.
+   -- Renaming a measurement (the pencil's dialog) now also renames that
+      measurement's 4 S21-tab graphs (S21/S12 dB+deg) via the same
+      "name + ' - ' + <trace label>" prefix on_newMeasurement() uses at
+      creation, and replots -- previously the S21 legend (when that row
+      was the one currently selected, see item 4 above) kept showing the
+      name the measurement was scanned with, not whatever it was renamed
+      to.

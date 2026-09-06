@@ -15,7 +15,11 @@ extern QList<QSerialPortInfo> bluetoothPorts();
 class ReDeviceInfo
 {
 public:
-    enum InterfaceType { WRONG=-1, HID=0, Serial, NANO, BT, BLE };
+    // NANOV2 appended after BLE, not inserted earlier -- these values are
+    // persisted verbatim as the ini's Connection/type integer (see
+    // SelectDeviceDialog::onApply()), so renumbering an existing entry
+    // would silently corrupt every already-saved connection.
+    enum InterfaceType { WRONG=-1, HID=0, Serial, NANO, BT, BLE, NANOV2 };
     ReDeviceInfo();
     ReDeviceInfo(const ReDeviceInfo& that);
     ~ReDeviceInfo();

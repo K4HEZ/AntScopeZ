@@ -561,7 +561,7 @@ process in the settings menu!</string>
         </property>
         <property name="maximumSize">
          <size>
-          <width>330</width>
+          <width>370</width>
           <height>16777215</height>
          </size>
         </property>
@@ -670,17 +670,17 @@ process in the settings menu!</string>
              </column>
              <column>
               <property name="text">
+               <string/>
+              </property>
+             </column>
+             <column>
+              <property name="text">
                <string>Name</string>
               </property>
              </column>
              <column>
               <property name="text">
                <string>Points</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string/>
               </property>
              </column>
             </widget>

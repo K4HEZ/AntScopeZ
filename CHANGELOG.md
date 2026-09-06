@@ -11,6 +11,193 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+### Fixed
+
+- S21 tab: 3+ measurements loaded at once used to make later ones' traces
+  collapse to identical red (`getColor()`'s out-of-range fallback was
+  sized for 1 color/measurement, not the S21 tab's 4). Legend now shows
+  only the currently-selected measurement's 4 traces (S21/S12 dB+deg),
+  not every measurement's at once -- `Measurements::updateS21Legend()`
+  follows table-row selection the same way trace pen width already did.
+  Selecting a measurement (table click, or a just-finished scan) also
+  used to only thicken 1 of its 4 S21 graphs, in the wrong color (copied
+  from the SWR chart's own pen) -- now correctly thickens/thins all 4,
+  each keeping its own color.
+- S21/S12 traces are always solid now, not S21 dashed vs. S12 solid --
+  that distinction existed to keep an exactly-overlapping reciprocal
+  network's S21 from being fully hidden under S12, back when their
+  colors could collapse to the same value (see the red-collapse fix
+  above); now that each of the 4 traces reliably gets its own color, a
+  thick dashed line was just reading poorly for no remaining benefit.
+- Calibrating the Short or Load standard alone (Settings' "Calibrate
+  Short"/"Calibrate Load" buttons) never showed the busy indicator (the
+  red dot in the plot area's corner) for any of its capture -- only
+  "Calibrate Open" did. All 3 now show it the same way.
+- Renaming a measurement (the pencil icon) didn't rename it on the S21
+  tab's legend -- that measurement's 4 graphs (S21/S12 dB+deg) kept
+  showing the name it was scanned with.
+
+### Added
+
+- Measurements list: the rename pencil moved to the left of the Name
+  column (was to the right, past Points); the panel is also a bit wider
+  so all 4 columns fit without a horizontal scrollbar.
+
+- Settings > General: "Selected measurement line width" / "Other
+  measurements' line width" spinboxes (1-10px) -- was hardcoded (5/2).
+- A V2/binary NanoVNA scan placed two "lowest SWR" auto-markers per scan
+  instead of one: `MainWindow::on_measurementComplete()`'s NanoVNA-family
+  early-return only ever checked the classic `ReDeviceInfo::NANO` enum
+  value, not `NANOV2` (added later, as its own value), so a V2 scan fell
+  through to that function's own marker placement *and* the separate
+  `on_measurementCompleteNano()` handler's. Classic ASCII never showed
+  this -- it actually matched the check.
+- Settings dialog reset every Developer-tab checkbox (Debug Logging,
+  Report Detailed Errors, reconnect-to-drain) to unchecked on every
+  single reopen, not just once per launch, since the dialog itself is
+  reconstructed fresh each time it's opened -- discarding whatever you'd
+  just set the moment you closed and reopened it. One of them (Report
+  Detailed Errors) additionally force-reset the real underlying flag,
+  not just the checkbox -- a functional regression, not just cosmetic.
+  Now reads current state instead of hardcoding it off.
+- BLE Pings' actual default was `true`, contradicting its own "defaults
+  unchecked (hidden)" comment -- it now genuinely starts unchecked.
+
+- Draining always timed out on HID/Serial devices (e.g. Match): the
+  default `BaseAnalyzer::stopMeasure()` actually sends a real `"off\r"`
+  wire-level abort, so the device genuinely stops producing more data --
+  draining then waited for points that were never coming, by design,
+  guaranteed to time out. Only `NanovnaAnalyzer`/`NanovnaV2Analyzer`/
+  `BleAnalyzer` have no real abort and genuinely need to drain; new
+  `BaseAnalyzer::stopCommandAbortsDevice()` (default true, overridden
+  false on those three) lets `on_stopMeasure()` skip draining entirely
+  for everything else and go straight to "Ready". Confirmed live against
+  a real Match device.
+- Status bar never returned to "Ready" after a normal (uninterrupted)
+  scan completion -- it just sat on the last "Scanning..." message
+  until the next scan started.
+
+- Draining after Stop always timed out instead of completing normally:
+  `AnalyzerPro::on_stopMeasure()` computed "how many points are still
+  outstanding" *after* already zeroing the counter it needed to read,
+  so it always waited for the full original point count instead of
+  whatever was genuinely still in flight -- confirmed live, a 400-point
+  scan stopped partway drained 146/400 and then timed out waiting for
+  points that were never coming. Also: a clean drain now shows "Ready"
+  in the status bar instead of the confusingly identical wording a
+  timeout would show.
+- Connect Analyzer always highlighted the first detected device row on
+  reopen, even while already connected to a different one -- Connect
+  could silently reconnect to the wrong device if clicked without
+  checking closely. Now highlights whichever row matches the currently
+  selected connection.
+
+### Changed
+
+- "Report Detailed Errors" and "Use reconnect to drain unwanted data"
+  moved from Settings > Developer to Settings > General (under Analyzer
+  timeout) -- ordinary user-facing preferences, not debug-only ones. Both
+  now persist to the ini like the rest of the General tab, instead of
+  being session-only.
+
+### Added
+
+- Status bar's scan-progress label now updates when a scan *starts* too
+  (all scan types: Single, S21, Continuous, User, One Fq, TDR), not just
+  while stopping/draining, and now shows a live "Scanning (N/Total
+  points)..." count as each point actually arrives, not just a static
+  message shown once at the start.
+- New connection-info status-bar label (left side): model, connection
+  type (USB/Serial/NanoVNA ASCII/NanoVNA Binary/Bluetooth/BLE), classic
+  NanoVNA's own ASCII-vs-binary `scan` capability
+  (`NanovnaAnalyzer::scanCapabilityDescription()`), and device serial
+  where available. Updates on every connect/disconnect.
+
+- Stopping a scan that's still delivering data (e.g. a large point-count
+  sweep) no longer leaves the app looking stopped while it silently keeps
+  discarding incoming points in the background: scan-triggering controls
+  now stay disabled and a new permanent status-bar label shows draining
+  progress ("Stopping — draining remaining data (N/Total points)...")
+  until it's genuinely done, bounded by the existing analyzer-timeout
+  watchdog so a device that goes silent mid-drain doesn't spin forever.
+  Applies uniformly to every stop trigger (Esc, re-clicking Single, closing
+  a dialog mid-scan, ...), since they already all funnel through one place
+  (`AnalyzerPro::on_stopMeasure()`). Neither the classic ASCII nor the
+  V2/LiteVNA64 binary protocol has a wire-level "abort" command, so this is
+  fundamentally a wait -- Settings > General's new "Use reconnect to
+  drain unwanted data" checkbox (off by default) switches to closing and
+  reopening the connection instead, often faster for a large scan, though
+  not guaranteed to make every device discard what it already queued.
+  Status bar is general-purpose (`MainWindow::m_statusLabel`), not
+  draining-specific -- room for more fields later (analyzer type, protocol,
+  points in progress, idle).
+
+- NanoVNA V2 / SAA-2 / LiteVNA64 support (`NanovnaV2Analyzer`): the binary
+  register+FIFO protocol, distinct from classic NanoVNA/H/H4's ASCII shell.
+  Detected via VID/PID `04B4:0008` in Connect Analyzer alongside the
+  existing classic NanoVNA entries; distinguishes V2 from LiteVNA64 at
+  connect time via a hardware/firmware version register read. Implemented
+  independently from protocol facts cross-verified against two real
+  clients (NanoVNASaver, libxavna/NanoVNA-QT) -- not a port of either; see
+  the class comment in `analyzer/nanovna_v2_analyzer.h` for the licensing
+  reasoning. Not yet validated end-to-end against anything -- next step is
+  testing against the companion NanoVNA emulator's own binary profile,
+  built earlier for exactly this. Connect Analyzer's dev-emulator
+  convenience row (see above) is now offered twice, once per protocol,
+  since the emulator's pty has no VID/PID to detect which one it's
+  currently speaking.
+- Stitched (multi-segment, >`g_analyzerMaxPoints`) sweeps against any
+  NanoVNA-family device only ever showed the first segment's data: each
+  analyzer backend fires its completion signal once per individual segment
+  on the way to being stitched into one result, not just on the truly last
+  one, and MainWindow's completion handlers unconditionally finalized
+  (`setIsMeasuring(false)`, UI resets, ...) on every one of them --
+  discarding every later segment's points as "stale leftover data" the
+  moment `AnalyzerPro::on_newData()`'s own guard saw measuring had already
+  stopped. New `AnalyzerPro::isStitchedSweepComplete()` lets MainWindow
+  tell an intermediate segment boundary apart from the real end.
+- Reconnecting to a different analyzer type at the same port path could
+  fail every write with "device not open": `AnalyzerPro::createDevice()`
+  left the previous analyzer's serial port to close itself via its
+  deferred `deleteLater()` destructor, but the new analyzer's own
+  `connectAnalyzer()` tries to open a port synchronously, in the same call
+  -- a race invisible with real hardware (never the same port path back to
+  back under a different protocol) but trivial to hit with a single
+  multi-protocol dev target at a fixed path. Now closes the old port
+  synchronously first.
+- Connect Analyzer silently reopened on the USB tab instead of COM whenever
+  the last connection was to any NanoVNA-family device (classic or V2) --
+  the "restore last-used tab" switch had no case for `NANO`/`NANOV2`, so
+  both fell through to USB's default. Pre-existing gap for classic `NANO`,
+  not something the V2 work introduced, just newly exposed by actually
+  reopening the dialog after a NanoVNA-family connection.
+- Point-count lock ("100 points, field disabled") that's meant to be
+  classic-NanoVNA-specific was keyed on a `name.contains("NanoVNA")`
+  substring check, which incorrectly also caught "NanoVNA V2" (and missed
+  "LiteVNA64") the moment those names existed. Now keyed on
+  `connectionType() == ReDeviceInfo::NANO` instead.
+
+### Fixed
+
+- TDR Measurement dialog run against a NanoVNA-type device could get stuck
+  permanently: the progress dialog (frameless, window-modal, Esc disabled)
+  never closed and the panel's Scan button never re-enabled, whether the
+  scan finished normally or was stopped early -- both NanoVNA completion
+  paths skipped the TDR finalize step entirely. No UI recovery once hit;
+  had to kill the process.
+- TDR Measurement's Result groupbox (peak distance/reflection type/reverse-
+  solve) never refreshed after a normally-completed NanoVNA TDR scan --
+  only after one stopped early -- because it only listened for the signal
+  variant NanoVNA's normal completion never emits.
+
+### Added
+
+- Dev-only: Connect Analyzer's COM list offers a "NanoVNA (dev emulator)"
+  entry, pointing at a companion emulator app
+  (`~/QT6Projects/NanoVnaEmulator`) over a local pty -- shown only while
+  that emulator is actually running (checks for its symlink at
+  `/tmp/nanovna-emulator`), invisible otherwise.
+
 ## [2.2.5] - 2026-09-05
 
 ### Added

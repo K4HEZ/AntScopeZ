@@ -64,8 +64,16 @@ enum class TdrWindow { Rectangular, Hamming, Hann, Blackman, Kaiser };
 #define DBL_MAX 1.797693134862315e+308
 #endif
 
-#define ACTIVE_GRAPH_PEN_WIDTH 5
-#define INACTIVE_GRAPH_PEN_WIDTH 2
+// User-settable now (Settings > General: "Selected/other measurement line
+// width"), default to the old hardcoded 5/2 -- see measurements.cpp's
+// g_activeGraphPenWidth/g_inactiveGraphPenWidth definitions. Left as
+// macros, not a straight rename to the globals, so every existing call
+// site (mainwindow.cpp/mainwindow_measurements_io.cpp/measurements.cpp)
+// keeps compiling unchanged.
+extern int g_activeGraphPenWidth;
+extern int g_inactiveGraphPenWidth;
+#define ACTIVE_GRAPH_PEN_WIDTH g_activeGraphPenWidth
+#define INACTIVE_GRAPH_PEN_WIDTH g_inactiveGraphPenWidth
 
 typedef std::complex <double> Complex;
 
@@ -93,6 +101,15 @@ public:
     void setCalibration(Calibration * _calibration);
     bool getCalibrationEnabled(void);
     void deleteRow(int row);
+    // S21 tab's legend shows only the currently-selected measurement's 4
+    // traces (S21/S12 dB+deg), not every measurement at once -- with
+    // several measurements loaded, a legend row per trace per measurement
+    // was unreadable (see the 2026-09-04 todo.txt entry this replaces).
+    // row is a plain m_measurements/table index (0=oldest), matching
+    // on_tableWidget_measurments_cellClicked()'s "row"; pass -1 (or an
+    // out-of-range row, e.g. after the last measurement is deleted) to
+    // just clear the legend.
+    void updateS21Legend(int row);
     void setFarEndMeasurement (qint32 mode) { m_farEndMeasurement=mode; }
     qint32 getFarEndMeasurement (void) {return m_farEndMeasurement;}
     // getMeasurement(number) indexes backwards from the newest entry --

@@ -80,10 +80,17 @@ void MainWindow::on_actionTDRMeasurement_triggered()
         // reverse-solve) opportunistically after *any* scan, not just ones
         // triggered from this panel -- same broad refresh
         // TDRAnalysisDialog::refresh() used to do. MainWindow's own
-        // on_measurementComplete() (connected in MainWindow's constructor,
-        // long before this dialog ever exists) always runs first and is
-        // what actually populates the TDR data this reads, same ordering
-        // guarantee TDRAnalysisDialog::refresh() relied on.
+        // on_measurementComplete()/on_measurementCompleteNano() (connected
+        // in MainWindow's constructor, long before this dialog ever exists)
+        // always run first and are what actually populate the TDR data this
+        // reads, same ordering guarantee TDRAnalysisDialog::refresh() relied
+        // on. Both signals, not just measurementComplete() -- a NanoVNA-type
+        // connection's *normal* scan completion only ever emits
+        // measurementCompleteNano() (see AnalyzerPro's own connectSignals()
+        // lambda); measurementComplete() there only fires if a scan was
+        // stopped early. Without this second connection, the Result
+        // groupbox never refreshed after a normally-completed NanoVNA TDR
+        // scan -- only after one that was manually stopped.
         connect(m_analyzer, &AnalyzerPro::measurementComplete,
                 m_tdrScanDialog->panel(), &TdrScanPanel::refreshResult);
         // NanoVNA connections never fire measurementComplete() at a real
