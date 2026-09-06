@@ -147,7 +147,7 @@ Settings::Settings(QWidget *parent) :
     ui->checkBoxWarnDirtyDelete->setChecked(g_warnDirtyDelete);
     m_settings->endGroup();
 
-    // Debug Logging (Developer tab) -- deliberately NOT persisted to the
+    // Debug Logging (Analyzer tab) -- deliberately NOT persisted to the
     // ini, so it always starts off on a *fresh app launch* (DebugLog's
     // static flags default false at process start) -- logging is opt-in
     // per run, not a standing setting someone forgets they left on. But
@@ -1418,7 +1418,7 @@ void Settings::initCustomizeTab()
     // "Don't restrict frequency" -- lives here (not tied to
     // customizeCheckBox/on_enableCustomizeControls() above, which is
     // Custom Analyzer's own separate, still-broken feature) purely for
-    // placement -- a developer-facing setting belongs on the Developer
+    // placement -- a developer-facing setting belongs on the Analyzer
     // tab. No longer g_developerMode-gated itself (ungated 2026-08-20):
     // living on this tab is the gating now, not the -developer flag.
     // Checked means "don't restrict" is ON, i.e. m_restrictFq is FALSE --

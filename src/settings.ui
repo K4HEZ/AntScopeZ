@@ -1841,7 +1841,7 @@ Was computed from Window Background, now directly-editable.</string>
      </widget>
      <widget class="QWidget" name="Custom">
       <attribute name="title">
-       <string>Developer</string>
+       <string>Analyzer</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_developerTab">
        <item>

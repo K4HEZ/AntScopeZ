@@ -180,7 +180,7 @@ Neither family's on-device-screenshot support is implemented.
 
 ### Anything else
 
-Settings → Developer → Custom Analyzer lets you manually define a
+Settings → Analyzer → Custom Analyzer lets you manually define a
 "prototype" -- frequency range, screen size, protocol -- for a device
 not in the table above, without a code change. Currently disabled (not
 safe to use yet -- see `BUILDINFO.md`'s Known Issues). See
@@ -408,7 +408,7 @@ zoom"](#general-tab) to lift those limits.
 ## Settings
 
 The Settings dialog has seven tabs: **General**, **Markers**,
-**OSL Calibration**, **Cable**, **Themes**, **Developer**, and
+**OSL Calibration**, **Cable**, **Themes**, **Analyzer**, and
 **Updates**.
 
 OSL Calibration has its own section -- see
@@ -554,9 +554,9 @@ hit Save.
 | Cancel | Discards unsaved edits, reloads the slot as last saved |
 | Save | Persists your edits. If you're editing the currently *active* theme (see View → Theme), the change applies immediately |
 
-### Developer tab
+### Analyzer tab
 
-<!-- SCREENSHOT: Settings dialog, Developer tab -->
+<!-- SCREENSHOT: Settings dialog, Analyzer tab -->
 
 Two group boxes:
 
@@ -1231,7 +1231,7 @@ the edge of that range.
 
 ## Customized analyzer parameters
 
-Settings' **Developer** tab's **Custom Analyzer** group box is intended
+Settings' **Analyzer** tab's **Custom Analyzer** group box is intended
 to let you define a named analyzer preset -- a custom minimum/maximum
 frequency range plus an LCD width/height -- for a unit AntScopeZ
 already recognizes correctly (a clone, or a newer hardware revision of
@@ -1241,7 +1241,7 @@ assumes for that model.
 It's visible (a "This feature is currently under development"
 notice sits at the top of it), and every control on it -- "Use
 customized analyzer", Apply, Auto calibration -- is disabled, except
-one: **Don't restrict frequency** (see [Developer tab](#developer-tab)
+one: **Don't restrict frequency** (see [Analyzer tab](#analyzer-tab)
 above), which is a real, working, unrelated setting that just happens
 to live in this group box. Everything else is shown rather than
 hidden so it isn't forgotten about, not because it's ready to use:
@@ -1324,8 +1324,8 @@ locale) for screenshots -- see [Open / Save](#open--save) and
 
 #### Debug logs: `Debug-yyyyMMdd.log`
 
-Written here too, when you turn on one or more of Settings → Developer
-→ Debug Logging's checkboxes (see [Developer tab](#settings)) -- one
+Written here too, when you turn on one or more of Settings → Analyzer
+→ Debug Logging's checkboxes (see [Analyzer tab](#settings)) -- one
 shared file per calendar day, appended to across the day (including
 across restarts), interleaving whichever of Serial/USB-HID/BLE/NanoVNA
 you had logging turned on for so the order things actually happened in
@@ -1458,10 +1458,10 @@ Notes on specific keys:
   `mainX`/`mainY`/`geometry`, ...) is internal window-position/
   zoom-state bookkeeping. Harmless to delete individually if something
   looks stuck -- it just regenerates with defaults.
-- **Developer tab's four "Enable ... debug logs" checkboxes (and BLE's
+- **Analyzer tab's four "Enable ... debug logs" checkboxes (and BLE's
   "Show ping/keepalive traffic") are never written here at all** --
   deliberately session-only, always starting unchecked. See
-  [Developer tab](#settings).
+  [Analyzer tab](#settings).
 
 If your `.ini` has a leftover group named in another language (e.g.
 `[Marcadores]` sitting next to `[Markers]`) from before this was fixed
@@ -1496,12 +1496,12 @@ delete.
   wideband, near-DC sweep -- a normal band-limited scan (e.g. just 20m)
   won't show anything there. See
   [TDR (Time Domain Reflectometry)](#tdr-time-domain-reflectometry).
-- **Developer tab's Custom Analyzer controls are all greyed out.**
+- **Analyzer tab's Custom Analyzer controls are all greyed out.**
   Deliberate, not a bug -- the feature underneath is unfinished. See
   [Customized analyzer parameters](#customized-analyzer-parameters).
 - **Debug logging was on, but the file is missing or empty.** The
   checkboxes reset to unchecked every time you open AntScopeZ (by
-  design -- see [Developer tab](#settings)), so check they're still on;
+  design -- see [Analyzer tab](#settings)), so check they're still on;
   and a checkbox only logs traffic for *that* connection type, so
   nothing gets written unless something's actually connected and
   talking over it. See [Files and directories](#files-and-directories)

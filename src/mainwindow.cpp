@@ -290,7 +290,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_settings->beginGroup("Settings");
     // Was gated behind g_developerMode (forced true, ignoring the saved
     // value, whenever the flag was off); ungated 2026-08-20 -- living on
-    // the Developer tab's Custom Analyzer group box is the gating now,
+    // the Analyzer tab's Custom Analyzer group box is the gating now,
     // not the -developer command-line flag.
     m_fqRestrict = m_settings->value("restrictFq", true).toBool();
     g_maxMeasurements = m_settings->value("maxMeasurements", MAX_MEASUREMENTS).toInt();

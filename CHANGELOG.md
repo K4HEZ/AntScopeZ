@@ -13,6 +13,11 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Changed
 
+- Settings dialog: "Developer" tab renamed "Analyzer" (#6) -- it's really
+  just Custom Analyzer/prototype settings now; Debug Logging and the
+  error-handling checkboxes already moved to General earlier this cycle.
+  Adding real retry/reconnect settings there is a separate, still-unscoped
+  follow-up (see `docs/roadmap.md` row 42).
 - Measurements: Open/Save replace Import/Export as both the File menu's
   wording and the actual model -- there's one Open dialog (File > Open,
   every supported format including AntScopeZ's own, "All supported
