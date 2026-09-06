@@ -49,6 +49,13 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Fixed
 
+- Band names didn't show on a fresh profile's first run even though View >
+  "Show Band Name" showed checked, until the checkbox was toggled off and
+  back on (#8). The `show-band-name` QSettings key had two different
+  defaults -- `true` seeding the checkbox, `false` governing whether
+  `setBands()` actually drew the labels -- and the very first band draw at
+  startup ran before the checkbox's own toggled connection was armed to
+  correct it. Both now default `true`.
 - 2-port Z-parameter Touchstone import (`# ... Z RI ...`, #7): Z21/Z12/Z22
   used to be silently skipped on import (a different quantity than
   S21/S12/S22, ohms not a unitless ratio) rather than actually converted

@@ -57,7 +57,14 @@ void MainWindow::setBands(QCustomPlot * widget, QStringList* bands, double y1, d
         return;
     }
     m_settings->beginGroup("Settings");
-    bool showName = m_settings->value("show-band-name", false).toBool();
+    // Default true, matching actionShowBandName's own seeded-checked
+    // default (mainwindow.cpp) -- was false here, a mismatch that left
+    // band names undrawn on a fresh profile's first startup even though
+    // the View menu checkbox showed checked (issue #8). setWidgetsSettings()
+    // does the very first band draw before that checkbox's toggled
+    // connection is even armed, so nothing corrected the mismatch until
+    // the user manually toggled it off and back on.
+    bool showName = m_settings->value("show-band-name", true).toBool();
     m_settings->endGroup();
     foreach (QString str, *bands)
     {
