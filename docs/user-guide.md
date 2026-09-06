@@ -89,14 +89,21 @@ rm -rf ~/.config/AntScopeZ
 
 ### Windows, macOS, or other Linux distros
 
-No installer package for Windows or macOS yet, and Linux distributions
-that aren't Debian/Ubuntu-based won't have a native package either --
-build from source instead. See [BUILDINFO.md](../BUILDINFO.md) for
-requirements and build steps. "Uninstalling" a from-source build is
-just deleting the build directory and (if you want a clean slate)
-whatever per-user config folder it wrote to (see
-[Files and directories](#files-and-directories) for the Windows/macOS
-equivalents).
+No released installer package for Windows or macOS yet, and Linux
+distributions that aren't Debian/Ubuntu-based won't have a native
+package either -- build from source instead. See
+[BUILDINFO.md](../BUILDINFO.md) for requirements and build steps.
+"Uninstalling" a from-source build is just deleting the build directory
+and (if you want a clean slate) whatever per-user config folder it
+wrote to (see [Files and directories](#files-and-directories) for the
+Windows/macOS equivalents).
+
+Windows now has a native build (Qt 6.11.2, MinGW) that packages as an
+NSIS installer (`AntScopeZ-<version>-win64.exe`), but it's not yet a
+published release -- built and smoke-tested only, real hardware
+verification (USB/HID/FTDI device access, `.asd` file association,
+etc.) is still outstanding. See `docs/windows-port-audit.md` if you
+want to build and try it yourself.
 
 ## Supported devices
 
@@ -210,7 +217,7 @@ material for a specific feature, not more setup.
 
 ### Connecting to your analyzer
 
-Click **Connect Analyzer** on the menu bar to open the "Connect
+Click **Analyzer > Connect...** on the menu bar to open the "Connect
 Analyzer" dialog. Pick a connection type (USB, COM, or BLE), click
 **Scan**, select your device from the list, and **Connect**. "Use same
 selection for future connections" saves that choice so AntScopeZ can
@@ -221,8 +228,12 @@ if there's no valid saved device to silently reconnect to. If you'd
 rather it not do that -- say, you're just reviewing saved `.s1p`/`.asd`
 files with no analyzer connected -- uncheck "Open 'Connect Analyzer' on
 launch", right next to "Use same selection for future connections" in
-this same dialog. The manual **Connect Analyzer** menu item is
+this same dialog. The manual **Analyzer > Connect...** menu item is
 unaffected either way.
+
+Once connected, **Analyzer > Disconnect** ends that connection without
+closing AntScopeZ -- useful before physically unplugging a device, or
+to hand it off to another program.
 
 Once connected, the window's title bar shows the device's model/name
 instead of "Analyzer not connected".
@@ -265,7 +276,7 @@ the main window.
 **Menu bar**
 
 There's no toolbar of buttons any more -- everything below lives in the
-menu bar instead (File / Edit / View / Connect Analyzer / Help).
+menu bar instead (File / Edit / View / Tools / Analyzer / Help).
 
 *File*
 
@@ -276,7 +287,6 @@ menu bar instead (File / Edit / View / Connect Analyzer / Help).
 | Settings... | Opens the [Settings dialog](#settings) |
 | Print... | Opens the [Print dialog](#print-and-screenshots) for the current chart |
 | Save Screenshot... | Saves the *current chart* (not the whole window) straight to a PNG file you pick -- same image Ctrl+C copies, just written to disk instead of the clipboard |
-| Screenshot from AA | Captures the *analyzer's own* on-device screen (not every model supports this -- see [Supported devices](#supported-devices)) -- see [Print and screenshots](#print-and-screenshots) |
 | Data from AA | Loads measurement results already stored in the analyzer's own memory -- see [Data from AA](#data-from-aa) |
 | Exit | Closes AntScopeZ |
 
@@ -305,7 +315,13 @@ menu bar instead (File / Edit / View / Connect Analyzer / Help).
 | Marker Comparison... | Compare two placed markers and estimate an antenna trim -- see [Markers](#markers) |
 | TDR Measurement... | Set up and run a TDR scan (cable type/velocity factor, top frequency, points, window function), and read the results afterward (distance/open-short/impedance, a velocity-factor calculator) -- see [TDR](#tdr-time-domain-reflectometry) |
 
-*Connect Analyzer* -- opens the [device-connection dialog](#connecting-to-your-analyzer) directly, same as Settings → General's own button.
+*Analyzer*
+
+| Control | What it does |
+|---|---|
+| Connect... | Opens the [device-connection dialog](#connecting-to-your-analyzer) directly |
+| Screenshot... | Captures the *analyzer's own* on-device screen (not every model supports this -- see [Supported devices](#supported-devices)) -- see [Print and screenshots](#print-and-screenshots) |
+| Disconnect | Ends the current connection without closing AntScopeZ |
 
 *Help*
 
@@ -407,9 +423,9 @@ zoom"](#general-tab) to lift those limits.
 
 ## Settings
 
-The Settings dialog has seven tabs: **General**, **Markers**,
-**OSL Calibration**, **Cable**, **Themes**, **Analyzer**, and
-**Updates**.
+The Settings dialog has eight tabs: **General**, **Markers**,
+**OSL Calibration**, **Cable**, **Themes**, **Analyzer**, **Graphs**,
+and **Updates**.
 
 OSL Calibration has its own section -- see
 [Calibration (OSL)](#calibration-osl).
@@ -604,6 +620,27 @@ Errors** and **Use reconnect to drain unwanted data** used to live here
 too, but are ordinary user-facing preferences, not debug-only ones --
 they moved to [General tab](#general-tab) and persist across restarts
 like the rest of that tab.
+
+### Graphs tab
+
+<!-- SCREENSHOT: Settings dialog, Graphs tab -->
+
+Two group boxes:
+
+**Zoom & Remote API**
+
+| Control | What it does |
+|---|---|
+| Allow extended chart zoom | Same control described under [General tab](#general-tab) above -- lives here now |
+| Enable Remote API | Off by default. Starts a local NDJSON-over-TCP control API (loopback only) that lets an external tool observe/control the connected analyzer -- status/devices/connect/disconnect/sweep/stop/subscribe/last commands, plus live point streaming while a scan runs. See `remoteapi/README.md` for the wire protocol if you're writing a client. Known gaps: BLE devices aren't supported over this API yet, and if more than one device of the same type is attached there's no way to target a specific one by port |
+| Remote API port | TCP port it listens on (loopback only), 1024–65535, default 7443 |
+
+**Chart Y-Axis Ranges**
+
+| Control | What it does |
+|---|---|
+| Phase chart Y-axis min / max (deg) | Overrides the Phase chart's fixed ±180° range. Each bound is clamped against its pair (min can't cross max and vice versa) as well as a generous absolute floor/ceiling |
+| Z=R+jX / Z=R‖jX charts Y-axis min / max (ohm) | Same idea, for the Series/Parallel Z charts' fixed ±2000Ω range |
 
 ### Updates tab
 
@@ -1071,7 +1108,7 @@ to report.
 ## Print and screenshots
 
 <!-- SCREENSHOT: Print dialog -->
-<!-- SCREENSHOT: Screenshot from AA dialog (the comment/export controls, not just the captured image already on the Pages site) -->
+<!-- SCREENSHOT: Analyzer > Screenshot dialog (the comment/export controls, not just the captured image already on the Pages site) -->
 
 Three related but different ways to get a chart out of AntScopeZ as an
 image or document:
@@ -1090,7 +1127,7 @@ image or document:
 
   The Print button/dialog isn't available while the Multi tab is
   active -- clicking it does nothing in that case.
-- **File → Screenshot from AA** captures the *analyzer's own* on-device
+- **Analyzer → Screenshot...** captures the *analyzer's own* on-device
   screen (not every model supports this -- see
   [Supported devices](#supported-devices)) and opens its own small
   dialog: add an optional comment, then **Export to PDF**,
@@ -1101,7 +1138,8 @@ image or document:
 All of the above default to your [Data folder](#files-and-directories),
 with a timestamped suggested filename (`Screenshot_yyyyMMdd-hhmmss.png`
 for Save Screenshot, `AnalyzerScreen_yyyyMMdd-hhmmss.pdf`/`.bmp` for
-Screenshot from AA) rather than reusing whatever was typed last time.
+the analyzer's own screenshot) rather than reusing whatever was typed
+last time.
 
 ## TDR (Time Domain Reflectometry)
 

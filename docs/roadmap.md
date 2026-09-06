@@ -69,6 +69,13 @@ possible today.
 | 38 | Get remote help from a more experienced ham -- let them drive your analyzer software over the network while you handle the physical antenna/hardware end | -- | -- | ❌ parked idea (2026-08-20), not scoped or designed -- see [[remote-network-control-idea]]. Would supersede, not extend, an existing but abandoned narrow UDP bridge (see [[s21-and-user-defined-live-capture-deferred]]-adjacent findings in `BUILDINFO.md`). |
 | 43 | Manually disconnect from the analyzer without closing the app | Analyzer menu > Disconnect | Analyzer menu | ✅ (shipped 2026-09-06, #3) |
 
+## Platform & external integration
+
+| # | Use case | How today | Charts/tools | Status |
+|---|---|---|---|---|
+| 47 | Run AntScopeZ natively on Windows, not just Linux/macOS | Qt 6.11.2 + MinGW build, packaged as an NSIS installer | -- | ⚠️ compiles clean and the built `.exe` launches (basic smoke test only, see `docs/windows-port-audit.md`); none of that doc's "Verification checklist" items (real analyzer over HID/FTDI, `.asd` file association, device-change notifications, per-user settings path) have been exercised against real Windows hardware yet |
+| 48 | Let an external tool observe/control a live scan programmatically (automation scripts, remote dashboards, etc.) | Settings > Graphs > Enable Remote API (NDJSON-over-TCP, loopback-only by default); status/devices/connect/disconnect/sweep/stop/subscribe/last commands, live point streaming | Settings > Graphs, `remoteapi/README.md` | ✅ core commands implemented (PR #11, merged 2026-09-06; 5 review-found bugs fixed same day, see CHANGELOG's 2.2.4 entry). ⚠️ known gaps: BLE devices explicitly rejected (not yet supported); can't target one specific device by port when more than one of the same type is attached (always connects to whichever port enumerates first); each `connect` command's device handshake runs synchronously on the GUI thread, so a slow/flaky device blocks the whole UI for the duration. See [[remote-network-control-idea]] for the earlier "let a person drive the GUI remotely" idea this is related to but doesn't replace -- this is a machine-facing data/control API, not a screen-sharing mechanism. |
+
 ## Visual / UI
 
 | # | Use case | How today | Charts/tools | Status |

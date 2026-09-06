@@ -100,14 +100,24 @@ Debe reiniciar %1 y actualizar el firmware.</translation>
         <translation>AntScopeZ</translation>
     </message>
     <message>
-        <location filename="../src/aboutdialog.ui" line="74"/>
+        <location filename="../src/aboutdialog.ui" line="87"/>
         <source>Version:</source>
         <translation>Versión:</translation>
     </message>
     <message>
-        <location filename="../src/aboutdialog.ui" line="137"/>
+        <location filename="../src/aboutdialog.ui" line="191"/>
         <source>Glory to Ukraine!</source>
         <translation>¡Gloria a Ucrania!</translation>
+    </message>
+    <message>
+        <location filename="../src/aboutdialog.ui" line="218"/>
+        <source>Created by K4HEZ, with assistance from KC5CD, based on RigExpert&apos;s &lt;a href=&quot;https://rigexpert.com/software/antscope2/&quot;&gt;AntScope2&lt;/a&gt;.</source>
+        <translation>Creado por K4HEZ, con la colaboración de KC5CD, basado en &lt;a href=&quot;https://rigexpert.com/software/antscope2/&quot;&gt;AntScope2&lt;/a&gt; de RigExpert.</translation>
+    </message>
+    <message>
+        <location filename="../src/aboutdialog.cpp" line="21"/>
+        <source>Build: </source>
+        <translation>Compilación: </translation>
     </message>
 </context>
 <context>
@@ -194,10 +204,10 @@ Inténtelo más tarde.</translation>
         <location filename="../analyzer/analyzerpro.cpp" line="377"/>
         <location filename="../analyzer/analyzerpro.cpp" line="404"/>
         <location filename="../analyzer/analyzerpro.cpp" line="424"/>
-        <location filename="../analyzer/analyzerpro.cpp" line="658"/>
-        <location filename="../analyzer/analyzerpro.cpp" line="731"/>
-        <location filename="../analyzer/analyzerpro.cpp" line="764"/>
-        <location filename="../analyzer/analyzerpro.cpp" line="795"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="681"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="753"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="785"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="838"/>
         <source>Ready</source>
         <translation>Listo</translation>
     </message>
@@ -214,7 +224,7 @@ Inténtelo más tarde.</translation>
     </message>
     <message>
         <location filename="../analyzer/analyzerpro.cpp" line="417"/>
-        <location filename="../analyzer/analyzerpro.cpp" line="802"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="845"/>
         <source>Scanning (%1/%2 points)...</source>
         <translation>Escaneando (%1/%2 puntos)...</translation>
     </message>
@@ -230,7 +240,7 @@ Inténtelo más tarde.</translation>
     </message>
     <message>
         <location filename="../analyzer/analyzerpro.cpp" line="495"/>
-        <location filename="../analyzer/analyzerpro.cpp" line="561"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="578"/>
         <source>Scanning (%1 points)...</source>
         <translation>Escaneando (%1 puntos)...</translation>
     </message>
@@ -240,17 +250,17 @@ Inténtelo más tarde.</translation>
         <translation>Escaneando S21 (%1 puntos)...</translation>
     </message>
     <message>
-        <location filename="../analyzer/analyzerpro.cpp" line="539"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="552"/>
         <source>Scanning continuously (%1 points)...</source>
         <translation>Escaneando continuamente (%1 puntos)...</translation>
     </message>
     <message>
-        <location filename="../analyzer/analyzerpro.cpp" line="588"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="605"/>
         <source>Scanning single frequency...</source>
         <translation>Escaneando una sola frecuencia...</translation>
     </message>
     <message>
-        <location filename="../analyzer/analyzerpro.cpp" line="942"/>
+        <location filename="../analyzer/analyzerpro.cpp" line="985"/>
         <source>Saving firmware file...</source>
         <translation>Guardando archivo de firmware...</translation>
     </message>
@@ -332,6 +342,14 @@ Inténtelo más tarde.</translation>
     </message>
 </context>
 <context>
+    <name>BaseAnalyzer</name>
+    <message>
+        <location filename="../analyzer/baseanalyzer.cpp" line="20"/>
+        <source>Analyzer detected but could not be opened -- it may be in use by another program (or another AntScopeZ window).</source>
+        <translation>Analizador detectado pero no se pudo abrir -- puede que otro programa (u otra ventana de AntScopeZ) lo esté usando.</translation>
+    </message>
+</context>
+<context>
     <name>BleAnalyzer</name>
     <message>
         <location filename="../analyzer/ble_analyzer.cpp" line="123"/>
@@ -369,48 +387,48 @@ Inténtelo más tarde.</translation>
         <translation>Búsqueda finalizada.</translation>
     </message>
     <message>
-        <location filename="../analyzer/ble_analyzer.cpp" line="261"/>
+        <location filename="../analyzer/ble_analyzer.cpp" line="274"/>
         <source>Cannot connect to remote device. (%1)</source>
         <translation>No se puede conectar al dispositivo remoto. (%1)</translation>
     </message>
     <message>
-        <location filename="../analyzer/ble_analyzer.cpp" line="270"/>
+        <location filename="../analyzer/ble_analyzer.cpp" line="283"/>
         <source>LowEnergy controller disconnected.</source>
         <translation>Controlador LowEnergy desconectado.</translation>
     </message>
     <message>
-        <location filename="../analyzer/ble_analyzer.cpp" line="301"/>
-        <location filename="../analyzer/ble_analyzer.cpp" line="421"/>
+        <location filename="../analyzer/ble_analyzer.cpp" line="314"/>
+        <location filename="../analyzer/ble_analyzer.cpp" line="434"/>
         <source>REU BLE Service not found.</source>
         <translation>Servicio REU BLE no encontrado.</translation>
     </message>
     <message>
-        <location filename="../analyzer/ble_analyzer.cpp" line="311"/>
+        <location filename="../analyzer/ble_analyzer.cpp" line="324"/>
         <source>Discovering services...</source>
         <translation>Descubriendo servicios...</translation>
     </message>
     <message>
-        <location filename="../analyzer/ble_analyzer.cpp" line="315"/>
+        <location filename="../analyzer/ble_analyzer.cpp" line="328"/>
         <source>Service discovered.</source>
         <translation>Servicio descubierto.</translation>
     </message>
     <message>
-        <location filename="../analyzer/ble_analyzer.cpp" line="324"/>
+        <location filename="../analyzer/ble_analyzer.cpp" line="337"/>
         <source>&apos;Read characteristic&apos; not found.</source>
         <translation>No se encontró la característica &apos;Read&apos;.</translation>
     </message>
     <message>
-        <location filename="../analyzer/ble_analyzer.cpp" line="404"/>
+        <location filename="../analyzer/ble_analyzer.cpp" line="417"/>
         <source>Analyzer disconnected. (no response for %1 ms)</source>
         <translation>Analizador desconectado. (sin respuesta durante %1 ms)</translation>
     </message>
     <message>
-        <location filename="../analyzer/ble_analyzer.cpp" line="426"/>
+        <location filename="../analyzer/ble_analyzer.cpp" line="439"/>
         <source>Write characteristic doesn&apos;t exist!</source>
         <translation>¡La característica Write no existe!</translation>
     </message>
     <message>
-        <location filename="../analyzer/ble_analyzer.cpp" line="446"/>
+        <location filename="../analyzer/ble_analyzer.cpp" line="459"/>
         <source>Analyzer error: wrong CRC. (data: %1)</source>
         <translation>Error del analizador: CRC incorrecto. (datos: %1)</translation>
     </message>
@@ -486,56 +504,56 @@ Se recomienda realizar la calibración con conexión por USB</translation>
 <context>
     <name>ComAnalyzer</name>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="105"/>
-        <source>Analyzer port %1 found but could not be opened -- it may be in use by another program (or another AntScopeZ window). (%2)</source>
-        <translation>Se encontró el puerto del analizador %1 pero no se pudo abrir -- puede que otro programa (u otra ventana de AntScopeZ) lo esté usando. (%2)</translation>
+        <location filename="../analyzer/com_analyzer.cpp" line="109"/>
+        <source>port %1: %2</source>
+        <translation>puerto %1: %2</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="187"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="188"/>
         <source> can not update firmware.
 </source>
         <translation> no puede actualizar el firmware.
 </translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="193"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="194"/>
         <source>Error: </source>
         <translation>Error: </translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="194"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="195"/>
         <source>Warning</source>
         <translation>Advertencia</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="267"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="268"/>
         <source>Analyzer returned ERROR while waiting for measurement data.</source>
         <translation>El analizador devolvió un ERROR mientras esperaba datos de medición.</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="636"/>
-        <location filename="../analyzer/com_analyzer.cpp" line="713"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="637"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="714"/>
         <source>Finish</source>
         <translation>Finalizar</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="636"/>
-        <location filename="../analyzer/com_analyzer.cpp" line="713"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="637"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="714"/>
         <source>Successfully updated!</source>
         <translation>¡Actualizado correctamente!</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="670"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="671"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="670"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="671"/>
         <source>Error while update, please try again.</source>
         <translation>Error durante la actualización, inténtelo de nuevo.</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="729"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="730"/>
         <source>Can not erase flash memory.
 You should reconnect your analyzer,
 restart %1 and update firmware.</source>
@@ -544,7 +562,7 @@ Debe reconectar su analizador,
 reiniciar %1 y actualizar el firmware.</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="736"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="737"/>
         <source>Can not write data to flash memory.
 You should reconnect your analyzer,
 restart %1 and update firmware.</source>
@@ -553,28 +571,28 @@ Debe reconectar su analizador,
 reiniciar %1 y actualizar el firmware.</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="742"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="743"/>
         <source>Firmware file has wrong length.
 Try to choose another file.</source>
         <translation>El archivo de firmware tiene una longitud incorrecta.
 Intente elegir otro archivo.</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="747"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="748"/>
         <source>Firmware has incorrect CRC.
 Try to choose another file.</source>
         <translation>El firmware tiene un CRC incorrecto.
 Intente elegir otro archivo.</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="752"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="753"/>
         <source>Serial flash has incorrect CRC.
 Try to choose another file.</source>
         <translation>La memoria flash serie tiene un CRC incorrecto.
 Intente elegir otro archivo.</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="757"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="758"/>
         <source>Timeout in the device.
 You should reconnect your analyzer,
 restart %1 and update firmware.</source>
@@ -583,35 +601,35 @@ Debe reconectar su analizador,
 reiniciar %1 y actualizar el firmware.</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="763"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="764"/>
         <source>Firmware file has wrong format.
 Try to choose another file.</source>
         <translation>El archivo de firmware tiene un formato incorrecto.
 Intente elegir otro archivo.</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="768"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="769"/>
         <source>Timeout.
 You should restart %1 and update firmware.</source>
         <translation>Tiempo de espera agotado.
 Debe reiniciar %1 y actualizar el firmware.</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="773"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="774"/>
         <source>Can not open serial port.
 You should close application which uses this port.</source>
         <translation>No se puede abrir el puerto serie.
 Debe cerrar la aplicación que utiliza este puerto.</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="778"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="779"/>
         <source>Can not write data to serial port.
 You should restart %1 and update firmware.</source>
         <translation>No se pueden escribir datos en el puerto serie.
 Debe reiniciar %1 y actualizar el firmware.</translation>
     </message>
     <message>
-        <location filename="../analyzer/com_analyzer.cpp" line="783"/>
+        <location filename="../analyzer/com_analyzer.cpp" line="784"/>
         <source>Can not read data from serial port.
 You should restart %1 and update firmware.</source>
         <translation>No se pueden leer datos del puerto serie.
@@ -845,12 +863,6 @@ Tipo: %3</translation>
 <context>
     <name>HidAnalyzer</name>
     <message>
-        <location filename="../analyzer/hid_analyzer.cpp" line="165"/>
-        <location filename="../analyzer/hid_analyzer.cpp" line="917"/>
-        <source>Analyzer detected but could not be opened -- it may be in use by another program (or another AntScopeZ window).</source>
-        <translation>Analizador detectado pero no se pudo abrir -- puede que otro programa (u otra ventana de AntScopeZ) lo esté usando.</translation>
-    </message>
-    <message>
         <location filename="../analyzer/hid_analyzer.cpp" line="754"/>
         <location filename="../analyzer/hid_analyzer.cpp" line="835"/>
         <source>Warning</source>
@@ -939,14 +951,14 @@ Tipo: %3</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="18"/>
-        <location filename="../src/licenseagent.cpp" line="510"/>
+        <location filename="../src/licenseagent.cpp" line="511"/>
         <source>Network timeout</source>
         <translation>Tiempo de espera de red agotado</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="36"/>
-        <location filename="../src/licenseagent.cpp" line="482"/>
-        <location filename="../src/licenseagent.cpp" line="510"/>
+        <location filename="../src/licenseagent.cpp" line="483"/>
+        <location filename="../src/licenseagent.cpp" line="511"/>
         <source>Register application</source>
         <translation>Registrar aplicación</translation>
     </message>
@@ -957,22 +969,22 @@ Tipo: %3</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="36"/>
-        <location filename="../src/licenseagent.cpp" line="534"/>
-        <location filename="../src/licenseagent.cpp" line="565"/>
-        <location filename="../src/licenseagent.cpp" line="575"/>
-        <location filename="../src/licenseagent.cpp" line="608"/>
-        <location filename="../src/licenseagent.cpp" line="650"/>
-        <location filename="../src/licenseagent.cpp" line="692"/>
-        <location filename="../src/licenseagent.cpp" line="698"/>
-        <location filename="../src/licenseagent.cpp" line="734"/>
-        <location filename="../src/licenseagent.cpp" line="744"/>
+        <location filename="../src/licenseagent.cpp" line="535"/>
+        <location filename="../src/licenseagent.cpp" line="566"/>
+        <location filename="../src/licenseagent.cpp" line="576"/>
+        <location filename="../src/licenseagent.cpp" line="609"/>
+        <location filename="../src/licenseagent.cpp" line="651"/>
+        <location filename="../src/licenseagent.cpp" line="693"/>
+        <location filename="../src/licenseagent.cpp" line="699"/>
+        <location filename="../src/licenseagent.cpp" line="735"/>
+        <location filename="../src/licenseagent.cpp" line="745"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
         <location filename="../src/licenseagent.cpp" line="104"/>
-        <location filename="../src/licenseagent.cpp" line="755"/>
-        <location filename="../src/licenseagent.cpp" line="761"/>
+        <location filename="../src/licenseagent.cpp" line="756"/>
+        <location filename="../src/licenseagent.cpp" line="762"/>
         <source>Update license</source>
         <translation>Actualizar licencia</translation>
     </message>
@@ -982,197 +994,197 @@ Tipo: %3</translation>
         <translation>Introducir clave</translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="382"/>
+        <location filename="../src/licenseagent.cpp" line="383"/>
         <source>Request status B16</source>
         <translation>Solicitar estado B16</translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="382"/>
+        <location filename="../src/licenseagent.cpp" line="383"/>
         <source>Something went wrong</source>
         <translation>Algo salió mal</translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="382"/>
-        <location filename="../src/licenseagent.cpp" line="482"/>
-        <location filename="../src/licenseagent.cpp" line="510"/>
-        <location filename="../src/licenseagent.cpp" line="738"/>
-        <location filename="../src/licenseagent.cpp" line="755"/>
-        <location filename="../src/licenseagent.cpp" line="761"/>
-        <location filename="../src/licenseagent.cpp" line="781"/>
+        <location filename="../src/licenseagent.cpp" line="383"/>
+        <location filename="../src/licenseagent.cpp" line="483"/>
+        <location filename="../src/licenseagent.cpp" line="511"/>
+        <location filename="../src/licenseagent.cpp" line="739"/>
+        <location filename="../src/licenseagent.cpp" line="756"/>
+        <location filename="../src/licenseagent.cpp" line="762"/>
+        <location filename="../src/licenseagent.cpp" line="782"/>
         <source>Ok</source>
         <translation>Aceptar</translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="432"/>
+        <location filename="../src/licenseagent.cpp" line="433"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="448"/>
+        <location filename="../src/licenseagent.cpp" line="449"/>
         <source>Network error.</source>
         <translation>Error de red.</translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="448"/>
-        <location filename="../src/licenseagent.cpp" line="784"/>
+        <location filename="../src/licenseagent.cpp" line="449"/>
+        <location filename="../src/licenseagent.cpp" line="785"/>
         <source>Close</source>
         <translation>Cerrar</translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="482"/>
+        <location filename="../src/licenseagent.cpp" line="483"/>
         <source>Registration was successful</source>
         <translation>El registro se realizó correctamente</translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="531"/>
-        <location filename="../src/licenseagent.cpp" line="570"/>
+        <location filename="../src/licenseagent.cpp" line="532"/>
+        <location filename="../src/licenseagent.cpp" line="571"/>
         <source>Device name </source>
         <translation>Nombre del dispositivo </translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="532"/>
-        <location filename="../src/licenseagent.cpp" line="571"/>
+        <location filename="../src/licenseagent.cpp" line="533"/>
+        <location filename="../src/licenseagent.cpp" line="572"/>
         <source>
 Serial number </source>
         <translation>
 Número de serie </translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="533"/>
-        <location filename="../src/licenseagent.cpp" line="572"/>
+        <location filename="../src/licenseagent.cpp" line="534"/>
+        <location filename="../src/licenseagent.cpp" line="573"/>
         <source>
 License name </source>
         <translation>
 Nombre de la licencia </translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="534"/>
+        <location filename="../src/licenseagent.cpp" line="535"/>
         <source>Device info</source>
         <translation>Información del dispositivo</translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="534"/>
-        <location filename="../src/licenseagent.cpp" line="575"/>
+        <location filename="../src/licenseagent.cpp" line="535"/>
+        <location filename="../src/licenseagent.cpp" line="576"/>
         <source>User Data update</source>
         <translation>Actualización de datos de usuario</translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="565"/>
-        <location filename="../src/licenseagent.cpp" line="608"/>
-        <location filename="../src/licenseagent.cpp" line="650"/>
-        <location filename="../src/licenseagent.cpp" line="658"/>
-        <location filename="../src/licenseagent.cpp" line="679"/>
-        <location filename="../src/licenseagent.cpp" line="692"/>
-        <location filename="../src/licenseagent.cpp" line="698"/>
-        <location filename="../src/licenseagent.cpp" line="734"/>
-        <location filename="../src/licenseagent.cpp" line="738"/>
-        <location filename="../src/licenseagent.cpp" line="744"/>
+        <location filename="../src/licenseagent.cpp" line="566"/>
+        <location filename="../src/licenseagent.cpp" line="609"/>
+        <location filename="../src/licenseagent.cpp" line="651"/>
+        <location filename="../src/licenseagent.cpp" line="659"/>
+        <location filename="../src/licenseagent.cpp" line="680"/>
+        <location filename="../src/licenseagent.cpp" line="693"/>
+        <location filename="../src/licenseagent.cpp" line="699"/>
+        <location filename="../src/licenseagent.cpp" line="735"/>
+        <location filename="../src/licenseagent.cpp" line="739"/>
+        <location filename="../src/licenseagent.cpp" line="745"/>
         <source>Register device</source>
         <translation>Registrar dispositivo</translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="565"/>
-        <location filename="../src/licenseagent.cpp" line="608"/>
-        <location filename="../src/licenseagent.cpp" line="650"/>
-        <location filename="../src/licenseagent.cpp" line="734"/>
+        <location filename="../src/licenseagent.cpp" line="566"/>
+        <location filename="../src/licenseagent.cpp" line="609"/>
+        <location filename="../src/licenseagent.cpp" line="651"/>
+        <location filename="../src/licenseagent.cpp" line="735"/>
         <source>Registration...</source>
         <translation>Registrando...</translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="573"/>
+        <location filename="../src/licenseagent.cpp" line="574"/>
         <source>
 Purchrge date: </source>
         <translation>
 Fecha de compra: </translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="574"/>
+        <location filename="../src/licenseagent.cpp" line="575"/>
         <source>
 Registration date: </source>
         <translation>
 Fecha de registro: </translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="575"/>
+        <location filename="../src/licenseagent.cpp" line="576"/>
         <source>Update user data</source>
         <translation>Actualizar datos de usuario</translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="653"/>
-        <location filename="../src/licenseagent.cpp" line="671"/>
+        <location filename="../src/licenseagent.cpp" line="654"/>
+        <location filename="../src/licenseagent.cpp" line="672"/>
         <source>Device name: </source>
         <translation>Nombre del dispositivo: </translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="654"/>
-        <location filename="../src/licenseagent.cpp" line="672"/>
+        <location filename="../src/licenseagent.cpp" line="655"/>
+        <location filename="../src/licenseagent.cpp" line="673"/>
         <source>Serial number: </source>
         <translation>Número de serie: </translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="655"/>
-        <location filename="../src/licenseagent.cpp" line="676"/>
+        <location filename="../src/licenseagent.cpp" line="656"/>
+        <location filename="../src/licenseagent.cpp" line="677"/>
         <source>License name: </source>
         <translation>Nombre de la licencia: </translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="656"/>
-        <location filename="../src/licenseagent.cpp" line="677"/>
+        <location filename="../src/licenseagent.cpp" line="657"/>
+        <location filename="../src/licenseagent.cpp" line="678"/>
         <source>Purcharge date: </source>
         <translation>Fecha de compra: </translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="657"/>
-        <location filename="../src/licenseagent.cpp" line="678"/>
+        <location filename="../src/licenseagent.cpp" line="658"/>
+        <location filename="../src/licenseagent.cpp" line="679"/>
         <source>Registration date: </source>
         <translation>Fecha de registro: </translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="670"/>
+        <location filename="../src/licenseagent.cpp" line="671"/>
         <source>Registration was successful
 </source>
         <translation>El registro se realizó correctamente
 </translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="692"/>
+        <location filename="../src/licenseagent.cpp" line="693"/>
         <source>Wait for eMail confirmation...</source>
         <translation>Esperando confirmación por correo electrónico...</translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="698"/>
-        <location filename="../src/licenseagent.cpp" line="744"/>
+        <location filename="../src/licenseagent.cpp" line="699"/>
+        <location filename="../src/licenseagent.cpp" line="745"/>
         <source>Registration failed</source>
         <translation>Error en el registro</translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="698"/>
+        <location filename="../src/licenseagent.cpp" line="699"/>
         <source>Try again</source>
         <translation>Intentar de nuevo</translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="738"/>
+        <location filename="../src/licenseagent.cpp" line="739"/>
         <source>eMail is not confirmed</source>
         <translation>El correo electrónico no está confirmado</translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="755"/>
+        <location filename="../src/licenseagent.cpp" line="756"/>
         <source>License updating...</source>
         <translation>Actualizando licencia...</translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="761"/>
+        <location filename="../src/licenseagent.cpp" line="762"/>
         <source>The update will not work until support is contacted</source>
         <translation>La actualización no funcionará hasta que se contacte con soporte</translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="781"/>
-        <location filename="../src/licenseagent.cpp" line="784"/>
+        <location filename="../src/licenseagent.cpp" line="782"/>
+        <location filename="../src/licenseagent.cpp" line="785"/>
         <source>License renewal</source>
         <translation>Renovación de licencia</translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="781"/>
+        <location filename="../src/licenseagent.cpp" line="782"/>
         <source>The license update was successful
 
 You should reconnect analyzer.</source>
@@ -1181,7 +1193,7 @@ You should reconnect analyzer.</source>
 Debe reconectar el analizador.</translation>
     </message>
     <message>
-        <location filename="../src/licenseagent.cpp" line="784"/>
+        <location filename="../src/licenseagent.cpp" line="785"/>
         <source>The license is not updated</source>
         <translation>La licencia no está actualizada</translation>
     </message>
@@ -1189,68 +1201,68 @@ Debe reconectar el analizador.</translation>
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../src/mainwindow.ui" line="1171"/>
+        <location filename="../src/mainwindow.ui" line="1187"/>
         <source>Entering the AntScopeZ program settings menu</source>
         <translation>Acceso al menú de configuración de AntScopeZ</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_settings.cpp" line="72"/>
-        <location filename="../src/mainwindow_settings.cpp" line="410"/>
+        <location filename="../src/mainwindow_settings.cpp" line="76"/>
+        <location filename="../src/mainwindow_settings.cpp" line="431"/>
         <source>Settings</source>
         <translation>Configuración</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_settings.cpp" line="406"/>
+        <location filename="../src/mainwindow_settings.cpp" line="427"/>
         <source>Export</source>
         <translation>Exportar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1118"/>
+        <location filename="../src/mainwindow.ui" line="1126"/>
         <source>Printing (or saving to PDF) measurement results</source>
         <translation>Imprimir (o guardar en PDF) los resultados de medición</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1126"/>
+        <location filename="../src/mainwindow.ui" line="1134"/>
         <source>Saving a program window with a chart on a PC</source>
         <translation>Guardar una ventana del programa con un gráfico en el PC</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_analyzer.cpp" line="216"/>
-        <location filename="../src/mainwindow_settings.cpp" line="408"/>
+        <location filename="../src/mainwindow_analyzer.cpp" line="239"/>
+        <location filename="../src/mainwindow_settings.cpp" line="429"/>
         <source>Screenshot</source>
         <translation>Captura de pantalla</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1134"/>
+        <location filename="../src/mainwindow.ui" line="1142"/>
         <source>Screenshot of the current screen of  analyzer (not for all models)</source>
         <translation>Captura de la pantalla actual del analizador (no disponible en todos los modelos)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1142"/>
+        <location filename="../src/mainwindow.ui" line="1150"/>
         <source>Loading saved measurement results from analyzer memory</source>
         <translation>Cargar resultados de medición guardados desde la memoria del analizador</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="76"/>
-        <location filename="../src/mainwindow.cpp" line="1313"/>
-        <location filename="../src/mainwindow.cpp" line="1369"/>
-        <location filename="../src/mainwindow.cpp" line="1404"/>
-        <location filename="../src/mainwindow.cpp" line="1427"/>
-        <location filename="../src/mainwindow.cpp" line="1449"/>
-        <location filename="../src/mainwindow.cpp" line="1497"/>
-        <location filename="../src/mainwindow.cpp" line="1561"/>
-        <location filename="../src/mainwindow_settings.cpp" line="338"/>
-        <location filename="../src/mainwindow_settings.cpp" line="340"/>
-        <location filename="../src/mainwindow_settings.cpp" line="342"/>
-        <location filename="../src/mainwindow_settings.cpp" line="344"/>
-        <location filename="../src/mainwindow_settings.cpp" line="346"/>
-        <location filename="../src/mainwindow_settings.cpp" line="349"/>
+        <location filename="../src/mainwindow.cpp" line="1496"/>
+        <location filename="../src/mainwindow.cpp" line="1556"/>
+        <location filename="../src/mainwindow.cpp" line="1597"/>
+        <location filename="../src/mainwindow.cpp" line="1621"/>
+        <location filename="../src/mainwindow.cpp" line="1643"/>
+        <location filename="../src/mainwindow.cpp" line="1691"/>
+        <location filename="../src/mainwindow.cpp" line="1755"/>
+        <location filename="../src/mainwindow_settings.cpp" line="359"/>
+        <location filename="../src/mainwindow_settings.cpp" line="361"/>
+        <location filename="../src/mainwindow_settings.cpp" line="363"/>
+        <location filename="../src/mainwindow_settings.cpp" line="365"/>
+        <location filename="../src/mainwindow_settings.cpp" line="367"/>
+        <location filename="../src/mainwindow_settings.cpp" line="370"/>
         <source>Frequency, kHz</source>
         <translation>Frecuencia, kHz</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="133"/>
-        <location filename="../src/mainwindow.cpp" line="934"/>
+        <location filename="../src/mainwindow.cpp" line="1047"/>
         <location filename="../src/mainwindow_frequency.cpp" line="43"/>
         <location filename="../src/mainwindow_frequency.cpp" line="46"/>
         <source>Center</source>
@@ -1355,7 +1367,7 @@ de calibración en el menú de configuración!</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="494"/>
-        <location filename="../src/mainwindow.cpp" line="929"/>
+        <location filename="../src/mainwindow.cpp" line="1042"/>
         <location filename="../src/mainwindow_frequency.cpp" line="35"/>
         <location filename="../src/mainwindow_frequency.cpp" line="38"/>
         <source>Start</source>
@@ -1363,7 +1375,7 @@ de calibración en el menú de configuración!</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="499"/>
-        <location filename="../src/mainwindow.cpp" line="930"/>
+        <location filename="../src/mainwindow.cpp" line="1043"/>
         <location filename="../src/mainwindow_frequency.cpp" line="36"/>
         <location filename="../src/mainwindow_frequency.cpp" line="39"/>
         <source>Stop</source>
@@ -1386,7 +1398,7 @@ de calibración en el menú de configuración!</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="527"/>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="702"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="703"/>
         <source>Delete</source>
         <translation>Eliminar</translation>
     </message>
@@ -1411,24 +1423,49 @@ de calibración en el menú de configuración!</translation>
         <translation>Nombre</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1099"/>
+        <location filename="../src/mainwindow.ui" line="1084"/>
+        <source>Analy&amp;zer</source>
+        <translation>&amp;Analizador</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.ui" line="1107"/>
         <source>&amp;Open...</source>
         <translation>&amp;Abrir...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1102"/>
+        <location filename="../src/mainwindow.ui" line="1110"/>
         <source>Open a saved measurement (AntScopeZ, Touchstone, CSV, or NWL)</source>
         <translation>Abrir una medición guardada (AntScopeZ, Touchstone, CSV o NWL)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1107"/>
+        <location filename="../src/mainwindow.ui" line="1115"/>
         <source>&amp;Save...</source>
         <translation>&amp;Guardar...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1110"/>
+        <location filename="../src/mainwindow.ui" line="1118"/>
         <source>Save the selected measurement</source>
         <translation>Guardar la medición seleccionada</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.ui" line="1139"/>
+        <source>&amp;Screenshot...</source>
+        <translation>&amp;Captura de pantalla...</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.ui" line="1155"/>
+        <source>&amp;Connect...</source>
+        <translation>&amp;Conectar...</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.ui" line="1160"/>
+        <source>&amp;Disconnect</source>
+        <translation>&amp;Desconectar</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.ui" line="1163"/>
+        <source>Disconnect the currently connected analyzer</source>
+        <translation>Desconecta el analizador actualmente conectado</translation>
     </message>
     <message>
         <location filename="../src/mainwindow_measurements_io.cpp" line="55"/>
@@ -1446,387 +1483,378 @@ de calibración en el menú de configuración!</translation>
         <translation>&amp;Archivo</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1039"/>
+        <location filename="../src/mainwindow.ui" line="1038"/>
         <source>&amp;Edit</source>
         <translation>&amp;Editar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1045"/>
+        <location filename="../src/mainwindow.ui" line="1044"/>
         <source>&amp;View</source>
         <translation>&amp;Ver</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1063"/>
+        <location filename="../src/mainwindow.ui" line="1062"/>
         <source>&amp;Band Highlighting</source>
         <translation>Resaltado de &amp;bandas</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1068"/>
+        <location filename="../src/mainwindow.ui" line="1067"/>
         <source>&amp;Language</source>
         <translation>&amp;Idioma</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1073"/>
+        <location filename="../src/mainwindow.ui" line="1072"/>
         <source>&amp;Theme</source>
         <translation>&amp;Tema</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1078"/>
+        <location filename="../src/mainwindow.ui" line="1077"/>
         <source>&amp;Tools</source>
         <translation>&amp;Herramientas</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1085"/>
+        <location filename="../src/mainwindow.ui" line="1093"/>
         <source>&amp;Help</source>
         <translation>Ay&amp;uda</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1115"/>
+        <location filename="../src/mainwindow.ui" line="1123"/>
         <source>&amp;Print...</source>
         <translation>Im&amp;primir...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1123"/>
+        <location filename="../src/mainwindow.ui" line="1131"/>
         <source>&amp;Save Screenshot...</source>
         <translation>&amp;Guardar captura de pantalla...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1131"/>
-        <source>Screenshot from &amp;AA</source>
-        <translation>Captura de pantalla desde &amp;AA</translation>
-    </message>
-    <message>
-        <location filename="../src/mainwindow.ui" line="1139"/>
+        <location filename="../src/mainwindow.ui" line="1147"/>
         <source>&amp;Data from AA</source>
         <translation>&amp;Datos desde AA</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1147"/>
-        <source>Connect &amp;Analyzer...</source>
-        <translation>Conectar &amp;analizador...</translation>
-    </message>
-    <message>
-        <location filename="../src/mainwindow.ui" line="1152"/>
+        <location filename="../src/mainwindow.ui" line="1168"/>
         <source>&amp;Marker Comparison...</source>
         <translation>Comparación de &amp;marcadores...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1155"/>
+        <location filename="../src/mainwindow.ui" line="1171"/>
         <source>Compare two placed markers (frequency/SWR/RL/R/X, Q factor, equivalent L/C) and estimate an antenna trim to reach a target frequency</source>
         <translation>Compara dos marcadores colocados (frecuencia/SWR/RL/R/X, factor Q, L/C equivalente) y estima un recorte de antena para alcanzar una frecuencia objetivo</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1160"/>
+        <location filename="../src/mainwindow.ui" line="1176"/>
         <source>TDR &amp;Measurement...</source>
         <translation>&amp;Medición TDR...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1163"/>
+        <location filename="../src/mainwindow.ui" line="1179"/>
         <source>Set up and run a TDR scan (cable type/velocity factor, top frequency, points, window function, live unambiguous-range/resolution estimate), and after scanning: distance to the strongest reflection, open/short indication, and a velocity-factor calculator from a known cable length</source>
         <translation>Configura y ejecuta un escaneo TDR (tipo de cable/factor de velocidad, frecuencia máxima, puntos, función de ventana, estimación en vivo de rango inequívoco/resolución), y tras escanear: distancia al reflejo más fuerte, indicación de abierto/cortocircuito, y una calculadora de factor de velocidad a partir de una longitud de cable conocida</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1168"/>
+        <location filename="../src/mainwindow.ui" line="1184"/>
         <source>&amp;Settings...</source>
         <translation>&amp;Configuración...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1176"/>
+        <location filename="../src/mainwindow.ui" line="1192"/>
         <source>E&amp;xit</source>
         <translation>&amp;Salir</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1181"/>
+        <location filename="../src/mainwindow.ui" line="1197"/>
         <source>&amp;About AntScopeZ...</source>
         <translation>&amp;Acerca de AntScopeZ...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1186"/>
+        <location filename="../src/mainwindow.ui" line="1202"/>
         <source>&amp;User Guide</source>
         <translation>&amp;Guía del usuario</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1197"/>
+        <location filename="../src/mainwindow.ui" line="1213"/>
         <source>Cursor &amp;Details</source>
         <translation>&amp;Detalles del cursor</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1200"/>
+        <location filename="../src/mainwindow.ui" line="1216"/>
         <source>Show the Frequency/SWR/... readout panel</source>
         <translation>Mostrar el panel de lectura de Frecuencia/SWR/...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1211"/>
+        <location filename="../src/mainwindow.ui" line="1227"/>
         <source>Show S21</source>
         <translation>Mostrar S21</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1214"/>
+        <location filename="../src/mainwindow.ui" line="1230"/>
         <source>Show the S21 (forward transmission) trace on the S21 tab</source>
         <translation>Muestra la traza S21 (transmisión directa) en la pestaña S21</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1225"/>
+        <location filename="../src/mainwindow.ui" line="1241"/>
         <source>Show S12</source>
         <translation>Mostrar S12</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1228"/>
+        <location filename="../src/mainwindow.ui" line="1244"/>
         <source>Show the S12 (reverse transmission) trace on the S21 tab -- for a reciprocal (passive) device this is identical to S21, so it&apos;s off by default</source>
         <translation>Muestra la traza S12 (transmisión inversa) en la pestaña S21 -- para un dispositivo recíproco (pasivo) es idéntica a S21, por lo que está desactivada por defecto</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1239"/>
+        <location filename="../src/mainwindow.ui" line="1255"/>
         <source>&amp;Markers Hint</source>
         <translation>Ayuda de &amp;marcadores</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1242"/>
+        <location filename="../src/mainwindow.ui" line="1258"/>
         <source>Show the markers table popup</source>
         <translation>Mostrar la ventana emergente de la tabla de marcadores</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1253"/>
+        <location filename="../src/mainwindow.ui" line="1269"/>
         <source>&amp;Cursor Params</source>
         <translation>&amp;Parámetros del cursor</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1256"/>
+        <location filename="../src/mainwindow.ui" line="1272"/>
         <source>Show brief params under the cursor</source>
         <translation>Mostrar parámetros breves bajo el cursor</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1264"/>
+        <location filename="../src/mainwindow.ui" line="1280"/>
         <source>Show &amp;Band Name</source>
         <translation>Mostrar nombre de &amp;banda</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1272"/>
+        <location filename="../src/mainwindow.ui" line="1288"/>
         <source>&amp;Band Selector</source>
         <translation>&amp;Selector de banda</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1275"/>
+        <location filename="../src/mainwindow.ui" line="1291"/>
         <source>Show the per-band Start/Stop selector above the Presets list</source>
         <translation>Mostrar el selector de Inicio/Fin por banda encima de la lista de preajustes</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.ui" line="1280"/>
+        <location filename="../src/mainwindow.ui" line="1296"/>
         <source>Edit &amp;ITU Bands...</source>
         <translation>Editar bandas &amp;ITU...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_analyzer.cpp" line="177"/>
+        <location filename="../src/mainwindow_analyzer.cpp" line="200"/>
         <source> - Analyzer not connected</source>
         <translation> - Analizador no conectado</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="412"/>
+        <location filename="../src/mainwindow.cpp" line="466"/>
+        <location filename="../src/mainwindow_scan.cpp" line="722"/>
         <source>Ready</source>
         <translation>Listo</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="414"/>
-        <location filename="../src/mainwindow_analyzer.cpp" line="112"/>
+        <location filename="../src/mainwindow.cpp" line="468"/>
+        <location filename="../src/mainwindow_analyzer.cpp" line="123"/>
         <source>Not connected</source>
         <translation>No conectado</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="679"/>
+        <location filename="../src/mainwindow.cpp" line="753"/>
         <source>File of AntScopeZ</source>
         <translation>Archivo de AntScopeZ</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="803"/>
-        <location filename="../src/mainwindow_settings.cpp" line="365"/>
+        <location filename="../src/mainwindow.cpp" line="877"/>
+        <location filename="../src/mainwindow_settings.cpp" line="386"/>
         <source>Press F%1</source>
         <translation>Presione F%1</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="928"/>
+        <location filename="../src/mainwindow.cpp" line="1041"/>
         <location filename="../src/mainwindow_frequency.cpp" line="37"/>
         <source>Presets (limits), kHz</source>
         <translation>Preajustes (límites), kHz</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="933"/>
+        <location filename="../src/mainwindow.cpp" line="1046"/>
         <location filename="../src/mainwindow_frequency.cpp" line="45"/>
         <source>Presets (center, range), kHz</source>
         <translation>Preajustes (centro, rango), kHz</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="935"/>
+        <location filename="../src/mainwindow.cpp" line="1048"/>
         <location filename="../src/mainwindow_frequency.cpp" line="47"/>
         <source>Range(+/-)</source>
         <translation>Rango(+/-)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1314"/>
-        <location filename="../src/mainwindow_settings.cpp" line="339"/>
-        <location filename="../src/mainwindow_settings.cpp" line="351"/>
-        <location filename="../src/mainwindow_tabs.cpp" line="147"/>
+        <location filename="../src/mainwindow.cpp" line="1497"/>
+        <location filename="../src/mainwindow_settings.cpp" line="360"/>
+        <location filename="../src/mainwindow_settings.cpp" line="372"/>
+        <location filename="../src/mainwindow_tabs.cpp" line="149"/>
         <source>SWR</source>
         <translation>SWR</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1370"/>
-        <location filename="../src/mainwindow_settings.cpp" line="341"/>
+        <location filename="../src/mainwindow.cpp" line="1557"/>
+        <location filename="../src/mainwindow_settings.cpp" line="362"/>
         <source>Phase, Angle</source>
         <translation>Fase, ángulo</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1405"/>
-        <location filename="../src/mainwindow_settings.cpp" line="343"/>
+        <location filename="../src/mainwindow.cpp" line="1598"/>
+        <location filename="../src/mainwindow_settings.cpp" line="364"/>
         <source>Rs, Ohm</source>
         <translation>Rs, Ohm</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1428"/>
-        <location filename="../src/mainwindow_settings.cpp" line="345"/>
+        <location filename="../src/mainwindow.cpp" line="1622"/>
+        <location filename="../src/mainwindow_settings.cpp" line="366"/>
         <source>Rp, Ohm</source>
         <translation>Rp, Ohm</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1450"/>
-        <location filename="../src/mainwindow_settings.cpp" line="347"/>
+        <location filename="../src/mainwindow.cpp" line="1644"/>
+        <location filename="../src/mainwindow_settings.cpp" line="368"/>
         <source>RL, dB</source>
         <translation>RL, dB</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1471"/>
-        <location filename="../src/mainwindow_settings.cpp" line="348"/>
+        <location filename="../src/mainwindow.cpp" line="1665"/>
+        <location filename="../src/mainwindow_settings.cpp" line="369"/>
         <source>Length, m</source>
         <translation>Longitud, m</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1485"/>
+        <location filename="../src/mainwindow.cpp" line="1679"/>
         <source>SR/IR</source>
         <translation>SR/IR</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1490"/>
+        <location filename="../src/mainwindow.cpp" line="1684"/>
         <source>|Z|</source>
         <translation>|Z|</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1514"/>
+        <location filename="../src/mainwindow.cpp" line="1708"/>
         <source>S21, dB</source>
         <translation>S21, dB</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1525"/>
+        <location filename="../src/mainwindow.cpp" line="1719"/>
         <source>Phase, deg</source>
         <translation>Fase, grados</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1562"/>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="516"/>
-        <location filename="../src/mainwindow_settings.cpp" line="360"/>
-        <location filename="../src/mainwindow_tabs.cpp" line="328"/>
-        <location filename="../src/mainwindow_tabs.cpp" line="597"/>
+        <location filename="../src/mainwindow.cpp" line="1756"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="517"/>
+        <location filename="../src/mainwindow_settings.cpp" line="381"/>
+        <location filename="../src/mainwindow_tabs.cpp" line="330"/>
+        <location filename="../src/mainwindow_tabs.cpp" line="611"/>
         <source>User defined</source>
         <translation>Definido por el usuario</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_settings.cpp" line="352"/>
-        <location filename="../src/mainwindow_tabs.cpp" line="169"/>
+        <location filename="../src/mainwindow_settings.cpp" line="373"/>
+        <location filename="../src/mainwindow_tabs.cpp" line="171"/>
         <source>Phase</source>
         <translation>Fase</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_settings.cpp" line="353"/>
-        <location filename="../src/mainwindow_tabs.cpp" line="192"/>
+        <location filename="../src/mainwindow_settings.cpp" line="374"/>
+        <location filename="../src/mainwindow_tabs.cpp" line="194"/>
         <source>Z=R+jX</source>
         <translation>Z=R+jX</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_settings.cpp" line="354"/>
-        <location filename="../src/mainwindow_tabs.cpp" line="214"/>
+        <location filename="../src/mainwindow_settings.cpp" line="375"/>
+        <location filename="../src/mainwindow_tabs.cpp" line="216"/>
         <source>Z=R||+jX</source>
         <translation>Z=R||+jX</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_settings.cpp" line="355"/>
-        <location filename="../src/mainwindow_tabs.cpp" line="234"/>
+        <location filename="../src/mainwindow_settings.cpp" line="376"/>
+        <location filename="../src/mainwindow_tabs.cpp" line="236"/>
         <source>RL</source>
         <translation>RL</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_settings.cpp" line="357"/>
-        <location filename="../src/mainwindow_tabs.cpp" line="256"/>
+        <location filename="../src/mainwindow_settings.cpp" line="378"/>
+        <location filename="../src/mainwindow_tabs.cpp" line="258"/>
         <source>S21</source>
         <translation>S21</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_settings.cpp" line="356"/>
-        <location filename="../src/mainwindow_tabs.cpp" line="278"/>
+        <location filename="../src/mainwindow_settings.cpp" line="377"/>
+        <location filename="../src/mainwindow_tabs.cpp" line="280"/>
         <source>TDR</source>
         <translation>TDR</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_settings.cpp" line="358"/>
-        <location filename="../src/mainwindow_tabs.cpp" line="300"/>
+        <location filename="../src/mainwindow_settings.cpp" line="379"/>
+        <location filename="../src/mainwindow_tabs.cpp" line="302"/>
         <source>Smith</source>
         <translation>Smith</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="528"/>
-        <location filename="../src/mainwindow_tabs.cpp" line="341"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="529"/>
+        <location filename="../src/mainwindow_tabs.cpp" line="343"/>
         <source>Multi</source>
         <translation>Multi</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_tabs.cpp" line="387"/>
+        <location filename="../src/mainwindow_tabs.cpp" line="389"/>
         <source>Move chart to the tab Multi</source>
         <translation>Mover gráfico a la pestaña Multi</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_tabs.cpp" line="398"/>
+        <location filename="../src/mainwindow_tabs.cpp" line="400"/>
         <source>Add multi-charts</source>
         <translation>Agregar gráficos múltiples</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_analyzer.cpp" line="118"/>
+        <location filename="../src/mainwindow_analyzer.cpp" line="129"/>
         <source>USB</source>
         <translation>USB</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_analyzer.cpp" line="119"/>
+        <location filename="../src/mainwindow_analyzer.cpp" line="130"/>
         <source>Serial</source>
         <translation>Serial</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_analyzer.cpp" line="120"/>
+        <location filename="../src/mainwindow_analyzer.cpp" line="131"/>
         <source>NanoVNA ASCII</source>
         <translation>NanoVNA ASCII</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_analyzer.cpp" line="121"/>
+        <location filename="../src/mainwindow_analyzer.cpp" line="132"/>
         <source>NanoVNA Binary</source>
         <translation>NanoVNA Binary</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_analyzer.cpp" line="122"/>
+        <location filename="../src/mainwindow_analyzer.cpp" line="133"/>
         <source>Bluetooth</source>
         <translation>Bluetooth</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_analyzer.cpp" line="123"/>
+        <location filename="../src/mainwindow_analyzer.cpp" line="134"/>
         <source>BLE</source>
         <translation>BLE</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_analyzer.cpp" line="124"/>
+        <location filename="../src/mainwindow_analyzer.cpp" line="135"/>
         <source>Unknown</source>
         <translation>Desconocido</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_analyzer.cpp" line="210"/>
+        <location filename="../src/mainwindow_analyzer.cpp" line="233"/>
         <source>Screen shot</source>
         <translation>Captura de pantalla</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_analyzer.cpp" line="210"/>
+        <location filename="../src/mainwindow_analyzer.cpp" line="233"/>
         <source>To get screenshots on this analyzer, you need to use the LCD2Clip utility from the https://rigexpert.com</source>
         <translation>Para obtener capturas de pantalla en este analizador, debe usar la utilidad LCD2Clip disponible en https://rigexpert.com</translation>
     </message>
@@ -1846,72 +1874,72 @@ de calibración en el menú de configuración!</translation>
         <translation>Cambios sin guardar</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="313"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="314"/>
         <source>Export PNG</source>
         <translation>Exportar PNG</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="365"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="366"/>
         <source>SWR graph</source>
         <translation>Gráfico de SWR</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="384"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="385"/>
         <source>Phase graph</source>
         <translation>Gráfico de fase</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="402"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="403"/>
         <source>RXZ graph</source>
         <translation>Gráfico RXZ</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="420"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="421"/>
         <source>RXZ parallel graph</source>
         <translation>Gráfico RXZ paralelo</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="438"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="439"/>
         <source>RL graph</source>
         <translation>Gráfico de RL</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="456"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="457"/>
         <source>S21 graph</source>
         <translation>Gráfico de S21</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="473"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="474"/>
         <source>TDR graph</source>
         <translation>Gráfico de TDR</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="492"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="493"/>
         <source>Smith graph</source>
         <translation>Gráfico de Smith</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="687"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="688"/>
         <source>Select Color...</source>
         <translation>Seleccionar color...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="694"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="695"/>
         <source>Rename...</source>
         <translation>Cambiar nombre...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="698"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="699"/>
         <source>Save as...</source>
         <translation>Guardar como...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="709"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="710"/>
         <source>Clear All</source>
         <translation>Borrar todo</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_measurements_io.cpp" line="586"/>
+        <location filename="../src/mainwindow_measurements_io.cpp" line="587"/>
         <source>Open file</source>
         <translation>Abrir archivo</translation>
     </message>
@@ -1926,22 +1954,22 @@ de calibración en el menú de configuración!</translation>
         <translation>Crear marcador</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_presets_bands.cpp" line="181"/>
+        <location filename="../src/mainwindow_presets_bands.cpp" line="182"/>
         <source>Select a band</source>
         <translation>Seleccione una banda</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_presets_bands.cpp" line="195"/>
+        <location filename="../src/mainwindow_presets_bands.cpp" line="196"/>
         <source>%1 (%2 - %3 kHz)</source>
         <translation>%1 (%2 - %3 kHz)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_settings.cpp" line="451"/>
+        <location filename="../src/mainwindow_settings.cpp" line="472"/>
         <source>Calibration Required</source>
         <translation>Calibración requerida</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_settings.cpp" line="452"/>
+        <location filename="../src/mainwindow_settings.cpp" line="473"/>
         <source>This analyzer hasn&apos;t been calibrated yet.
 
 Connect it, then open Settings and go to the &quot;OSL Calibration&quot; tab to run the Calibration Wizard (or Open/Short/Load individually). That tab also shows the folder AntScopeZ is using for calibration files, if you&apos;re trying to place existing ones by hand.</source>
@@ -1960,12 +1988,12 @@ Conéctelo, luego abra Configuración y vaya a la pestaña &quot;Calibración OS
         <translation>Este escaneo solicitará %1 puntos, por encima de su umbral de advertencia configurado de %2 (Configuración &gt; General). Un número elevado de puntos puede tardar mucho en completarse. ¿Continuar?</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_scan.cpp" line="970"/>
+        <location filename="../src/mainwindow_scan.cpp" line="992"/>
         <source>Analyzer Error</source>
         <translation>Error del analizador</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow_scan.cpp" line="993"/>
+        <location filename="../src/mainwindow_scan.cpp" line="1015"/>
         <source>Remains %1</source>
         <translation>Quedan %1</translation>
     </message>
@@ -2277,6 +2305,19 @@ Conéctelo, luego abra Configuración y vaya a la pestaña &quot;Calibración OS
     </message>
 </context>
 <context>
+    <name>MarkersPanel</name>
+    <message>
+        <location filename="../src/markerspanel.cpp" line="72"/>
+        <source>Clear All</source>
+        <translation>Borrar todo</translation>
+    </message>
+    <message>
+        <location filename="../src/markerspanel.cpp" line="77"/>
+        <source>Clear Empty Markers</source>
+        <translation>Borrar marcadores vacíos</translation>
+    </message>
+</context>
+<context>
     <name>Measurements</name>
     <message>
         <location filename="../src/measurements.cpp" line="246"/>
@@ -2356,19 +2397,19 @@ Conéctelo, luego abra Configuración y vaya a la pestaña &quot;Calibración OS
     </message>
     <message>
         <location filename="../src/measurements.cpp" line="584"/>
-        <location filename="../src/measurements.cpp" line="1850"/>
+        <location filename="../src/measurements.cpp" line="1868"/>
         <source>FQ:%1kHz SW:%2kHz Points:%3</source>
         <translation>FQ:%1kHz SW:%2kHz Puntos:%3</translation>
     </message>
     <message>
         <location filename="../src/measurements.cpp" line="590"/>
-        <location filename="../src/measurements.cpp" line="1856"/>
+        <location filename="../src/measurements.cpp" line="1874"/>
         <source>Start:%1kHz Stop:%2kHz Points:%3</source>
         <translation>Inicio:%1kHz Fin:%2kHz Puntos:%3</translation>
     </message>
     <message>
         <location filename="../src/measurements.cpp" line="279"/>
-        <location filename="../src/measurements.cpp" line="701"/>
+        <location filename="../src/measurements.cpp" line="715"/>
         <source>S21 (dB)</source>
         <translation>S21 (dB)</translation>
     </message>
@@ -2376,7 +2417,7 @@ Conéctelo, luego abra Configuración y vaya a la pestaña &quot;Calibración OS
         <location filename="../src/measurements.cpp" line="264"/>
         <location filename="../src/measurements.cpp" line="601"/>
         <location filename="../src/measurements.cpp" line="607"/>
-        <location filename="../src/measurements.cpp" line="1865"/>
+        <location filename="../src/measurements.cpp" line="1883"/>
         <source>
 Double-click an item to rescale the chart.
 Right-click an item for more options</source>
@@ -2386,37 +2427,37 @@ Haga clic derecho en un elemento para ver más opciones</translation>
     </message>
     <message>
         <location filename="../src/measurements.cpp" line="280"/>
-        <location filename="../src/measurements.cpp" line="703"/>
+        <location filename="../src/measurements.cpp" line="717"/>
         <source>S21 (deg)</source>
         <translation>S21 (grados)</translation>
     </message>
     <message>
         <location filename="../src/measurements.cpp" line="281"/>
-        <location filename="../src/measurements.cpp" line="706"/>
+        <location filename="../src/measurements.cpp" line="720"/>
         <source>S12 (dB)</source>
         <translation>S12 (dB)</translation>
     </message>
     <message>
         <location filename="../src/measurements.cpp" line="282"/>
-        <location filename="../src/measurements.cpp" line="708"/>
+        <location filename="../src/measurements.cpp" line="722"/>
         <source>S12 (deg)</source>
         <translation>S12 (grados)</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="713"/>
+        <location filename="../src/measurements.cpp" line="727"/>
         <location filename="../src/measurements_popups.cpp" line="539"/>
         <source>Impulse response</source>
         <translation>Respuesta al impulso</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="715"/>
+        <location filename="../src/measurements.cpp" line="729"/>
         <location filename="../src/measurements_popups.cpp" line="540"/>
         <source>Step response</source>
         <translation>Respuesta al escalón</translation>
     </message>
     <message>
         <location filename="../src/measurements.cpp" line="348"/>
-        <location filename="../src/measurements.cpp" line="717"/>
+        <location filename="../src/measurements.cpp" line="731"/>
         <location filename="../src/measurements_popups.cpp" line="324"/>
         <location filename="../src/measurements_popups.cpp" line="541"/>
         <location filename="../src/measurements_popups.cpp" line="1100"/>
@@ -2529,24 +2570,24 @@ Haga clic derecho en un elemento para ver más opciones</translation>
         <translation>se cargaron %1 puntos, de %2</translation>
     </message>
     <message>
-        <location filename="../src/measurements_io.cpp" line="968"/>
+        <location filename="../src/measurements_io.cpp" line="1006"/>
         <source>Load data</source>
         <translation>Cargar datos</translation>
     </message>
     <message>
-        <location filename="../src/measurements_io.cpp" line="968"/>
+        <location filename="../src/measurements_io.cpp" line="1006"/>
         <source>Oops, this format is not supported!</source>
         <translation>¡Vaya, este formato no es compatible!</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="1798"/>
-        <location filename="../src/measurements.cpp" line="1820"/>
+        <location filename="../src/measurements.cpp" line="1816"/>
+        <location filename="../src/measurements.cpp" line="1838"/>
         <source>Length, m</source>
         <translation>Longitud, m</translation>
     </message>
     <message>
-        <location filename="../src/measurements.cpp" line="1802"/>
         <location filename="../src/measurements.cpp" line="1820"/>
+        <location filename="../src/measurements.cpp" line="1838"/>
         <source>Length, feet</source>
         <translation>Longitud, pies</translation>
     </message>
@@ -2597,27 +2638,27 @@ Haga clic derecho en un elemento para ver más opciones</translation>
 <context>
     <name>NanovnaAnalyzer</name>
     <message>
-        <location filename="../analyzer/nanovna_analyzer.cpp" line="434"/>
+        <location filename="../analyzer/nanovna_analyzer.cpp" line="514"/>
         <source>NanoVNA binary scan reply didn&apos;t match the request (mask %1 vs %2, points %3 vs %4) -- falling back to ASCII scanning.</source>
         <translation>La respuesta del escaneo binario de NanoVNA no coincide con la solicitud (máscara %1 frente a %2, puntos %3 frente a %4) -- volviendo al escaneo ASCII.</translation>
     </message>
     <message>
-        <location filename="../analyzer/nanovna_analyzer.cpp" line="646"/>
+        <location filename="../analyzer/nanovna_analyzer.cpp" line="815"/>
         <source>ASCII+Binary</source>
         <translation>ASCII+Binary</translation>
     </message>
     <message>
-        <location filename="../analyzer/nanovna_analyzer.cpp" line="647"/>
+        <location filename="../analyzer/nanovna_analyzer.cpp" line="816"/>
         <source>ASCII</source>
         <translation>ASCII</translation>
     </message>
     <message>
-        <location filename="../analyzer/nanovna_analyzer.cpp" line="648"/>
+        <location filename="../analyzer/nanovna_analyzer.cpp" line="817"/>
         <source>Legacy</source>
         <translation>Legacy</translation>
     </message>
     <message>
-        <location filename="../analyzer/nanovna_analyzer.cpp" line="650"/>
+        <location filename="../analyzer/nanovna_analyzer.cpp" line="819"/>
         <source>Unknown</source>
         <translation>Desconocido</translation>
     </message>
@@ -2737,34 +2778,34 @@ Haga clic derecho en un elemento para ver más opciones</translation>
     </message>
     <message>
         <location filename="../src/screenshot.cpp" line="140"/>
-        <location filename="../src/screenshot.cpp" line="583"/>
+        <location filename="../src/screenshot.cpp" line="626"/>
         <source>Image added to clipboard</source>
         <translation>Imagen agregada al portapapeles</translation>
     </message>
     <message>
         <location filename="../src/screenshot.cpp" line="211"/>
-        <location filename="../src/screenshot.cpp" line="641"/>
+        <location filename="../src/screenshot.cpp" line="685"/>
         <source>Export PDF</source>
         <translation>Exportar PDF</translation>
     </message>
     <message>
-        <location filename="../src/screenshot.cpp" line="624"/>
+        <location filename="../src/screenshot.cpp" line="668"/>
         <source>Save as BMP</source>
         <translation>Guardar como BMP</translation>
     </message>
     <message>
-        <location filename="../src/screenshot.cpp" line="665"/>
-        <location filename="../src/screenshot.cpp" line="675"/>
+        <location filename="../src/screenshot.cpp" line="709"/>
+        <location filename="../src/screenshot.cpp" line="719"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location filename="../src/screenshot.cpp" line="665"/>
+        <location filename="../src/screenshot.cpp" line="709"/>
         <source>Screenshot not supported on this device.</source>
         <translation>Captura de pantalla no compatible con este dispositivo.</translation>
     </message>
     <message>
-        <location filename="../src/screenshot.cpp" line="675"/>
+        <location filename="../src/screenshot.cpp" line="719"/>
         <source>Error while make screenshot. Please try again.</source>
         <translation>Error al realizar la captura de pantalla. Inténtelo de nuevo.</translation>
     </message>
@@ -2772,7 +2813,7 @@ Haga clic derecho en un elemento para ver más opciones</translation>
 <context>
     <name>SelectDeviceDialog</name>
     <message>
-        <location filename="../src/selectdevicedialog.cpp" line="208"/>
+        <location filename="../src/selectdevicedialog.cpp" line="215"/>
         <source>Select device</source>
         <translation>Seleccionar dispositivo</translation>
     </message>
@@ -2842,38 +2883,38 @@ Haga clic derecho en un elemento para ver más opciones</translation>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <location filename="../src/selectdevicedialog.cpp" line="170"/>
+        <location filename="../src/selectdevicedialog.cpp" line="177"/>
         <source>This version of the operating system does not guarantee the correct operation of the BLE.</source>
         <translation>Esta versión del sistema operativo no garantiza el correcto funcionamiento del BLE.</translation>
     </message>
     <message>
-        <location filename="../src/selectdevicedialog.cpp" line="206"/>
+        <location filename="../src/selectdevicedialog.cpp" line="213"/>
         <source>Serial number does not match the type of device</source>
         <translation>El número de serie no coincide con el tipo de dispositivo</translation>
     </message>
     <message>
-        <location filename="../src/selectdevicedialog.cpp" line="273"/>
+        <location filename="../src/selectdevicedialog.cpp" line="280"/>
         <source>Device name</source>
         <translation>Nombre del dispositivo</translation>
     </message>
     <message>
-        <location filename="../src/selectdevicedialog.cpp" line="274"/>
-        <location filename="../src/selectdevicedialog.cpp" line="425"/>
+        <location filename="../src/selectdevicedialog.cpp" line="281"/>
+        <location filename="../src/selectdevicedialog.cpp" line="432"/>
         <source>Serial number</source>
         <translation>Número de serie</translation>
     </message>
     <message>
-        <location filename="../src/selectdevicedialog.cpp" line="280"/>
+        <location filename="../src/selectdevicedialog.cpp" line="287"/>
         <source>Port name</source>
         <translation>Nombre del puerto</translation>
     </message>
     <message>
-        <location filename="../src/selectdevicedialog.cpp" line="378"/>
+        <location filename="../src/selectdevicedialog.cpp" line="385"/>
         <source>Name</source>
         <translation>Nombre</translation>
     </message>
     <message>
-        <location filename="../src/selectdevicedialog.cpp" line="379"/>
+        <location filename="../src/selectdevicedialog.cpp" line="386"/>
         <source>Address</source>
         <translation>Dirección</translation>
     </message>
@@ -2891,79 +2932,79 @@ Haga clic derecho en un elemento para ver más opciones</translation>
         <translation>General</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2554"/>
-        <location filename="../src/settings.cpp" line="292"/>
+        <location filename="../src/settings.ui" line="2749"/>
+        <location filename="../src/settings.cpp" line="330"/>
         <source>Register application</source>
         <translation>Registrar aplicación</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2561"/>
+        <location filename="../src/settings.ui" line="2756"/>
         <source>Match license</source>
         <translation>Vincular licencia</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2584"/>
+        <location filename="../src/settings.ui" line="2779"/>
         <source>Register device</source>
         <translation>Registrar dispositivo</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2577"/>
+        <location filename="../src/settings.ui" line="2772"/>
         <source>Update license</source>
         <translation>Actualizar licencia</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2570"/>
+        <location filename="../src/settings.ui" line="2765"/>
         <source>Device info</source>
         <translation>Información del dispositivo</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="176"/>
+        <location filename="../src/settings.ui" line="140"/>
         <source>Measurement system</source>
         <translation>Sistema de medición</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="192"/>
+        <location filename="../src/settings.ui" line="156"/>
         <source>Metric</source>
         <translation>Métrico</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="197"/>
+        <location filename="../src/settings.ui" line="161"/>
         <source>Imperial</source>
         <translation>Imperial</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="207"/>
-        <location filename="../src/settings.ui" line="223"/>
+        <location filename="../src/settings.ui" line="171"/>
+        <location filename="../src/settings.ui" line="187"/>
         <source>The maximum number of simultaneously displayed measurements</source>
         <translation>El número máximo de mediciones mostradas simultáneamente</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="226"/>
+        <location filename="../src/settings.ui" line="190"/>
         <source>Max measurements</source>
         <translation>Máx. mediciones</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="981"/>
+        <location filename="../src/settings.ui" line="864"/>
         <source>Marker behavior</source>
         <translation>Comportamiento del marcador</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1011"/>
+        <location filename="../src/settings.ui" line="894"/>
         <source>Maximum number of markers</source>
         <translation>Número máximo de marcadores</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1033"/>
+        <location filename="../src/settings.ui" line="916"/>
         <source>After a single/full scan finishes, place a marker at the frequency with the lowest SWR -- only if a marker slot is free (see &quot;Maximum number of markers&quot; above). Never fires during a Continuous scan.</source>
         <translation>Al finalizar un escaneo único/completo, coloca un marcador en la frecuencia con el SWR más bajo, solo si hay una ranura de marcador libre (vea &quot;Número máximo de marcadores&quot; arriba). Nunca se activa durante un escaneo continuo.</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1036"/>
+        <location filename="../src/settings.ui" line="919"/>
         <source>Automatically set a marker at the lowest SWR</source>
         <translation>Establecer automáticamente un marcador en el SWR más bajo</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1853"/>
+        <location filename="../src/settings.ui" line="1868"/>
         <source>Don&apos;t restrict frequency</source>
         <translation>No restringir la frecuencia</translation>
     </message>
@@ -2978,837 +3019,960 @@ Haga clic derecho en un elemento para ver más opciones</translation>
         <translation>Ohm</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1060"/>
+        <location filename="../src/settings.ui" line="96"/>
+        <source>Shows additional, technical analyzer error messages
+(BLE connection/protocol errors) in the error dialog.
+Off by default -- frequent and low-level, more noise
+than help for day-to-day use. Always-shown messages
+(analyzer busy/unreachable) aren&apos;t affected.</source>
+        <translation>Muestra mensajes de error técnicos adicionales del
+analizador (errores de conexión/protocolo BLE) en el
+diálogo de errores. Desactivado de forma predeterminada
+-- son frecuentes y de bajo nivel, más ruido que ayuda
+para el uso diario. Los mensajes siempre mostrados
+(analizador ocupado/inalcanzable) no se ven afectados.</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="110"/>
+        <source>Neither classic ASCII nor V2/LiteVNA64 binary NanoVNA
+protocols have a &quot;abort scan in progress&quot; command.
+Once asked for N points, the device sends all of them.
+
+By default: stops listening and discards outstanding data.
+Checked: closes/reopens connection immediately (faster
+for large scans, but doesn&apos;t guarantee the device
+discards queued data -- only that AntScopeZ resyncs).</source>
+        <translation>Ni el protocolo ASCII clásico ni el binario V2/LiteVNA64
+de NanoVNA tienen un comando para &quot;abortar el escaneo
+en curso&quot;. Una vez solicitados N puntos, el dispositivo
+los envía todos.
+
+Por defecto: deja de escuchar y descarta los datos
+pendientes. Marcado: cierra/reabre la conexión de
+inmediato (más rápido para escaneos grandes, pero no
+garantiza que el dispositivo descarte los datos en cola
+-- solo que AntScopeZ se resincroniza).</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="127"/>
+        <source>A measurement is &quot;dirty&quot; if scanned or renamed
+since it was last saved (shown as &quot; *&quot; in Points column).
+
+Warns before Delete/Clear All discards any dirty measurement.</source>
+        <translation>Una medición está &quot;sucia&quot; si se escaneó o renombró
+desde la última vez que se guardó (se muestra como
+&quot; *&quot; en la columna Puntos).
+
+Advierte antes de que Eliminar/Borrar todo descarte
+cualquier medición sucia.</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="542"/>
+        <source>Editable field/control fill (QLineEdit/QSpinBox/QComboBox Base).
+Was computed from Window Background, now directly-editable.</source>
+        <translation>Color de relleno de campos/controles editables
+(Base de QLineEdit/QSpinBox/QComboBox).
+Antes se calculaba a partir del fondo de la ventana,
+ahora es editable directamente.</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="943"/>
         <source>OSL Calibration</source>
         <translation>Calibración OSL</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1068"/>
+        <location filename="../src/settings.ui" line="951"/>
         <source>Calibration Wizard</source>
         <translation>Asistente de calibración</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1083"/>
+        <location filename="../src/settings.ui" line="966"/>
         <source>Start</source>
         <translation>Iniciar</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1103"/>
+        <location filename="../src/settings.ui" line="986"/>
         <source>Points</source>
         <translation>Puntos</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1132"/>
-        <location filename="../src/settings.cpp" line="602"/>
-        <location filename="../src/settings.cpp" line="672"/>
+        <location filename="../src/settings.ui" line="1015"/>
+        <location filename="../src/settings.cpp" line="653"/>
+        <location filename="../src/settings.cpp" line="723"/>
         <source>Open</source>
         <translation>Open</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1141"/>
-        <location filename="../src/settings.ui" line="1202"/>
-        <location filename="../src/settings.ui" line="1260"/>
+        <location filename="../src/settings.ui" line="1024"/>
+        <location filename="../src/settings.ui" line="1085"/>
+        <location filename="../src/settings.ui" line="1143"/>
         <source>Not chosen</source>
         <translation>No seleccionado</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1170"/>
-        <location filename="../src/settings.ui" line="1228"/>
-        <location filename="../src/settings.ui" line="1286"/>
+        <location filename="../src/settings.ui" line="1053"/>
+        <location filename="../src/settings.ui" line="1111"/>
+        <location filename="../src/settings.ui" line="1169"/>
         <source>Open file</source>
         <translation>Abrir archivo</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1183"/>
+        <location filename="../src/settings.ui" line="1066"/>
         <source>Start Open Calibration</source>
         <translation>Iniciar calibración Open</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1193"/>
-        <location filename="../src/settings.cpp" line="682"/>
+        <location filename="../src/settings.ui" line="1076"/>
+        <location filename="../src/settings.cpp" line="733"/>
         <source>Short</source>
         <translation>Short</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1241"/>
+        <location filename="../src/settings.ui" line="1124"/>
         <source>Start Short Calibration</source>
         <translation>Iniciar calibración Short</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1251"/>
-        <location filename="../src/settings.cpp" line="692"/>
+        <location filename="../src/settings.ui" line="1134"/>
+        <location filename="../src/settings.cpp" line="743"/>
         <source>Load</source>
         <translation>Load</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1299"/>
+        <location filename="../src/settings.ui" line="1182"/>
         <source>Start Load Calibration</source>
         <translation>Iniciar calibración Load</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1309"/>
+        <location filename="../src/settings.ui" line="1192"/>
         <source>TextLabel</source>
         <translation>Etiqueta de texto</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1319"/>
+        <location filename="../src/settings.ui" line="1202"/>
         <source>Cable</source>
         <translation>Cable</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1760"/>
+        <location filename="../src/settings.ui" line="1643"/>
         <source>Cable length</source>
         <translation>Longitud del cable</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1590"/>
+        <location filename="../src/settings.ui" line="1473"/>
         <source>Velocity factor</source>
         <translation>Factor de velocidad</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1457"/>
+        <location filename="../src/settings.ui" line="1340"/>
         <source>Conductive loss</source>
         <translation>Pérdida conductiva</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1503"/>
+        <location filename="../src/settings.ui" line="1386"/>
         <source>Dielectric loss</source>
         <translation>Pérdida dieléctrica</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1558"/>
+        <location filename="../src/settings.ui" line="1441"/>
         <source>dB/100feet</source>
         <translation>dB/100pies</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1563"/>
+        <location filename="../src/settings.ui" line="1446"/>
         <source>dB/feet</source>
         <translation>dB/pie</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1568"/>
+        <location filename="../src/settings.ui" line="1451"/>
         <source>dB/100m</source>
         <translation>dB/100m</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1573"/>
+        <location filename="../src/settings.ui" line="1456"/>
         <source>dB/m</source>
         <translation>dB/m</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1581"/>
+        <location filename="../src/settings.ui" line="1464"/>
         <source>at</source>
         <translation>a</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1392"/>
+        <location filename="../src/settings.ui" line="1275"/>
         <source>any frequency</source>
         <translation>cualquier frecuencia</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1433"/>
+        <location filename="../src/settings.ui" line="1316"/>
         <source>MHz</source>
         <translation>MHz</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1606"/>
+        <location filename="../src/settings.ui" line="1489"/>
         <source>Transmission line options</source>
         <translation>Opciones de línea de transmisión</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1728"/>
+        <location filename="../src/settings.ui" line="1611"/>
         <source>Do nothing</source>
         <translation>No hacer nada</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1696"/>
+        <location filename="../src/settings.ui" line="1579"/>
         <source>Subtract cable</source>
         <translation>Restar cable</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1712"/>
+        <location filename="../src/settings.ui" line="1595"/>
         <source>Add cable</source>
         <translation>Agregar cable</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1798"/>
+        <location filename="../src/settings.ui" line="1681"/>
         <source>Export</source>
         <translation>Exportar</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1805"/>
+        <location filename="../src/settings.ui" line="1688"/>
         <source>Update graphs</source>
         <translation>Actualizar gráficos</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1846"/>
+        <location filename="../src/settings.ui" line="1861"/>
         <source>Use customized analyzer</source>
         <translation>Usar analizador personalizado</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="474"/>
-        <location filename="../src/settings.ui" line="1862"/>
+        <location filename="../src/settings.ui" line="346"/>
+        <location filename="../src/settings.ui" line="1877"/>
         <source>Name</source>
         <translation>Nombre</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="98"/>
-        <location filename="../src/settings.ui" line="108"/>
+        <location filename="../src/settings.ui" line="1706"/>
+        <location filename="../src/settings.ui" line="1716"/>
         <source>How long a scan can go without receiving any data before it&apos;s treated as failed (device unreachable, or busy -- held open by another program or another AntScopeZ window).</source>
         <translation>Cuánto tiempo puede pasar un escaneo sin recibir ningún dato antes de considerarse fallido (dispositivo inalcanzable, u ocupado -- mantenido abierto por otro programa u otra ventana de AntScopeZ).</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="101"/>
+        <location filename="../src/settings.ui" line="1709"/>
         <source>Analyzer timeout:</source>
         <translation>Tiempo de espera del analizador:</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="124"/>
+        <location filename="../src/settings.ui" line="1732"/>
         <source>sec</source>
         <translation>s</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="146"/>
-        <source>Shows additional, more technical analyzer error messages (BLE connection/protocol errors) in the analyzer error dialog. Off by default -- these are frequent and low-level enough to be more noise than help for most day-to-day use. The small set of always-shown messages (analyzer busy/unreachable) aren&apos;t affected by this.</source>
-        <translation>Muestra mensajes de error del analizador adicionales y más técnicos (errores de conexión/protocolo BLE) en el diálogo de error del analizador. Desactivado por defecto -- son lo bastante frecuentes y de bajo nivel como para ser más ruido que ayuda en el uso diario. El pequeño conjunto de mensajes que siempre se muestran (analizador ocupado/inalcanzable) no se ve afectado por esto.</translation>
-    </message>
-    <message>
-        <location filename="../src/settings.ui" line="149"/>
+        <location filename="../src/settings.ui" line="103"/>
         <source>Report Detailed Errors</source>
         <translation>Informar errores detallados</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="156"/>
-        <source>Neither the classic ASCII nor the V2/LiteVNA64 binary NanoVNA protocol has a wire-level &quot;abort a scan in progress&quot; command -- once asked for N points, the device (real or emulated) is going to send all of them. By default, stopping a scan early waits out whatever&apos;s still outstanding and quietly discards it. Checking this instead closes and reopens the connection right away, which is often faster for a large scan -- but isn&apos;t guaranteed to make every device actually discard what it already queued internally, only that AntScopeZ itself stops listening and resyncs cleanly on the next connect.</source>
-        <translation>Ni el protocolo ASCII clásico ni el protocolo binario NanoVNA V2/LiteVNA64 tienen un comando a nivel de cable para &quot;abortar un escaneo en curso&quot; -- una vez que se piden N puntos, el dispositivo (real o emulado) va a enviarlos todos. Por defecto, detener un escaneo antes de tiempo espera a que llegue todo lo pendiente y lo descarta silenciosamente. Marcar esto en su lugar cierra y vuelve a abrir la conexión de inmediato, lo cual suele ser más rápido para un escaneo grande -- pero no garantiza que cada dispositivo realmente descarte lo que ya tenía en cola internamente, solo que AntScopeZ deja de escuchar y se resincroniza correctamente en la siguiente conexión.</translation>
-    </message>
-    <message>
-        <location filename="../src/settings.ui" line="159"/>
+        <location filename="../src/settings.ui" line="120"/>
         <source>Use reconnect to drain unwanted data</source>
         <translation>Usar reconexión para vaciar datos no deseados</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="166"/>
-        <source>A measurement is &quot;dirty&quot; if it came from a scan or was renamed since it was last saved -- shown as a trailing &quot; *&quot; in the measurements list&apos;s Points column. Warns before Delete/Clear All would discard any dirty measurement.</source>
-        <translation>Una medición está &quot;sin guardar&quot; si proviene de un escaneo o se renombró desde la última vez que se guardó -- se muestra como un &quot; *&quot; al final de la columna Puntos de la lista de mediciones. Avisa antes de que Eliminar/Borrar todo descarte cualquier medición sin guardar.</translation>
-    </message>
-    <message>
-        <location filename="../src/settings.ui" line="169"/>
+        <location filename="../src/settings.ui" line="133"/>
         <source>Warn before deleting or clearing dirty measurements</source>
         <translation>Avisar antes de eliminar o borrar mediciones sin guardar</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="237"/>
-        <location filename="../src/settings.ui" line="253"/>
+        <location filename="../src/settings.ui" line="201"/>
+        <location filename="../src/settings.ui" line="217"/>
         <source>Line width (pixels) for the currently-selected measurement&apos;s traces</source>
         <translation>Grosor de línea (en píxeles) para las trazas de la medición seleccionada actualmente</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="256"/>
+        <location filename="../src/settings.ui" line="220"/>
         <source>Selected measurement line width</source>
         <translation>Grosor de línea de la medición seleccionada</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="267"/>
-        <location filename="../src/settings.ui" line="283"/>
+        <location filename="../src/settings.ui" line="231"/>
+        <location filename="../src/settings.ui" line="247"/>
         <source>Line width (pixels) for every other loaded measurement&apos;s traces</source>
         <translation>Grosor de línea (en píxeles) para las trazas de cualquier otra medición cargada</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="286"/>
+        <location filename="../src/settings.ui" line="250"/>
         <source>Other measurements&apos; line width</source>
         <translation>Grosor de línea de otras mediciones</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="304"/>
+        <location filename="../src/settings.ui" line="1698"/>
+        <source>Analyzer</source>
+        <translation>Analizador</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="1760"/>
         <source>Scanning</source>
         <translation>Escaneo</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="315"/>
-        <location filename="../src/settings.ui" line="325"/>
+        <location filename="../src/settings.ui" line="1771"/>
+        <location filename="../src/settings.ui" line="1781"/>
         <source>The Points field/slider&apos;s practical ceiling (50-10000). Lower this if your device or scan speed doesn&apos;t need the full range.</source>
         <translation>El límite práctico del campo/deslizador de Puntos (50-10000). Redúzcalo si su dispositivo o velocidad de escaneo no necesita el rango completo.</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="318"/>
+        <location filename="../src/settings.ui" line="1774"/>
         <source>Scanning points maximum</source>
         <translation>Máximo de puntos de escaneo</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="335"/>
-        <location filename="../src/settings.ui" line="345"/>
+        <location filename="../src/settings.ui" line="1791"/>
+        <location filename="../src/settings.ui" line="1801"/>
         <source>Starting a scan requesting more points than this pops a confirm/cancel warning first (50-10000).</source>
         <translation>Iniciar un escaneo que solicite más puntos que este valor muestra primero una advertencia de confirmar/cancelar (50-10000).</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="338"/>
+        <location filename="../src/settings.ui" line="1794"/>
         <source>Warn for scans above</source>
         <translation>Advertir para escaneos por encima de</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="355"/>
-        <location filename="../src/settings.ui" line="365"/>
+        <location filename="../src/settings.ui" line="1811"/>
+        <location filename="../src/settings.ui" line="1821"/>
         <source>How many points a single sweep request actually carries to the device (50-10000). A scan asking for more gets split into multiple sequential sweeps and stitched together.</source>
         <translation>Cuántos puntos lleva realmente al dispositivo una sola solicitud de barrido (50-10000). Un escaneo que pida más se divide en varios barridos secuenciales que luego se combinan.</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="358"/>
+        <location filename="../src/settings.ui" line="1814"/>
         <source>Analyzer maximum number of points</source>
         <translation>Número máximo de puntos del analizador</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="375"/>
+        <location filename="../src/settings.ui" line="2291"/>
+        <source>Graphs</source>
+        <translation>Gráficos</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="2303"/>
+        <source>Zoom &amp; Remote API</source>
+        <translation>Zoom y API remota</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="2314"/>
         <source>Lets Ctrl+scroll/Ctrl+/- zoom the SWR/Z=R+jX/Z=R‖jX/RL charts&apos; Y-axis, and plain scroll zoom the TDR chart&apos;s distance axis, past their normal preset limits.</source>
         <translation>Permite que Ctrl+desplazamiento/Ctrl+/- amplíen el eje Y de los gráficos SWR/Z=R+jX/Z=R‖jX/RL, y el desplazamiento simple amplíe el eje de distancia del gráfico TDR, más allá de sus límites preestablecidos normales.</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="378"/>
+        <location filename="../src/settings.ui" line="2317"/>
         <source>Allow extended chart zoom</source>
         <translation>Permitir zoom de gráfico extendido</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="394"/>
+        <location filename="../src/settings.ui" line="266"/>
         <source>Data folder</source>
         <translation>Carpeta de datos</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="421"/>
+        <location filename="../src/settings.ui" line="293"/>
         <source>Browse...</source>
         <translation>Examinar...</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="430"/>
+        <location filename="../src/settings.ui" line="302"/>
         <source>Save actions update this folder</source>
         <translation>Las acciones de guardado actualizan esta carpeta</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="454"/>
+        <location filename="../src/settings.ui" line="326"/>
         <source>Themes</source>
         <translation>Temas</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="464"/>
+        <location filename="../src/settings.ui" line="336"/>
         <source>Theme</source>
         <translation>Tema</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="484"/>
+        <location filename="../src/settings.ui" line="356"/>
         <source>Window Background</source>
         <translation>Fondo de ventana</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="506"/>
-        <location filename="../src/settings.ui" line="537"/>
+        <location filename="../src/settings.ui" line="378"/>
+        <location filename="../src/settings.ui" line="409"/>
+        <location filename="../src/settings.ui" line="440"/>
+        <location filename="../src/settings.ui" line="471"/>
+        <location filename="../src/settings.ui" line="502"/>
+        <location filename="../src/settings.ui" line="533"/>
         <location filename="../src/settings.ui" line="568"/>
-        <location filename="../src/settings.ui" line="599"/>
-        <location filename="../src/settings.ui" line="630"/>
-        <location filename="../src/settings.ui" line="661"/>
-        <location filename="../src/settings.ui" line="695"/>
         <source>#000000</source>
         <translation>#000000</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="515"/>
+        <location filename="../src/settings.ui" line="387"/>
         <source>Text</source>
         <translation>Texto</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="546"/>
+        <location filename="../src/settings.ui" line="418"/>
         <source>Text Muted</source>
         <translation>Texto atenuado</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="577"/>
+        <location filename="../src/settings.ui" line="449"/>
         <source>Border</source>
         <translation>Borde</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="608"/>
+        <location filename="../src/settings.ui" line="480"/>
         <source>Chart Background</source>
         <translation>Fondo del gráfico</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="639"/>
+        <location filename="../src/settings.ui" line="511"/>
         <source>Marker</source>
         <translation>Marcador</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="670"/>
-        <source>Editable field/control fill (QLineEdit/QSpinBox/QComboBox&apos;s Base -- was computed automatically from Window Background before this, now a real, directly-editable color).</source>
-        <translation>Relleno de campo/control editable (Base de QLineEdit/QSpinBox/QComboBox: antes se calculaba automáticamente a partir del fondo de ventana, ahora es un color real, directamente editable).</translation>
-    </message>
-    <message>
-        <location filename="../src/settings.ui" line="673"/>
+        <location filename="../src/settings.ui" line="546"/>
         <source>Base (editable fields)</source>
         <translation>Base (campos editables)</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="721"/>
+        <location filename="../src/settings.ui" line="594"/>
         <source>Default</source>
         <translation>Predeterminado</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="741"/>
+        <location filename="../src/settings.ui" line="614"/>
+        <source>Make the selected theme the app&apos;s active theme now</source>
+        <translation>Hace que el tema seleccionado sea el tema activo de la aplicación ahora mismo</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="624"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="751"/>
+        <location filename="../src/settings.ui" line="634"/>
         <source>Save</source>
         <translation>Guardar</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="762"/>
+        <location filename="../src/settings.ui" line="645"/>
         <source>Example</source>
         <translation>Ejemplo</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="773"/>
-        <location filename="../src/settings.ui" line="818"/>
-        <location filename="../src/settings.ui" line="841"/>
+        <location filename="../src/settings.ui" line="656"/>
+        <location filename="../src/settings.ui" line="701"/>
+        <location filename="../src/settings.ui" line="724"/>
         <source>Enabled</source>
         <translation>Habilitado</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="783"/>
-        <location filename="../src/settings.ui" line="831"/>
-        <location filename="../src/settings.ui" line="857"/>
+        <location filename="../src/settings.ui" line="666"/>
+        <location filename="../src/settings.ui" line="714"/>
+        <location filename="../src/settings.ui" line="740"/>
         <source>Disabled</source>
         <translation>Deshabilitado</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="794"/>
+        <location filename="../src/settings.ui" line="677"/>
         <source>Editable field (Base)</source>
         <translation>Campo editable (Base)</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="797"/>
+        <location filename="../src/settings.ui" line="680"/>
         <source>Editable</source>
         <translation>Editable</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="804"/>
+        <location filename="../src/settings.ui" line="687"/>
         <source>Locked field (e.g. Settings &gt; Cable&apos;s Preset mode)</source>
         <translation>Campo bloqueado (p. ej. el modo Preestablecido de Configuración &gt; Cable)</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="807"/>
+        <location filename="../src/settings.ui" line="690"/>
         <source>Locked</source>
         <translation>Bloqueado</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="872"/>
+        <location filename="../src/settings.ui" line="755"/>
         <source>Sample chart</source>
         <translation>Gráfico de ejemplo</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="935"/>
+        <location filename="../src/settings.ui" line="818"/>
         <source>1</source>
         <translation>1</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="975"/>
+        <location filename="../src/settings.ui" line="858"/>
         <source>Markers</source>
         <translation>Marcadores</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="992"/>
-        <location filename="../src/settings.ui" line="1008"/>
+        <location filename="../src/settings.ui" line="875"/>
+        <location filename="../src/settings.ui" line="891"/>
         <source>The maximum number of markers that can be placed at once</source>
         <translation>El número máximo de marcadores que se pueden colocar a la vez</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1049"/>
+        <location filename="../src/settings.ui" line="932"/>
         <source>Available</source>
         <translation>Disponibles</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1052"/>
+        <location filename="../src/settings.ui" line="935"/>
         <source>Selected</source>
         <translation>Seleccionados</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1327"/>
+        <location filename="../src/settings.ui" line="1210"/>
         <source>Pick a cable type below -- velocity factor, R0, and loss figures are filled in from it and can&apos;t be hand-edited while Preset is selected.</source>
         <translation>Elija abajo un tipo de cable: el factor de velocidad, R0 y las cifras de pérdida se completan a partir de él y no se pueden editar manualmente mientras esté seleccionado Preestablecido.</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1330"/>
+        <location filename="../src/settings.ui" line="1213"/>
         <source>Preset</source>
         <translation>Preestablecido</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1337"/>
+        <location filename="../src/settings.ui" line="1220"/>
         <source>Enter velocity factor, R0, and loss figures by hand -- e.g. from a manufacturer datasheet for a cable not in the preset list, or a velocity factor solved from Tools &gt; TDR Analysis.</source>
         <translation>Introduzca manualmente el factor de velocidad, R0 y las cifras de pérdida, por ejemplo, de la hoja de datos de un fabricante para un cable que no está en la lista de preestablecidos, o un factor de velocidad obtenido en Herramientas &gt; Análisis TDR.</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1340"/>
+        <location filename="../src/settings.ui" line="1223"/>
         <source>Custom</source>
         <translation>Personalizado</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1381"/>
+        <location filename="../src/settings.ui" line="1264"/>
         <source>Cable specifications</source>
         <translation>Especificaciones del cable</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1536"/>
+        <location filename="../src/settings.ui" line="1419"/>
         <source>Cable R0 (ohm)</source>
         <translation>R0 del cable (ohm)</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1627"/>
+        <location filename="../src/settings.ui" line="1510"/>
         <source>Remove this cable&apos;s modeled effect, showing the antenna&apos;s true impedance at its own terminals (de-embedding) -- use when you measured through a known feedline.</source>
         <translation>Elimina el efecto modelado de este cable, mostrando la impedancia real de la antena en sus propios terminales (de-embedding); úselo cuando midió a través de una línea de alimentación conocida.</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1649"/>
+        <location filename="../src/settings.ui" line="1532"/>
         <source>Use the measured impedance as-is -- no cable model applied.</source>
         <translation>Usar la impedancia medida tal cual, sin aplicar ningún modelo de cable.</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1750"/>
+        <location filename="../src/settings.ui" line="1633"/>
         <source>Project a bare measurement forward through this modeled cable, showing what the radio end would actually see (embedding).</source>
         <translation>Proyecta una medición sin procesar hacia adelante a través de este cable modelado, mostrando lo que realmente vería el extremo de la radio (embedding).</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1815"/>
-        <source>Developer</source>
-        <translation>Desarrollador</translation>
-    </message>
-    <message>
-        <location filename="../src/settings.ui" line="1821"/>
+        <location filename="../src/settings.ui" line="1836"/>
         <source>Custom Analyzer</source>
         <translation>Analizador personalizado</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1830"/>
-        <location filename="../src/settings.ui" line="2312"/>
+        <location filename="../src/settings.ui" line="1845"/>
+        <location filename="../src/settings.ui" line="2507"/>
         <source>This feature is currently under development.</source>
         <translation>Esta función está actualmente en desarrollo.</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1886"/>
+        <location filename="../src/settings.ui" line="1901"/>
         <source>Prototype</source>
         <translation>Prototipo</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1907"/>
+        <location filename="../src/settings.ui" line="1922"/>
         <source>Frequency(kHz)</source>
         <translation>Frecuencia(kHz)</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1919"/>
-        <location filename="../src/settings.ui" line="2070"/>
+        <location filename="../src/settings.ui" line="1934"/>
+        <location filename="../src/settings.ui" line="2085"/>
         <source>Min</source>
         <translation>Mín</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1926"/>
-        <location filename="../src/settings.ui" line="2097"/>
+        <location filename="../src/settings.ui" line="1941"/>
+        <location filename="../src/settings.ui" line="2112"/>
         <source>Max</source>
         <translation>Máx</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1942"/>
+        <location filename="../src/settings.ui" line="1957"/>
         <source>LCD screen</source>
         <translation>Pantalla LCD</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1954"/>
+        <location filename="../src/settings.ui" line="1969"/>
         <source>Width</source>
         <translation>Ancho</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="1974"/>
+        <location filename="../src/settings.ui" line="1989"/>
         <source>Height</source>
         <translation>Alto</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2003"/>
+        <location filename="../src/settings.ui" line="2018"/>
         <source>New</source>
         <translation>Nuevo</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2010"/>
+        <location filename="../src/settings.ui" line="2025"/>
         <source>Remove</source>
         <translation>Quitar</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2030"/>
+        <location filename="../src/settings.ui" line="617"/>
+        <location filename="../src/settings.ui" line="2045"/>
         <source>Apply</source>
         <translation>Aplicar</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2041"/>
+        <location filename="../src/settings.ui" line="2056"/>
         <source>Auto calibration</source>
         <translation>Calibración automática</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2050"/>
+        <location filename="../src/settings.ui" line="2065"/>
         <source>Length</source>
         <translation>Longitud</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2124"/>
+        <location filename="../src/settings.ui" line="2139"/>
         <source>Steps</source>
         <translation>Pasos</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2060"/>
+        <location filename="../src/settings.ui" line="2075"/>
         <source>Resistance</source>
         <translation>Resistencia</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2185"/>
+        <location filename="../src/settings.ui" line="2200"/>
         <source>Debug Logging</source>
         <translation>Registro de depuración</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2276"/>
+        <location filename="../src/settings.ui" line="2324"/>
+        <source>Starts a local NDJSON-over-TCP control API (loopback only by default) that lets external tools observe/control the connected analyzer. Off by default.</source>
+        <translation>Inicia una API de control local NDJSON sobre TCP (solo loopback de forma predeterminada) que permite a herramientas externas observar/controlar el analizador conectado. Desactivada de forma predeterminada.</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="2327"/>
+        <source>Enable Remote API</source>
+        <translation>Habilitar API remota</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="2334"/>
+        <location filename="../src/settings.ui" line="2344"/>
+        <source>TCP port the Remote API listens on (loopback only).</source>
+        <translation>Puerto TCP en el que escucha la API remota (solo loopback).</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="2337"/>
+        <source>Remote API port</source>
+        <translation>Puerto de la API remota</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="2365"/>
+        <source>Chart Y-Axis Ranges</source>
+        <translation>Rangos del eje Y de los gráficos</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="2374"/>
+        <location filename="../src/settings.ui" line="2384"/>
+        <source>Phase chart&apos;s Y-axis lower bound, in degrees. Defaults to -180, the app&apos;s historical fixed range.</source>
+        <translation>Límite inferior del eje Y del gráfico de fase, en grados. El valor predeterminado es -180, el rango fijo histórico de la aplicación.</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="2377"/>
+        <source>Phase chart Y-axis min (deg)</source>
+        <translation>Mín. eje Y del gráfico de fase (grados)</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="2394"/>
+        <location filename="../src/settings.ui" line="2404"/>
+        <source>Phase chart&apos;s Y-axis upper bound, in degrees. Defaults to 180, the app&apos;s historical fixed range.</source>
+        <translation>Límite superior del eje Y del gráfico de fase, en grados. El valor predeterminado es 180, el rango fijo histórico de la aplicación.</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="2397"/>
+        <source>Phase chart Y-axis max (deg)</source>
+        <translation>Máx. eje Y del gráfico de fase (grados)</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="2414"/>
+        <location filename="../src/settings.ui" line="2424"/>
+        <source>Z=R+jX / Z=R‖jX charts&apos; Y-axis lower bound, in ohms. Defaults to -2000, the app&apos;s historical fixed range.</source>
+        <translation>Límite inferior del eje Y de los gráficos Z=R+jX / Z=R‖jX, en ohmios. El valor predeterminado es -2000, el rango fijo histórico de la aplicación.</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="2417"/>
+        <source>Z=R+jX / Z=R‖jX charts Y-axis min (ohm)</source>
+        <translation>Mín. eje Y de los gráficos Z=R+jX / Z=R‖jX (Ohm)</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="2434"/>
+        <location filename="../src/settings.ui" line="2444"/>
+        <source>Z=R+jX / Z=R‖jX charts&apos; Y-axis upper bound, in ohms. Defaults to 2000, the app&apos;s historical fixed range.</source>
+        <translation>Límite superior del eje Y de los gráficos Z=R+jX / Z=R‖jX, en ohmios. El valor predeterminado es 2000, el rango fijo histórico de la aplicación.</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="2437"/>
+        <source>Z=R+jX / Z=R‖jX charts Y-axis max (ohm)</source>
+        <translation>Máx. eje Y de los gráficos Z=R+jX / Z=R‖jX (Ohm)</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="2471"/>
         <source>Updates</source>
         <translation>Actualizaciones</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2354"/>
+        <location filename="../src/settings.ui" line="2549"/>
         <source>Not implemented yet</source>
         <translation>Aún no implementado</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2357"/>
+        <location filename="../src/settings.ui" line="2552"/>
         <source>Check for Software Updates</source>
         <translation>Buscar actualizaciones de software</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2394"/>
+        <location filename="../src/settings.ui" line="2589"/>
         <source>WARNING: Firmware updates are disabled due to possible permanent corruption of your analyzer should it fail. Please contact your vendor for assistance if you should seek a firmware update.</source>
         <translation>ADVERTENCIA: las actualizaciones de firmware están deshabilitadas debido a la posible corrupción permanente de su analizador en caso de fallo. Póngase en contacto con su proveedor si necesita una actualización de firmware.</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2406"/>
+        <location filename="../src/settings.ui" line="2601"/>
         <source>Info</source>
         <translation>Información</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2419"/>
+        <location filename="../src/settings.ui" line="2614"/>
         <source>Analyzer model:</source>
         <translation>Modelo del analizador:</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2440"/>
+        <location filename="../src/settings.ui" line="2635"/>
         <source>Firmware version:</source>
         <translation>Versión de firmware:</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2461"/>
+        <location filename="../src/settings.ui" line="2656"/>
         <source>Serial number:</source>
         <translation>Número de serie:</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2485"/>
+        <location filename="../src/settings.ui" line="2680"/>
         <source>Update from file</source>
         <translation>Actualizar desde archivo</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2501"/>
+        <location filename="../src/settings.ui" line="2696"/>
         <source>Browse</source>
         <translation>Examinar</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2522"/>
-        <location filename="../src/settings.cpp" line="584"/>
+        <location filename="../src/settings.ui" line="2717"/>
+        <location filename="../src/settings.cpp" line="635"/>
         <source>Update</source>
         <translation>Actualizar</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2540"/>
-        <location filename="../src/settings.cpp" line="470"/>
+        <location filename="../src/settings.ui" line="2735"/>
+        <location filename="../src/settings.cpp" line="521"/>
         <source>Check for firmware updates</source>
         <translation>Buscar actualizaciones de firmware</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2298"/>
+        <location filename="../src/settings.ui" line="2493"/>
         <source>AntScopeZ</source>
         <translation>AntScopeZ</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2200"/>
+        <location filename="../src/settings.ui" line="2215"/>
         <source>Com/Serial</source>
         <translation>Com/Serie</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2213"/>
+        <location filename="../src/settings.ui" line="2228"/>
         <source>USB/HID</source>
         <translation>USB/HID</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2226"/>
+        <location filename="../src/settings.ui" line="2241"/>
         <source>NanoVNA</source>
         <translation>NanoVNA</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2239"/>
+        <location filename="../src/settings.ui" line="2254"/>
         <source>BLE/Bluetooth</source>
         <translation>BLE/Bluetooth</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2252"/>
+        <location filename="../src/settings.ui" line="2267"/>
         <source>BLE Pings</source>
         <translation>Pings BLE</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2282"/>
+        <location filename="../src/settings.ui" line="2477"/>
         <source>Notice:  The items on this page use the internet to send and receive information about you and your devices.  This may include email addresses, software versions, analyzer details, serial numbers and other information not deemed to be of sensitive nature.  This data may traverse the internet unencrypted if the vendor has not enabled SSL security.</source>
         <translation>Aviso: los elementos de esta página usan internet para enviar y recibir información sobre usted y sus dispositivos. Esto puede incluir direcciones de correo electrónico, versiones de software, detalles del analizador, números de serie y otra información no considerada de naturaleza sensible. Estos datos pueden viajar por internet sin cifrar si el proveedor no ha habilitado la seguridad SSL.</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2321"/>
+        <location filename="../src/settings.ui" line="2516"/>
         <source>Version:</source>
         <translation>Versión:</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2377"/>
+        <location filename="../src/settings.ui" line="2572"/>
         <source>RigExpert Specific Features</source>
         <translation>Funciones específicas de RigExpert</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2639"/>
+        <location filename="../src/settings.ui" line="2834"/>
         <source>Close</source>
         <translation>Cerrar</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="100"/>
-        <location filename="../src/settings.cpp" line="283"/>
+        <location filename="../src/settings.cpp" line="106"/>
+        <location filename="../src/settings.cpp" line="321"/>
         <source>Change application registration</source>
         <translation>Cambiar registro de la aplicación</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="108"/>
+        <location filename="../src/settings.cpp" line="114"/>
         <source>Choose file</source>
         <translation>Elegir archivo</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="195"/>
+        <location filename="../src/settings.cpp" line="229"/>
         <source>Choose data folder</source>
         <translation>Elegir carpeta de datos</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="214"/>
-        <location filename="../src/settings.cpp" line="1361"/>
+        <location filename="../src/settings.cpp" line="252"/>
+        <location filename="../src/settings.cpp" line="1412"/>
         <source>Change parameters or choose from list...</source>
         <translation>Cambiar parámetros o elegir de la lista...</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="293"/>
+        <location filename="../src/settings.cpp" line="331"/>
         <source>Do you want to register the application?</source>
         <translation>¿Desea registrar la aplicación?</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="296"/>
+        <location filename="../src/settings.cpp" line="334"/>
         <source>Registration</source>
         <translation>Registro</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="297"/>
+        <location filename="../src/settings.cpp" line="335"/>
         <source>Remind later?</source>
         <translation>¿Recordar más tarde?</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="451"/>
-        <location filename="../src/settings.cpp" line="475"/>
+        <location filename="../src/settings.cpp" line="502"/>
+        <location filename="../src/settings.cpp" line="526"/>
         <source>Checking</source>
         <translation>Comprobando</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="575"/>
+        <location filename="../src/settings.cpp" line="626"/>
         <source>Updating...</source>
         <translation>Actualizando...</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="603"/>
-        <location filename="../src/settings.cpp" line="673"/>
+        <location filename="../src/settings.cpp" line="654"/>
+        <location filename="../src/settings.cpp" line="724"/>
         <source>Please connect OPEN standard and press OK.</source>
         <translation>Conecte el estándar OPEN y presione Aceptar.</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="683"/>
+        <location filename="../src/settings.cpp" line="734"/>
         <source>Please connect SHORT standard and press OK.</source>
         <translation>Conecte el estándar SHORT y presione Aceptar.</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="693"/>
+        <location filename="../src/settings.cpp" line="744"/>
         <source>Please connect LOAD standard and press OK.</source>
         <translation>Conecte el estándar LOAD y presione Aceptar.</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="713"/>
+        <location filename="../src/settings.cpp" line="764"/>
         <source>Open &apos;open calibration&apos; file</source>
         <translation>Abrir el archivo de calibración &apos;open&apos;</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="729"/>
+        <location filename="../src/settings.cpp" line="780"/>
         <source>Open &apos;short calibration&apos; file</source>
         <translation>Abrir el archivo de calibración &apos;short&apos;</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="746"/>
+        <location filename="../src/settings.cpp" line="797"/>
         <source>Open &apos;load calibration&apos; file</source>
         <translation>Abrir el archivo de calibración &apos;load&apos;</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="784"/>
+        <location filename="../src/settings.cpp" line="835"/>
         <source>m</source>
         <translation>m</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="784"/>
+        <location filename="../src/settings.cpp" line="835"/>
         <source>ft</source>
         <translation>pies</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="958"/>
+        <location filename="../src/settings.cpp" line="1009"/>
         <source>Ideal 50-Ohm cable</source>
         <translation>Cable ideal de 50 ohmios</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="959"/>
+        <location filename="../src/settings.cpp" line="1010"/>
         <source>Ideal 50-Ohm cable, 50, 0.66, 0.0, 0.0, 0, 0</source>
         <translation>Cable ideal de 50 ohmios, 50, 0.66, 0.0, 0.0, 0, 0</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="960"/>
+        <location filename="../src/settings.cpp" line="1011"/>
         <source>Ideal 75-Ohm cable</source>
         <translation>Cable ideal de 75 ohmios</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="961"/>
+        <location filename="../src/settings.cpp" line="1012"/>
         <source>Ideal 75-Ohm cable, 75, 0.66, 0.0, 0.0, 0, 0</source>
         <translation>Cable ideal de 75 ohmios, 75, 0.66, 0.0, 0.0, 0, 0</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="962"/>
+        <location filename="../src/settings.cpp" line="1013"/>
         <source>Ideal 25-Ohm cable</source>
         <translation>Cable ideal de 25 ohmios</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="963"/>
+        <location filename="../src/settings.cpp" line="1014"/>
         <source>Ideal 25-Ohm cable, 25, 0.66, 0.0, 0.0, 0, 0</source>
         <translation>Cable ideal de 25 ohmios, 25, 0.66, 0.0, 0.0, 0, 0</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="964"/>
+        <location filename="../src/settings.cpp" line="1015"/>
         <source>Ideal 37.5-Ohm cable</source>
         <translation>Cable ideal de 37.5 ohmios</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="965"/>
+        <location filename="../src/settings.cpp" line="1016"/>
         <source>Ideal 37.5-Ohm cable, 37.5, 0.66, 0.0, 0.0, 0, 0</source>
         <translation>Cable ideal de 37.5 ohmios, 37.5, 0.66, 0.0, 0.0, 0, 0</translation>
     </message>
     <message>
-        <location filename="../src/settings.cpp" line="974"/>
+        <location filename="../src/settings.cpp" line="1025"/>
         <source>Can&apos;t open file</source>
         <translation>No se puede abrir el archivo</translation>
     </message>

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(AntScopeZ
-    VERSION 2.2.5
+    VERSION 2.2.4
     DESCRIPTION "AntScopeZ Antenna Analyzer Application"
     LANGUAGES C CXX
 )
@@ -21,9 +21,12 @@ endif()
 # only feeds ANTSCOPEZ_VER (About box, title bar, startup log line -- see
 # target_compile_definitions() below), so an in-progress build reads
 # "2.2.4-dev" instead of silently claiming to be the exact 2.2.4 release.
-# Clear it to an empty string right when 2.2.5 actually ships (matching
-# commit + `v2.2.5` tag, same pattern as `v2.2.3`/`v2.2.2`), then bump
-# PROJECT_VERSION and set this back to "-dev" to start the next cycle.
+# Clear it to an empty string right when 2.2.4 actually ships (matching
+# commit + `v2.2.4` tag, same pattern as `v2.2.3`/`v2.2.2`), then bump
+# PROJECT_VERSION to 2.2.5 and set this back to "-dev" to start the next
+# cycle. (PR #11's branch had briefly bumped this to 2.2.5 on its own --
+# corrected back to 2.2.4 on merge, since v2.2.4 was still the actual next
+# unreleased version; nothing had shipped as 2.2.4 yet.)
 set(ANTSCOPEZ_VER_SUFFIX "")
 
 set(CMAKE_CXX_STANDARD 17)

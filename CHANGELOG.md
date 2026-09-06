@@ -11,6 +11,8 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+## [2.2.4] - 2026-09-06
+
 ### Changed
 
 - Settings dialog: "Developer" tab renamed "Analyzer". (#6)
@@ -328,8 +330,6 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   that emulator is actually running (checks for its symlink at
   `/tmp/nanovna-emulator`), invisible otherwise.
 
-## [2.2.5] - 2026-09-05
-
 ### Added
 
 - Native Windows support: AntScopeZ now builds and runs natively on
@@ -387,6 +387,29 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   axis) to avoid accidental rescaling.
 - Installer: fixed a missing `ftd2xx.dll` and a broken `ProgramData`
   data-file path in the Windows installer.
+
+### Fixed
+
+- NanoVNA: the "scan"-command point-count clamp (50-401, see above) was
+  applied before picking between the "scan" and classic "sweep" device
+  commands, so it also silently truncated fallback-protocol requests --
+  clamp now only applies to the "scan" path.
+- Markers list: "Clear Empty Markers" had become unreachable -- the new
+  right-click "Clear All" put a `CustomContextMenu` policy on the table,
+  which swallows the context-menu event before the panel's own
+  `contextMenuEvent()` (where "Clear Empty Markers" lived) ever sees it.
+  Folded into the same menu instead.
+- Band Selector's "always start enabled" override (issue #23) only lasted
+  until the next band-region switch -- it never wrote the forced value
+  back to the ini, so `populateBandSelector()` re-hid it on the next
+  region change using the still-stale persisted value.
+- Remote API: connecting to a HID analyzer sent a duplicate "connected"
+  event to every subscribed client -- `cmdConnect()`'s manual broadcast
+  raced HID's own synchronous `analyzerFound` emission.
+- Settings dialog silently turned BLE "Show Pings" back off every time it
+  was reopened, even while actively enabled, contradicting its own
+  "not a hardcoded reset" comment; now only forced off when BLE/Bluetooth
+  logging itself is off, matching the checkbox's actual state.
 
 ## [2.2.3] - 2026-09-01
 
