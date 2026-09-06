@@ -571,6 +571,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_measurements, &Measurements::selectMeasurement, this, &MainWindow::on_tableWidget_measurments_cellClicked);
 
     m_analyzerConnected = false;
+    ui->actionDisconnectAnalyzer->setEnabled(false);
     refreshWindowTitle();
 
     if(m_markers == NULL)
@@ -638,6 +639,7 @@ MainWindow::MainWindow(QWidget *parent) :
     });
 
     connect(ui->actionConnectAnalyzer, &QAction::triggered, this, &MainWindow::on_selectDeviceDialog);
+    connect(ui->actionDisconnectAnalyzer, &QAction::triggered, this, &MainWindow::on_actionDisconnectAnalyzer_triggered);
 
     changeColorTheme(m_activeThemeIndex);
 

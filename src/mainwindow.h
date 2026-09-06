@@ -430,6 +430,16 @@ public slots:
     void on_analyzerFound(int index);
     void on_analyzerNameFound(QString name);
     void on_deviceDisconnected();
+    // User-requested disconnect (issue #3) -- calls AnalyzerPro::
+    // on_disconnectDevice() directly, same call already used by
+    // Settings::updateAnalyzerInfo() and LicenseAgent::finishWaitInfoB16()
+    // to force a disconnect. Reuses on_deviceDisconnected() (via
+    // AnalyzerPro::deviceDisconnected()) for all UI cleanup -- no separate
+    // path needed, since on_disconnectDevice() already nulls m_baseAnalyzer
+    // *before* emitting, so on_deviceDisconnected()'s own trailing
+    // searchAnalyzer() call (guarded on m_baseAnalyzer != nullptr) is a
+    // no-op either way, same as it already is for an unexpected drop.
+    void on_actionDisconnectAnalyzer_triggered();
     // Rebuilds the window title from current state (m_analyzerConnected/
     // m_connectedDeviceName) in the active language -- the one place that
     // actually composes it, called from both connect/disconnect and from

@@ -1080,6 +1080,13 @@ process in the settings menu!</string>
     <addaction name="actionMarkerComparison"/>
     <addaction name="actionTDRMeasurement"/>
    </widget>
+   <widget class="QMenu" name="menuAnalyzer">
+    <property name="title">
+     <string>Analy&amp;zer</string>
+    </property>
+    <addaction name="actionConnectAnalyzer"/>
+    <addaction name="actionDisconnectAnalyzer"/>
+   </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>&amp;Help</string>
@@ -1091,7 +1098,7 @@ process in the settings menu!</string>
    <addaction name="menuEdit"/>
    <addaction name="menuView"/>
    <addaction name="menuTools"/>
-   <addaction name="actionConnectAnalyzer"/>
+   <addaction name="menuAnalyzer"/>
    <addaction name="menuHelp"/>
   </widget>
   <action name="actionImport">
@@ -1144,7 +1151,12 @@ process in the settings menu!</string>
   </action>
   <action name="actionConnectAnalyzer">
    <property name="text">
-    <string>Connect &amp;Analyzer...</string>
+    <string>&amp;Connect...</string>
+   </property>
+  </action>
+  <action name="actionDisconnectAnalyzer">
+   <property name="text">
+    <string>&amp;Disconnect</string>
    </property>
   </action>
   <action name="actionMarkerComparison">

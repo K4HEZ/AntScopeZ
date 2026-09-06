@@ -45,6 +45,7 @@ void MainWindow::on_analyzerNameFound(QString name)
     ui->singleStart->setEnabled(true);
     ui->continuousStartBtn->setEnabled(true);
     ui->fullBtn->setEnabled(true);
+    ui->actionDisconnectAnalyzer->setEnabled(true);
     if (m_tdrScanDialog != nullptr)
         m_tdrScanDialog->panel()->setConnected(true);
     if (g_bAA55modeNewProtocol) {
@@ -144,6 +145,7 @@ void MainWindow::on_deviceDisconnected()
     ui->continuousStartBtn->setEnabled(false);
     ui->actionAnalyzerData->setEnabled(false);
     ui->actionScreenshotAA->setEnabled(false);
+    ui->actionDisconnectAnalyzer->setEnabled(false);
     ui->lineEdit_points->setEnabled(true);
     ui->speedAccuracySlider->setEnabled(true);
     ui->fullBtn->setEnabled(false);
@@ -162,6 +164,17 @@ void MainWindow::on_deviceDisconnected()
 
     if (m_analyzer != nullptr)
         m_analyzer->searchAnalyzer();
+}
+
+void MainWindow::on_actionDisconnectAnalyzer_triggered()
+{
+    // Same call Settings::updateAnalyzerInfo() and LicenseAgent::
+    // finishWaitInfoB16() already use to force a disconnect -- nulls
+    // m_baseAnalyzer and emits deviceDisconnected() (see AnalyzerPro::
+    // on_disconnectDevice()), which on_deviceDisconnected() above is
+    // already wired to. No separate cleanup needed here.
+    if (m_analyzer != nullptr)
+        m_analyzer->on_disconnectDevice();
 }
 
 void MainWindow::refreshWindowTitle()

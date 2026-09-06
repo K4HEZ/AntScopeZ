@@ -110,6 +110,12 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Added
 
+- New "Analyzer" menu with Connect/Disconnect actions (#3) -- there was a
+  Connect Analyzer action but no matching Disconnect;
+  `on_deviceDisconnected()`'s cleanup used to only ever run for an
+  unexpected drop. `on_actionDisconnectAnalyzer_triggered()` reuses the
+  same `AnalyzerPro::on_disconnectDevice()` call Settings/LicenseAgent
+  already use to force one, so no separate cleanup path was needed.
 - Save dialog: "AntScopeZ" (.asd) is now one of its format buttons
   (listed first) instead of having its own separate quick-save path.
   Same frequency/R/X fields as the other 1-port formats here, just as
