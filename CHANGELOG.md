@@ -100,6 +100,16 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Added
 
+- Windows packaging: `CMakePresets.json` gained `windows-mingw`/
+  `windows-mingw-release` presets (Qt Online Installer's Qt 6.11.2 MinGW
+  kit under `C:/Qt`), and `CMakeLists.txt` gained an NSIS packaging block
+  (`cpack -G NSIS`) plus the deploy/install rules an actual Windows
+  package needs: `windeployqt`-equivalent Qt runtime bundling, the FTDI
+  DLL carried into a packaged install (previously dev-tree-only), and
+  `cables.txt`/`itu-regions-defaults.txt`/`user-guide.md` landing in
+  `C:\ProgramData\AntScopeZ` where `Settings::programDataPath()` actually
+  looks on Windows. Not yet built or verified on real Windows hardware
+  by this repo's own maintainer -- see `BUILDINFO.md`.
 - Save dialog: "AntScopeZ" (.asd) is now one of its format buttons
   (listed first) instead of having its own separate quick-save path.
   Same frequency/R/X fields as the other 1-port formats here, just as

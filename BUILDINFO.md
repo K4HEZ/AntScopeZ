@@ -166,7 +166,12 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   Bluetooth works on Linux.
 - **Windows** — uses the `hidapi` Windows backend, `setupapi`, and the bundled
   FTDI DLLs in `ftdi/`. OpenSSL link flags are currently *not* applied; see the
-  note in `CMakeLists.txt`.  This project has not been tested on Windows.
+  note in `CMakeLists.txt`. `CMakePresets.json` has a `windows-mingw`/
+  `windows-mingw-release` pair (Qt Online Installer's Qt 6.11.2 MinGW kit
+  under `C:/Qt`) and `CMakeLists.txt` has an NSIS packaging block
+  (`cpack -G NSIS`), but this project has not yet been built or run on
+  Windows by this repo's own maintainer -- verification is pending from a
+  contributor with an actual Windows dev machine.
 - **macOS** — uses the `hidapi` mac backend; `build.sh` drives `macdeployqt`. 
   This project has not been tested on macOS due to not owning the hardware.
 

@@ -50,6 +50,43 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
             }
+        },
+        {
+            "name": "qt-6.11-windows",
+            "hidden": true,
+            "description": "Pins the Qt 6.11.2 MinGW kit installed by the Qt Online Installer under C:/Qt, and the Ninja/MinGW toolchain installed alongside it under C:/Qt/Tools. Mirrors the Linux qt-6.11 base preset's CMAKE_PREFIX_PATH pinning above, for the same reason: find_package(Qt6 6.2) would otherwise resolve ambiguously if more than one Qt install were ever present.",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            },
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_PREFIX_PATH": "C:/Qt/6.11.2/mingw_64",
+                "CMAKE_C_COMPILER": "C:/Qt/Tools/mingw1310_64/bin/gcc.exe",
+                "CMAKE_CXX_COMPILER": "C:/Qt/Tools/mingw1310_64/bin/g++.exe",
+                "CMAKE_MAKE_PROGRAM": "C:/Qt/Tools/Ninja/ninja.exe"
+            }
+        },
+        {
+            "name": "windows-mingw",
+            "displayName": "Windows Debug (Qt 6.11.2 MinGW)",
+            "description": "Native Windows build against the Qt Online Installer's Qt 6.11.2 MinGW 13.1.0 kit -- built and run directly on Windows, not cross-compiled.",
+            "inherits": "qt-6.11-windows",
+            "binaryDir": "${sourceDir}/build-windows-mingw",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "windows-mingw-release",
+            "displayName": "Windows Release (Qt 6.11.2 MinGW)",
+            "description": "Release variant of windows-mingw, for packaging -- same kit/toolchain, mirrors the Linux debug/release preset split above.",
+            "inherits": "qt-6.11-windows",
+            "binaryDir": "${sourceDir}/build-windows-mingw-release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
         }
     ],
     "buildPresets": [
@@ -64,6 +101,14 @@
         {
             "name": "system-qt",
             "configurePreset": "system-qt"
+        },
+        {
+            "name": "windows-mingw",
+            "configurePreset": "windows-mingw"
+        },
+        {
+            "name": "windows-mingw-release",
+            "configurePreset": "windows-mingw-release"
         }
     ]
 }
