@@ -159,7 +159,7 @@ Settings::Settings(QWidget *parent) :
     ui->checkBoxWarnDirtyDelete->setChecked(g_warnDirtyDelete);
     m_settings->endGroup();
 
-    // Debug Logging (Developer tab) -- deliberately NOT persisted to the
+    // Debug Logging (Analyzer tab) -- deliberately NOT persisted to the
     // ini: logging is opt-in per session, not a standing setting someone
     // forgets they left on. Drives DebugLog's per-interface enable flags
     // directly (also plain in-memory, not persisted) rather than through
@@ -1923,7 +1923,7 @@ void Settings::on_analyzerTimeoutFinished()
 }
 
 // Phase chart Y-axis min/max and Z=R+jX/Z=R||jX charts' shared Y-axis
-// min/max (Settings > Advanced, "Chart Y-Axis Ranges") -- see #45/#49/#50.
+// min/max (Settings > Graphs, "Chart Y-Axis Ranges") -- see #45/#49/#50.
 // Each pair is clamped independently to a generous absolute range, then
 // against its partner field (min must stay below max and vice versa) so
 // MainWindow's clampAxisRange() (mainwindow.cpp) never gets handed an

@@ -90,7 +90,7 @@ int g_analyzerTimeoutSec = 8;
 // Moved here from a Developer-tab, session-only checkbox 2026-09-04; now
 // an ordinary persisted preference like the rest of this block.
 bool g_reconnectToDrain = false;
-// Phase chart's Y-axis min/max (Settings > Advanced) -- was a fixed
+// Phase chart's Y-axis min/max (Settings > Graphs) -- was a fixed
 // +/-180 degrees baked into clampAxisRange()'s call for m_phaseWidget->
 // yAxis (see setWidgetsSettings()). Issue #49 originally asked to just
 // widen the hardcoded default to +/-190 (so a real +/-180 reading isn't
@@ -101,7 +101,7 @@ bool g_reconnectToDrain = false;
 // re-run -- see clampAxisRange()'s pointer overload.
 double g_phaseAxisMin = -180;
 double g_phaseAxisMax = 180;
-// Z=R+jX / Z=R||jX charts' shared Y-axis min/max (Settings > Advanced) --
+// Z=R+jX / Z=R||jX charts' shared Y-axis min/max (Settings > Graphs) --
 // same story as the phase pair above, but for m_rsWidget/m_rpWidget's
 // yAxis clamp (was a fixed +/-2000 ohms). #50 originally asked to just
 // raise the hardcoded ceiling to 5000; #45's discussion superseded that
@@ -1425,7 +1425,7 @@ static void clampAxisRange(QCPAxis *axis, double min, double max)
 }
 
 // Pointer overload for axes whose clamp bounds can change at runtime via
-// a Settings > Advanced control -- the Phase chart (g_phaseAxisMin/Max)
+// a Settings > Graphs control -- the Phase chart (g_phaseAxisMin/Max)
 // and the Z=R+jX / Z=R||jX charts (g_zAxisMin/Max, shared by both), see
 // their declarations above. Re-reads *min/*max on every rangeChanged
 // tick instead of baking a snapshot into the closure the way the
