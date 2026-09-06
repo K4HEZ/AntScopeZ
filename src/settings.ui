@@ -95,7 +95,9 @@
              <item>
               <widget class="QLabel" name="label_analyzerTimeout">
                <property name="toolTip">
-                <string>How long a scan can go without receiving any data before it's treated as failed (device unreachable, or busy -- held open by another program or another AntScopeZ window).</string>
+                <string>How long a scan can go without receiving any data
+before it's treated as failed (device unreachable,
+or busy -- held open by another program or window).</string>
                </property>
                <property name="text">
                 <string>Analyzer timeout:</string>
@@ -105,7 +107,9 @@
              <item>
               <widget class="QLineEdit" name="lineEdit_analyzerTimeout">
                <property name="toolTip">
-                <string>How long a scan can go without receiving any data before it's treated as failed (device unreachable, or busy -- held open by another program or another AntScopeZ window).</string>
+                <string>How long a scan can go without receiving any data
+before it's treated as failed (device unreachable,
+or busy -- held open by another program or window).</string>
                </property>
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -143,7 +147,11 @@
            <item>
             <widget class="QCheckBox" name="checkBoxReportDetailedErrors">
              <property name="toolTip">
-              <string>Shows additional, more technical analyzer error messages (BLE connection/protocol errors) in the analyzer error dialog. Off by default -- these are frequent and low-level enough to be more noise than help for most day-to-day use. The small set of always-shown messages (analyzer busy/unreachable) aren't affected by this.</string>
+              <string>Shows additional, technical analyzer error messages
+(BLE connection/protocol errors) in the error dialog.
+Off by default -- frequent and low-level, more noise
+than help for day-to-day use. Always-shown messages
+(analyzer busy/unreachable) aren't affected.</string>
              </property>
              <property name="text">
               <string>Report Detailed Errors</string>
@@ -153,7 +161,14 @@
            <item>
             <widget class="QCheckBox" name="checkBoxReconnectToDrain">
              <property name="toolTip">
-              <string>Neither the classic ASCII nor the V2/LiteVNA64 binary NanoVNA protocol has a wire-level "abort a scan in progress" command -- once asked for N points, the device (real or emulated) is going to send all of them. By default, stopping a scan early waits out whatever's still outstanding and quietly discards it. Checking this instead closes and reopens the connection right away, which is often faster for a large scan -- but isn't guaranteed to make every device actually discard what it already queued internally, only that AntScopeZ itself stops listening and resyncs cleanly on the next connect.</string>
+              <string>Neither classic ASCII nor V2/LiteVNA64 binary NanoVNA
+protocols have a "abort scan in progress" command.
+Once asked for N points, the device sends all of them.
+
+By default: stops listening and discards outstanding data.
+Checked: closes/reopens connection immediately (faster
+for large scans, but doesn't guarantee the device
+discards queued data -- only that AntScopeZ resyncs).</string>
              </property>
              <property name="text">
               <string>Use reconnect to drain unwanted data</string>
@@ -163,7 +178,10 @@
            <item>
             <widget class="QCheckBox" name="checkBoxWarnDirtyDelete">
              <property name="toolTip">
-              <string>A measurement is "dirty" if it came from a scan or was renamed since it was last saved -- shown as a trailing " *" in the measurements list's Points column. Warns before Delete/Clear All would discard any dirty measurement.</string>
+              <string>A measurement is "dirty" if scanned or renamed
+since it was last saved (shown as " *" in Points column).
+
+Warns before Delete/Clear All discards any dirty measurement.</string>
              </property>
              <property name="text">
               <string>Warn before deleting or clearing dirty measurements</string>
@@ -312,7 +330,8 @@
                 <item row="0" column="0">
                  <widget class="QLabel" name="label_scanPointsMax">
                   <property name="toolTip">
-                   <string>The Points field/slider's practical ceiling (50-10000). Lower this if your device or scan speed doesn't need the full range.</string>
+                   <string>Practical ceiling for Points field/slider (50-10000).
+Lower if your device/scan speed doesn't need full range.</string>
                   </property>
                   <property name="text">
                    <string>Scanning points maximum</string>
@@ -322,7 +341,8 @@
                 <item row="0" column="1">
                  <widget class="QLineEdit" name="lineEditScanPointsMax">
                   <property name="toolTip">
-                   <string>The Points field/slider's practical ceiling (50-10000). Lower this if your device or scan speed doesn't need the full range.</string>
+                   <string>Practical ceiling for Points field/slider (50-10000).
+Lower if your device/scan speed doesn't need full range.</string>
                   </property>
                   <property name="maxLength">
                    <number>5</number>
@@ -332,7 +352,8 @@
                 <item row="1" column="0">
                  <widget class="QLabel" name="label_scanWarnThreshold">
                   <property name="toolTip">
-                   <string>Starting a scan requesting more points than this pops a confirm/cancel warning first (50-10000).</string>
+                   <string>Scan requesting more points than this shows
+a confirm/cancel warning first (50-10000).</string>
                   </property>
                   <property name="text">
                    <string>Warn for scans above</string>
@@ -342,7 +363,8 @@
                 <item row="1" column="1">
                  <widget class="QLineEdit" name="lineEditScanWarnThreshold">
                   <property name="toolTip">
-                   <string>Starting a scan requesting more points than this pops a confirm/cancel warning first (50-10000).</string>
+                   <string>Scan requesting more points than this shows
+a confirm/cancel warning first (50-10000).</string>
                   </property>
                   <property name="maxLength">
                    <number>5</number>
@@ -352,7 +374,9 @@
                 <item row="2" column="0">
                  <widget class="QLabel" name="label_analyzerMaxPoints">
                   <property name="toolTip">
-                   <string>How many points a single sweep request actually carries to the device (50-10000). A scan asking for more gets split into multiple sequential sweeps and stitched together.</string>
+                   <string>Points per single sweep request to device (50-10000).
+Scans requesting more are split into sequential
+sweeps and stitched together.</string>
                   </property>
                   <property name="text">
                    <string>Analyzer maximum number of points</string>
@@ -362,7 +386,9 @@
                 <item row="2" column="1">
                  <widget class="QLineEdit" name="lineEditAnalyzerMaxPoints">
                   <property name="toolTip">
-                   <string>How many points a single sweep request actually carries to the device (50-10000). A scan asking for more gets split into multiple sequential sweeps and stitched together.</string>
+                   <string>Points per single sweep request to device (50-10000).
+Scans requesting more are split into sequential
+sweeps and stitched together.</string>
                   </property>
                   <property name="maxLength">
                    <number>5</number>
@@ -372,7 +398,9 @@
                 <item row="3" column="0" colspan="2">
                  <widget class="QCheckBox" name="checkBoxExtendedChartZoom">
                   <property name="toolTip">
-                   <string>Lets Ctrl+scroll/Ctrl+/- zoom the SWR/Z=R+jX/Z=R‖jX/RL charts' Y-axis, and plain scroll zoom the TDR chart's distance axis, past their normal preset limits.</string>
+                   <string>Ctrl+scroll/Ctrl+/- zooms SWR/Z/RL charts' Y-axis
+past normal limits. Plain scroll zooms TDR
+distance axis past normal limits.</string>
                   </property>
                   <property name="text">
                    <string>Allow extended chart zoom</string>
@@ -667,7 +695,8 @@
            <item row="8" column="0">
             <widget class="QLabel" name="label_themeBase">
              <property name="toolTip">
-              <string>Editable field/control fill (QLineEdit/QSpinBox/QComboBox's Base -- was computed automatically from Window Background before this, now a real, directly-editable color).</string>
+              <string>Editable field/control fill (QLineEdit/QSpinBox/QComboBox Base).
+Was computed from Window Background, now directly-editable.</string>
              </property>
              <property name="text">
               <string>Base (editable fields)</string>
