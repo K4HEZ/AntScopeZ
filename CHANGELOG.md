@@ -13,11 +13,7 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Changed
 
-- Settings dialog: "Developer" tab renamed "Analyzer" (#6) -- it's really
-  just Custom Analyzer/prototype settings now; Debug Logging and the
-  error-handling checkboxes already moved to General earlier this cycle.
-  Adding real retry/reconnect settings there is a separate, still-unscoped
-  follow-up (see `docs/roadmap.md` row 42).
+- Settings dialog: "Developer" tab renamed "Analyzer". (#6)
 - Measurements: Open/Save replace Import/Export as both the File menu's
   wording and the actual model -- there's one Open dialog (File > Open,
   every supported format including AntScopeZ's own, "All supported
@@ -49,44 +45,21 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Fixed
 
-- Band names didn't show on a fresh profile's first run even though View >
-  "Show Band Name" showed checked, until the checkbox was toggled off and
-  back on (#8). The `show-band-name` QSettings key had two different
-  defaults -- `true` seeding the checkbox, `false` governing whether
-  `setBands()` actually drew the labels -- and the very first band draw at
-  startup ran before the checkbox's own toggled connection was armed to
-  correct it. Both now default `true`.
-- 2-port Z-parameter Touchstone import (`# ... Z RI ...`, #7): Z21/Z12/Z22
-  used to be silently skipped on import (a different quantity than
-  S21/S12/S22, ohms not a unitless ratio) rather than actually converted
-  -- guarded against mislabeling real data as the wrong quantity, but the
-  data itself never reached the S21 tab, Markers, or export. Now runs
-  through a real Z-to-S 2-port matrix conversion
-  (`Measurements::zToSParam()`); S-parameter files (the common case) are
-  unaffected.
-- Phase chart: the 180 deg line clipped right at the top/bottom edge of
-  the chart (#4). Y-axis widened from +/-180 to +/-190 deg so the full
-  swing sits visibly inside the plot area.
-- Z=R+jX / Z=R‖jX (Rs/Rp) charts couldn't scale out far enough to see a
-  real high-impedance point, e.g. a badly mismatched antenna feedpoint
-  (#5). Y-axis ceiling raised from +/-2000 to +/-5000 Ohm.
-- ITU region band data (`shared/itu-regions-defaults.txt`, #2): Region 1
-  and Region 3 both had "70sm"/"23sm" instead of "70cm"/"23cm" (Region 2
-  already had it right). Region 2 was also missing the 33cm (902-928 MHz)
-  amateur allocation entirely -- added.
-- Windows: `QT_TARGET_RC_ICONS` (used to embed the taskbar/Start-menu icon)
-  is a no-op with Qt 6.11.2's public `qt_add_executable()` -- only wired up
-  in Qt's internal build helpers, not the public CMake API this project
-  uses. No `.rc` file was ever actually generated. Replaced with a
-  first-party `src/resources/AntScopeZ.rc.in` template handed to CMake
-  directly via `target_sources()`, gated behind a new WIN32-only
-  `enable_language(RC)`. Linux/macOS builds unaffected.
-- Classic/V2 NanoVNA: status bar got stuck on "Scanning (N/N points)..."
-  forever after a normal scan completed (chart/markers/measurement row
-  all finalized correctly, just the status text never reset). NanoVNA
-  completion runs through `on_measurementCompleteNano()`, not
-  `AnalyzerPro::on_newData()`'s own "Ready" reset, which needs one more
-  `newData()` call than NanoVNA's parsing paths ever send.
+- Band names could fail to show on a fresh profile's first run despite
+  View > "Show Band Name" being checked, until toggled off and back on --
+  a QSettings default mismatch. (#8)
+- 2-port Z-parameter Touchstone imports (`# ... Z RI ...`) now convert to
+  S-parameters correctly instead of being silently skipped. (#7)
+- Phase chart: widened Y-axis to +/-190 deg so the 180 deg line isn't
+  clipped at the edge. (#4)
+- Z=R+jX / Z=R‖jX charts: Y-axis ceiling raised to +/-5000 Ohm to show
+  high-impedance points. (#5)
+- ITU region band data: fixed 70cm/23cm typo (Region 1/3), added missing
+  33cm (Region 2). (#2)
+- Windows: the app icon wasn't actually embedded in the built .exe --
+  fixed.
+- Classic/V2 NanoVNA: status bar no longer gets stuck on "Scanning..."
+  after a scan finishes.
 - Markers list: columns never widened to fit real data, only their
   header label -- resizeColumnsToContents() only ever ran once, before
   any values existed. Now also runs every time the values actually
@@ -130,12 +103,7 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Added
 
-- New "Analyzer" menu with Connect/Disconnect actions (#3) -- there was a
-  Connect Analyzer action but no matching Disconnect;
-  `on_deviceDisconnected()`'s cleanup used to only ever run for an
-  unexpected drop. `on_actionDisconnectAnalyzer_triggered()` reuses the
-  same `AnalyzerPro::on_disconnectDevice()` call Settings/LicenseAgent
-  already use to force one, so no separate cleanup path was needed.
+- New "Analyzer" menu with Connect/Disconnect actions. (#3)
 - Save dialog: "AntScopeZ" (.asd) is now one of its format buttons
   (listed first) instead of having its own separate quick-save path.
   Same frequency/R/X fields as the other 1-port formats here, just as
