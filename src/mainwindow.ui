@@ -1029,7 +1029,6 @@ process in the settings menu!</string>
     <addaction name="actionPrint"/>
     <addaction name="separator"/>
     <addaction name="actionScreenshot"/>
-    <addaction name="actionScreenshotAA"/>
     <addaction name="actionAnalyzerData"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
@@ -1085,6 +1084,8 @@ process in the settings menu!</string>
      <string>Analy&amp;zer</string>
     </property>
     <addaction name="actionConnectAnalyzer"/>
+    <addaction name="actionScreenshotAA"/>
+    <addaction name="separator"/>
     <addaction name="actionDisconnectAnalyzer"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -1135,7 +1136,7 @@ process in the settings menu!</string>
   </action>
   <action name="actionScreenshotAA">
    <property name="text">
-    <string>Screenshot from &amp;AA</string>
+    <string>&amp;Screenshot...</string>
    </property>
    <property name="toolTip">
     <string>Screenshot of the current screen of  analyzer (not for all models)</string>

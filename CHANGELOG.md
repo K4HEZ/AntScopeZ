@@ -103,6 +103,9 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Added
 
+- Screenshot capture for classic NanoVNA, moved into the Analyzer menu
+  (Connect / Screenshot / separator / Disconnect). Not yet verified
+  against real hardware. (#9)
 - New "Analyzer" menu with Connect/Disconnect actions. (#3)
 - Save dialog: "AntScopeZ" (.asd) is now one of its format buttons
   (listed first) instead of having its own separate quick-save path.

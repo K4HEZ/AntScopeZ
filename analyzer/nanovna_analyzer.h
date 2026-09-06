@@ -35,7 +35,8 @@ class NanovnaAnalyzer : public BaseAnalyzer
         WAIT_NANO_DATA_S21,     // fallback sequence's "data 1" pass (real S21, paired with m_s11Buffer)
         WAIT_NANO_SCAN_PROBE,   // one-time capability probe: bare "scan" -> "scan?" (unsupported) or "usage: scan ..." (ascii supported)
         WAIT_NANO_SCAN_ASCII,   // fast-path "scan ... <mask>" with text reply (also used for the ascii leg of the binary upgrade check)
-        WAIT_NANO_SCAN_BINARY   // fast-path "scan ... <mask|BINARY>" with raw binary reply -- byte-counted, not line-scanned
+        WAIT_NANO_SCAN_BINARY,  // fast-path "scan ... <mask|BINARY>" with raw binary reply -- byte-counted, not line-scanned
+        WAIT_NANO_CAPTURE       // "capture" reply -- one echoed line then a fixed-size raw RGB565 framebuffer dump, byte-counted like WAIT_NANO_SCAN_BINARY
     };
 
     // What the connected firmware's "scan" command (see NanoVNA-D's
@@ -123,6 +124,16 @@ private:
     quint16 m_binarySentMask = 0;   // what we asked for, to sanity-check the header echoed back
     quint16 m_binarySentPoints = 0;
     qint32 parseBinaryScan();       // consumes from m_incomingBuffer directly; returns bytes consumed (0 == not enough yet)
+
+    // "capture" reply: one echoed "\r\n"-terminated line, then a flat
+    // 320x240 raw RGB565 framebuffer dump (big-endian per pixel) -- no
+    // length header, unlike the binary scan reply above, so the expected
+    // size is just the fixed screen dimensions. Same byte-counted
+    // approach as parseBinaryScan() for the same reason (raw pixel bytes
+    // can legitimately equal 0x0D/0x0A).
+    static constexpr int CAPTURE_WIDTH = 320;
+    static constexpr int CAPTURE_HEIGHT = 240;
+    qint32 parseCapture();
 
     void startFallbackSweep();               // classic sweep/frequencies/data 0 [/data 1] sequence
     void startScanSweep(bool useBinary);      // single "scan <from> <to> <points> <mask>" fast path

@@ -390,7 +390,26 @@ void Screenshot::on_newData(QByteArray data)
                                 .arg(data, 2, 16, QChar('0')).arg(quantity).arg(quantity, 2, 16, QChar('0'))
                                 .arg(red).arg(green).arg(blue).arg(m_imageVector.size());
             }
-        }else {
+        }else if (model == "NanoVNA") {
+        // Flat big-endian RGB565 framebuffer dump, no run-length encoding
+        // (issue #9) -- standard bit layout (R high 5 bits, G mid 6, B low
+        // 5), same expansion formula as every other branch here.
+        while(m_inputData.length() >= 2)
+        {
+            int data = (((int)m_inputData.takeFirst())<<8);
+            data += (int)m_inputData.takeFirst();
+
+            int red = (data>>11)&0x1F;
+            int green = (data>>5)&0x3F;
+            int blue = data&0x1F;
+
+            red = (red<<3) + ( (red&0x10) ? 0x07 : 0 );
+            green = (green<<2) + ( (green&0x20) ? 0x03 : 0 );
+            blue = (blue<<3) + ( (blue&0x10) ? 0x07 : 0 );
+
+            m_imageVector.append(qRgb(red,green,blue));
+        }
+    }else {
         while(m_inputData.length() > 3)
         {
             int data = (((int)m_inputData.takeFirst())<<8);
@@ -567,6 +586,24 @@ void Screenshot::on_newData(QByteArray data)
                 for (x = 0; x < m_lcdWidth; ++x)
                 {
                     m_image->setPixel (x, y, m_imageVector.at(i));
+                    i++;
+                }
+            }
+            m_inputData.clear();
+            m_imageVector.clear();
+            ui->progressBar->hide();
+            repaint();
+        }
+    } else if (model == "NanoVNA") {
+        if (m_imageVector.length() >= m_lcdHeight*m_lcdWidth)
+        {
+            int x,y;
+            int i = 0;
+            for (y = 0; y < m_lcdHeight; ++y)
+            {
+                for (x = 0; x < m_lcdWidth; ++x)
+                {
+                    m_image->setPixel(x, y, m_imageVector.at(i));
                     i++;
                 }
             }
