@@ -6,6 +6,7 @@
 #include "analyzer/customanalyzer.h"
 #include "settings.h"
 #include "style.h"
+#include "debuglog.h"
 #include <QSettings>
 
 bool g_developerMode = false;
@@ -211,10 +212,48 @@ int main(int argc, char *argv[])
     // is left in place so that's a one-line change.
     if (args.contains("-developer")) {
         //g_developerMode = true;
+
+        // Debug Logging (Settings > Developer) enable flags, one per
+        // checkbox -- lets a repro run start with the right logging already
+        // on instead of having to open Settings and tick it by hand every
+        // time. Gated behind -developer same as everything else on this
+        // line (not g_developerMode, which stays inert -- see this block's
+        // own comment above): the checkboxes themselves are always reachable
+        // regardless of -developer, this is only about skipping the manual
+        // GUI step, not resurrecting the broader gate.
+        if (args.contains("-comserial"))
+            DebugLog::setSerialEnabled(true);
+        if (args.contains("-usbhid"))
+            DebugLog::setUsbHidEnabled(true);
+        if (args.contains("-nanovna"))
+            DebugLog::setNanovnaEnabled(true);
+        if (args.contains("-ble"))
+            DebugLog::setBleEnabled(true);
     }
     if (args.contains("-usb-only")) {
         g_usbOnly = true;
     }
+
+    // -remote-api-port <n>: force the Remote API on regardless of the
+    // persisted Settings toggle (json-tcp-api branch) -- for headless/dev
+    // use, e.g. paired with -headless below. Silently ignored if malformed
+    // (missing value, non-numeric, out of range) rather than refusing to
+    // start the app over a CLI typo; applied once MainWindow exists, below.
+    int remoteApiPortOverride = -1; // -1 == no override requested
+    int remoteApiPortFlagIndex = args.indexOf("-remote-api-port");
+    if (remoteApiPortFlagIndex != -1 && remoteApiPortFlagIndex + 1 < args.size()) {
+        bool ok = false;
+        int port = args.at(remoteApiPortFlagIndex + 1).toInt(&ok);
+        if (ok && port > 0 && port <= 65535)
+            remoteApiPortOverride = port;
+    }
+    // -headless: skip w.show() only (see json-tcp-api's plan doc for why
+    // this is deliberately narrower than a full GUI-decoupled headless
+    // mode) -- MainWindow/AnalyzerPro are still built normally. Does NOT
+    // itself enable the Remote API; pair with -remote-api-port (or an
+    // already-persisted "Enable Remote API" setting) or the process runs
+    // with nothing visible and nothing reachable.
+    bool headless = args.contains("-headless");
 
     g_raspbian = QSysInfo::productType().contains("raspbian", Qt::CaseInsensitive);
 
@@ -243,13 +282,17 @@ int main(int argc, char *argv[])
     MainWindow w;
     g_mainWindow = w.m_mainWindow;
 
+    if (remoteApiPortOverride != -1)
+        w.setRemoteApiEnabled(true, static_cast<quint16>(remoteApiPortOverride));
+
     foreach (QString path, args) {
         if (path.contains(".asd")) {
             w.openFile(path);
             break;
         }
     }
-    w.show();
+    if (!headless)
+        w.show();
 
     return a.exec();
 }

@@ -54,6 +54,36 @@ public:
     virtual void disconnectAnalyzer() = 0;
     ReDeviceInfo::InterfaceType connectionType() { return m_type; }
 
+    // ISSUE #20 (2026-09-04): "device busy" detection used to be
+    // hand-implemented independently per subclass -- HidAnalyzer had a
+    // debounced version (m_reportedBusy, since its connect attempt lives
+    // inside a repeating searchAnalyzer() poll and would otherwise spam
+    // the same popup every tick), ComAnalyzer had a one-shot version with
+    // different wording and no dedup member at all (its connect attempt
+    // only ever runs once per explicit user click, on a freshly-constructed
+    // instance -- see AnalyzerPro::createDevice(), which deletes and
+    // recreates m_baseAnalyzer on every connect attempt -- so there was
+    // nothing to debounce). Centralized here so both patterns share one
+    // mechanism and one base message instead of a third subclass having to
+    // hand-copy this again: reportBusy() is safe to call from either a
+    // one-shot context (each fresh instance starts with m_reportedBusy
+    // false, so it always reports) or a repeating-poll context (call
+    // clearBusyDebounce() once the device is no longer seen as busy/
+    // matched at all, so a *future* busy episode reports fresh -- see
+    // HidAnalyzer::tryConnectMatchingDevice() for that reset).
+    //
+    // Deliberately NOT wired into BleAnalyzer as part of this pass: Qt's
+    // QLowEnergyController::Error enum has no equivalent to
+    // QSerialPort::PermissionError/a failed hid_open() -- there's no
+    // Qt-visible signal that specifically means "another process already
+    // holds this device", as opposed to any other connection failure
+    // (device out of range, GATT negotiation failure, etc.). Wiring BLE
+    // into this facility with a guessed error-code mapping would risk
+    // mislabeling a genuine unrelated connection failure as "busy" --
+    // left as a documented gap (see the issue) rather than faked.
+    void reportBusy(const QString& detail = QString());
+    void clearBusyDebounce() { m_reportedBusy = false; }
+
 signals:
     void analyzerFound (int analyzerIndex);
     void analyzerDisconnected();
@@ -108,6 +138,7 @@ protected:
     QByteArray m_incomingBuffer;
     QList <QString> m_stringList;
     ReDeviceInfo::InterfaceType m_type = ReDeviceInfo::WRONG;
+    bool m_reportedBusy = false; // see reportBusy()/clearBusyDebounce() above
 
 };
 

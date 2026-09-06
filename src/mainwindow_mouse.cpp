@@ -167,6 +167,11 @@ void MainWindow::mouseMove_swr(QMouseEvent *e)
     m_isMouseClick = false;
     double x = m_swrWidget->xAxis->pixelToCoord(e->pos().x());
     double y = m_swrWidget->yAxis->pixelToCoord(e->pos().y());
+    // See mouseMove_smith()'s comment -- same degenerate-axis-range NaN
+    // guard, explicit here too rather than relying on the range comparisons
+    // below happening to be NaN-safe on their own.
+    if (!std::isfinite(x) || !std::isfinite(y))
+        return;
 
     double from;
     double to;
@@ -251,6 +256,11 @@ void MainWindow::mouseMove_phase(QMouseEvent *e)
     m_isMouseClick = false;
     double x = m_phaseWidget->xAxis->pixelToCoord(e->pos().x());
     double y = m_phaseWidget->yAxis->pixelToCoord(e->pos().y());
+    // See mouseMove_smith()'s comment -- same degenerate-axis-range NaN
+    // guard, explicit here too rather than relying on the range comparisons
+    // below happening to be NaN-safe on their own.
+    if (!std::isfinite(x) || !std::isfinite(y))
+        return;
     double from;
     double to;
     if(!m_isRange)
@@ -373,6 +383,11 @@ void MainWindow::mouseMove_rs(QMouseEvent *e)
     m_isMouseClick = false;
     double x = m_rsWidget->xAxis->pixelToCoord(e->pos().x());
     double y = m_rsWidget->yAxis->pixelToCoord(e->pos().y());
+    // See mouseMove_smith()'s comment -- same degenerate-axis-range NaN
+    // guard, explicit here too rather than relying on the range comparisons
+    // below happening to be NaN-safe on their own.
+    if (!std::isfinite(x) || !std::isfinite(y))
+        return;
     int from;
     int to;
     if(!m_isRange)
@@ -494,6 +509,11 @@ void MainWindow::mouseMove_rp(QMouseEvent *e)
     m_isMouseClick = false;
     double x = m_rpWidget->xAxis->pixelToCoord(e->pos().x());
     double y = m_rpWidget->yAxis->pixelToCoord(e->pos().y());
+    // See mouseMove_smith()'s comment -- same degenerate-axis-range NaN
+    // guard, explicit here too rather than relying on the range comparisons
+    // below happening to be NaN-safe on their own.
+    if (!std::isfinite(x) || !std::isfinite(y))
+        return;
     double from;
     double to;
     if(!m_isRange)
@@ -602,6 +622,11 @@ void MainWindow::mouseMove_rl(QMouseEvent *e)
     m_isMouseClick = false;
     double x = m_rlWidget->xAxis->pixelToCoord(e->pos().x());
     double y = m_rlWidget->yAxis->pixelToCoord(e->pos().y());
+    // See mouseMove_smith()'s comment -- same degenerate-axis-range NaN
+    // guard, explicit here too rather than relying on the range comparisons
+    // below happening to be NaN-safe on their own.
+    if (!std::isfinite(x) || !std::isfinite(y))
+        return;
     double from;
     double to;
     if(!m_isRange)
@@ -720,6 +745,11 @@ void MainWindow::mouseWheel_tdr(QWheelEvent* e)
 void MainWindow::mouseMove_tdr(QMouseEvent * e)
 {
     double x = m_tdrWidget->xAxis->pixelToCoord(e->pos().x());
+    // See mouseMove_smith()'s comment -- same degenerate-axis-range NaN
+    // guard, explicit here too rather than relying on the range comparison
+    // below happening to be NaN-safe on its own.
+    if (!std::isfinite(x))
+        return;
     if( (x >= m_tdrWidget->xAxis->range().lower) && (x <= m_tdrWidget->xAxis->range().upper))
     {
         QList <QTableWidgetItem *> list = ui->tableWidget_measurments->selectedItems();
@@ -739,6 +769,11 @@ void MainWindow::mouseMove_s21(QMouseEvent * e)
 {
     // QPointF pos = e->pos();
     double x = m_s21Widget->xAxis->pixelToCoord(e->pos().x());
+    // See mouseMove_smith()'s comment -- same degenerate-axis-range NaN
+    // guard, explicit here too rather than relying on the range comparison
+    // below happening to be NaN-safe on its own.
+    if (!std::isfinite(x))
+        return;
     if( (x >= m_s21Widget->xAxis->range().lower) && (x <= m_s21Widget->xAxis->range().upper))
     {
         QList <QTableWidgetItem *> list = ui->tableWidget_measurments->selectedItems();
@@ -857,6 +892,11 @@ void MainWindow::mouseMove_user(QMouseEvent *e)
     m_isMouseClick = false;
     double x = m_userWidget->xAxis->pixelToCoord(e->pos().x());
     double y = m_userWidget->yAxis->pixelToCoord(e->pos().y());
+    // See mouseMove_smith()'s comment -- same degenerate-axis-range NaN
+    // guard, explicit here too rather than relying on the range comparisons
+    // below happening to be NaN-safe on their own.
+    if (!std::isfinite(x) || !std::isfinite(y))
+        return;
     int from;
     int to;
     if(!m_isRange)

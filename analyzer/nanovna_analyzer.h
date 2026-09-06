@@ -100,11 +100,18 @@ private:
     // the fallback sequence's "data 1" pass) into a real SParamPoint.
     QVector<std::complex<double>> m_s11Buffer;
     static std::complex<double> parseReIm(const QString& line);
+    static std::complex<double> impedanceFromReflection(std::complex<double> gamma); // 50 ohm reference, shared by toRawData() and emitPoint()
+    static SParamPoint makeSParamPoint(double fqMHz, std::complex<double> s11, std::complex<double> s21); // NanoVNA-family is forward-only (no S12/S22) -- shared by the WAIT_NANO_DATA_S21 fallback pass and emitPoint()
 
     // "scan" command capability probe/state -- see ScanSupport's comment.
     ScanSupport m_scanSupport = ScanSupport::Unknown;
-    bool m_scanBinaryProbeInProgress = false;
-    QTimer* m_scanProbeTimeoutTimer = nullptr;
+    bool m_scanCapabilityProbeInProgress = false; // WAIT_NANO_SCAN_PROBE stage (bare "scan"), see probeScanCapability()
+    bool m_scanBinaryProbeInProgress = false;      // WAIT_NANO_SCAN_BINARY stage, see probeBinaryScanSupport()
+    QTimer* m_scanProbeTimeoutTimer = nullptr; // shared by both probe stages above -- only one is ever in flight at a time
+    // startMeasure()'s handshake-retry (see its own comment) -- a real
+    // QTimer rather than QTimer::singleShot() so stopMeasure() can actually
+    // cancel a pending retry. See issue #27.
+    QTimer* m_measureRetryTimer = nullptr;
     void probeScanCapability();
     void probeBinaryScanSupport();
     void onScanProbeTimeout();
@@ -124,6 +131,12 @@ private:
     quint16 m_binarySentMask = 0;   // what we asked for, to sanity-check the header echoed back
     quint16 m_binarySentPoints = 0;
     qint32 parseBinaryScan();       // consumes from m_incomingBuffer directly; returns bytes consumed (0 == not enough yet)
+    // The exact "scan ...\r\n" command most recently sent for a binary-mode
+    // request (probe or real) -- the device echoes it back verbatim before
+    // its real reply, and parseBinaryScan() needs to strip that echo before
+    // reading the header. Cleared once checked; see parseBinaryScan()'s own
+    // comment. Issues #27/#41.
+    QByteArray m_lastScanCommand;
 
     // "capture" reply: one echoed "\r\n"-terminated line, then a flat
     // 320x240 raw RGB565 framebuffer dump (big-endian per pixel) -- no

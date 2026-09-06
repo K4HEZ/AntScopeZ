@@ -1159,6 +1159,9 @@ process in the settings menu!</string>
    <property name="text">
     <string>&amp;Disconnect</string>
    </property>
+   <property name="toolTip">
+    <string>Disconnect the currently connected analyzer</string>
+   </property>
   </action>
   <action name="actionMarkerComparison">
    <property name="text">

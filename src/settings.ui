@@ -91,60 +91,6 @@
             </layout>
            </item>
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_analyzerTimeout">
-             <item>
-              <widget class="QLabel" name="label_analyzerTimeout">
-               <property name="toolTip">
-                <string>How long a scan can go without receiving any data
-before it's treated as failed (device unreachable,
-or busy -- held open by another program or window).</string>
-               </property>
-               <property name="text">
-                <string>Analyzer timeout:</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLineEdit" name="lineEdit_analyzerTimeout">
-               <property name="toolTip">
-                <string>How long a scan can go without receiving any data
-before it's treated as failed (device unreachable,
-or busy -- held open by another program or window).</string>
-               </property>
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="maxLength">
-                <number>3</number>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="label_analyzerTimeoutUnit">
-               <property name="text">
-                <string>sec</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacer_analyzerTimeout">
-               <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
-           </item>
-           <item>
             <widget class="QCheckBox" name="checkBoxReportDetailedErrors">
              <property name="toolTip">
               <string>Shows additional, technical analyzer error messages
@@ -302,108 +248,6 @@ Warns before Delete/Clear All discards any dirty measurement.</string>
                   </property>
                   <property name="text">
                    <string>Other measurements' line width</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item>
-            <widget class="QGroupBox" name="groupBox_12">
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="title">
-              <string>Scanning</string>
-             </property>
-             <layout class="QVBoxLayout" name="verticalLayout_14">
-              <property name="topMargin">
-               <number>20</number>
-              </property>
-              <item>
-               <layout class="QFormLayout" name="formLayout_scanning">
-                <item row="0" column="0">
-                 <widget class="QLabel" name="label_scanPointsMax">
-                  <property name="toolTip">
-                   <string>Practical ceiling for Points field/slider (50-10000).
-Lower if your device/scan speed doesn't need full range.</string>
-                  </property>
-                  <property name="text">
-                   <string>Scanning points maximum</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="1">
-                 <widget class="QLineEdit" name="lineEditScanPointsMax">
-                  <property name="toolTip">
-                   <string>Practical ceiling for Points field/slider (50-10000).
-Lower if your device/scan speed doesn't need full range.</string>
-                  </property>
-                  <property name="maxLength">
-                   <number>5</number>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="0">
-                 <widget class="QLabel" name="label_scanWarnThreshold">
-                  <property name="toolTip">
-                   <string>Scan requesting more points than this shows
-a confirm/cancel warning first (50-10000).</string>
-                  </property>
-                  <property name="text">
-                   <string>Warn for scans above</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="1">
-                 <widget class="QLineEdit" name="lineEditScanWarnThreshold">
-                  <property name="toolTip">
-                   <string>Scan requesting more points than this shows
-a confirm/cancel warning first (50-10000).</string>
-                  </property>
-                  <property name="maxLength">
-                   <number>5</number>
-                  </property>
-                 </widget>
-                </item>
-                <item row="2" column="0">
-                 <widget class="QLabel" name="label_analyzerMaxPoints">
-                  <property name="toolTip">
-                   <string>Points per single sweep request to device (50-10000).
-Scans requesting more are split into sequential
-sweeps and stitched together.</string>
-                  </property>
-                  <property name="text">
-                   <string>Analyzer maximum number of points</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="2" column="1">
-                 <widget class="QLineEdit" name="lineEditAnalyzerMaxPoints">
-                  <property name="toolTip">
-                   <string>Points per single sweep request to device (50-10000).
-Scans requesting more are split into sequential
-sweeps and stitched together.</string>
-                  </property>
-                  <property name="maxLength">
-                   <number>5</number>
-                  </property>
-                 </widget>
-                </item>
-                <item row="3" column="0" colspan="2">
-                 <widget class="QCheckBox" name="checkBoxExtendedChartZoom">
-                  <property name="toolTip">
-                   <string>Ctrl+scroll/Ctrl+/- zooms SWR/Z/RL charts' Y-axis
-past normal limits. Plain scroll zooms TDR
-distance axis past normal limits.</string>
-                  </property>
-                  <property name="text">
-                   <string>Allow extended chart zoom</string>
                   </property>
                  </widget>
                 </item>
@@ -763,6 +607,16 @@ Was computed from Window Background, now directly-editable.</string>
               </size>
              </property>
             </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="themeApplyBtn">
+             <property name="toolTip">
+              <string>Make the selected theme the app's active theme now</string>
+             </property>
+             <property name="text">
+              <string>Apply</string>
+             </property>
+            </widget>
            </item>
            <item>
             <widget class="QPushButton" name="themeCancelBtn">
@@ -1845,6 +1699,138 @@ Was computed from Window Background, now directly-editable.</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_developerTab">
        <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_analyzerTimeout">
+         <item>
+          <widget class="QLabel" name="label_analyzerTimeout">
+           <property name="toolTip">
+            <string>How long a scan can go without receiving any data before it's treated as failed (device unreachable, or busy -- held open by another program or another AntScopeZ window).</string>
+           </property>
+           <property name="text">
+            <string>Analyzer timeout:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEdit_analyzerTimeout">
+           <property name="toolTip">
+            <string>How long a scan can go without receiving any data before it's treated as failed (device unreachable, or busy -- held open by another program or another AntScopeZ window).</string>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="maxLength">
+            <number>3</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_analyzerTimeoutUnit">
+           <property name="text">
+            <string>sec</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_analyzerTimeout">
+           <property name="orientation">
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBoxScanning">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="title">
+          <string>Scanning</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_scanning">
+          <property name="topMargin">
+           <number>20</number>
+          </property>
+          <item>
+           <layout class="QFormLayout" name="formLayout_scanningCounts">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_scanPointsMax">
+              <property name="toolTip">
+               <string>The Points field/slider's practical ceiling (50-10000). Lower this if your device or scan speed doesn't need the full range.</string>
+              </property>
+              <property name="text">
+               <string>Scanning points maximum</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="lineEditScanPointsMax">
+              <property name="toolTip">
+               <string>The Points field/slider's practical ceiling (50-10000). Lower this if your device or scan speed doesn't need the full range.</string>
+              </property>
+              <property name="maxLength">
+               <number>5</number>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_scanWarnThreshold">
+              <property name="toolTip">
+               <string>Starting a scan requesting more points than this pops a confirm/cancel warning first (50-10000).</string>
+              </property>
+              <property name="text">
+               <string>Warn for scans above</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="lineEditScanWarnThreshold">
+              <property name="toolTip">
+               <string>Starting a scan requesting more points than this pops a confirm/cancel warning first (50-10000).</string>
+              </property>
+              <property name="maxLength">
+               <number>5</number>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_analyzerMaxPoints">
+              <property name="toolTip">
+               <string>How many points a single sweep request actually carries to the device (50-10000). A scan asking for more gets split into multiple sequential sweeps and stitched together.</string>
+              </property>
+              <property name="text">
+               <string>Analyzer maximum number of points</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLineEdit" name="lineEditAnalyzerMaxPoints">
+              <property name="toolTip">
+               <string>How many points a single sweep request actually carries to the device (50-10000). A scan asking for more gets split into multiple sequential sweeps and stitched together.</string>
+              </property>
+              <property name="maxLength">
+               <number>5</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="groupBoxCustomAnalyzer">
          <property name="title">
           <string>Custom Analyzer</string>
@@ -2287,6 +2273,186 @@ Was computed from Window Background, now directly-editable.</string>
        </item>
        <item>
         <spacer name="verticalSpacer_customAnalyzer">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>12</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="Advanced">
+      <attribute name="title">
+       <string>Graphs</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_advancedTab">
+       <item>
+        <widget class="QGroupBox" name="groupBox_12">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="title">
+          <string>Zoom &amp; Remote API</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_14">
+          <property name="topMargin">
+           <number>20</number>
+          </property>
+          <item>
+           <layout class="QFormLayout" name="formLayout_scanning">
+            <item row="0" column="0" colspan="2">
+             <widget class="QCheckBox" name="checkBoxExtendedChartZoom">
+              <property name="toolTip">
+               <string>Lets Ctrl+scroll/Ctrl+/- zoom the SWR/Z=R+jX/Z=R‖jX/RL charts' Y-axis, and plain scroll zoom the TDR chart's distance axis, past their normal preset limits.</string>
+              </property>
+              <property name="text">
+               <string>Allow extended chart zoom</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0" colspan="2">
+             <widget class="QCheckBox" name="checkBoxRemoteApiEnabled">
+              <property name="toolTip">
+               <string>Starts a local NDJSON-over-TCP control API (loopback only by default) that lets external tools observe/control the connected analyzer. Off by default.</string>
+              </property>
+              <property name="text">
+               <string>Enable Remote API</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_remoteApiPort">
+              <property name="toolTip">
+               <string>TCP port the Remote API listens on (loopback only).</string>
+              </property>
+              <property name="text">
+               <string>Remote API port</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QSpinBox" name="spinBoxRemoteApiPort">
+              <property name="toolTip">
+               <string>TCP port the Remote API listens on (loopback only).</string>
+              </property>
+              <property name="minimum">
+               <number>1024</number>
+              </property>
+              <property name="maximum">
+               <number>65535</number>
+              </property>
+              <property name="value">
+               <number>7443</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBoxChartAxisRanges">
+         <property name="title">
+          <string>Chart Y-Axis Ranges</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_chartAxisRanges">
+          <property name="topMargin">
+           <number>20</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_phaseAxisMin">
+            <property name="toolTip">
+             <string>Phase chart's Y-axis lower bound, in degrees. Defaults to -180, the app's historical fixed range.</string>
+            </property>
+            <property name="text">
+             <string>Phase chart Y-axis min (deg)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="lineEditPhaseAxisMin">
+            <property name="toolTip">
+             <string>Phase chart's Y-axis lower bound, in degrees. Defaults to -180, the app's historical fixed range.</string>
+            </property>
+            <property name="maxLength">
+             <number>4</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_phaseAxisMax">
+            <property name="toolTip">
+             <string>Phase chart's Y-axis upper bound, in degrees. Defaults to 180, the app's historical fixed range.</string>
+            </property>
+            <property name="text">
+             <string>Phase chart Y-axis max (deg)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="lineEditPhaseAxisMax">
+            <property name="toolTip">
+             <string>Phase chart's Y-axis upper bound, in degrees. Defaults to 180, the app's historical fixed range.</string>
+            </property>
+            <property name="maxLength">
+             <number>4</number>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_zAxisMin">
+            <property name="toolTip">
+             <string>Z=R+jX / Z=R‖jX charts' Y-axis lower bound, in ohms. Defaults to -2000, the app's historical fixed range.</string>
+            </property>
+            <property name="text">
+             <string>Z=R+jX / Z=R‖jX charts Y-axis min (ohm)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="lineEditZAxisMin">
+            <property name="toolTip">
+             <string>Z=R+jX / Z=R‖jX charts' Y-axis lower bound, in ohms. Defaults to -2000, the app's historical fixed range.</string>
+            </property>
+            <property name="maxLength">
+             <number>8</number>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_zAxisMax">
+            <property name="toolTip">
+             <string>Z=R+jX / Z=R‖jX charts' Y-axis upper bound, in ohms. Defaults to 2000, the app's historical fixed range.</string>
+            </property>
+            <property name="text">
+             <string>Z=R+jX / Z=R‖jX charts Y-axis max (ohm)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="lineEditZAxisMax">
+            <property name="toolTip">
+             <string>Z=R+jX / Z=R‖jX charts' Y-axis upper bound, in ohms. Defaults to 2000, the app's historical fixed range.</string>
+            </property>
+            <property name="maxLength">
+             <number>8</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_advancedTab">
          <property name="orientation">
           <enum>Qt::Orientation::Vertical</enum>
          </property>

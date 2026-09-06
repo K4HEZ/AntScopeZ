@@ -36,6 +36,7 @@ Markers::Markers(QObject *parent) : QObject(parent),
         m_markersHint = new MarkersPanel();
         updateHintVisibility();
         connect(m_markersHint, SIGNAL(removeMarker(int)), SLOT(on_removeMarker(int)));
+        connect(m_markersHint, &MarkersPanel::clearAllMarkers, this, &Markers::on_removeAllMarkers);
         connect(m_markersHint, &MarkersPanel::changeColumns, this, [&](){ repaint(); });
         repaint();
     }
@@ -702,15 +703,6 @@ void Markers::saveBmp(QString path)
     }
 }
 
-QList <QStringList> Markers::getMarkersHintList()
-{
-    if(m_markersHint != NULL)
-    {
-        return m_markersHint->getPopupList();
-    }
-    return QList <QStringList> ();
-}
-
 qint32 Markers::getMarkersCount()
 {
     return m_markersList.length();
@@ -799,6 +791,31 @@ void Markers::on_removeMarker(int number)
     // marker's line/label lives on every plot at once, so force all of them
     // to drop the just-removed item instead of leaving it visible until the
     // user happens to switch tabs.
+    m_swrWidget->replot();
+    m_phaseWidget->replot();
+    m_rsWidget->replot();
+    m_rpWidget->replot();
+    m_rlWidget->replot();
+    m_s21Widget->replot();
+    updateHintVisibility();
+    emit markersChanged();
+}
+
+void Markers::on_removeAllMarkers()
+{
+    if (m_markersList.isEmpty())
+        return;
+
+    for (marker* m : m_markersList) {
+        m->clear();
+        delete m;
+    }
+    m_markersList.clear();
+
+    changeMarkersHint();
+    redraw();
+    // See on_removeMarker()'s identical comment -- redraw() only replots the
+    // currently-active tab, so force every one to drop the removed markers.
     m_swrWidget->replot();
     m_phaseWidget->replot();
     m_rsWidget->replot();

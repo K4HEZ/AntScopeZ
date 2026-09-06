@@ -6,14 +6,8 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QVBoxLayout>
-#include <QtNetwork>
 #include "analyzerparameters.h"
 #include "settings.h"
-
-#define UDP_SEND_VERSION "AA1"
-#define UDP_RECEIVE_VERSION "AA2"
-#define UDP_PORT_SEND 6050
-#define UDP_PORT_RECEIVE 6051
 
 // The two One-Fq floating-window styles. Detailed is this widget (11
 // packed technical fields, see updateText()) -- a debug/inspection use
@@ -52,11 +46,6 @@ class OneFqWidget : public QWidget
     int m_mainBiasY;
     int m_parentX;
     int m_parentY;
-    QUdpSocket* m_udpSender=nullptr;
-    QUdpSocket* m_udpReceiver=nullptr;
-    QHostAddress m_udpAddress;
-    bool m_needBroadcast = false;
-    qreal m_broadcastFq = 0;
 
 public:
     explicit OneFqWidget(int _points, QWidget *parent = 0);
@@ -77,7 +66,6 @@ public:
     void reset() { m_added=0;  }
     int points() { return m_points; }
     bool needUpdate() { return (m_added >= m_points); }
-    void needBroadcast(qreal fq) { m_needBroadcast=true; m_broadcastFq=fq; }
     void MainWindowPos(int x, int y);
     void setX(int x){m_x = x;}
     void setY(int y){m_y = y;}
@@ -95,11 +83,9 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent *);
     void addValue(double src, double& dst);
     void updateText();
-    void broadcastDatagram();
 
 signals:
     void canceled(bool);
-    void udpReceived(QString cmd, qreal data);
     // Double-click anywhere on the widget -- Measurements swaps this
     // Detailed style out for OneFqBigReadout (and back again on the
     // BigReadout's own double-click), see
@@ -107,7 +93,6 @@ signals:
     void styleToggleRequested();
 
 public slots:
-    void processPendingDatagrams();
     void setText(const QString& text);
     QString getText();
 };

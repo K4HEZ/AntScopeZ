@@ -7,6 +7,10 @@ CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 
+# ---- cmake --install packaging staging output, e.g. for zipping a release ----
+pkg-windows/
+pkg-*/
+
 # Per-machine preset overrides (e.g. a Qt installed somewhere other than the
 # /opt path CMakePresets.json pins). CMakePresets.json itself is tracked.
 CMakeUserPresets.json

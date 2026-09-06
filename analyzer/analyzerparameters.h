@@ -98,6 +98,31 @@ struct SParamPoint {
                // the same f*fqmul in measurements_io.cpp -- *1000 to get
                // to the kHz every chart key actually uses)
     std::complex<double> s11, s12, s21, s22;
+
+    // Mirrors RawData::write() above -- only s11/s21 (not s12/s22), matching
+    // this app's own actual usage (see the struct comment: s12/s22 aren't
+    // populated by anything live, only by a full .s2p Touchstone import).
+    void write (QJsonObject &json) const
+    {
+        json["fq"] = fq;
+        QJsonObject s11json;
+        s11json["re"] = s11.real();
+        s11json["im"] = s11.imag();
+        json["s11"] = s11json;
+        QJsonObject s21json;
+        s21json["re"] = s21.real();
+        s21json["im"] = s21.imag();
+        json["s21"] = s21json;
+    }
+
+    // Set only by NanovnaAnalyzer::emitPoint()'s fast "scan"-command path,
+    // where newData() and newSParamPoint() are emitted back-to-back for
+    // this exact same point -- Measurements::on_newSParamPoint() uses this
+    // to skip its own redundant redraw, since on_newData()'s already
+    // covers it. Left false (default) everywhere else, including the
+    // older-firmware fallback tier, where S11/S21 arrive via two genuinely
+    // separate serial round-trips and each redraw is real. Issue #17.
+    bool skipRedraw = false;
 };
 
 struct GraphData {

@@ -98,13 +98,57 @@ void HidAnalyzer::nonblocking (int nonblock)
 }
 
 
+// Scans an already-enumerated device list for the configured analyzer and
+// tries to open it, reporting (debounced) "found but busy" if a match is
+// seen but connectHid() fails. Shared by searchAnalyzer(true) and
+// connectAnalyzer() -- see either caller's own comment for why both need
+// their own copy of this rather than just one calling the other.
+bool HidAnalyzer::tryConnectMatchingDevice(struct hid_device_info* devs, AnalyzerParameters* analyzer)
+{
+    bool matchedButBusy = false;
+    struct hid_device_info *cur_dev = devs;
+    for(;;)
+    {
+        if(cur_dev == nullptr)
+          break;
+
+        if( cur_dev->vendor_id == RE_VID && cur_dev->product_id == RE_PID)
+        {
+            QString number = QString::fromWCharArray(cur_dev->serial_number);
+            number.remove(4,5);
+            int prefix = number.toInt();
+            if (analyzer->prefix() == prefix) {
+                m_serialNumber = QString::fromWCharArray(cur_dev->serial_number);
+                if (connectHid(RE_VID, RE_PID)) {
+                    clearBusyDebounce();
+                    emit analyzerFound(analyzer->index());
+                    return true;
+                }
+                matchedButBusy = true;
+            }
+        }
+        cur_dev = cur_dev->next;
+    }
+    if (matchedButBusy) {
+        // See BaseAnalyzer::reportBusy() -- debounced, since this runs off
+        // a 1s poll while disconnected and would otherwise re-emit
+        // signalAnalyzerError() every tick for as long as the device stays
+        // busy.
+        reportBusy();
+    } else {
+        // Not found at all this tick (unplugged, wrong prefix, etc.) --
+        // clear the debounce so a future busy episode reports fresh.
+        clearBusyDebounce();
+    }
+    return false;
+}
+
 bool HidAnalyzer::searchAnalyzer(bool arrival)
 {
     if (! g_usbOnly)
         return false;
 
     qDebug() << "HidAnalyzer::searchAnalyzer";
-    bool result = false;
     if(arrival)//add device
     {
         // Nothing to search for if already connected -- without this, every
@@ -117,7 +161,7 @@ bool HidAnalyzer::searchAnalyzer(bool arrival)
         if (m_hidDevice != nullptr)
             return false;
 
-        struct hid_device_info *devs=nullptr, *cur_dev=nullptr;
+        struct hid_device_info *devs=nullptr;
         QMutexLocker locker(&m_mutexSearch);
         devs = m_devices;
         if (devs == nullptr)
@@ -127,51 +171,7 @@ bool HidAnalyzer::searchAnalyzer(bool arrival)
         if (analyzer == nullptr)
             return false;
 
-        // Set when a device matching VID/PID/serial-prefix was found in
-        // this tick's enumeration but connectHid() still failed to open it
-        // -- unlike "no matching device at all", enumeration succeeding
-        // means the device is physically present, so the only thing that
-        // can make hid_open() fail is something else already holding it
-        // (another program, or another AntScopeZ window).
-        bool matchedButBusy = false;
-
-        cur_dev = devs;
-        for(;;)
-        {
-            if(cur_dev == nullptr)
-              break;
-
-            if( cur_dev->vendor_id == RE_VID && cur_dev->product_id == RE_PID)
-            {
-                QString number = QString::fromWCharArray(cur_dev->serial_number);
-                number.remove(4,5);
-                int prefix = number.toInt();
-                if (analyzer->prefix() == prefix) {
-                    m_serialNumber = QString::fromWCharArray(cur_dev->serial_number);
-                    result = connectHid(RE_VID, RE_PID);
-                    if (result) {
-                        m_reportedBusy = false;
-                        emit analyzerFound(analyzer->index());
-                        return true;
-                    }
-                    matchedButBusy = true;
-                }
-            }
-            cur_dev = cur_dev->next;
-        }
-        if (matchedButBusy) {
-            if (!m_reportedBusy) {
-                m_reportedBusy = true;
-                emit signalAnalyzerError(tr("Analyzer detected but could not be opened -- "
-                                             "it may be in use by another program (or another "
-                                             "AntScopeZ window)."));
-            }
-        } else {
-            // Not found at all this tick (unplugged, wrong prefix, etc.) --
-            // clear the debounce so a future busy episode reports fresh.
-            m_reportedBusy = false;
-        }
-        return false;
+        return tryConnectMatchingDevice(devs, analyzer);
     } else {
         struct hid_device_info *devs, *cur_dev;
         if (!m_mutexSearch.tryLock())
@@ -871,13 +871,12 @@ QString HidAnalyzer::hidError(hid_device* _device)
 bool HidAnalyzer::connectAnalyzer()
 {
     // This is the path actually exercised at app launch (and any explicit
-    // "Connect" retry) -- searchAnalyzer(true)'s own copy of this same
-    // enumerate-and-connectHid() loop only ever runs afterwards, off
-    // checkTimerTick()'s 1s poll, once already disconnected. Busy detection
-    // has to live in both (still-unconsolidated duplicate logic, not
-    // shared) or a device that's busy from the very first connect attempt
+    // "Connect" retry) -- searchAnalyzer(true)'s own call into
+    // tryConnectMatchingDevice() only ever runs afterwards, off
+    // checkTimerTick()'s 1s poll, once already disconnected. Both need to
+    // call it -- a device that's busy from the very first connect attempt
     // -- e.g. another AntScopeZ window already holding it before this one
-    // even opened -- reports nothing at all.
+    // even opened -- would otherwise report nothing at all.
     AnalyzerParameters* analyzer = AnalyzerParameters::byIndex(SelectionParameters::selected.modelIndex);
     if (analyzer == nullptr)
         return false;
@@ -886,42 +885,7 @@ bool HidAnalyzer::connectAnalyzer()
     if (devs == nullptr)
         return false;
 
-    bool matchedButBusy = false;
-    struct hid_device_info *cur_dev = devs;
-    for(;;)
-    {
-        if(cur_dev == nullptr)
-          break;
-
-        if( cur_dev->vendor_id == RE_VID && cur_dev->product_id == RE_PID)
-        {
-            QString number = QString::fromWCharArray(cur_dev->serial_number);
-            number.remove(4,5);
-            int prefix = number.toInt();
-            if (analyzer->prefix() == prefix) {
-                m_serialNumber = QString::fromWCharArray(cur_dev->serial_number);
-                bool result = connectHid(RE_VID, RE_PID);
-                if (result) {
-                    m_reportedBusy = false;
-                    emit analyzerFound(analyzer->index());
-                    return true;
-                }
-                matchedButBusy = true;
-            }
-        }
-        cur_dev = cur_dev->next;
-    }
-    if (matchedButBusy) {
-        if (!m_reportedBusy) {
-            m_reportedBusy = true;
-            emit signalAnalyzerError(tr("Analyzer detected but could not be opened -- "
-                                         "it may be in use by another program (or another "
-                                         "AntScopeZ window)."));
-        }
-    } else {
-        m_reportedBusy = false;
-    }
-    return false;
+    return tryConnectMatchingDevice(devs, analyzer);
 }
 
 void HidAnalyzer::disconnectAnalyzer()

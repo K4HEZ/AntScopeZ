@@ -89,18 +89,21 @@ void MainWindow::on_analyzerNameFound(QString name)
     // (Settings::checkUpdatesBtn() -> AnalyzerPro::on_checkUpdatesBtn_clicked(),
     // wired up below).
 
-    // Classic NanoVNA used to be hardcoded to a 100-point ceiling with the
-    // Points field disabled entirely (first a name.contains("NanoVNA")
-    // substring check, later keyed on connectionType() == ReDeviceInfo::NANO
-    // once that substring check started mismatching NanoVNA V2/LiteVNA64).
-    // Dropped 2026-09-06: the classic ASCII protocol has no actual
-    // point-count ceiling of its own -- 100 was a conservative guess about
-    // its slow per-point serial-shell round trips, but plenty of real
-    // classic-ASCII analyzers natively support 201/401/801+ points, and a
-    // scan that's genuinely too slow for someone's hardware is exactly what
-    // Settings > General's "Analyzer maximum number of points" + scan
-    // stitching already exists to handle -- same as every other connection
-    // type, no special-case needed here.
+    // Was hard-locked to 100 and disabled for any NanoVNA (present unchanged
+    // since this fork's first commit, no comment ever explaining why 100).
+    // Traced the actual wire path for issue #35: NanovnaAnalyzer::startMeasure()
+    // sends whatever point count it's given straight to the device's "scan"/
+    // "sweep" command with no clamping of its own (analyzer/nanovna_analyzer.cpp),
+    // so this was a pure GUI-side restriction, not a protocol limit -- and the
+    // repo owner confirmed their NanoVNA-H4 handles 400+ points fine over this
+    // same path. Now just uses the same enabled field/slider (and existing
+    // g_pointsMax clamp in setDotsNumber()) as every other analyzer -- also
+    // covers NanoVNA V2/LiteVNA64 (connectionType() == ReDeviceInfo::NANOV2)
+    // correctly, since nothing here special-cases by device type at all.
+    // (Same fix landed independently upstream, worded slightly differently --
+    // see the "Classic NanoVNA: remove hardcoded 100-point cap" commit on
+    // develop; both traced to the same conclusion: no real protocol ceiling,
+    // Settings > General's max-points/stitching is the right place to bound it.)
     ui->lineEdit_points->setEnabled(true);
     ui->speedAccuracySlider->setEnabled(true);
     m_calibration->init(m_analyzer->getSerialNumber());

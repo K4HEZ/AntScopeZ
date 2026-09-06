@@ -12,6 +12,18 @@ BaseAnalyzer::BaseAnalyzer(QObject *parent)
     connect(m_sendTimer, SIGNAL(timeout()), this, SLOT(continueMeasurement()));
 }
 
+void BaseAnalyzer::reportBusy(const QString& detail)
+{
+    if (m_reportedBusy)
+        return;
+    m_reportedBusy = true;
+    QString msg = tr("Analyzer detected but could not be opened -- it may be in use "
+                      "by another program (or another AntScopeZ window).");
+    if (!detail.isEmpty())
+        msg += QString(" (%1)").arg(detail);
+    emit signalAnalyzerError(msg);
+}
+
 void BaseAnalyzer::startMeasure(qint64 fqFrom, qint64 fqTo, int dotsNumber, bool frx)
 {
     Q_UNUSED (frx)

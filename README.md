@@ -56,6 +56,69 @@ next to it. Use `-DCMAKE_BUILD_TYPE=Debug` for a debug build.
 For build options, macOS packaging, Qt Creator setup, translations, platform
 notes, and known issues, see [BUILDINFO.md](BUILDINFO.md).
 
+## Remote API
+
+AntScopeZ can expose a local, in-process control API for whatever analyzer is currently
+connected -- device enumeration, connect/disconnect, sweeps, and live point streaming,
+over a small NDJSON-over-TCP protocol. It's for external tools (scripts, an MCP server, a
+web dashboard) that want to drive AntScopeZ programmatically; the app's own GUI doesn't
+use it.
+
+Off by default. Enable it in Settings > General ("Enable Remote API" + a port field), or
+pass `-remote-api-port <n>` on the command line to force it on for a single run. It binds
+to `127.0.0.1` only -- not reachable from other machines -- unless you reconfigure that
+yourself. `-headless` runs AntScopeZ without showing its window (still a full GUI process
+under the hood, just not displayed), useful when driving it purely through this API.
+
+See [`remoteapi/`](remoteapi/) for the implementation and protocol details.
+
+## Windows
+
+Windows support is a beta effort (releases tagged `-win-beta`); see
+[BUILDINFO.md](BUILDINFO.md)'s platform notes for what has and hasn't been
+verified against real hardware yet.
+
+### Installing a prebuilt release
+
+Download the `AntScopeZ-<version>-win64-beta.zip` asset from the
+[Releases page](https://github.com/kc5cd/AntScopeZ/releases), extract it
+anywhere, and run `AntScopeZ.exe` inside the extracted `bin\` folder --
+it's a fully self-contained build (Qt DLLs and plugins included), so no
+separate Qt install is required.
+
+### Building from source
+
+Requires the Qt 6.11.2 MinGW kit installed via the
+[Qt Online Installer](https://www.qt.io/download-qt-installer) under
+`C:\Qt`, including the SerialPort and Bluetooth (under "Connectivity")
+addon components -- both are optional and not installed by default, so
+check `C:\Qt\6.11.2\mingw_64\lib\cmake\` for `Qt6SerialPort`/
+`Qt6Bluetooth` first.
+
+```
+cmake --preset windows-mingw
+cmake --build --preset windows-mingw --parallel
+```
+
+This is a native build against the Qt Online Installer's bundled
+MinGW-w64 toolchain and Ninja (`C:\Qt\Tools`), not a cross-compile and
+not a system compiler. Use the `windows-mingw-release` preset instead
+for an optimized build.
+
+### Running
+
+Windows builds don't use rpath, so the `AntScopeZ.exe` produced by the
+build above (in `build-windows-mingw\`) won't find its Qt DLLs on its
+own. To produce a complete, runnable copy -- the same layout the
+packaged releases ship, with `windeployqt` run automatically -- install
+into a staging directory instead of running the build output directly:
+
+```
+cmake --install build-windows-mingw --prefix pkg-windows
+```
+
+Then run `pkg-windows\bin\AntScopeZ.exe`.
+
 ## License
 
 AntScopeZ, as built and distributed, is licensed under the **GNU General

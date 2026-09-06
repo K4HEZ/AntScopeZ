@@ -102,10 +102,11 @@ bool ComAnalyzer::openComPort(const QString& portName, quint32 portSpeed)
             // errorString() is the OS's own message for this (e.g. "Permission
             // error" / "Access is denied" / "Resource busy") -- genuine
             // diagnostic data sitting right here, previously just discarded.
-            emit signalAnalyzerError(tr("Analyzer port %1 found but could not be opened -- "
-                                         "it may be in use by another program (or another "
-                                         "AntScopeZ window). (%2)")
-                                          .arg(portName, m_comPort->errorString()));
+            // See BaseAnalyzer::reportBusy() -- shared with HidAnalyzer's
+            // equivalent check, though this one doesn't strictly need the
+            // debounce it provides (each connect attempt runs on a freshly
+            // constructed instance, see AnalyzerPro::createDevice()).
+            reportBusy(tr("port %1: %2").arg(portName, m_comPort->errorString()));
         }
     }
     else {

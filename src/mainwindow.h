@@ -75,6 +75,8 @@ namespace Ui {
 class MainWindow;
 }
 
+class RemoteApiServer;
+
 struct MultiTab {
     QList<QString> tabs;
     bool isVisible() { return !tabs.isEmpty(); }
@@ -109,6 +111,30 @@ public:
     void openFile(QString path);
     AnalyzerPro* analyzer() { return m_analyzer; }
     bool isMeasuring() { return analyzer()->isMeasuring(); }
+    bool isAnalyzerConnected() const { return m_analyzerConnected; }
+    QString connectedDeviceName() const { return m_connectedDeviceName; }
+    // Both delegate to m_measurements (private, no general accessor --
+    // see remoteapiconnection.h's own comment on why RemoteApiConnection
+    // deliberately doesn't reach into Measurements directly) so a
+    // remote-triggered scan gets the same Measurements-side prep/cleanup
+    // on_singleStart_clicked()'s own start/stop paths rely on
+    // (mainwindow_scan.cpp) -- setContinuous(false) resets continuing-scan
+    // point-index state, and interrupt() is the same flag issue #3's fix
+    // this session added a guard for (stray points leaking in after Stop).
+    void startRemoteSweep(qint64 fqFromHz, qint64 fqToHz, int points) {
+        m_measurements->setContinuous(false);
+        emit measure(fqFromHz, fqToHz, points);
+    }
+    void stopCurrentScan() {
+        m_measurements->interrupt();
+        emit stopMeasure();
+    }
+    // Starts/stops m_remoteApiServer live -- called from Settings' accept
+    // handler (settings.cpp) so toggling the "Enable Remote API" checkbox
+    // takes effect immediately, no restart needed. Also called once at
+    // startup (mainwindow.cpp constructor) if the persisted setting was
+    // already on.
+    void setRemoteApiEnabled(bool enabled, quint16 port);
     Markers* markers() { return m_markers; }
     QTabWidget* tabWidget();
 \
@@ -125,6 +151,10 @@ private:
 
     AnalyzerData *m_analyzerData = nullptr;
     AnalyzerPro *m_analyzer = nullptr;
+    // Owned via normal QObject parent-child (parent = this), same as
+    // m_analyzer -- no manual delete needed, but stop() is still called
+    // explicitly in the destructor (see there for why).
+    RemoteApiServer *m_remoteApiServer = nullptr;
     // State refreshWindowTitle() composes the title from -- see its
     // declaration above.
     bool m_analyzerConnected = false;
@@ -351,6 +381,17 @@ private:
     void clearAllMeasurements();
     void exportMeasurementRow(int row);
     void changeColorTheme(int themeIndex);
+    // Makes `index` the persisted active theme: writes "activeTheme" to
+    // QSettings (the one thing changeColorTheme() itself never does --
+    // it's also called for the *already*-active index from a couple of
+    // places, where re-persisting the same value would be a no-op), calls
+    // changeColorTheme(), and syncs the View > Theme menu's checked radio
+    // to match (setChecked(true) on an action in an exclusive QActionGroup
+    // unchecks its siblings for free). Used by both the View menu's own
+    // click handler and Settings > Themes' Apply button (issue #24) --
+    // needed so Apply's activation survives a restart the same way picking
+    // a theme from the View menu always has.
+    void activateThemeIndex(int index);
     // Updates the View > Theme menu's "N: Name" labels from Style::themeAt()
     // -- called after Settings > Themes saves any slot, since a rename could
     // be to a slot other than the currently-active one.
@@ -430,15 +471,15 @@ public slots:
     void on_analyzerFound(int index);
     void on_analyzerNameFound(QString name);
     void on_deviceDisconnected();
-    // User-requested disconnect (issue #3) -- calls AnalyzerPro::
-    // on_disconnectDevice() directly, same call already used by
-    // Settings::updateAnalyzerInfo() and LicenseAgent::finishWaitInfoB16()
-    // to force a disconnect. Reuses on_deviceDisconnected() (via
-    // AnalyzerPro::deviceDisconnected()) for all UI cleanup -- no separate
-    // path needed, since on_disconnectDevice() already nulls m_baseAnalyzer
-    // *before* emitting, so on_deviceDisconnected()'s own trailing
-    // searchAnalyzer() call (guarded on m_baseAnalyzer != nullptr) is a
-    // no-op either way, same as it already is for an unexpected drop.
+    // Menu action (issue #34, also filed independently upstream as #3) --
+    // the backend (AnalyzerPro::on_disconnectDevice()) already existed and
+    // was used internally (Settings, licenseagent), just had no user-facing
+    // entry point. Reuses on_deviceDisconnected() (via AnalyzerPro::
+    // deviceDisconnected()) for all UI cleanup -- no separate path needed,
+    // since on_disconnectDevice() already nulls m_baseAnalyzer *before*
+    // emitting, so on_deviceDisconnected()'s own trailing searchAnalyzer()
+    // call (guarded on m_baseAnalyzer != nullptr) is a no-op either way,
+    // same as it already is for an unexpected drop.
     void on_actionDisconnectAnalyzer_triggered();
     // Rebuilds the window title from current state (m_analyzerConnected/
     // m_connectedDeviceName) in the active language -- the one place that

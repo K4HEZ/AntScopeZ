@@ -54,7 +54,7 @@
         {
             "name": "qt-6.11-windows",
             "hidden": true,
-            "description": "Pins the Qt 6.11.2 MinGW kit installed by the Qt Online Installer under C:/Qt, and the Ninja/MinGW toolchain installed alongside it under C:/Qt/Tools. Mirrors the Linux qt-6.11 base preset's CMAKE_PREFIX_PATH pinning above, for the same reason: find_package(Qt6 6.2) would otherwise resolve ambiguously if more than one Qt install were ever present.",
+            "description": "Pins the Qt 6.11.2 MinGW kit installed by the Qt Online Installer under C:/Qt, and the Ninja/MinGW toolchain installed alongside it under C:/Qt/Tools. Mirrors the Linux qt-6.11 base preset's CMAKE_PREFIX_PATH pinning above, for the same reason: find_package(Qt6 6.2) would otherwise resolve ambiguously if more than one Qt install were ever present. Carried over from the windows-port branch (2026-09) so branches off master can also be configured/verified on the Windows dev machine this project is actively built on -- master itself never had these presets.",
             "condition": {
                 "type": "equals",
                 "lhs": "${hostSystemName}",

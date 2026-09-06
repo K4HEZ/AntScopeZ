@@ -666,8 +666,11 @@ void MainWindow::on_measurementComplete()
         ui->continuousStartBtn->setChecked(false);
         ui->fullBtn->setEnabled(true);
         ui->fullBtn->setChecked(true);
-        m_measurements->on_measurementComplete();
-        m_markers->autoPlaceAtLowestSwr();
+        // Skip autoPlaceAtLowestSwr() if the scan ended with no points --
+        // on_measurementComplete() already deleted the empty row, so
+        // last() now refers to a previous, unrelated measurement.
+        if (!m_measurements->on_measurementComplete())
+            m_markers->autoPlaceAtLowestSwr();
         m_bInterrupted = true;
         ui->actionExport->setEnabled(true);
         m_analyzer->setContinuos(false);
@@ -719,14 +722,16 @@ void MainWindow::on_measurementCompleteNano()
     m_statusLabel->setText(tr("Ready"));
 
     // TdrScanPanel-triggered scan -- see the matching comment and TDR
-    // finalize block in on_measurementComplete(). That function's own
-    // m_isTdrScanning check only ever fires when Stop is clicked mid-scan
-    // (AnalyzerPro::on_stopMeasure()'s synthesized measurementComplete());
-    // a TDR scan against a NanoVNA device that completes *normally* comes
-    // through here instead (measurementCompleteNano(), not
-    // measurementComplete()), so this has to be duplicated rather than
-    // shared -- same reason the graph(0)-clear fix a few lines down is
-    // duplicated too.
+    // finalize block in on_measurementComplete(). That function early-
+    // returns for NANO connections, so its m_isTdrScanning branch never
+    // runs for a NanoVNA TDR scan -- confirmed as issue #30: without this,
+    // m_isTdrScanning stayed true forever and TdrScanPanel's controls
+    // (Cable Type/Vel. Factor/Points/re-scan) stayed disabled after the
+    // first NanoVNA TDR measurement, since nothing ever called
+    // setScanning(false) for that connection type. Duplicated rather than
+    // shared for the same reason as the #33 fix and the graph(0)-clear fix
+    // a few lines down are duplicated too: on_measurementComplete() returns
+    // before reaching here.
     if (m_isTdrScanning) {
         m_measurements->stopTDRProgress();
         m_measurements->on_measurementComplete();
@@ -737,8 +742,9 @@ void MainWindow::on_measurementCompleteNano()
         if (m_tdrScanDialog != nullptr)
             m_tdrScanDialog->panel()->setScanning(false);
         ui->actionExport->setEnabled(true);
-        // See the identical restore-after-listeners comment in
-        // on_measurementComplete()'s own TDR block.
+        // See on_measurementComplete()'s identical comment: deferred so
+        // TdrScanPanel::refreshResult() (connected after this slot) still
+        // sees the just-used velocity factor when it runs.
         {
             double savedVf = m_tdrSavedVelFactor;
             QTimer::singleShot(0, this, [this, savedVf]() {
@@ -780,8 +786,11 @@ void MainWindow::on_measurementCompleteNano()
     } else { // single mode
         ui->singleStart->setChecked(false);
         ui->continuousStartBtn->setChecked(false);
-        m_measurements->on_measurementComplete();
-        m_markers->autoPlaceAtLowestSwr();
+        // Skip autoPlaceAtLowestSwr() if the scan ended with no points --
+        // on_measurementComplete() already deleted the empty row, so
+        // last() now refers to a previous, unrelated measurement.
+        if (!m_measurements->on_measurementComplete())
+            m_markers->autoPlaceAtLowestSwr();
         m_bInterrupted = true;
         ui->actionExport->setEnabled(true);
         m_analyzer->setContinuos(false);

@@ -10,6 +10,7 @@
 #include "style.h"
 #include "filedialog.h"
 #include "editbandsdialog.h"
+#include "remoteapi/remoteapiserver.h"
 #include "debuglog.h"
 #include <QWindow>
 #include <QActionGroup>
@@ -66,6 +67,14 @@ int g_analyzerMaxPoints = 1000;
 // developer/debug feature. Default off, matching pre-existing behavior for
 // anyone who never had -developer passed.
 bool g_extendedChartZoom = false;
+// "Enable Remote API" (Settings > General) -- starts a local NDJSON-over-TCP
+// control API (remoteapi/, json-tcp-api branch), loopback-only by default.
+// Default off: opening a network port, even loopback-only, shouldn't happen
+// without the user opting in. g_remoteApiPort's default (7443) is otherwise
+// arbitrary -- chosen to avoid common local-dev port collisions (3000/5000/
+// 8000/8080 etc.), not tied to any registered/well-known port.
+bool g_remoteApiEnabled = false;
+int g_remoteApiPort = 7443;
 // "Analyzer timeout" (Settings > General) -- seconds a scan can go without
 // receiving a single data point before AnalyzerPro's watchdog treats it as
 // failed (device gone, or busy -- already held open by another program or
@@ -81,6 +90,24 @@ int g_analyzerTimeoutSec = 8;
 // Moved here from a Developer-tab, session-only checkbox 2026-09-04; now
 // an ordinary persisted preference like the rest of this block.
 bool g_reconnectToDrain = false;
+// Phase chart's Y-axis min/max (Settings > Graphs) -- was a fixed
+// +/-180 degrees baked into clampAxisRange()'s call for m_phaseWidget->
+// yAxis (see setWidgetsSettings()). Issue #49 originally asked to just
+// widen the hardcoded default to +/-190 (so a real +/-180 reading isn't
+// drawn clipped at the plot edge); #45's discussion superseded that with
+// "make it a real setting, keep today's +/-180 default" instead. Passed
+// to clampAxisRange() by pointer (not value) so a change made while the
+// app is running takes effect without needing setWidgetsSettings() to
+// re-run -- see clampAxisRange()'s pointer overload.
+double g_phaseAxisMin = -180;
+double g_phaseAxisMax = 180;
+// Z=R+jX / Z=R||jX charts' shared Y-axis min/max (Settings > Graphs) --
+// same story as the phase pair above, but for m_rsWidget/m_rpWidget's
+// yAxis clamp (was a fixed +/-2000 ohms). #50 originally asked to just
+// raise the hardcoded ceiling to 5000; #45's discussion superseded that
+// with "make it a real setting, keep today's +/-2000 default" instead.
+double g_zAxisMin = -2000;
+double g_zAxisMax = 2000;
 // See measurement::dirty's own comment -- gates the confirm-before-discard
 // warning in MainWindow::deleteMeasurementRow()/clearAllMeasurements()
 // (mainwindow_measurements_io.cpp). Settings > General.
@@ -203,13 +230,14 @@ MainWindow::MainWindow(QWidget *parent) :
 //    QRegExpValidator *validator = new QRegExpValidator(re, this);
 //    ui->lineEdit_fqFrom->setValidator(validator);
 //    ui->lineEdit_fqTo->setValidator(validator);
-    connect(ui->lineEdit_fqFrom, &QLineEdit::editingFinished, this, [=]() {
-        changeFqFrom(true);
-    });
-    connect(ui->lineEdit_fqTo, &QLineEdit::editingFinished, this, [=]() {
-        changeFqTo(true);
-    });
-
+    // lineEdit_fqFrom/fqTo's editingFinished() is already auto-connected to
+    // on_lineEdit_fqFrom_editingFinished()/on_lineEdit_fqTo_editingFinished()
+    // (mainwindow_frequency.cpp) by Qt's connectSlotsByName() inside
+    // ui->setupUi() above, via the on_<objectName>_<signal> naming
+    // convention -- an explicit connect() here to the same effective call
+    // (changeFqFrom(true)/changeFqTo(true)) used to run it a second time on
+    // every edit (issue #29's aside). Removed rather than kept as a
+    // "just in case" duplicate.
 
     m_qtLanguageTranslator = new QTranslator();
     m_qtBaseTranslator = new QTranslator();
@@ -265,6 +293,26 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->tabWidget->setCurrentIndex(0);
     ui->tabWidget->setCurrentIndex(cur_index);
+    // The two calls above are a no-op signal-wise whenever cur_index == 0
+    // (the common case -- SWR, index 0, is both the tab widget's own
+    // default and the most-used tab) -- QTabWidget::setCurrentIndex()
+    // doesn't fire currentChanged() unless the index actually changes, and
+    // it's already sitting at 0 from createTabs()'s addTab() calls above,
+    // before either call here runs. Since Measurements::m_currentTab is
+    // only ever set from currentChanged() (via on_tabWidget_currentChanged()
+    // -> emit currentTab()), it stayed permanently empty for the rest of
+    // the session whenever this happened -- and on_redrawGraphs() dispatches
+    // purely on m_currentTab's exact tab-name string, so every scan's live
+    // chart update silently no-opped (matched no branch) until the user
+    // happened to switch tabs, or closeSettingsDialog()'s own equivalent
+    // re-sync (added earlier for a different reason, same root gap) ran.
+    // Root cause of issue #27 ("first click after launch shows nothing"),
+    // confirmed 2026-09-05 by tracing a live NanoVNA debug log where both
+    // scans completed identically at the wire level -- only the chart
+    // rendering silently failed for the first one. Force the sync
+    // unconditionally rather than relying on the two setCurrentIndex()
+    // calls to happen to produce a real change.
+    on_tabWidget_currentChanged(cur_index);
 #ifndef NO_MULTITAB
     connect(ui->tabWidget, &QTabWidget::currentChanged, this, [=](int index) {
         if (ui->tabWidget->widget(index) == m_tab_multi) {
@@ -302,9 +350,15 @@ MainWindow::MainWindow(QWidget *parent) :
     g_pointsWarnThreshold = m_settings->value("pointsWarnThreshold", 1000).toInt();
     g_analyzerMaxPoints = m_settings->value("analyzerMaxPoints", 1000).toInt();
     g_extendedChartZoom = m_settings->value("extendedChartZoom", false).toBool();
+    g_remoteApiEnabled = m_settings->value("remoteApiEnabled", false).toBool();
+    g_remoteApiPort = m_settings->value("remoteApiPort", 7443).toInt();
     g_analyzerTimeoutSec = m_settings->value("analyzerTimeoutSec", 8).toInt();
     DebugLog::setDetailedErrorsEnabled(m_settings->value("reportDetailedErrors", false).toBool());
     g_reconnectToDrain = m_settings->value("reconnectToDrain", false).toBool();
+    g_phaseAxisMin = m_settings->value("phaseAxisMin", -180).toDouble();
+    g_phaseAxisMax = m_settings->value("phaseAxisMax", 180).toDouble();
+    g_zAxisMin = m_settings->value("zAxisMin", -2000).toDouble();
+    g_zAxisMax = m_settings->value("zAxisMax", 2000).toDouble();
     g_warnDirtyDelete = m_settings->value("warnDirtyDelete", true).toBool();
     m_activeThemeIndex = m_settings->value("activeTheme", 0).toInt();
     m_settings->endGroup();
@@ -413,6 +467,14 @@ MainWindow::MainWindow(QWidget *parent) :
     statusBar()->addPermanentWidget(m_statusLabel);
     m_connectionStatusLabel = new QLabel(tr("Not connected"), this);
     statusBar()->insertPermanentWidget(0, m_connectionStatusLabel);
+
+    // g_remoteApiEnabled/g_remoteApiPort were already read from QSettings
+    // above (the earlier "Settings" group block) by the time this runs.
+    // Loopback-only bind is RemoteApiServer::start()'s own default, not
+    // repeated here.
+    m_remoteApiServer = new RemoteApiServer(this, this);
+    if (g_remoteApiEnabled)
+        m_remoteApiServer->start(static_cast<quint16>(g_remoteApiPort));
     // These QShortcuts are parented to `this` (MainWindow), so Qt's parent-child
     // ownership deletes them automatically when MainWindow is destroyed -- clang's
     // static analyzer doesn't model that ownership, hence the false "leak" warnings.
@@ -488,6 +550,16 @@ MainWindow::MainWindow(QWidget *parent) :
     // speedAccuracySlider has focus and wants those same keys for itself.
     // This filter lets the slider claim them first; see eventFilter().
     ui->speedAccuracySlider->installEventFilter(this);
+
+    // Issue #29: QLineEdit::editingFinished() only fires on Enter/Return or
+    // an actual Qt focus transfer -- clicking a widget that doesn't itself
+    // accept focus (a QLabel, a chart's empty background, etc.) never moves
+    // focus away from lineEdit_fqFrom/fqTo, so their change/rescan logic
+    // never ran for that click. A filter on just those two widgets (like
+    // speedAccuracySlider's above) can't see this -- the click lands on some
+    // *other* widget entirely -- so this needs the application-wide net
+    // instead, watching every mouse press regardless of target.
+    qApp->installEventFilter(this);
 
     QShortcut *shortCtrlC = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_C),this);
     connect(shortCtrlC,SIGNAL(activated()),this,SLOT(on_pressCtrlC()));
@@ -821,10 +893,44 @@ MainWindow::MainWindow(QWidget *parent) :
     // Band Selector: same "band-selector-enabled" QSettings key and
     // presetsBandComboBox visibility toggle checkBoxBandSelector used to
     // drive via Settings' bandSelectorEnabledChanged signal.
+    //
+    // ISSUE #23 (2026-09-04): repo owner reported the band dropdown not
+    // showing by default, and decided -- "for now" -- that this control
+    // should just always start enabled on launch, full stop, regardless
+    // of whatever's persisted from a prior run. Two things were previously
+    // making it come up disabled: (a) any settings file predating the
+    // "seed enabled on first run" logic in populateBandSelector()
+    // (mainwindow_presets_bands.cpp) never gets that seed applied
+    // retroactively -- it only fires once, on a key that has never
+    // existed; (b) issue #21 (current_band drift) can make that same seed
+    // compute "disabled" even on an apparently-fresh run, if the
+    // persisted current_band string doesn't match a real loaded region.
+    // Rather than pick between "fix the seed's one-shot guard" and "fix
+    // #21 first and see if that alone resolves it", the owner's call was
+    // to just force this true unconditionally as an immediate, simple
+    // stopgap -- with the real long-term question ("should this persist
+    // across restarts at all, and if so how") deliberately left open,
+    // to be decided later.
+    //
+    // bandSelectorEnabledPersisted below is intentionally read (not
+    // deleted) even though its value doesn't drive the startup default
+    // anymore -- keeps the ini-read code path alive and in the same shape
+    // it'll need to be in whenever that longer-term decision is made,
+    // instead of ripping it out now only to re-add it later. The toggle
+    // handler just below (which DOES still write this key on every
+    // uncheck/recheck) is completely unchanged -- unchecking Band
+    // Selector still works normally for the rest of this run, it's only
+    // the value this block starts from on the *next* launch that's now
+    // ignored.
     {
         m_settings->beginGroup("Settings");
-        bool bandSelectorEnabled = m_settings->value("band-selector-enabled", false).toBool();
+        bool bandSelectorEnabledPersisted = m_settings->value("band-selector-enabled", false).toBool();
         m_settings->endGroup();
+        qDebug() << "Band Selector: ini had band-selector-enabled ="
+                 << bandSelectorEnabledPersisted
+                 << "-- ignored, forcing enabled=true at startup per issue #23";
+
+        bool bandSelectorEnabled = true; // forced -- see comment above, not read from ini
         ui->actionBandSelector->setChecked(bandSelectorEnabled);
         ui->presetsBandComboBox->setVisible(bandSelectorEnabled);
     }
@@ -916,10 +1022,7 @@ MainWindow::MainWindow(QWidget *parent) :
             action->setChecked(i == m_activeThemeIndex);
             themeGroup->addAction(action);
             connect(action, &QAction::triggered, this, [this, i]() {
-                m_settings->beginGroup("Settings");
-                m_settings->setValue("activeTheme", i);
-                m_settings->endGroup();
-                changeColorTheme(i);
+                activateThemeIndex(i);
             });
         }
     }
@@ -1004,8 +1107,24 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 }
 
+void MainWindow::setRemoteApiEnabled(bool enabled, quint16 port)
+{
+    if (enabled)
+        m_remoteApiServer->start(port);
+    else
+        m_remoteApiServer->stop();
+}
+
 MainWindow::~MainWindow()
 {
+    // Explicit stop() before anything else: closes the listening socket
+    // and drops connections synchronously (their deleteLater()s still
+    // resolve on this same event loop before it stops), rather than
+    // leaving that to QObject parent-child teardown ordering, which isn't
+    // guaranteed to run before m_analyzer itself is torn down below.
+    if (m_remoteApiServer != nullptr)
+        m_remoteApiServer->stop();
+
     QList<QStringList*> values = m_BandsMap.values();
     while (!values.isEmpty()) {
         QStringList* lst = values.takeLast();
@@ -1079,9 +1198,15 @@ MainWindow::~MainWindow()
     m_settings->setValue("pointsWarnThreshold", g_pointsWarnThreshold);
     m_settings->setValue("analyzerMaxPoints", g_analyzerMaxPoints);
     m_settings->setValue("extendedChartZoom", g_extendedChartZoom);
+    m_settings->setValue("remoteApiEnabled", g_remoteApiEnabled);
+    m_settings->setValue("remoteApiPort", g_remoteApiPort);
     m_settings->setValue("analyzerTimeoutSec", g_analyzerTimeoutSec);
     m_settings->setValue("reportDetailedErrors", DebugLog::detailedErrorsEnabled());
     m_settings->setValue("reconnectToDrain", g_reconnectToDrain);
+    m_settings->setValue("phaseAxisMin", g_phaseAxisMin);
+    m_settings->setValue("phaseAxisMax", g_phaseAxisMax);
+    m_settings->setValue("zAxisMin", g_zAxisMin);
+    m_settings->setValue("zAxisMax", g_zAxisMax);
     m_settings->setValue("warnDirtyDelete", g_warnDirtyDelete);
     m_settings->endGroup();
 
@@ -1202,6 +1327,22 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
             return true;
         }
     }
+
+    // Issue #29: force a real focus-out (which does fire editingFinished())
+    // on lineEdit_fqFrom/fqTo whenever a mouse press lands anywhere else,
+    // including on a widget that would never have taken focus away from
+    // them on its own. `obj != focused` skips the case where the press is
+    // on the field itself (repositioning the text cursor shouldn't blur
+    // it), and clicking the *other* of the two fields already worked
+    // correctly before this filter -- this just makes it also work for
+    // every non-focusable target (labels, chart backgrounds, etc.).
+    if (event->type() == QEvent::MouseButtonPress) {
+        QWidget* focused = QApplication::focusWidget();
+        if ((focused == ui->lineEdit_fqFrom || focused == ui->lineEdit_fqTo) && obj != focused) {
+            focused->clearFocus();
+        }
+    }
+
     return QMainWindow::eventFilter(obj, event);
 }
 
@@ -1274,6 +1415,38 @@ static void clampAxisRange(QCPAxis *axis, double min, double max)
             // the range currently is, clamped so the reopened span itself
             // still fits inside [min, max].
             double center = qBound(min + minSpan / 2.0, (lower + upper) / 2.0, max - minSpan / 2.0);
+            lower = center - minSpan / 2.0;
+            upper = center + minSpan / 2.0;
+            outOfBounds = true;
+        }
+        if (outOfBounds && upper > lower)
+            axis->setRange(lower, upper);
+    });
+}
+
+// Pointer overload for axes whose clamp bounds can change at runtime via
+// a Settings > Graphs control -- the Phase chart (g_phaseAxisMin/Max)
+// and the Z=R+jX / Z=R||jX charts (g_zAxisMin/Max, shared by both), see
+// their declarations above. Re-reads *min/*max on every rangeChanged
+// tick instead of baking a snapshot into the closure the way the
+// literal-double overload above does, so a value picked in Settings
+// takes effect immediately -- setWidgetsSettings() below only ever runs
+// once, at startup, so it can't be relied on to re-apply a later change.
+static void clampAxisRange(QCPAxis *axis, const double *min, const double *max)
+{
+    QObject::connect(axis, QOverload<const QCPRange&>::of(&QCPAxis::rangeChanged),
+                      axis, [axis, min, max](const QCPRange &newRange) {
+        const double lo = *min;
+        const double hi = *max;
+        const double minSpan = (hi - lo) * 1e-6;
+        double lower = newRange.lower;
+        double upper = newRange.upper;
+        bool outOfBounds = false;
+        if (lower < lo) { lower = lo; outOfBounds = true; }
+        if (upper > hi) { upper = hi; outOfBounds = true; }
+        if (upper - lower < minSpan)
+        {
+            double center = qBound(lo + minSpan / 2.0, (lower + upper) / 2.0, hi - minSpan / 2.0);
             lower = center - minSpan / 2.0;
             upper = center + minSpan / 2.0;
             outOfBounds = true;
@@ -1366,11 +1539,11 @@ void MainWindow::setWidgetsSettings()
 
     //-------Phase Widget---------------------------------------------
     m_phaseWidget->addGraph();//graph(0)
-    // y-range widened to +/-190 (issue #4) -- the real data/band-highlight
-    // range is still the physical +/-180 deg swing, but a +/-180 axis
-    // range put the 180 deg line exactly on the plot's top/bottom edge,
-    // clipping it. +/-190 leaves 180 deg visibly inside the plot area.
-    setBands(m_phaseWidget, bands, -190, 190);
+    // Upstream's issue #4 widened this to a hardcoded +/-190; superseded
+    // here by g_phaseAxisMin/Max (issue #49/#45, see their comment at the
+    // top of this file) -- a real, user-configurable Settings > Advanced
+    // pair, defaulting to the original +/-180.
+    setBands(m_phaseWidget, bands, g_phaseAxisMin, g_phaseAxisMax);
     m_phaseWidget->graph(0)->setPen(pen);
     m_phaseWidget->xAxis->setLabel(tr("Frequency, kHz"));
     m_phaseWidget->yAxis->setLabel(tr("Phase, Angle"));
@@ -1387,12 +1560,12 @@ void MainWindow::setWidgetsSettings()
     // code also went through on every interactive tick, not just app code.
     // Restored as clampAxisRange() (above setWidgetsSettings()) instead of
     // back inside qcustomplot.cpp/.h -- see that function's comment.
-    m_phaseWidget->yAxis->setRange(-190, 190);
+    m_phaseWidget->yAxis->setRange(g_phaseAxisMin, g_phaseAxisMax);
     m_phaseWidget->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
     m_phaseWidget->axisRect()->setRangeZoom(Qt::Horizontal);
     m_phaseWidget->axisRect()->setRangeDrag(Qt::Horizontal | Qt::Vertical);
     clampAxisRange(m_phaseWidget->xAxis, 0, 10000000);
-    clampAxisRange(m_phaseWidget->yAxis, -190, 190);
+    clampAxisRange(m_phaseWidget->yAxis, &g_phaseAxisMin, &g_phaseAxisMax);
     // See m_swrWidget->xAxis->setNumberFormat()'s comment just above.
     m_phaseWidget->xAxis->setNumberFormat("f");
     m_phaseWidget->xAxis->setNumberPrecision(0);
@@ -1405,10 +1578,13 @@ void MainWindow::setWidgetsSettings()
     //-------RSeries Widget------------------------------------------------
     m_rsWidget->addGraph();//graph(0)
     m_rsWidget->setAutoAddPlottableToLegend(false);
-    // Ceiling raised from +/-2000 to +/-5000 (issue #5) -- a real
-    // high-impedance point (e.g. a badly mismatched antenna feedpoint)
-    // couldn't be zoomed out far enough to see at all.
-    setBands(m_rsWidget, bands, -5000, 5000);
+    // Upstream's issue #5 raised this to a hardcoded +/-5000 (a real
+    // high-impedance point, e.g. a badly mismatched antenna feedpoint,
+    // couldn't be zoomed out far enough to see at +/-2000); superseded here
+    // by g_zAxisMin/Max (issue #50/#45, see comment at top of this file) --
+    // a real, user-configurable Settings > Advanced pair, defaulting to the
+    // original +/-2000.
+    setBands(m_rsWidget, bands, g_zAxisMin, g_zAxisMax);
     m_rsWidget->graph(0)->setPen(pen);
     m_rsWidget->xAxis->setLabel(tr("Frequency, kHz"));
     m_rsWidget->yAxis->setLabel(tr("Rs, Ohm"));
@@ -1418,7 +1594,7 @@ void MainWindow::setWidgetsSettings()
     m_rsWidget->axisRect()->setRangeZoom(Qt::Horizontal);
     m_rsWidget->axisRect()->setRangeDrag(Qt::Horizontal | Qt::Vertical);
     clampAxisRange(m_rsWidget->xAxis, 0, 10000000);
-    clampAxisRange(m_rsWidget->yAxis, -5000, 5000);
+    clampAxisRange(m_rsWidget->yAxis, &g_zAxisMin, &g_zAxisMax);
     // See m_swrWidget->xAxis->setNumberFormat()'s comment above.
     m_rsWidget->xAxis->setNumberFormat("f");
     m_rsWidget->xAxis->setNumberPrecision(0);
@@ -1431,8 +1607,8 @@ void MainWindow::setWidgetsSettings()
     //-------RParallel Widget------------------------------------------------
     m_rpWidget->addGraph();//graph(0)
     m_rpWidget->setAutoAddPlottableToLegend(false);
-    // See m_rsWidget's identical +/-5000 comment above (issue #5).
-    setBands(m_rpWidget, bands, -5000, 5000);
+    // See m_rsWidget's identical g_zAxisMin/Max comment above.
+    setBands(m_rpWidget, bands, g_zAxisMin, g_zAxisMax);
     m_rpWidget->graph(0)->setPen(pen);
     m_rpWidget->xAxis->setLabel(tr("Frequency, kHz"));
     m_rpWidget->yAxis->setLabel(tr("Rp, Ohm"));
@@ -1442,7 +1618,7 @@ void MainWindow::setWidgetsSettings()
     m_rpWidget->axisRect()->setRangeZoom(Qt::Horizontal);
     m_rpWidget->axisRect()->setRangeDrag(Qt::Horizontal | Qt::Vertical);
     clampAxisRange(m_rpWidget->xAxis, 0, 10000000);
-    clampAxisRange(m_rpWidget->yAxis, -5000, 5000);
+    clampAxisRange(m_rpWidget->yAxis, &g_zAxisMin, &g_zAxisMax);
     // See m_swrWidget->xAxis->setNumberFormat()'s comment above.
     m_rpWidget->xAxis->setNumberFormat("f");
     m_rpWidget->xAxis->setNumberPrecision(0);

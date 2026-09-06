@@ -19,6 +19,13 @@ void MainWindow::on_actionMarkerComparison_triggered()
         // (WA_DeleteOnClose above), no manual disconnect needed.
         connect(m_analyzer, &AnalyzerPro::measurementComplete,
                 m_markerComparisonDialog, &MarkerComparisonDialog::refresh);
+        // NanoVNA connections never fire measurementComplete() at a real
+        // completion (see the identical fix/comment for TdrScanPanel::
+        // refreshResult() further down in this file, on_actionTDRMeasurement_
+        // triggered()) -- without this, the combos/values here never updated
+        // live for a NanoVNA scan while this dialog was open. Fixes #39.
+        connect(m_analyzer, &AnalyzerPro::measurementCompleteNano,
+                m_markerComparisonDialog, &MarkerComparisonDialog::refresh);
         // A marker added/removed on the plots doesn't produce a new sweep
         // (no measurementComplete above), so the combos need their own hook
         // to pick it up without the user having to reopen this dialog.
@@ -86,6 +93,18 @@ void MainWindow::on_actionTDRMeasurement_triggered()
         // scan -- only after one that was manually stopped.
         connect(m_analyzer, &AnalyzerPro::measurementComplete,
                 m_tdrScanDialog->panel(), &TdrScanPanel::refreshResult);
+        // NanoVNA connections never fire measurementComplete() at a real
+        // completion (MainWindow::on_measurementComplete() early-returns for
+        // NANO; the actual signal is measurementCompleteNano(), driven by
+        // the device's own "ch>" prompt) -- without this, refreshResult()
+        // was never invoked after a NanoVNA TDR scan, so the Result groupbox
+        // (peak distance/reflection type) stayed blank even though
+        // stopTDRProgress()'s own redrawTDR() call correctly populated the
+        // chart itself. Confirmed issue #30 (follow-up finding), 2026-09-05.
+        // Same "connected after MainWindow's own on_measurementCompleteNano()
+        // slot" ordering guarantee as the measurementComplete connection
+        // above -- MainWindow's constructor connects its own slot to this
+        // signal long before m_tdrScanDialog exists.
         connect(m_analyzer, &AnalyzerPro::measurementCompleteNano,
                 m_tdrScanDialog->panel(), &TdrScanPanel::refreshResult);
         // "Use this velocity factor" (reverse-solve) -- apply it as

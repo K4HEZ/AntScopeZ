@@ -32,8 +32,14 @@ extern int g_pointsMax; // see mainwindow.cpp
 extern int g_pointsWarnThreshold; // see mainwindow.cpp
 extern int g_analyzerMaxPoints; // see mainwindow.cpp
 extern bool g_extendedChartZoom; // see mainwindow.cpp
+extern bool g_remoteApiEnabled; // see mainwindow.cpp
+extern int g_remoteApiPort; // see mainwindow.cpp
 extern int g_analyzerTimeoutSec; // see mainwindow.cpp
 extern bool g_reconnectToDrain; // see mainwindow.cpp
+extern double g_phaseAxisMin; // see mainwindow.cpp
+extern double g_phaseAxisMax; // see mainwindow.cpp
+extern double g_zAxisMin; // see mainwindow.cpp
+extern double g_zAxisMax; // see mainwindow.cpp
 extern bool g_warnDirtyDelete; // see mainwindow.cpp
 extern QString appendSpaces(const QString& number);
 int Settings::m_serialIndex = 0;
@@ -136,6 +142,8 @@ Settings::Settings(QWidget *parent) :
     ui->lineEditScanWarnThreshold->setText(QString::number(g_pointsWarnThreshold));
     ui->lineEditAnalyzerMaxPoints->setText(QString::number(g_analyzerMaxPoints));
     ui->checkBoxExtendedChartZoom->setChecked(g_extendedChartZoom);
+    ui->checkBoxRemoteApiEnabled->setChecked(g_remoteApiEnabled);
+    ui->spinBoxRemoteApiPort->setValue(g_remoteApiPort);
     ui->lineEdit_analyzerTimeout->setText(QString::number(g_analyzerTimeoutSec));
     // Moved here from the Developer tab 2026-09-04 -- these are ordinary
     // user-facing preferences, not debug/developer-only knobs, and now
@@ -144,23 +152,27 @@ Settings::Settings(QWidget *parent) :
     // session-only in-memory-only behavior they had before.
     ui->checkBoxReportDetailedErrors->setChecked(DebugLog::detailedErrorsEnabled());
     ui->checkBoxReconnectToDrain->setChecked(g_reconnectToDrain);
+    ui->lineEditPhaseAxisMin->setText(QString::number(g_phaseAxisMin));
+    ui->lineEditPhaseAxisMax->setText(QString::number(g_phaseAxisMax));
+    ui->lineEditZAxisMin->setText(QString::number(g_zAxisMin));
+    ui->lineEditZAxisMax->setText(QString::number(g_zAxisMax));
     ui->checkBoxWarnDirtyDelete->setChecked(g_warnDirtyDelete);
     m_settings->endGroup();
 
     // Debug Logging (Analyzer tab) -- deliberately NOT persisted to the
-    // ini, so it always starts off on a *fresh app launch* (DebugLog's
-    // static flags default false at process start) -- logging is opt-in
-    // per run, not a standing setting someone forgets they left on. But
-    // this dialog itself is reconstructed fresh every time Settings is
-    // opened (not a singleton reused across opens), so hardcoding
-    // setChecked(false) here -- as this used to -- reset the *visible*
-    // checkbox on every single reopen too, not just once per launch,
-    // regardless of whether logging was actually still running underneath.
-    // Reading DebugLog's own current state instead fixes that without
-    // giving up the "off by default each launch" behavior (the getters
-    // just return whatever's actually true right now). Confirmed live
-    // 2026-09-04: checked "NanoVNA", closed Settings, reopened it, box was
-    // back to unchecked.
+    // ini: logging is opt-in per session, not a standing setting someone
+    // forgets they left on. Drives DebugLog's per-interface enable flags
+    // directly (also plain in-memory, not persisted) rather than through
+    // QSettings. Read back DebugLog's own current state rather than just
+    // assuming unchecked -- it can already be true here, e.g. the
+    // -comserial/-usbhid/-nanovna/-ble CLI flags (main.cpp) set it before
+    // Settings is ever opened, and this dialog itself is reconstructed
+    // fresh every time Settings is opened (not a singleton reused across
+    // opens), so hardcoding setChecked(false) -- as this used to -- reset
+    // the *visible* checkbox on every reopen too, not just once per
+    // launch, regardless of whether logging was actually still running
+    // underneath. Confirmed live 2026-09-04: checked "NanoVNA", closed
+    // Settings, reopened it, box was back to unchecked.
     ui->debugLogSerialCheckBox->setChecked(DebugLog::serialEnabled());
     ui->debugLogUsbHidCheckBox->setChecked(DebugLog::usbHidEnabled());
     ui->debugLogBleCheckBox->setChecked(DebugLog::bleEnabled());
@@ -177,7 +189,21 @@ Settings::Settings(QWidget *parent) :
     // hardcoded reset.
     ui->debugLogBleShowPingsCheckBox->setChecked(DebugLog::bleShowPings());
     ui->debugLogBleShowPingsCheckBox->setEnabled(ui->debugLogBleCheckBox->isChecked());
-    connect(ui->debugLogBleCheckBox, &QCheckBox::toggled, ui->debugLogBleShowPingsCheckBox, &QCheckBox::setEnabled);
+    DebugLog::setBleShowPings(false);
+    // Was: connect(..., &QCheckBox::setEnabled) directly -- only toggled
+    // *enabled*, so unchecking BLE/Bluetooth after BLE Pings had been
+    // turned on left it disabled but still checked (and DebugLog still
+    // reporting pings), with no way to uncheck a disabled checkbox from the
+    // UI. Force it back off (both the checkbox and the underlying
+    // DebugLog state, same as loadDefaults()'s own initial state just
+    // above) whenever BLE/Bluetooth itself goes off. Issue #40.
+    connect(ui->debugLogBleCheckBox, &QCheckBox::toggled, this, [=](bool checked) {
+        ui->debugLogBleShowPingsCheckBox->setEnabled(checked);
+        if (!checked) {
+            ui->debugLogBleShowPingsCheckBox->setChecked(false);
+            DebugLog::setBleShowPings(false);
+        }
+    });
     connect(ui->debugLogBleShowPingsCheckBox, &QCheckBox::clicked, DebugLog::setBleShowPings);
 
     // "Data folder" -- the single UserDataDir every save/export/screenshot
@@ -210,6 +236,10 @@ Settings::Settings(QWidget *parent) :
     connect(ui->lineEditScanPointsMax, &QLineEdit::editingFinished, this, &Settings::on_scanPointsMaxFinished);
     connect(ui->lineEditScanWarnThreshold, &QLineEdit::editingFinished, this, &Settings::on_scanWarnThresholdFinished);
     connect(ui->lineEditAnalyzerMaxPoints, &QLineEdit::editingFinished, this, &Settings::on_analyzerMaxPointsFinished);
+    connect(ui->lineEditPhaseAxisMin, &QLineEdit::editingFinished, this, &Settings::on_phaseAxisMinFinished);
+    connect(ui->lineEditPhaseAxisMax, &QLineEdit::editingFinished, this, &Settings::on_phaseAxisMaxFinished);
+    connect(ui->lineEditZAxisMin, &QLineEdit::editingFinished, this, &Settings::on_zAxisMinFinished);
+    connect(ui->lineEditZAxisMax, &QLineEdit::editingFinished, this, &Settings::on_zAxisMaxFinished);
 
     ui->cableComboBox->addItem(tr("Change parameters or choose from list..."));
     ui->cableComboBox->setMaxVisibleItems(20);
@@ -383,6 +413,13 @@ Settings::~Settings()
     g_pointsWarnThreshold = qBound(50, ui->lineEditScanWarnThreshold->text().toInt(), POINTS_MAX);
     g_analyzerMaxPoints = qBound(50, ui->lineEditAnalyzerMaxPoints->text().toInt(), POINTS_MAX);
     g_extendedChartZoom = ui->checkBoxExtendedChartZoom->isChecked();
+    g_remoteApiEnabled = ui->checkBoxRemoteApiEnabled->isChecked();
+    g_remoteApiPort = ui->spinBoxRemoteApiPort->value();
+    // Unlike the flags above (passively consulted elsewhere), this one
+    // needs to actively start/stop a live QTcpServer -- MainWindow::
+    // m_mainWindow is the same static instance pointer analyzerFound()
+    // and friends already rely on elsewhere in this file.
+    MainWindow::m_mainWindow->setRemoteApiEnabled(g_remoteApiEnabled, static_cast<quint16>(g_remoteApiPort));
     DebugLog::setDetailedErrorsEnabled(ui->checkBoxReportDetailedErrors->isChecked());
     g_reconnectToDrain = ui->checkBoxReconnectToDrain->isChecked();
     g_warnDirtyDelete = ui->checkBoxWarnDirtyDelete->isChecked();
@@ -398,8 +435,14 @@ Settings::~Settings()
     m_settings->setValue("pointsWarnThreshold", g_pointsWarnThreshold);
     m_settings->setValue("analyzerMaxPoints", g_analyzerMaxPoints);
     m_settings->setValue("extendedChartZoom", g_extendedChartZoom);
+    m_settings->setValue("remoteApiEnabled", g_remoteApiEnabled);
+    m_settings->setValue("remoteApiPort", g_remoteApiPort);
     m_settings->setValue("reportDetailedErrors", DebugLog::detailedErrorsEnabled());
     m_settings->setValue("reconnectToDrain", g_reconnectToDrain);
+    // g_phaseAxisMin/Max and g_zAxisMin/Max, like g_analyzerTimeoutSec just
+    // above, are persisted from MainWindow's own save routine instead of
+    // here -- their on_..Finished() handlers below already keep the
+    // globals themselves current the moment the field loses focus.
     m_settings->setValue("warnDirtyDelete", g_warnDirtyDelete);
 
     m_settings->setValue("currentIndex",ui->tabWidget->currentIndex());
@@ -1598,6 +1641,15 @@ void Settings::initThemesTab()
         // stylesheet on itself anymore (see the comment above Settings::Settings()).
     });
 
+    // Apply (issue #24): make the currently-selected theme the app's live
+    // active one, independent of Save -- themeComboBox's own selection
+    // never did this (see activateTheme()'s declaration for why), so
+    // there was no way to switch the live theme from here at all short of
+    // saving into whatever slot happened to already be active.
+    connect(ui->themeApplyBtn, &QPushButton::clicked, this, [this]() {
+        emit activateTheme(m_editingThemeIndex);
+    });
+
     ui->themeComboBox->setCurrentIndex(Style::activeThemeIndex());
     // setCurrentIndex() above only fires on_themeComboBox_currentIndexChanged()
     // if the index actually changes from the combo's default of 0 -- this
@@ -1867,6 +1919,52 @@ void Settings::on_analyzerTimeoutFinished()
     value = qBound(1, value, 300);
     ui->lineEdit_analyzerTimeout->setText(QString::number(value));
     g_analyzerTimeoutSec = value;
+    emit paramsChanged();
+}
+
+// Phase chart Y-axis min/max and Z=R+jX/Z=R||jX charts' shared Y-axis
+// min/max (Settings > Graphs, "Chart Y-Axis Ranges") -- see #45/#49/#50.
+// Each pair is clamped independently to a generous absolute range, then
+// against its partner field (min must stay below max and vice versa) so
+// MainWindow's clampAxisRange() (mainwindow.cpp) never gets handed an
+// inverted or zero-width span. Not qBound()'d against each other's
+// *current* value in a single step -- editing min first and immediately
+// hitting an already-too-low max would otherwise fight over an ordering
+// that hasn't been entered yet, so each side only pulls back far enough
+// to stay strictly on its own side of the other.
+void Settings::on_phaseAxisMinFinished()
+{
+    int value = ui->lineEditPhaseAxisMin->text().toInt();
+    value = qBound(-360, value, ui->lineEditPhaseAxisMax->text().toInt() - 1);
+    ui->lineEditPhaseAxisMin->setText(QString::number(value));
+    g_phaseAxisMin = value;
+    emit paramsChanged();
+}
+
+void Settings::on_phaseAxisMaxFinished()
+{
+    int value = ui->lineEditPhaseAxisMax->text().toInt();
+    value = qBound(ui->lineEditPhaseAxisMin->text().toInt() + 1, value, 360);
+    ui->lineEditPhaseAxisMax->setText(QString::number(value));
+    g_phaseAxisMax = value;
+    emit paramsChanged();
+}
+
+void Settings::on_zAxisMinFinished()
+{
+    int value = ui->lineEditZAxisMin->text().toInt();
+    value = qBound(-1000000, value, ui->lineEditZAxisMax->text().toInt() - 1);
+    ui->lineEditZAxisMin->setText(QString::number(value));
+    g_zAxisMin = value;
+    emit paramsChanged();
+}
+
+void Settings::on_zAxisMaxFinished()
+{
+    int value = ui->lineEditZAxisMax->text().toInt();
+    value = qBound(ui->lineEditZAxisMin->text().toInt() + 1, value, 1000000);
+    ui->lineEditZAxisMax->setText(QString::number(value));
+    g_zAxisMax = value;
     emit paramsChanged();
 }
 
