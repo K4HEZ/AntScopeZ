@@ -49,6 +49,14 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Fixed
 
+- 2-port Z-parameter Touchstone import (`# ... Z RI ...`, #7): Z21/Z12/Z22
+  used to be silently skipped on import (a different quantity than
+  S21/S12/S22, ohms not a unitless ratio) rather than actually converted
+  -- guarded against mislabeling real data as the wrong quantity, but the
+  data itself never reached the S21 tab, Markers, or export. Now runs
+  through a real Z-to-S 2-port matrix conversion
+  (`Measurements::zToSParam()`); S-parameter files (the common case) are
+  unaffected.
 - Phase chart: the 180 deg line clipped right at the top/bottom edge of
   the chart (#4). Y-axis widened from +/-180 to +/-190 deg so the full
   swing sits visibly inside the plot area.

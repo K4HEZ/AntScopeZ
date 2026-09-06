@@ -546,6 +546,16 @@ private:
     // existing 1-port S11/Z11 pair -- format decoding is identical
     // regardless of which parameter it's for.
     static std::complex<double> sparamFromFormat(int iFormat, double v1, double v2);
+    // Converts one 2-port Z-parameter data line (Z11/Z21/Z12/Z22, all
+    // referenced to the same real Z0 -- Touchstone's "R n" line, one
+    // impedance for both ports) into the equivalent S-parameters, via the
+    // standard 2-port Z-to-S matrix identity. See #7 -- a Z-parameter
+    // Touchstone file's Z21/Z12/Z22 used to be silently skipped entirely
+    // (a different quantity than S21/S12/S22, ohms not a unitless ratio)
+    // rather than actually converted.
+    static SParamPoint zToSParam(double fq, std::complex<double> z11,
+                                  std::complex<double> z21, std::complex<double> z12,
+                                  std::complex<double> z22, double z0);
     // std::arg() wraps into (-180, 180] degrees; a real transmission
     // phase can rack up many full turns across a sweep, so this
     // accumulates the shortest-path delta between consecutive points
