@@ -135,6 +135,7 @@ void LicenseAgent::requestLicense(QString key)
     request.setSslConfiguration(conf);
 
     setState(WaitLicense);
+    m_canceled = false; // stale cancel from a prior request could wrongly short-circuit this new one
     sendRequest(request);
 
 }

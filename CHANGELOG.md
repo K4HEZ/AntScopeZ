@@ -45,6 +45,11 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Fixed
 
+- Merged from RigExpert's AntScope2 2.0.3 (#10): RigExpert "Match"
+  analyzer's max frequency corrected 690MHz -> 750MHz; screenshot
+  completion now resets state right away instead of only on dialog
+  close; a stale license-request cancel flag could wrongly short-circuit
+  a new request.
 - Band names could fail to show on a fresh profile's first run despite
   View > "Show Band Name" being checked, until toggled off and back on --
   a QSettings default mismatch. (#8)

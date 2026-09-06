@@ -480,6 +480,7 @@ void Screenshot::on_newData(QByteArray data)
             m_inputData.clear();
             m_imageVector.clear();
             ui->progressBar->hide();
+            emit screenshotComplete();
             repaint();
         }
     } else if (model == "Stick 230" || model == "Stick 500") {
@@ -510,6 +511,7 @@ void Screenshot::on_newData(QByteArray data)
                     m_inputData.clear();
                     m_imageVector.clear();
                     ui->progressBar->hide();
+                    emit screenshotComplete();
                     repaint();
                 }
                 else { // version 2, USB
@@ -528,6 +530,7 @@ void Screenshot::on_newData(QByteArray data)
                         m_inputData.clear();
                         m_imageVector.clear();
                         ui->progressBar->hide();
+                        emit screenshotComplete();
                         repaint();
                     }
                 }
@@ -548,6 +551,7 @@ void Screenshot::on_newData(QByteArray data)
                 m_inputData.clear();
                 m_imageVector.clear();
                 ui->progressBar->hide();
+                emit screenshotComplete();
                 repaint();
             }
         }
@@ -592,6 +596,7 @@ void Screenshot::on_newData(QByteArray data)
             m_inputData.clear();
             m_imageVector.clear();
             ui->progressBar->hide();
+            emit screenshotComplete();
             repaint();
         }
     } else if (model == "NanoVNA") {
@@ -610,6 +615,7 @@ void Screenshot::on_newData(QByteArray data)
             m_inputData.clear();
             m_imageVector.clear();
             ui->progressBar->hide();
+            emit screenshotComplete();
             repaint();
         }
     } else if((m_imageVector.length() >= m_lcdHeight*m_lcdWidth)
@@ -649,6 +655,7 @@ void Screenshot::on_newData(QByteArray data)
             m_inputData.clear();
             m_imageVector.clear();
             ui->progressBar->hide();
+            emit screenshotComplete();
             repaint();
         }
 
