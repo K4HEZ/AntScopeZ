@@ -32,7 +32,7 @@ possible today.
 | 9 | Retrieve scans already stored on the analyzer itself | Data from AA | File > Data from AA | ✅ |
 | 10 | Correct for the analyzer's own measurement error | OSL calibration, then check the Calibration box | Settings > OSL Calibration | ✅ |
 | 11 | Target scans to a specific ham band quickly | Band selector fills Start/Stop | Presets panel | ✅ |
-| 12 | Find a cable fault or verify cable integrity | Run a TDR scan, read the reflection (distance + impedance in Ohms, not just open/short) | TDR, Tools > TDR Measurement | ✅ distance/open-short reliable; ⚠️ the Ohms figure is a rough estimate, not precision -- confirmed 2026-08-21 against a real open 13ft cable (101Ω, then 771Ω after a real bug fix, still not fully convincing) -- real cable loss, the settling-point calculation, and window-function choice all affect the number independently. See [[tdr-scan-rework-plan]]. |
+| 12 | Find a cable fault or verify cable integrity | Run a TDR scan, read the reflection (distance + impedance in Ohms, not just open/short) | TDR, Tools > TDR Measurement | ✅ distance/open-short reliable; ⚠️ the Ohms figure is a rough estimate, not precision -- confirmed 2026-08-21 against a real open 13ft cable (101Ω, then 771Ω after a real bug fix, still not fully convincing) -- real cable loss, the settling-point calculation, and window-function choice all affect the number independently. Likely 4th factor found 2026-09-06: `CalcTdr()` discards the inverse-FFT's imaginary part (`src/measurements_tdr.cpp:289`), so a real (non-ideal) reflection's reactive component is silently thrown away -- the Ohms reading may need to become a real R+jX pair, not a scalar. See [[tdr-scan-rework-plan]]. |
 | 13 | Determine an unknown cable's length or velocity factor | Reverse-solve calculator (known length -> velocity factor) | Tools > TDR Measurement | ✅ |
 | 14 | Figure out if bad SWR is the antenna or the feedline | Enter the known feedline length -- automatically flags "peak is short of that length" (possible fault partway along) vs. it just being the far end | Tools > TDR Measurement | ✅ (automated 2026-08-21 -- was a manual eyeball comparison before) |
 | 15 | Share/document a chart as an image or PDF | Print, Save Screenshot, Screenshot from AA | File menu | ✅ |
@@ -50,11 +50,9 @@ possible today.
 | # | Use case | How today | Charts/tools | Status |
 |---|---|---|---|---|
 | 19 | Verify a filter/attenuator's passband or insertion loss vs frequency | Import a `.s2p`, read S21 magnitude -- or, on NanoVNA-family hardware, a live scan now populates real S21 directly (unvalidated, see row 28) | S21 tab | ✅ (shipped 2026-08-19; live NanoVNA path added 2026-08-31) |
-| 20 | Sanity-check S21≈S12 (reciprocity) for a passive device | View > Show S12 (off by default -- S12 duplicates S21 exactly for any reciprocal device, so it's opt-in); both traces solid, distinct colors (dashed-vs-solid dropped 2026-09-06, no longer needed) | S21 tab | ✅ for imported `.s2p` data. Not meaningful on a live NanoVNA scan -- that path is forward-only and hardcodes S12 to 0 (see row 28), so it can never actually show S21≈S12, only S21 against a flat zero line. |
-| 21 | Track a frequency point's S21/S12 across the Markers table / cursor hover | Marker Comparison table columns, Cursor Details | S21 tab, Markers | ✅ (shipped 2026-08-19). Same caveat as row 20 -- the S12 column reads real data from an imported `.s2p`, but is always 0 on a live NanoVNA scan. |
-| 22 | Check the DUT's *output*-port match (S22) | -- | -- | ❌ deferred -- and now a *double* gap, not a single one: no live-capture path produces real S22 either (NanoVNA's row 28 addition is forward-only S11+S21, S22 hardcoded to 0 in `nanovna_analyzer.cpp`), and even an imported `.s2p` file's real S22 is parsed and re-exportable but never surfaced anywhere in the UI (no chart, no column) |
-| 23 | Sanity-check a device is electrically symmetric (S11≈S22) | -- | -- | ❌ same gap as above |
-| 24 | Design a matching network for a 2-port device's output side | -- | -- | ❌ same gap |
+| 20 | Sanity-check S21≈S12 (reciprocity) for a passive device | View > Show S12 | S21 tab | ✅ for imported `.s2p` data. Live NanoVNA scans hardcode S12 to 0 -- see row 22. |
+| 21 | Track a frequency point's S21/S12 across the Markers table / cursor hover | Marker Comparison table columns, Cursor Details | S21 tab, Markers | ✅ for imported `.s2p` data. Same live-scan caveat as row 20. |
+| 22 | Full S12/S22 access -- output-port match, S11≈S22 symmetry check, output-side matching network design, and real (not hardcoded-0) S12 on a live NanoVNA scan | -- | -- | ❌ deferred pending hardware to test a full 4-parameter capture with (folded rows 22/23/24 together 2026-09-06) |
 | 25 | Read group delay / phase linearity through a device | -- | -- | ❌ explicitly deferred in the 2-port plan |
 | 26 | Compare S21 alongside another chart in Multi view | Right-click the S21 tab > "Move chart to the tab Multi", same as any other chart | S21 tab, Multi | ✅ (fixed 2026-09-06 -- S21 used to be excluded from Multi's join menu entirely, which also meant joining it via the *other* "move to Multi" menu, then using Multi's own "Close all", could permanently strand the tab hidden with no way back; both fixed together, S21 is a fully symmetric Multi-tab participant now) |
 | 27 | Export imported 2-port data back out (S11/S21/S12/S22), in RI, MA, or DB | Export dialog's S2P RI/MA/DB buttons (only shown for a 2-port measurement) | File > Export | ✅ (shipped 2026-08-19, `exportSParamData()`) |
@@ -67,10 +65,9 @@ possible today.
 | # | Use case | How today | Charts/tools | Status |
 |---|---|---|---|---|
 | 30 | Understand why a scan is slow or appears hung | A scan that goes silent past Settings > General > "Analyzer timeout" (default 8s) now fails with a proper non-modal error dialog -- timestamped, with whatever diagnostic detail is available -- instead of leaving the busy indicator/wait cursor stuck forever. Stopping a scan that's still delivering data (neither NanoVNA protocol has a wire-level abort) now visibly shows "draining" progress in the status bar and disables scan controls until it's genuinely done, instead of looking stopped while still silently discarding incoming points -- bounded by the same watchdog | Settings > General, analyzer error dialog, status bar | ✅ (watchdog shipped 2026-09-01 -- `AnalyzerPro` scan-silence watchdog; USB/HID and Serial connections also now detect "device present but busy" specifically, both at launch and while polling. Drain-aware stop shipped 2026-09-03/04 -- `AnalyzerPro::beginDraining()`/`stopCommandAbortsDevice()`, optional "Use reconnect to drain unwanted data" in Settings > General). ⚠️ Genuinely aborting a *very* large (~10000-point) scan mid-flight is still unfixed -- draining/reconnect both wait out or discard what's already in transit, but a prior attempt at a true wire-level-independent early exit (processEvents()+early-exit in the NanoVNA parse loops) broke real hardware badly (wouldn't start, needed multiple reconnects, stop didn't drain) and was fully reverted 2026-09-05. Leading suspect, unconfirmed: `QEventLoop::ExcludeSocketNotifiers` may be blocking something in the connect/handshake/drain path that genuinely depends on socket-notifier events firing during that window. Needs a fresh root-cause pass before retrying. |
-| 31 | Reliable auto-reconnect after a dropped/power-cycled analyzer | -- | -- | ⚠️ known gap, unchanged -- row 30's "device present but busy" detection helps diagnose a stuck connect attempt but doesn't make the reconnect itself more reliable |
+| 31 | Reliable, configurable auto-reconnect after a dropped/power-cycled analyzer | Settings > Analyzer tab (renamed from "Developer" 2026-09-06, #6) exists as the future home for this | Settings > Analyzer | ⚠️ known gap -- row 30's "device present but busy" detection helps diagnose a stuck connect attempt but doesn't make reconnect itself more reliable. Retry/reconnect controls (count, backoff, defaults, UI shape) not yet scoped (folded row 42 in here 2026-09-06). **Design concern: needs a hard retry limit -- endless unattended reconnect cycling against unresponsive/faulted hardware risks actual hardware damage, not just a UX annoyance.** |
 | 38 | Get remote help from a more experienced ham -- let them drive your analyzer software over the network while you handle the physical antenna/hardware end | -- | -- | ❌ parked idea (2026-08-20), not scoped or designed -- see [[remote-network-control-idea]]. Would supersede, not extend, an existing but abandoned narrow UDP bridge (see [[s21-and-user-defined-live-capture-deferred]]-adjacent findings in `BUILDINFO.md`). |
-| 42 | Configure how AntScopeZ handles analyzer errors (retry/reconnect behavior) | -- | -- | ⚠️ tab renamed "Developer" -> "Analyzer" 2026-09-06 (#6). What retry/reconnect controls actually belong on it (retry count, backoff, defaults, UI shape) still not scoped -- needs a design pass before implementation. Feeds directly into row 31's gap. |
-| 43 | Manually disconnect from the analyzer without closing the app | -- | -- | ❌ planned, not started (2026-09-06) -- there's a Connect Analyzer... action but no matching Disconnect; `on_deviceDisconnected()` today only handles an unexpected drop, not a user-requested one. Add an explicit Connect/Disconnect mechanism. |
+| 43 | Manually disconnect from the analyzer without closing the app | Analyzer menu > Disconnect | Analyzer menu | ✅ (shipped 2026-09-06, #3) |
 
 ## Visual / UI
 
@@ -80,25 +77,12 @@ possible today.
 | 41 | Know at a glance whether a measurement has unsaved changes | Points column shows a trailing " *" for a dirty measurement (scanned or renamed since last saved) | Measurements panel | ✅ (shipped 2026-09-06 -- `measurement::dirty`; deleting/clearing a dirty measurement also warns first, gated by a Settings > General checkbox, default on) |
 | 33 | Keep the Markers table visible without it floating awkwardly over the chart | Docked into a resizable splitter under the plot tabs as a normal themed table; visibility follows the View > Markers Hint checkbox alone; columns auto-widen to fit real data on every refresh | Markers panel | ✅ (shipped 2026-09-01 -- `MarkersPopUp`, a translucent floating `Qt::Tool` window, retired in favor of `MarkersPanel`, a plain child widget styled for free by the app's existing Fusion/palette theming. Column auto-resize fixed 2026-09-06 -- previously only sized once, to the header label's width.) |
 | 44 | Clear all markers at once, or just the ones that no longer land on real scan data (e.g. after switching to a narrower-range measurement, a marker's original frequency falls outside it) | Right-click the Markers table > "Clear All Markers" (removes all) or "Clear Empty Markers" (removes only those with no valid data across any measurement) | Markers panel | ✅ (shipped 2026-09-06 -- detection scans all data columns, identifies markers with no valid data across any/all measurements, and removes in reverse index order to avoid renumbering conflicts) |
-| 45 | See the full ±180° phase swing on the Phase chart without the 180° line clipping right at the chart's edge | -- | Phase chart | ❌ planned, not started (2026-09-06) -- suggested fix: widen the vertical axis to ±190° so 180° sits inside the plot area instead of getting truncated at the boundary |
-| 46 | Scale the Series/Parallel Z charts out far enough to see high-impedance points | -- | Z=R+jX, Z=R‖jX | ❌ planned, not started (2026-09-06) -- allow the vertical axis to scale up to ±5000 Ω |
-
-## Other outstanding items
-
-Things that don't fit the use-case table shape above, but still need
-action:
-
-- **Measurements file I/O rework needs a real live test pass.**
-  Implemented 2026-09-06 (rows 8 and 41 above; see `CHANGELOG.md` for
-  the full shape), but not yet exercised end-to-end by hand: rename,
-  save in every format including the new .asd button, delete/clear both
-  with and without dirty measurements present, the warn-before-discard
-  checkbox itself, the new combined "All supported files" Open filter,
-  and right-click on an empty row vs. a real one.
+| 45 | See the full ±180° phase swing on the Phase chart without the 180° line clipping right at the chart's edge | Y-axis widened to ±190° | Phase chart | ✅ (shipped 2026-09-06, #4) |
+| 46 | Scale the Series/Parallel Z charts out far enough to see high-impedance points | Y-axis ceiling raised to ±5000 Ω | Z=R+jX, Z=R‖jX | ✅ (shipped 2026-09-06, #5) |
 
 ## Notes
 
-Row 22-24's gap (S22) is the single largest one left: nothing lets a
+Row 22's gap (S22) is the single largest one left: nothing lets a
 user look at a 2-port device's output port at all, not a
 workaround-but-clunky case, a flat ❌. Row 27 (2-port export) and row 26
 (Multi view) are adjacent gaps worth keeping in view when S22 does get
