@@ -6,6 +6,14 @@ project(AntScopeZ
     LANGUAGES C CXX
 )
 
+# RC (Windows resource-script) support is not one of the base LANGUAGES above
+# since it's meaningless on Linux/macOS; enabled here, gated on WIN32, so
+# CMake knows how to hand a .rc file to windres (MinGW) / rc.exe (MSVC) --
+# see the WIN32 block below for why this is needed at all.
+if(WIN32)
+    enable_language(RC)
+endif()
+
 # PROJECT_VERSION itself has to stay strictly numeric (major.minor.patch) --
 # CMake's project(VERSION ...) rejects anything else, and CPACK_PACKAGE_VERSION
 # / the .deb filename both derive from it, where a suffix would just fight
@@ -404,13 +412,38 @@ if(WIN32)
         ${CMAKE_CURRENT_SOURCE_DIR}/ftdi
     )
 
-    # Equivalent of qmake's RC_ICONS: Qt generates the .rc for us. A checked-in
-    # AntScope2_resource.rc used to sit here unused -- it hardcoded an absolute
-    # path (C:\Projects\AntScope2\AntScope2.ico) and qmake never referenced it
+    # Equivalent of qmake's RC_ICONS. A checked-in AntScope2_resource.rc used
+    # to sit here unused -- it hardcoded an absolute path
+    # (C:\Projects\AntScope2\AntScope2.ico) and qmake never referenced it
     # either -- and has been deleted rather than renamed for AntScopeZ.
+    #
+    # The QT_TARGET_RC_ICONS target property this block used to set turns out
+    # to be a no-op with Qt 6.11.2's public qt_add_executable(): the public
+    # finalizer chain (qt6_finalize_target -> _qt_internal_finalize_executable
+    # -> _qt_internal_finalize_windows_app) only generates the app manifest on
+    # WIN32; the function that actually reads QT_TARGET_RC_ICONS and emits an
+    # .rc file (_qt_internal_generate_win32_rc_file) is only ever called from
+    # Qt's *internal* qt_internal_add_executable()/qt_internal_add_app()
+    # helpers (used to build Qt itself), which this project doesn't use. Net
+    # effect: no .rc file was ever generated, so the taskbar/Start-menu icon
+    # was silently never embedded on this Qt version -- not a regression,
+    # just a property that never did anything here.
+    #
+    # Fixed by generating our own minimal .rc file instead (still no
+    # third-party/vendor edits -- src/resources/AntScopeZ.rc.in is
+    # first-party) and handing it to CMake directly via target_sources(),
+    # which every CMake version/generator supports regardless of what Qt's
+    # finalizers do.
+    set(ANTSCOPEZ_ICON_PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/resources/AntScopeZ.ico")
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/resources/AntScopeZ.rc.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/AntScopeZ.rc"
+        @ONLY
+    )
+    target_sources(AntScopeZ PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/AntScopeZ.rc")
+
     set_target_properties(AntScopeZ PROPERTIES
         WIN32_EXECUTABLE      ON
-        QT_TARGET_RC_ICONS    "${CMAKE_CURRENT_SOURCE_DIR}/src/resources/AntScopeZ.ico"
     )
 
     # Ship the FTDI driver DLL next to the executable.

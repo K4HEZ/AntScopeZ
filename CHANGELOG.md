@@ -44,6 +44,13 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Fixed
 
+- Windows: `QT_TARGET_RC_ICONS` (used to embed the taskbar/Start-menu icon)
+  is a no-op with Qt 6.11.2's public `qt_add_executable()` -- only wired up
+  in Qt's internal build helpers, not the public CMake API this project
+  uses. No `.rc` file was ever actually generated. Replaced with a
+  first-party `src/resources/AntScopeZ.rc.in` template handed to CMake
+  directly via `target_sources()`, gated behind a new WIN32-only
+  `enable_language(RC)`. Linux/macOS builds unaffected.
 - Classic/V2 NanoVNA: status bar got stuck on "Scanning (N/N points)..."
   forever after a normal scan completed (chart/markers/measurement row
   all finalized correctly, just the status text never reset). NanoVNA
