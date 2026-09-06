@@ -89,6 +89,13 @@ void NanovnaAnalyzer::dataArrived()
         // the buffer this same call (typically the shell's "ch> " prompt
         // that follows right after the binary payload) instead of leaving
         // it unread until more bytes happen to arrive later.
+    } else if (getParseState() == WAIT_NANO_CAPTURE) {
+        qint32 count = parseCapture();
+        if (count == 0)
+            return; // full frame hasn't arrived yet -- wait for more bytes
+        m_incomingBuffer.remove(0, count);
+        // Same reasoning as the WAIT_NANO_SCAN_BINARY case above -- fall
+        // through so the trailing "ch> " prompt gets consumed now too.
     }
 
     int count = parse(m_incomingBuffer);
@@ -558,6 +565,31 @@ qint32 NanovnaAnalyzer::parseBinaryScan()
     return consumed;
 }
 
+qint32 NanovnaAnalyzer::parseCapture()
+{
+    const int IMAGE_BYTES = CAPTURE_WIDTH * CAPTURE_HEIGHT * 2; // RGB565, 2 bytes/pixel
+
+    // Firmware echoes "capture" back as its own line before the real
+    // framebuffer dump -- same one-line-echo behavior "scan"/"data 1"
+    // shell commands have elsewhere in this file. m_incomingBuffer only
+    // grows until this returns non-zero, so the echo's position is stable
+    // across repeated calls while the framebuffer itself is still arriving.
+    int pos = m_incomingBuffer.indexOf("\r\n");
+    if (pos < 0)
+        return 0; // echo hasn't fully arrived yet
+    int echoLen = pos + 2;
+
+    if (m_incomingBuffer.size() < echoLen + IMAGE_BYTES)
+        return 0; // framebuffer not fully arrived yet
+
+    QByteArray image = m_incomingBuffer.mid(echoLen, IMAGE_BYTES);
+    emit analyzerScreenshotDataArrived(image);
+
+    setParseState(WAIT_NANO_NO);
+    setIsMeasuring(false);
+    return echoLen + IMAGE_BYTES;
+}
+
 void NanovnaAnalyzer::emitPoint(double fqMHz, std::complex<double> s11, std::complex<double> s21)
 {
     // Same reasoning as WAIT_NANO_DATA_S21's guard above: the firmware
@@ -719,9 +751,9 @@ void NanovnaAnalyzer::stopMeasure()
 void NanovnaAnalyzer::makeScreenshot()
 {
     setIsMeasuring(true);
-    m_parseState = WAIT_SCREENSHOT_DATA;
+    setParseState(WAIT_NANO_CAPTURE);
     m_incomingBuffer.clear();
-    // TODO
+    sendData("capture\r\n");
 }
 
 void NanovnaAnalyzer::on_screenshotComplete()

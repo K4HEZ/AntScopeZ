@@ -48,10 +48,21 @@ void MainWindow::on_analyzerNameFound(QString name)
     ui->actionDisconnectAnalyzer->setEnabled(true);
     if (m_tdrScanDialog != nullptr)
         m_tdrScanDialog->panel()->setConnected(true);
+    // Was `!NanovnaAnalyzer::isConnected() && !zeroII` -- that static flag
+    // only tracks classic NanoVNA, so a V2/LiteVNA64 connection fell
+    // through to the enabled branch below with nothing real behind either
+    // action (issue #9). Explicit connectionType() switch instead: NANO
+    // now has a real screenshot implementation, NANOV2 doesn't yet.
     if (g_bAA55modeNewProtocol) {
         ui->actionAnalyzerData->setEnabled(true);
         ui->actionScreenshotAA->setEnabled(false);
-    } else if (!NanovnaAnalyzer::isConnected() && !zeroII) {
+    } else if (analyzer()->connectionType() == ReDeviceInfo::NANO) {
+        ui->actionAnalyzerData->setEnabled(false);
+        ui->actionScreenshotAA->setEnabled(true);
+    } else if (analyzer()->connectionType() == ReDeviceInfo::NANOV2) {
+        ui->actionAnalyzerData->setEnabled(false);
+        ui->actionScreenshotAA->setEnabled(false);
+    } else if (!zeroII) {
         ui->actionAnalyzerData->setEnabled(true);
         ui->actionScreenshotAA->setEnabled(true);
     } else {

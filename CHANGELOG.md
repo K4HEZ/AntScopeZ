@@ -45,6 +45,11 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Fixed
 
+- Merged from RigExpert's AntScope2 2.0.3 (#10): RigExpert "Match"
+  analyzer's max frequency corrected 690MHz -> 750MHz; screenshot
+  completion now resets state right away instead of only on dialog
+  close; a stale license-request cancel flag could wrongly short-circuit
+  a new request.
 - Band names could fail to show on a fresh profile's first run despite
   View > "Show Band Name" being checked, until toggled off and back on --
   a QSettings default mismatch. (#8)
@@ -103,6 +108,9 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Added
 
+- Screenshot capture for classic NanoVNA, moved into the Analyzer menu
+  (Connect / Screenshot / separator / Disconnect). Not yet verified
+  against real hardware. (#9)
 - New "Analyzer" menu with Connect/Disconnect actions. (#3)
 - Save dialog: "AntScopeZ" (.asd) is now one of its format buttons
   (listed first) instead of having its own separate quick-save path.
