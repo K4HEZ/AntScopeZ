@@ -13,6 +13,12 @@
   <property name="windowTitle">
    <string>About AntScopeZ</string>
   </property>
+  <property name="minimumSize">
+   <size>
+    <width>239</width>
+    <height>270</height>
+   </size>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_icon">
@@ -142,56 +148,33 @@
        </property>
        <item>
         <widget class="QLabel" name="label_2">
-         <property name="minimumSize">
-          <size>
-           <width>114</width>
-           <height>38</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>114</width>
-           <height>38</height>
-          </size>
-         </property>
          <property name="styleSheet">
           <string notr="true">background-color: 	#0057B7;
-color: #ffffff;
-padding: 5px;</string>
+color: #ffffff;</string>
          </property>
          <property name="text">
           <string notr="true">Slava Ukraini!</string>
          </property>
-         <property name="alignment">
-          <set>Qt::AlignmentFlag::AlignCenter</set>
+         <property name="indent">
+          <number>5</number>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QLabel" name="label_3">
-         <property name="minimumSize">
-          <size>
-           <width>114</width>
-           <height>38</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>114</width>
-           <height>38</height>
-          </size>
-         </property>
          <property name="styleSheet">
           <string notr="true">background-color: #ffd700;
 color: #000000;
-padding: 5px;
 </string>
          </property>
          <property name="text">
           <string>Glory to Ukraine!</string>
          </property>
          <property name="alignment">
-          <set>Qt::AlignmentFlag::AlignCenter</set>
+          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+         </property>
+         <property name="indent">
+          <number>5</number>
          </property>
         </widget>
        </item>
