@@ -44,6 +44,10 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Fixed
 
+- ITU region band data (`shared/itu-regions-defaults.txt`, #2): Region 1
+  and Region 3 both had "70sm"/"23sm" instead of "70cm"/"23cm" (Region 2
+  already had it right). Region 2 was also missing the 33cm (902-928 MHz)
+  amateur allocation entirely -- added.
 - Windows: `QT_TARGET_RC_ICONS` (used to embed the taskbar/Start-menu icon)
   is a no-op with Qt 6.11.2's public `qt_add_executable()` -- only wired up
   in Qt's internal build helpers, not the public CMake API this project
