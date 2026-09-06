@@ -410,6 +410,10 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   was reopened, even while actively enabled, contradicting its own
   "not a hardcoded reset" comment; now only forced off when BLE/Bluetooth
   logging itself is off, matching the checkbox's actual state.
+- About dialog: the blue/yellow flag labels had been recentered and given
+  a hardcoded pixel size, losing their original left/right-justified
+  banner look -- restored, and now sized to 80% of the credits text
+  box's width instead of a fixed size, so they scale with the dialog.
 
 ## [2.2.3] - 2026-09-01
 
