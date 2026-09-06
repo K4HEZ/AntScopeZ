@@ -71,6 +71,8 @@ namespace Ui {
 class MainWindow;
 }
 
+class RemoteApiServer;
+
 struct MultiTab {
     QList<QString> tabs;
     bool isVisible() { return !tabs.isEmpty(); }
@@ -105,6 +107,30 @@ public:
     void openFile(QString path);
     AnalyzerPro* analyzer() { return m_analyzer; }
     bool isMeasuring() { return analyzer()->isMeasuring(); }
+    bool isAnalyzerConnected() const { return m_analyzerConnected; }
+    QString connectedDeviceName() const { return m_connectedDeviceName; }
+    // Both delegate to m_measurements (private, no general accessor --
+    // see remoteapiconnection.h's own comment on why RemoteApiConnection
+    // deliberately doesn't reach into Measurements directly) so a
+    // remote-triggered scan gets the same Measurements-side prep/cleanup
+    // on_singleStart_clicked()'s own start/stop paths rely on
+    // (mainwindow_scan.cpp) -- setContinuous(false) resets continuing-scan
+    // point-index state, and interrupt() is the same flag issue #3's fix
+    // this session added a guard for (stray points leaking in after Stop).
+    void startRemoteSweep(qint64 fqFromHz, qint64 fqToHz, int points) {
+        m_measurements->setContinuous(false);
+        emit measure(fqFromHz, fqToHz, points);
+    }
+    void stopCurrentScan() {
+        m_measurements->interrupt();
+        emit stopMeasure();
+    }
+    // Starts/stops m_remoteApiServer live -- called from Settings' accept
+    // handler (settings.cpp) so toggling the "Enable Remote API" checkbox
+    // takes effect immediately, no restart needed. Also called once at
+    // startup (mainwindow.cpp constructor) if the persisted setting was
+    // already on.
+    void setRemoteApiEnabled(bool enabled, quint16 port);
     Markers* markers() { return m_markers; }
     QTabWidget* tabWidget();
 \
@@ -121,6 +147,10 @@ private:
 
     AnalyzerData *m_analyzerData = nullptr;
     AnalyzerPro *m_analyzer = nullptr;
+    // Owned via normal QObject parent-child (parent = this), same as
+    // m_analyzer -- no manual delete needed, but stop() is still called
+    // explicitly in the destructor (see there for why).
+    RemoteApiServer *m_remoteApiServer = nullptr;
     // State refreshWindowTitle() composes the title from -- see its
     // declaration above.
     bool m_analyzerConnected = false;

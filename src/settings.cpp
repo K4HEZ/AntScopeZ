@@ -32,6 +32,8 @@ extern int g_pointsMax; // see mainwindow.cpp
 extern int g_pointsWarnThreshold; // see mainwindow.cpp
 extern int g_analyzerMaxPoints; // see mainwindow.cpp
 extern bool g_extendedChartZoom; // see mainwindow.cpp
+extern bool g_remoteApiEnabled; // see mainwindow.cpp
+extern int g_remoteApiPort; // see mainwindow.cpp
 extern int g_analyzerTimeoutSec; // see mainwindow.cpp
 extern bool g_reconnectToDrain; // see mainwindow.cpp
 extern QString appendSpaces(const QString& number);
@@ -135,6 +137,8 @@ Settings::Settings(QWidget *parent) :
     ui->lineEditScanWarnThreshold->setText(QString::number(g_pointsWarnThreshold));
     ui->lineEditAnalyzerMaxPoints->setText(QString::number(g_analyzerMaxPoints));
     ui->checkBoxExtendedChartZoom->setChecked(g_extendedChartZoom);
+    ui->checkBoxRemoteApiEnabled->setChecked(g_remoteApiEnabled);
+    ui->spinBoxRemoteApiPort->setValue(g_remoteApiPort);
     ui->lineEdit_analyzerTimeout->setText(QString::number(g_analyzerTimeoutSec));
     // Moved here from the Developer tab 2026-09-04 -- these are ordinary
     // user-facing preferences, not debug/developer-only knobs, and now
@@ -395,6 +399,13 @@ Settings::~Settings()
     g_pointsWarnThreshold = qBound(50, ui->lineEditScanWarnThreshold->text().toInt(), POINTS_MAX);
     g_analyzerMaxPoints = qBound(50, ui->lineEditAnalyzerMaxPoints->text().toInt(), POINTS_MAX);
     g_extendedChartZoom = ui->checkBoxExtendedChartZoom->isChecked();
+    g_remoteApiEnabled = ui->checkBoxRemoteApiEnabled->isChecked();
+    g_remoteApiPort = ui->spinBoxRemoteApiPort->value();
+    // Unlike the flags above (passively consulted elsewhere), this one
+    // needs to actively start/stop a live QTcpServer -- MainWindow::
+    // m_mainWindow is the same static instance pointer analyzerFound()
+    // and friends already rely on elsewhere in this file.
+    MainWindow::m_mainWindow->setRemoteApiEnabled(g_remoteApiEnabled, static_cast<quint16>(g_remoteApiPort));
     DebugLog::setDetailedErrorsEnabled(ui->checkBoxReportDetailedErrors->isChecked());
     g_reconnectToDrain = ui->checkBoxReconnectToDrain->isChecked();
 
@@ -409,6 +420,8 @@ Settings::~Settings()
     m_settings->setValue("pointsWarnThreshold", g_pointsWarnThreshold);
     m_settings->setValue("analyzerMaxPoints", g_analyzerMaxPoints);
     m_settings->setValue("extendedChartZoom", g_extendedChartZoom);
+    m_settings->setValue("remoteApiEnabled", g_remoteApiEnabled);
+    m_settings->setValue("remoteApiPort", g_remoteApiPort);
     m_settings->setValue("reportDetailedErrors", DebugLog::detailedErrorsEnabled());
     m_settings->setValue("reconnectToDrain", g_reconnectToDrain);
 

@@ -56,6 +56,22 @@ next to it. Use `-DCMAKE_BUILD_TYPE=Debug` for a debug build.
 For build options, macOS packaging, Qt Creator setup, translations, platform
 notes, and known issues, see [BUILDINFO.md](BUILDINFO.md).
 
+## Remote API
+
+AntScopeZ can expose a local, in-process control API for whatever analyzer is currently
+connected -- device enumeration, connect/disconnect, sweeps, and live point streaming,
+over a small NDJSON-over-TCP protocol. It's for external tools (scripts, an MCP server, a
+web dashboard) that want to drive AntScopeZ programmatically; the app's own GUI doesn't
+use it.
+
+Off by default. Enable it in Settings > General ("Enable Remote API" + a port field), or
+pass `-remote-api-port <n>` on the command line to force it on for a single run. It binds
+to `127.0.0.1` only -- not reachable from other machines -- unless you reconfigure that
+yourself. `-headless` runs AntScopeZ without showing its window (still a full GUI process
+under the hood, just not displayed), useful when driving it purely through this API.
+
+See [`remoteapi/`](remoteapi/) for the implementation and protocol details.
+
 ## Windows
 
 Windows support is a beta effort (releases tagged `-win-beta`); see

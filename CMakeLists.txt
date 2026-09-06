@@ -186,6 +186,9 @@ set(ANTSCOPE_SOURCES
 
     devinfo/redeviceinfo.cpp
     ftdi/ftdiinfo.cpp
+
+    remoteapi/remoteapiconnection.cpp
+    remoteapi/remoteapiserver.cpp
 )
 
 set(ANTSCOPE_HEADERS
@@ -257,6 +260,10 @@ set(ANTSCOPE_HEADERS
     devinfo/redeviceinfo.h
     ftdi/ftd2xx.h
     ftdi/ftdiinfo.h
+
+    remoteapi/remoteapiconnection.h
+    remoteapi/remoteapiprotocol.h
+    remoteapi/remoteapiserver.h
 )
 
 set(ANTSCOPE_FORMS

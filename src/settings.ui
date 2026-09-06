@@ -369,6 +369,42 @@
                   </property>
                  </widget>
                 </item>
+                <item row="4" column="0" colspan="2">
+                 <widget class="QCheckBox" name="checkBoxRemoteApiEnabled">
+                  <property name="toolTip">
+                   <string>Starts a local NDJSON-over-TCP control API (loopback only by default) that lets external tools observe/control the connected analyzer. Off by default.</string>
+                  </property>
+                  <property name="text">
+                   <string>Enable Remote API</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="0">
+                 <widget class="QLabel" name="label_remoteApiPort">
+                  <property name="toolTip">
+                   <string>TCP port the Remote API listens on (loopback only).</string>
+                  </property>
+                  <property name="text">
+                   <string>Remote API port</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="1">
+                 <widget class="QSpinBox" name="spinBoxRemoteApiPort">
+                  <property name="toolTip">
+                   <string>TCP port the Remote API listens on (loopback only).</string>
+                  </property>
+                  <property name="minimum">
+                   <number>1024</number>
+                  </property>
+                  <property name="maximum">
+                   <number>65535</number>
+                  </property>
+                  <property name="value">
+                   <number>7443</number>
+                  </property>
+                 </widget>
+                </item>
                </layout>
               </item>
              </layout>

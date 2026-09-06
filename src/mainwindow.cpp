@@ -10,6 +10,7 @@
 #include "style.h"
 #include "filedialog.h"
 #include "editbandsdialog.h"
+#include "remoteapi/remoteapiserver.h"
 #include "debuglog.h"
 #include <QWindow>
 #include <QActionGroup>
@@ -66,6 +67,14 @@ int g_analyzerMaxPoints = 1000;
 // developer/debug feature. Default off, matching pre-existing behavior for
 // anyone who never had -developer passed.
 bool g_extendedChartZoom = false;
+// "Enable Remote API" (Settings > General) -- starts a local NDJSON-over-TCP
+// control API (remoteapi/, json-tcp-api branch), loopback-only by default.
+// Default off: opening a network port, even loopback-only, shouldn't happen
+// without the user opting in. g_remoteApiPort's default (7443) is otherwise
+// arbitrary -- chosen to avoid common local-dev port collisions (3000/5000/
+// 8000/8080 etc.), not tied to any registered/well-known port.
+bool g_remoteApiEnabled = false;
+int g_remoteApiPort = 7443;
 // "Analyzer timeout" (Settings > General) -- seconds a scan can go without
 // receiving a single data point before AnalyzerPro's watchdog treats it as
 // failed (device gone, or busy -- already held open by another program or
@@ -319,6 +328,8 @@ MainWindow::MainWindow(QWidget *parent) :
     g_pointsWarnThreshold = m_settings->value("pointsWarnThreshold", 1000).toInt();
     g_analyzerMaxPoints = m_settings->value("analyzerMaxPoints", 1000).toInt();
     g_extendedChartZoom = m_settings->value("extendedChartZoom", false).toBool();
+    g_remoteApiEnabled = m_settings->value("remoteApiEnabled", false).toBool();
+    g_remoteApiPort = m_settings->value("remoteApiPort", 7443).toInt();
     g_analyzerTimeoutSec = m_settings->value("analyzerTimeoutSec", 8).toInt();
     DebugLog::setDetailedErrorsEnabled(m_settings->value("reportDetailedErrors", false).toBool());
     g_reconnectToDrain = m_settings->value("reconnectToDrain", false).toBool();
@@ -432,6 +443,14 @@ MainWindow::MainWindow(QWidget *parent) :
     statusBar()->addPermanentWidget(m_statusLabel);
     m_connectionStatusLabel = new QLabel(tr("Not connected"), this);
     statusBar()->insertPermanentWidget(0, m_connectionStatusLabel);
+
+    // g_remoteApiEnabled/g_remoteApiPort were already read from QSettings
+    // above (the earlier "Settings" group block) by the time this runs.
+    // Loopback-only bind is RemoteApiServer::start()'s own default, not
+    // repeated here.
+    m_remoteApiServer = new RemoteApiServer(this, this);
+    if (g_remoteApiEnabled)
+        m_remoteApiServer->start(static_cast<quint16>(g_remoteApiPort));
     // These QShortcuts are parented to `this` (MainWindow), so Qt's parent-child
     // ownership deletes them automatically when MainWindow is destroyed -- clang's
     // static analyzer doesn't model that ownership, hence the false "leak" warnings.
@@ -1060,8 +1079,24 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 }
 
+void MainWindow::setRemoteApiEnabled(bool enabled, quint16 port)
+{
+    if (enabled)
+        m_remoteApiServer->start(port);
+    else
+        m_remoteApiServer->stop();
+}
+
 MainWindow::~MainWindow()
 {
+    // Explicit stop() before anything else: closes the listening socket
+    // and drops connections synchronously (their deleteLater()s still
+    // resolve on this same event loop before it stops), rather than
+    // leaving that to QObject parent-child teardown ordering, which isn't
+    // guaranteed to run before m_analyzer itself is torn down below.
+    if (m_remoteApiServer != nullptr)
+        m_remoteApiServer->stop();
+
     QList<QStringList*> values = m_BandsMap.values();
     while (!values.isEmpty()) {
         QStringList* lst = values.takeLast();
@@ -1135,6 +1170,8 @@ MainWindow::~MainWindow()
     m_settings->setValue("pointsWarnThreshold", g_pointsWarnThreshold);
     m_settings->setValue("analyzerMaxPoints", g_analyzerMaxPoints);
     m_settings->setValue("extendedChartZoom", g_extendedChartZoom);
+    m_settings->setValue("remoteApiEnabled", g_remoteApiEnabled);
+    m_settings->setValue("remoteApiPort", g_remoteApiPort);
     m_settings->setValue("analyzerTimeoutSec", g_analyzerTimeoutSec);
     m_settings->setValue("reportDetailedErrors", DebugLog::detailedErrorsEnabled());
     m_settings->setValue("reconnectToDrain", g_reconnectToDrain);

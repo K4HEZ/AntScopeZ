@@ -602,6 +602,12 @@ void AnalyzerPro::on_stopMeasure()
     // measurement was genuinely in progress.
     bool wasMeasuring = m_isMeasuring;
     PopUpIndicator::setIndicatorVisible(false);
+    // See m_measurementStopped's own comment (analyzerpro.h) -- marks any
+    // completeMeasurement() that arrives after this as stale, without
+    // relying on the coarser m_isMeasuring (which on_newData()'s own
+    // completion check also legitimately clears for a real, non-stopped
+    // finish).
+    m_measurementStopped = true;
 
     // Snapshot before m_chartCounter/clearStitchState() reset below --
     // remainingPointsInCurrentRequest() (and so beginDraining()) needs to
@@ -1006,10 +1012,17 @@ void AnalyzerPro::setIsMeasuring (bool _isMeasuring)
     // ISSUE #19: centralized here instead of at every individual
     // measurement-start/completion call site -- see the comment on
     // m_watchdogTimer (analyzerpro.h) for the full reasoning.
-    if (_isMeasuring)
+    if (_isMeasuring) {
         kickWatchdog();
-    else
+        // A real new measurement is starting -- see m_measurementStopped's
+        // own comment (analyzerpro.h): whatever stopped state a previous
+        // scan left behind no longer applies to this one. Centralized here
+        // rather than at every on_measure*()/startOneFq() call site, same
+        // reasoning as kickWatchdog() above.
+        m_measurementStopped = false;
+    } else {
         stopWatchdog();
+    }
 }
 
 void AnalyzerPro::setContinuos(bool _isContinuos)
@@ -1119,7 +1132,17 @@ void AnalyzerPro::connectSignals()
         // it wrongly runs that handler's completion bookkeeping (including
         // possibly deleting the new scan's just-created row and forcing
         // m_analyzer->setIsMeasuring(false) mid-flight) against it instead.
-        if (!m_isMeasuring)
+        //
+        // Checks m_measurementStopped, not m_isMeasuring -- see that
+        // flag's own comment (analyzerpro.h). Using m_isMeasuring here
+        // used to also reject this same scan's own genuine, non-stopped
+        // completion: on_newData()'s chartCounter-vs-dotsNumber check
+        // already clears m_isMeasuring for the NanoVNA fast "scan" path's
+        // real final point, just before this signal arrives for the exact
+        // same scan -- silently dropping measurementCompleteNano() (the
+        // Remote API's only "sweep_done" signal for NanoVNA) even though
+        // nothing was ever stopped. Issue #42.
+        if (m_measurementStopped)
             return;
         if (m_baseAnalyzer != nullptr) {
             m_baseAnalyzer->on_measurementComplete();
