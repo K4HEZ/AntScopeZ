@@ -908,13 +908,16 @@ measurement currently in the Measurements list -- so a marker's values
 across several saved scans are all visible at once, not just the
 latest. The View menu's **Markers Hint** checkbox shows or hides this
 table; it's shown (empty, headers only) as soon as it's turned on, even
-before you've placed a marker. Click a marker's **x** to remove it. The
-table scrolls (horizontally and vertically, as needed) if it grows past
-the space given to it -- drag the splitter above it to resize. Columns
-auto-widen to fit whatever's actually in them, re-checked on every
-refresh, so a column that needs more room than its header label doesn't
-require a manual resize. Which columns it shows, and in what order, is
-set from [Settings → Markers](#markers-tab).
+before you've placed a marker. Click a marker's **x** to remove it, or
+right-click anywhere in the table to open a context menu with **Clear All
+Markers** (removes all at once) or **Clear Empty Markers** (removes only
+markers with no valid data across any measurement). The table scrolls
+(horizontally and vertically, as needed) if it grows past the space given
+to it -- drag the splitter above it to resize. Columns auto-widen to fit
+whatever's actually in them, re-checked on every refresh, so a column that
+needs more room than its header label doesn't require a manual resize.
+Which columns it shows, and in what order, is set from
+[Settings → Markers](#markers-tab).
 
 For a 2-port measurement (a `.s2p` import), the Markers table also gains
 **S21, dB** / **S21 Phase°** / **S12, dB** / **S12 Phase°** columns -- see

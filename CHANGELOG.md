@@ -30,6 +30,11 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   individual cell). Right-click menu added with "Clear All Markers"
   (removes all) and "Clear Empty Markers" (removes only those with no
   valid data across any measurement).
+- Settings dialog: tooltips in the General and Scanning tabs wrapped
+  for better readability (Analyzer timeout, Report Detailed Errors,
+  Use reconnect to drain, Warn before deleting, Points ceiling, Analyzer
+  max points, Allow extended chart zoom, Base color). Affects 9 translatable
+  strings; see language files if retranslating.
 - A measurement now tracks whether it's "dirty" (scanned or renamed
   since it was last saved, or never saved at all) -- shown as a trailing
   " *" in the Points column. Deleting or clearing a dirty measurement
