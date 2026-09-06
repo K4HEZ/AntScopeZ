@@ -44,6 +44,12 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Fixed
 
+- Classic/V2 NanoVNA: status bar got stuck on "Scanning (N/N points)..."
+  forever after a normal scan completed (chart/markers/measurement row
+  all finalized correctly, just the status text never reset). NanoVNA
+  completion runs through `on_measurementCompleteNano()`, not
+  `AnalyzerPro::on_newData()`'s own "Ready" reset, which needs one more
+  `newData()` call than NanoVNA's parsing paths ever send.
 - Markers list: columns never widened to fit real data, only their
   header label -- resizeColumnsToContents() only ever ran once, before
   any values existed. Now also runs every time the values actually

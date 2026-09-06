@@ -705,6 +705,19 @@ void MainWindow::on_measurementCompleteNano()
     if (m_analyzer != nullptr && !m_analyzer->isStitchedSweepComplete())
         return;
 
+    // NanoVNA-family devices never reach AnalyzerPro::on_newData()'s own
+    // "Ready" reset (see AnalyzerPro::connectSignals()'s completeMeasurement
+    // lambda, which routes here instead of through on_newData()'s
+    // finNum-based completion branch) -- NanovnaAnalyzer's data paths emit
+    // newData() exactly dotsNumber times, never the one-extra call that
+    // branch needs to fire. Set it directly here so the status bar doesn't
+    // stay stuck on "Scanning (N/N points)..." forever after a normal
+    // NanoVNA scan completes. Unconditional, mirroring on_newData()'s own
+    // unconditional emit -- fires for every genuine completion this
+    // function handles (TDR, Continuous segment, Single), same as the
+    // non-Nano path.
+    m_statusLabel->setText(tr("Ready"));
+
     // TdrScanPanel-triggered scan -- see the matching comment and TDR
     // finalize block in on_measurementComplete(). That function's own
     // m_isTdrScanning check only ever fires when Stop is clicked mid-scan
