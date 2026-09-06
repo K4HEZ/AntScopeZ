@@ -1227,6 +1227,17 @@ endif()
 # Requires NSIS (https://nsis.sourceforge.io/) installed on the build
 # machine -- not needed for a plain `cmake --build`, only for `cpack`.
 #
+# Known gap, not fixed here: CPack's NSIS template hardcodes
+# `RequestExecutionLevel admin` (confirmed by reading CPack's own
+# NSIS.template.in -- no CPACK_NSIS_* variable exists to override it), so
+# the generated Uninstall.exe always UAC-prompts even with `/S` and aborts
+# if declined. No CMake-only fix exists; a real fix needs either NSIS's
+# UAC.nsh self-elevation pattern or post-build manifest patching via
+# mt.exe, both real packaging-pipeline changes -- not attempted here
+# without a separate decision to do so. Workaround in the meantime: run
+# the uninstaller from an already-elevated shell (Windows doesn't
+# re-prompt when the calling process is already elevated).
+#
 if(WIN32)
     set(CPACK_GENERATOR "NSIS")
     set(CPACK_PACKAGE_NAME "AntScopeZ")
