@@ -40,6 +40,7 @@ extern double g_phaseAxisMin; // see mainwindow.cpp
 extern double g_phaseAxisMax; // see mainwindow.cpp
 extern double g_zAxisMin; // see mainwindow.cpp
 extern double g_zAxisMax; // see mainwindow.cpp
+extern bool g_warnDirtyDelete; // see mainwindow.cpp
 extern QString appendSpaces(const QString& number);
 int Settings::m_serialIndex = 0;
 bool Settings::m_licenseUpdateBlocked = false;
@@ -155,6 +156,7 @@ Settings::Settings(QWidget *parent) :
     ui->lineEditPhaseAxisMax->setText(QString::number(g_phaseAxisMax));
     ui->lineEditZAxisMin->setText(QString::number(g_zAxisMin));
     ui->lineEditZAxisMax->setText(QString::number(g_zAxisMax));
+    ui->checkBoxWarnDirtyDelete->setChecked(g_warnDirtyDelete);
     m_settings->endGroup();
 
     // Debug Logging (Developer tab) -- deliberately NOT persisted to the
@@ -420,6 +422,7 @@ Settings::~Settings()
     MainWindow::m_mainWindow->setRemoteApiEnabled(g_remoteApiEnabled, static_cast<quint16>(g_remoteApiPort));
     DebugLog::setDetailedErrorsEnabled(ui->checkBoxReportDetailedErrors->isChecked());
     g_reconnectToDrain = ui->checkBoxReconnectToDrain->isChecked();
+    g_warnDirtyDelete = ui->checkBoxWarnDirtyDelete->isChecked();
 
     m_settings->beginGroup("Settings");
     m_settings->setValue("restrictFq", m_restrictFq);
@@ -440,6 +443,7 @@ Settings::~Settings()
     // above, are persisted from MainWindow's own save routine instead of
     // here -- their on_..Finished() handlers below already keep the
     // globals themselves current the moment the field loses focus.
+    m_settings->setValue("warnDirtyDelete", g_warnDirtyDelete);
 
     m_settings->setValue("currentIndex",ui->tabWidget->currentIndex());
     m_settings->endGroup();
@@ -1457,7 +1461,7 @@ void Settings::initCustomizeTab()
     // "Don't restrict frequency" -- lives here (not tied to
     // customizeCheckBox/on_enableCustomizeControls() above, which is
     // Custom Analyzer's own separate, still-broken feature) purely for
-    // placement -- a developer-facing setting belongs on the Developer
+    // placement -- a developer-facing setting belongs on the Analyzer
     // tab. No longer g_developerMode-gated itself (ungated 2026-08-20):
     // living on this tab is the gating now, not the -developer flag.
     // Checked means "don't restrict" is ON, i.e. m_restrictFq is FALSE --

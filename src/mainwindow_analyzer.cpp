@@ -45,6 +45,7 @@ void MainWindow::on_analyzerNameFound(QString name)
     ui->singleStart->setEnabled(true);
     ui->continuousStartBtn->setEnabled(true);
     ui->fullBtn->setEnabled(true);
+    ui->actionDisconnectAnalyzer->setEnabled(true);
     if (m_tdrScanDialog != nullptr)
         m_tdrScanDialog->panel()->setConnected(true);
     if (g_bAA55modeNewProtocol) {
@@ -88,6 +89,10 @@ void MainWindow::on_analyzerNameFound(QString name)
     // g_pointsMax clamp in setDotsNumber()) as every other analyzer -- also
     // covers NanoVNA V2/LiteVNA64 (connectionType() == ReDeviceInfo::NANOV2)
     // correctly, since nothing here special-cases by device type at all.
+    // (Same fix landed independently upstream, worded slightly differently --
+    // see the "Classic NanoVNA: remove hardcoded 100-point cap" commit on
+    // develop; both traced to the same conclusion: no real protocol ceiling,
+    // Settings > General's max-points/stitching is the right place to bound it.)
     ui->lineEdit_points->setEnabled(true);
     ui->speedAccuracySlider->setEnabled(true);
     m_calibration->init(m_analyzer->getSerialNumber());
@@ -143,6 +148,7 @@ void MainWindow::on_deviceDisconnected()
     ui->continuousStartBtn->setEnabled(false);
     ui->actionAnalyzerData->setEnabled(false);
     ui->actionScreenshotAA->setEnabled(false);
+    ui->actionDisconnectAnalyzer->setEnabled(false);
     ui->lineEdit_points->setEnabled(true);
     ui->speedAccuracySlider->setEnabled(true);
     ui->fullBtn->setEnabled(false);
@@ -161,6 +167,17 @@ void MainWindow::on_deviceDisconnected()
 
     if (m_analyzer != nullptr)
         m_analyzer->searchAnalyzer();
+}
+
+void MainWindow::on_actionDisconnectAnalyzer_triggered()
+{
+    // Same call Settings::updateAnalyzerInfo() and LicenseAgent::
+    // finishWaitInfoB16() already use to force a disconnect -- nulls
+    // m_baseAnalyzer and emits deviceDisconnected() (see AnalyzerPro::
+    // on_disconnectDevice()), which on_deviceDisconnected() above is
+    // already wired to. No separate cleanup needed here.
+    if (m_analyzer != nullptr)
+        m_analyzer->on_disconnectDevice();
 }
 
 void MainWindow::refreshWindowTitle()
@@ -219,13 +236,6 @@ void MainWindow::on_actionScreenshotAA_triggered()
 
     m_screenshot->exec();
     m_screenshot = nullptr;
-}
-
-void MainWindow::on_disconnectAnalyzerRequested()
-{
-    if (!m_analyzerConnected)
-        return;
-    m_analyzer->on_disconnectDevice(); // emits deviceDisconnected() -> on_deviceDisconnected() does the rest
 }
 
 void MainWindow::on_selectDeviceDialog()

@@ -5,14 +5,14 @@ title: AntScopeZ
 
 # AntScopeZ
 
-A modern antenna-analyzer application for RigExpert hardware (and a few
+A modern antenna-analyzer application for RigExpert & NanoVNA (and a few
 other brands) -- built for, and maintained by, the ham radio community.
 
 ## Features
 
-- Support of RigExport Analyzers and NanoVNA
+- Support of RigExport Analyzers and NanoVNA (ASCII & Binary)
 - Autodetect most Analyzers
-- Import/Export of Touchstone Files (.s1p/.s2p), CSV, NWL
+- Import/Export of Touchstone Files (.asd/.s1p/.s2p/.csv/.nwl)
 - Full 2-Port S-Parameter Export (S11/S21/S12/S22)
 - Customizable Band Selection and User Presets
 - Named Measurements, (load/save/conversions)

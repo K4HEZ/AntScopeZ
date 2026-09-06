@@ -531,7 +531,20 @@ void AnalyzerPro::on_measureContinuous(qint64 fqFrom, qint64 fqTo, qint32 dotsNu
         setIsMeasuring(true);
         emit continueMeasurement(fqFrom, fqTo, dotsNumber);
         m_chartCounter = 0;
-        if (m_baseAnalyzer != nullptr && m_baseAnalyzer->connectionType() != ReDeviceInfo::NANO)
+        // Used to exclude classic NanoVNA (connectionType() == NANO) here --
+        // on_measure()/startStitchedMeasure() end up calling the exact same
+        // m_baseAnalyzer->startMeasure() this does, which already works fine
+        // for NanoVNA (Single scan has never excluded it). With the
+        // exclusion in place, this whole block -- the only thing that
+        // actually starts a scan -- was skipped entirely for NANO, falling
+        // straight through to on_stopMeasure() below: Continuous mode never
+        // sent a single command to a classic NanoVNA, it just immediately
+        // reported "done". Removed 2026-09-06 so classic NanoVNA also gets
+        // real Continuous scanning, and (the original point of this fix)
+        // g_analyzerMaxPoints/stitching too -- 100/101-point-per-sweep
+        // hardware is common on ASCII-speaking analyzers generally, not
+        // just NanoVNA.
+        if (m_baseAnalyzer != nullptr)
         {
             startStitchedMeasure(fqFrom, fqTo, dotsNumber);
             PopUpIndicator::setIndicatorVisible(true);
@@ -552,7 +565,11 @@ void AnalyzerPro::on_measureUser (qint64 fqFrom, qint64 fqTo, qint32 dotsNumber)
         QString name = datetime.toString("##yyyyMMdd-hhmmss"); // see on_measure()'s comment
         emit newMeasurement(name, fqFrom, fqTo, dotsNumber);
         m_chartCounter = 0;
-        if (m_baseAnalyzer != nullptr && m_baseAnalyzer->connectionType() != ReDeviceInfo::NANO)
+        // Same NANO exclusion, same bug, same fix as on_measureContinuous()
+        // above -- see its comment. setIsFRXMode(false) is harmless for
+        // NanoVNA (matches on_measure()'s own setIsFRXMode(true), which
+        // already runs unconditionally there).
+        if (m_baseAnalyzer != nullptr)
         {
             m_baseAnalyzer->setIsFRXMode(false);
             startStitchedMeasure(fqFrom, fqTo, dotsNumber);
@@ -999,10 +1016,6 @@ void AnalyzerPro::setCalibrationMode(bool enabled)
 
 void AnalyzerPro::setIsMeasuring (bool _isMeasuring)
 {
-    // TEMPORARY (2026-09-05, see popupindicator.cpp's own comment) --
-    // correlates against the busy-indicator instrumentation there.
-    qDebug().noquote() << QDateTime::currentDateTime().toString("hh:mm:ss.zzz")
-        << "[BUSY] AnalyzerPro::setIsMeasuring(" << _isMeasuring << ")";
     m_isMeasuring = _isMeasuring;
     if(m_baseAnalyzer != nullptr)
     {

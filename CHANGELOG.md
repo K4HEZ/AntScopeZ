@@ -11,8 +11,60 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+### Changed
+
+- Settings dialog: "Developer" tab renamed "Analyzer". (#6)
+- Measurements: Open/Save replace Import/Export as both the File menu's
+  wording and the actual model -- there's one Open dialog (File > Open,
+  every supported format including AntScopeZ's own, "All supported
+  files" listed first) and one Save dialog (File > Save, or the
+  measurements list's right-click "Save as...") for every format
+  including AntScopeZ's own now, not a separate quick native-format Save
+  button plus a different multi-format Export dialog.
+- Measurements list: the 4 buttons below the table (Open/Save/Delete/
+  Clear) are gone. Open was already fully covered by File > Open; the
+  other 3 (plus Rename and a new Select Color...) are a right-click menu
+  on the table now -- Select Color..., Rename..., Save as..., Delete,
+  Clear All. The Delete key still deletes the selected measurement.
+- Markers list: selection mode changed from cell-select to row-select
+  (so right-click context menu picks an entire marker row, not an
+  individual cell). Right-click menu added with "Clear All Markers"
+  (removes all) and "Clear Empty Markers" (removes only those with no
+  valid data across any measurement).
+- Settings dialog: tooltips in the General and Scanning tabs wrapped
+  for better readability (Analyzer timeout, Report Detailed Errors,
+  Use reconnect to drain, Warn before deleting, Points ceiling, Analyzer
+  max points, Allow extended chart zoom, Base color). Affects 9 translatable
+  strings; see language files if retranslating.
+- A measurement now tracks whether it's "dirty" (scanned or renamed
+  since it was last saved, or never saved at all) -- shown as a trailing
+  " *" in the Points column. Deleting or clearing a dirty measurement
+  warns first (one combined warning, not one per item); a new Settings >
+  General checkbox, "Warn before deleting or clearing dirty
+  measurements" (on by default), controls this.
+
 ### Fixed
 
+- Band names could fail to show on a fresh profile's first run despite
+  View > "Show Band Name" being checked, until toggled off and back on --
+  a QSettings default mismatch. (#8)
+- 2-port Z-parameter Touchstone imports (`# ... Z RI ...`) now convert to
+  S-parameters correctly instead of being silently skipped. (#7)
+- Phase chart: widened Y-axis to +/-190 deg so the 180 deg line isn't
+  clipped at the edge. (#4)
+- Z=R+jX / Z=R‖jX charts: Y-axis ceiling raised to +/-5000 Ohm to show
+  high-impedance points. (#5)
+- ITU region band data: fixed 70cm/23cm typo (Region 1/3), added missing
+  33cm (Region 2). (#2)
+- Windows: the app icon wasn't actually embedded in the built .exe --
+  fixed.
+- Classic/V2 NanoVNA: status bar no longer gets stuck on "Scanning..."
+  after a scan finishes.
+- Markers list: columns never widened to fit real data, only their
+  header label -- resizeColumnsToContents() only ever ran once, before
+  any values existed. Now also runs every time the values actually
+  refresh, so a column stays sized to whatever's currently showing
+  instead of needing a manual resize each time.
 - S21 tab: 3+ measurements loaded at once used to make later ones' traces
   collapse to identical red (`getColor()`'s out-of-range fallback was
   sized for 1 color/measurement, not the S21 tab's 4). Legend now shows
@@ -36,12 +88,80 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 - Renaming a measurement (the pencil icon) didn't rename it on the S21
   tab's legend -- that measurement's 4 graphs (S21/S12 dB+deg) kept
   showing the name it was scanned with.
+- S21 tab: two different measurements' overlapping traces (e.g. one
+  green, one red) blended into an unlabeled third color (e.g. orange) --
+  every trace was semi-transparent so a reciprocal device's identical
+  S21/S12 wouldn't fully hide each other. Traces are fully opaque now
+  that S12 defaults off (see below), so the common overlap case mostly
+  doesn't reach the chart at the same time to begin with.
+- Joining the S21 tab into the Multi tab (right-click it directly ->
+  "Move chart to the tab Multi") then using the Multi tab's own "Close
+  all"/"Close S21" could permanently strand the S21 tab hidden with no
+  way to get it back. S21 is now a fully, symmetrically supported
+  Join/Close target, and is always visible to begin with (matching
+  every other chart tab) rather than hidden until first used.
 
 ### Added
 
-- Measurements list: the rename pencil moved to the left of the Name
-  column (was to the right, past Points); the panel is also a bit wider
-  so all 4 columns fit without a horizontal scrollbar.
+- New "Analyzer" menu with Connect/Disconnect actions. (#3)
+- Save dialog: "AntScopeZ" (.asd) is now one of its format buttons
+  (listed first) instead of having its own separate quick-save path.
+  Same frequency/R/X fields as the other 1-port formats here, just as
+  JSON numbers instead of rounded text (not that it matters in
+  practice -- real measurement precision is below where that would
+  show up). Doesn't store 2-port S21/S12/S22 data at all, so S2P
+  actually has more data for a 2-port measurement, not the other way
+  around.
+- File > Open's dialog offers an "All supported files" combined filter
+  covering every format (.asd/.s1p/.s2p/.csv/.nwl), listed first so it's
+  the default shown -- previously defaulted to whichever single format
+  (S1p) happened to be listed first.
+- View menu: independent "Show S21"/"Show S12" toggles for the S21
+  tab (default S21 on, S12 off) -- S12 duplicates S21 exactly for any
+  reciprocal (passive) device, the common case for this instrument, so
+  showing it is opt-in now instead of a permanent transparent overlay.
+
+- Measurements list: the rename pencil column existed only briefly
+  (moved left of Name earlier this cycle) before being removed entirely
+  -- rename now lives on the right-click menu (see below), same as
+  everything else that used to be a column icon or a button.
+- S21 tab: selecting a measurement now brings its 4 traces to the front
+  of the chart, not just thickening their pen -- previously an older
+  measurement's traces stayed underneath every measurement scanned
+  after it even while selected. Applies even if the measurement is
+  currently hidden, so its traces are already on top the moment its
+  visibility checkbox is turned on.
+- Settings > General: line-width spinboxes for the selected measurement
+  vs. every other loaded one (S21 tab and elsewhere), 1-10px.
+
+### Documentation
+
+- `docs/use-cases.md` and `docs/user-guide.md` brought back in sync with
+  everything above (Open/Save wording, right-click measurements menu,
+  dirty-flag warning, Show S21/S12 toggles, line-width settings, S21 tab
+  always visible/joinable, markers list auto-resize).
+- `todo.txt` merged into `docs/use-cases.md` and removed -- one place
+  for outstanding work instead of two; resolved items dropped rather
+  than kept as pointers (CHANGELOG.md/git log already have the history),
+  genuinely open ones folded into the relevant row or a new "Other
+  outstanding items" section for the few that aren't use-case-shaped.
+  That merged doc renamed `docs/roadmap.md` (it's no longer just a
+  use-case catalog) and gained two new planned items: a Settings dialog
+  rework (rename "Developer" tab to "Analyzer", add retry/reconnect
+  error-handling settings) and an explicit Connect/Disconnect Analyzer
+  mechanism (today there's only Connect).
+- Translations: ran `update_translations` and filled in this cycle's ~65
+  new/changed source strings for Ukrainian, Japanese, and Spanish.
+  Separately cleared a much older backlog inherited from this repo's
+  first commit -- 310/388/537 (uk/ja/es) strings had sat flagged
+  "unfinished" since day one. Most already had solid translation text
+  (apparently RigExpert's own original work, just never marked reviewed
+  in Linguist's metadata) and were already being compiled into the
+  `.qm`/shown at runtime regardless of that flag -- lrelease only drops
+  genuinely *empty* translations, of which there were a real handful
+  (5/20/20). Wrote those, reviewed the rest for placeholder/newline
+  consistency (all clean), and marked everything reviewed. All 3
+  `.ts` files are now 742/742 finished, 0 unfinished.
 
 - Settings > General: "Selected measurement line width" / "Other
   measurements' line width" spinboxes (1-10px) -- was hardcoded (5/2).

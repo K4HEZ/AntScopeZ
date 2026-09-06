@@ -101,6 +101,24 @@ public:
     void setCalibration(Calibration * _calibration);
     bool getCalibrationEnabled(void);
     void deleteRow(int row);
+    // Prompts for a new name and applies it (table cell, tooltip, S21
+    // legend/graph names, dirty flag) -- was the measurements table's
+    // pencil-column (COL_MENU) click handler; that column's gone now,
+    // this is called directly from the right-click context menu's
+    // "Rename..." (MainWindow::on_tableWidgetMeasurmentsContextMenu())
+    // with the row under the cursor.
+    void renameMeasurement(int row);
+    // Called by every one of Export's format-button handlers (export.cpp)
+    // on a successful (non-cancelled) save -- see measurement::dirty's own
+    // comment: "any file save clears the dirty flag" is Harold's call,
+    // 2026-09-06, now that Import/Export are really just Open/Save (no
+    // more "saving" vs. "exporting" distinction). number is a plain
+    // m_measurements/table row (0=oldest), same as Export's own
+    // m_measureNumber actually resolves to when it reaches exportData()/
+    // exportSParamData()/saveData() -- see clearDirty()'s own comment in
+    // measurements.cpp for why that's not the same as what
+    // getMeasurement() would need.
+    void clearDirty(int number);
     // S21 tab's legend shows only the currently-selected measurement's 4
     // traces (S21/S12 dB+deg), not every measurement at once -- with
     // several measurements loaded, a legend row per trace per measurement
@@ -110,6 +128,17 @@ public:
     // out-of-range row, e.g. after the last measurement is deleted) to
     // just clear the legend.
     void updateS21Legend(int row);
+    // Independent show/hide for the S21 vs S12 traces across every
+    // measurement on the S21 tab (View menu's Show S21/Show S12 actions,
+    // mainwindow.cpp) -- replaces permanent semi-transparency as the fix
+    // for two different measurements' overlapping traces blending into
+    // an unlabeled third color (reported 2026-09-06). Recomputes every
+    // row's actual graph visibility (this toggle AND'ed with that row's
+    // own visibility checkbox, toggleVisibility()) and replots.
+    void setS21ShowS21(bool show);
+    void setS21ShowS12(bool show);
+    bool getS21ShowS21(void) const { return m_s21ShowS21; }
+    bool getS21ShowS12(void) const { return m_s21ShowS12; }
     void setFarEndMeasurement (qint32 mode) { m_farEndMeasurement=mode; }
     qint32 getFarEndMeasurement (void) {return m_farEndMeasurement;}
     // getMeasurement(number) indexes backwards from the newest entry --
@@ -361,6 +390,23 @@ private:
     bool m_graphHintEnabled;
     bool m_graphBriefHintEnabled;
 
+    // S21 tab: independent show/hide for the S21 vs S12 traces (View
+    // menu's Show S21/Show S12 actions) -- see setS21ShowS21()/
+    // setS21ShowS12()'s own comment for why this exists (2026-09-06,
+    // replacing permanent semi-transparency as the fix for S21/S12
+    // overlap). Default S21 on/S12 off: S12 duplicates S21 for any
+    // reciprocal (passive) device -- the common case for this
+    // instrument -- so showing it is opt-in, not on by default.
+    bool m_s21ShowS21 = true;
+    bool m_s21ShowS12 = false;
+    // Applies m_s21ShowS21/m_s21ShowS12 (AND'ed with each row's own
+    // visibility checkbox) to every measurement's 4 S21 graphs at once --
+    // shared by setS21ShowS21()/setS21ShowS12() (a global toggle changed)
+    // and on_newMeasurement() (a new row needs its initial visibility to
+    // already match the current toggle state, not QCPGraph's own
+    // default-visible).
+    void updateS21GraphVisibility();
+
     volatile bool m_calibrationMode;
 
     double m_Z0;
@@ -500,6 +546,16 @@ private:
     // existing 1-port S11/Z11 pair -- format decoding is identical
     // regardless of which parameter it's for.
     static std::complex<double> sparamFromFormat(int iFormat, double v1, double v2);
+    // Converts one 2-port Z-parameter data line (Z11/Z21/Z12/Z22, all
+    // referenced to the same real Z0 -- Touchstone's "R n" line, one
+    // impedance for both ports) into the equivalent S-parameters, via the
+    // standard 2-port Z-to-S matrix identity. See #7 -- a Z-parameter
+    // Touchstone file's Z21/Z12/Z22 used to be silently skipped entirely
+    // (a different quantity than S21/S12/S22, ohms not a unitless ratio)
+    // rather than actually converted.
+    static SParamPoint zToSParam(double fq, std::complex<double> z11,
+                                  std::complex<double> z21, std::complex<double> z12,
+                                  std::complex<double> z22, double z0);
     // std::arg() wraps into (-180, 180] degrees; a real transmission
     // phase can rack up many full turns across a sweep, so this
     // accumulates the shortest-path delta between consecutive points

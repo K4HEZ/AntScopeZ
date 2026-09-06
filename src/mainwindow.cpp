@@ -108,6 +108,10 @@ double g_phaseAxisMax = 180;
 // with "make it a real setting, keep today's +/-2000 default" instead.
 double g_zAxisMin = -2000;
 double g_zAxisMax = 2000;
+// See measurement::dirty's own comment -- gates the confirm-before-discard
+// warning in MainWindow::deleteMeasurementRow()/clearAllMeasurements()
+// (mainwindow_measurements_io.cpp). Settings > General.
+bool g_warnDirtyDelete = true;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -334,7 +338,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_settings->beginGroup("Settings");
     // Was gated behind g_developerMode (forced true, ignoring the saved
     // value, whenever the flag was off); ungated 2026-08-20 -- living on
-    // the Developer tab's Custom Analyzer group box is the gating now,
+    // the Analyzer tab's Custom Analyzer group box is the gating now,
     // not the -developer command-line flag.
     m_fqRestrict = m_settings->value("restrictFq", true).toBool();
     g_maxMeasurements = m_settings->value("maxMeasurements", MAX_MEASUREMENTS).toInt();
@@ -355,6 +359,7 @@ MainWindow::MainWindow(QWidget *parent) :
     g_phaseAxisMax = m_settings->value("phaseAxisMax", 180).toDouble();
     g_zAxisMin = m_settings->value("zAxisMin", -2000).toDouble();
     g_zAxisMax = m_settings->value("zAxisMax", 2000).toDouble();
+    g_warnDirtyDelete = m_settings->value("warnDirtyDelete", true).toBool();
     m_activeThemeIndex = m_settings->value("activeTheme", 0).toInt();
     m_settings->endGroup();
 
@@ -376,9 +381,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->continuousStartBtn->setEnabled(false);
     ui->actionAnalyzerData->setEnabled(false);
     ui->actionScreenshotAA->setEnabled(false);
-    ui->measurmentsSaveBtn->setEnabled(false);    
-    ui->measurmentsDeleteBtn->setEnabled(false);
-    ui->measurmentsClearBtn->setEnabled(false);
     ui->actionExport->setEnabled(false);
     ui->fullBtn->setEnabled(false);
 
@@ -387,7 +389,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // Same Tab-traps-focus-inside default as tableWidget_presets -- see
     // Presets::setTable() for the full explanation.
     ui->tableWidget_measurments->setTabKeyNavigation(false);
-    //ui->tableWidget_measurments->setToolTip(tr("Double-click an item to rescale the chart.\nRight-click an item to change color"));
+    //ui->tableWidget_measurments->setToolTip(tr("Double-click an item to rescale the chart.\nRight-click an item for more options"));
     ui->tableWidget_measurments->setToolTip("");
     ui->tableWidget_measurments->setContextMenuPolicy(Qt::CustomContextMenu);
     //ui->tableWidget_measurments->setItemDelegateForColumn(COL_NAME, new ElideDelegate(ui->tableWidget_measurments));
@@ -641,6 +643,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_measurements, &Measurements::selectMeasurement, this, &MainWindow::on_tableWidget_measurments_cellClicked);
 
     m_analyzerConnected = false;
+    ui->actionDisconnectAnalyzer->setEnabled(false);
     refreshWindowTitle();
 
     if(m_markers == NULL)
@@ -683,6 +686,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->actionMarkersHint->setChecked(m_markers->getMarkersHintEnabled());
     connect(ui->actionMarkersHint, &QAction::toggled, m_markers, &Markers::setMarkersHintEnabled);
 
+    ui->actionShowS21->setChecked(m_measurements->getS21ShowS21());
+    connect(ui->actionShowS21, &QAction::toggled, m_measurements, &Measurements::setS21ShowS21);
+    ui->actionShowS12->setChecked(m_measurements->getS21ShowS12());
+    connect(ui->actionShowS12, &QAction::toggled, m_measurements, &Measurements::setS21ShowS12);
+
     // Show Band Name: same "show-band-name" QSettings key and reload-bands
     // side effect the removed checkBoxBandName triggered via Settings'
     // own connect() lambda + reloadBands signal (see mainwindow_settings.cpp's
@@ -703,7 +711,7 @@ MainWindow::MainWindow(QWidget *parent) :
     });
 
     connect(ui->actionConnectAnalyzer, &QAction::triggered, this, &MainWindow::on_selectDeviceDialog);
-    connect(ui->actionDisconnectAnalyzer, &QAction::triggered, this, &MainWindow::on_disconnectAnalyzerRequested);
+    connect(ui->actionDisconnectAnalyzer, &QAction::triggered, this, &MainWindow::on_actionDisconnectAnalyzer_triggered);
 
     changeColorTheme(m_activeThemeIndex);
 
@@ -728,8 +736,6 @@ MainWindow::MainWindow(QWidget *parent) :
 //        // at load time
 //        w->blockSignals(false);
 //    });
-
-    connect(ui->measurmentsClearBtn, &QPushButton::clicked, this, &MainWindow::measurementsClearBtn_clicked);
 
 #ifdef Q_OS_WIN
     // Registers .asd as a AntScopeZ-associated file type via the real
@@ -1201,6 +1207,7 @@ MainWindow::~MainWindow()
     m_settings->setValue("phaseAxisMax", g_phaseAxisMax);
     m_settings->setValue("zAxisMin", g_zAxisMin);
     m_settings->setValue("zAxisMax", g_zAxisMax);
+    m_settings->setValue("warnDirtyDelete", g_warnDirtyDelete);
     m_settings->endGroup();
 
     m_settings->beginGroup("Cable");
@@ -1532,6 +1539,10 @@ void MainWindow::setWidgetsSettings()
 
     //-------Phase Widget---------------------------------------------
     m_phaseWidget->addGraph();//graph(0)
+    // Upstream's issue #4 widened this to a hardcoded +/-190; superseded
+    // here by g_phaseAxisMin/Max (issue #49/#45, see their comment at the
+    // top of this file) -- a real, user-configurable Settings > Advanced
+    // pair, defaulting to the original +/-180.
     setBands(m_phaseWidget, bands, g_phaseAxisMin, g_phaseAxisMax);
     m_phaseWidget->graph(0)->setPen(pen);
     m_phaseWidget->xAxis->setLabel(tr("Frequency, kHz"));
@@ -1567,6 +1578,12 @@ void MainWindow::setWidgetsSettings()
     //-------RSeries Widget------------------------------------------------
     m_rsWidget->addGraph();//graph(0)
     m_rsWidget->setAutoAddPlottableToLegend(false);
+    // Upstream's issue #5 raised this to a hardcoded +/-5000 (a real
+    // high-impedance point, e.g. a badly mismatched antenna feedpoint,
+    // couldn't be zoomed out far enough to see at +/-2000); superseded here
+    // by g_zAxisMin/Max (issue #50/#45, see comment at top of this file) --
+    // a real, user-configurable Settings > Advanced pair, defaulting to the
+    // original +/-2000.
     setBands(m_rsWidget, bands, g_zAxisMin, g_zAxisMax);
     m_rsWidget->graph(0)->setPen(pen);
     m_rsWidget->xAxis->setLabel(tr("Frequency, kHz"));
@@ -1590,6 +1607,7 @@ void MainWindow::setWidgetsSettings()
     //-------RParallel Widget------------------------------------------------
     m_rpWidget->addGraph();//graph(0)
     m_rpWidget->setAutoAddPlottableToLegend(false);
+    // See m_rsWidget's identical g_zAxisMin/Max comment above.
     setBands(m_rpWidget, bands, g_zAxisMin, g_zAxisMax);
     m_rpWidget->graph(0)->setPen(pen);
     m_rpWidget->xAxis->setLabel(tr("Frequency, kHz"));

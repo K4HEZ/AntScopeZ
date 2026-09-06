@@ -71,12 +71,9 @@ void MainWindow::on_pressEsc ()
 
     m_measurements->hideOneFqWidget();
     // Same fix as on_singleStart_clicked()/on_continuousStartBtn_clicked()'s
-    // stop paths -- on_startOneFq() disables these unconditionally, and
-    // nothing re-enabled them on the Esc path either.
-    ui->measurmentsSaveBtn->setEnabled(true);
+    // stop paths -- on_startOneFq() disables this unconditionally, and
+    // nothing re-enabled it on the Esc path either.
     ui->actionExport->setEnabled(true);
-    ui->measurmentsDeleteBtn->setEnabled(true);
-    ui->measurmentsClearBtn->setEnabled(true);
     m_measurements->interrupt();
     emit stopMeasure();
 }
@@ -98,7 +95,15 @@ void MainWindow::on_pressF10 ()
 
 void MainWindow::on_pressDelete ()
 {
-    emit on_measurmentsDeleteBtn_clicked();
+    // selectedRows(), not currentRow() -- rows in this table are selected
+    // via selectionModel()->select(..., Select|Rows) throughout (see
+    // Measurements::on_newMeasurement()/deleteRow()), which never touches
+    // Qt's separate "current index" concept the way an actual mouse click
+    // does; currentRow() stayed -1 here otherwise (same bug, and same fix,
+    // as Measurements::updateS21GraphVisibility()'s legend refresh).
+    QModelIndexList sel = ui->tableWidget_measurments->selectionModel()->selectedRows();
+    if (!sel.isEmpty())
+        deleteMeasurementRow(sel.first().row());
 }
 
 void MainWindow::on_pressPlus ()

@@ -72,10 +72,7 @@ void MainWindow::on_singleStart_clicked()
         // on_startOneFq() disables these four unconditionally when One Fq
         // mode starts; nothing on any stop path re-enabled them until now
         // -- confirmed 2026-08-20 (stayed disabled after Esc/stop).
-        ui->measurmentsSaveBtn->setEnabled(true);
         ui->actionExport->setEnabled(true);
-        ui->measurmentsDeleteBtn->setEnabled(true);
-        ui->measurmentsClearBtn->setEnabled(true);
         return;
     }
 
@@ -203,10 +200,7 @@ void MainWindow::on_singleStart_clicked()
     {
         emit measure(start*1000, stop*1000, m_dotsNumber);
     }
-    ui->measurmentsSaveBtn->setEnabled(true);
     ui->actionExport->setEnabled(true);
-    ui->measurmentsDeleteBtn->setEnabled(!m_analyzer->isMeasuring());
-    ui->measurmentsClearBtn->setEnabled(!m_analyzer->isMeasuring());
 
     dtStartMeasurement = QDateTime::currentDateTime();
 }
@@ -230,10 +224,7 @@ void MainWindow::on_continuousStartBtn_clicked(bool checked)
         // mode isn't gated by g_developerMode, so cleaning it up on stop
         // shouldn't be either.
         m_measurements->hideOneFqWidget();
-        ui->measurmentsSaveBtn->setEnabled(true);
         ui->actionExport->setEnabled(true);
-        ui->measurmentsDeleteBtn->setEnabled(true);
-        ui->measurmentsClearBtn->setEnabled(true);
         return;
     }
     if(ui->tabWidget->currentWidget()->objectName() == "tab_tdr") {
@@ -347,10 +338,7 @@ void MainWindow::on_continuousStartBtn_clicked(bool checked)
         } else {
             emit measure(start*1000, stop*1000, m_dotsNumber);
         }
-        ui->measurmentsSaveBtn->setEnabled(true);
         ui->actionExport->setEnabled(true);
-        ui->measurmentsDeleteBtn->setEnabled(false);
-        ui->measurmentsClearBtn->setEnabled(false);
     }else
     {
         m_bInterrupted = true;
@@ -377,10 +365,7 @@ void MainWindow::on_startOneFq(quint64 _fq, int _dots, bool _continuous)
 
     emit measureOneFq(this, _fq*1000, 1);
 
-    ui->measurmentsSaveBtn->setEnabled(false);
     ui->actionExport->setEnabled(false);
-    ui->measurmentsDeleteBtn->setEnabled(false);
-    ui->measurmentsClearBtn->setEnabled(false);
 }
 
 // TdrScanPanel::scanRequested() -- see m_isTdrScanning's comment in
@@ -447,10 +432,7 @@ void MainWindow::on_tdrScanRequested(qint64 topFreqKHz, int dots, TdrWindow wind
     if (m_tdrScanDialog != nullptr)
         m_tdrScanDialog->panel()->setScanning(true);
 
-    ui->measurmentsSaveBtn->setEnabled(false);
     ui->actionExport->setEnabled(false);
-    ui->measurmentsDeleteBtn->setEnabled(false);
-    ui->measurmentsClearBtn->setEnabled(false);
 
     emit measure(minFqKHz*1000, topFreqKHz*1000, dots);
 }
@@ -465,10 +447,7 @@ void MainWindow::on_tdrStopRequested()
     emit stopMeasure();
     if (m_tdrScanDialog != nullptr)
         m_tdrScanDialog->panel()->setScanning(false);
-    ui->measurmentsDeleteBtn->setEnabled(true);
-    ui->measurmentsClearBtn->setEnabled(true);
     ui->actionExport->setEnabled(true);
-    ui->measurmentsSaveBtn->setEnabled(true);
 }
 
 // AnalyzerPro::drainingChanged() -- see AnalyzerPro::m_isDraining's own
@@ -532,10 +511,7 @@ void MainWindow::on_measurementComplete()
         PopUpIndicator::setIndicatorVisible(false);
         if (m_tdrScanDialog != nullptr)
             m_tdrScanDialog->panel()->setScanning(false);
-        ui->measurmentsDeleteBtn->setEnabled(true);
-        ui->measurmentsClearBtn->setEnabled(true);
         ui->actionExport->setEnabled(true);
-        ui->measurmentsSaveBtn->setEnabled(true);
         // Restore the velocity factor on_tdrScanRequested() overrode --
         // deferred, not done right here, because TdrScanPanel::refreshResult()
         // is *also* connected to this same measurementComplete() signal
@@ -679,8 +655,6 @@ void MainWindow::on_measurementComplete()
             // over it. Not autoPlaceAtLowestSwr() -- that's deliberately
             // single/full-scan only, see its own comment.
             m_measurements->on_measurementComplete();
-            ui->measurmentsDeleteBtn->setEnabled(true);
-            ui->measurmentsClearBtn->setEnabled(true);
             m_analyzer->setContinuos(false);
             m_analyzer->setIsMeasuring(false);
             PopUpIndicator::setIndicatorVisible(false);
@@ -698,10 +672,7 @@ void MainWindow::on_measurementComplete()
         if (!m_measurements->on_measurementComplete())
             m_markers->autoPlaceAtLowestSwr();
         m_bInterrupted = true;
-        ui->measurmentsDeleteBtn->setEnabled(true);
-        ui->measurmentsClearBtn->setEnabled(true);
         ui->actionExport->setEnabled(true);
-        ui->measurmentsSaveBtn->setEnabled(true);
         m_analyzer->setContinuos(false);
         m_analyzer->setIsMeasuring(false);
         PopUpIndicator::setIndicatorVisible(false);
@@ -737,6 +708,19 @@ void MainWindow::on_measurementCompleteNano()
     if (m_analyzer != nullptr && !m_analyzer->isStitchedSweepComplete())
         return;
 
+    // NanoVNA-family devices never reach AnalyzerPro::on_newData()'s own
+    // "Ready" reset (see AnalyzerPro::connectSignals()'s completeMeasurement
+    // lambda, which routes here instead of through on_newData()'s
+    // finNum-based completion branch) -- NanovnaAnalyzer's data paths emit
+    // newData() exactly dotsNumber times, never the one-extra call that
+    // branch needs to fire. Set it directly here so the status bar doesn't
+    // stay stuck on "Scanning (N/N points)..." forever after a normal
+    // NanoVNA scan completes. Unconditional, mirroring on_newData()'s own
+    // unconditional emit -- fires for every genuine completion this
+    // function handles (TDR, Continuous segment, Single), same as the
+    // non-Nano path.
+    m_statusLabel->setText(tr("Ready"));
+
     // TdrScanPanel-triggered scan -- see the matching comment and TDR
     // finalize block in on_measurementComplete(). That function early-
     // returns for NANO connections, so its m_isTdrScanning branch never
@@ -757,10 +741,7 @@ void MainWindow::on_measurementCompleteNano()
         PopUpIndicator::setIndicatorVisible(false);
         if (m_tdrScanDialog != nullptr)
             m_tdrScanDialog->panel()->setScanning(false);
-        ui->measurmentsDeleteBtn->setEnabled(true);
-        ui->measurmentsClearBtn->setEnabled(true);
         ui->actionExport->setEnabled(true);
-        ui->measurmentsSaveBtn->setEnabled(true);
         // See on_measurementComplete()'s identical comment: deferred so
         // TdrScanPanel::refreshResult() (connected after this slot) still
         // sees the just-used velocity factor when it runs.
@@ -796,8 +777,6 @@ void MainWindow::on_measurementCompleteNano()
             // See the identical fix/comment in on_measurementComplete()'s
             // own Continuous-interrupted branch.
             m_measurements->on_measurementComplete();
-            ui->measurmentsDeleteBtn->setEnabled(true);
-            ui->measurmentsClearBtn->setEnabled(true);
             m_analyzer->setContinuos(false);
             m_analyzer->setIsMeasuring(false);
             PopUpIndicator::setIndicatorVisible(false);
@@ -813,10 +792,7 @@ void MainWindow::on_measurementCompleteNano()
         if (!m_measurements->on_measurementComplete())
             m_markers->autoPlaceAtLowestSwr();
         m_bInterrupted = true;
-        ui->measurmentsDeleteBtn->setEnabled(true);
-        ui->measurmentsClearBtn->setEnabled(true);
         ui->actionExport->setEnabled(true);
-        ui->measurmentsSaveBtn->setEnabled(true);
         m_analyzer->setContinuos(false);
         m_analyzer->setIsMeasuring(false);
         PopUpIndicator::setIndicatorVisible(false);
@@ -924,7 +900,7 @@ void MainWindow::on_presssCtrlAltShiftM()
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
 
-    measurementsClearBtn_clicked(true);
+    clearAllMeasurements();
 
     m_measurements->setAutoCalibration(1);
 

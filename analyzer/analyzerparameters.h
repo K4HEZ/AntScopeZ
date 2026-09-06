@@ -152,6 +152,15 @@ struct measurement
 {
     QString name;
     bool visible = true;
+    // True if this measurement's on-disk copy (if any) doesn't match what's
+    // in memory -- defaults true (a live scan), set false on load from a
+    // file (Measurements::loadData()/importData()) or a successful save
+    // (any format -- Export's format buttons all funnel through Measurements::
+    // clearDirty()), set true again on rename (Measurements::
+    // renameMeasurement()). Not affected by changing a measurement's color
+    // (display preference, not data) or by a cancelled save. Shown as a
+    // trailing " *" in the Points column (Measurements::pointsCellText()).
+    bool dirty = true;
     qint64 qint64From;
     qint64 qint64To;
     qint64 qint64Dots;

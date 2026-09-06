@@ -30,7 +30,7 @@ supported analyzer models and brands.
 - [Markers](#markers)
 - [Multi view](#multi-view)
 - [Data from AA](#data-from-aa)
-- [Import / Export](#import--export)
+- [Open / Save](#open--save)
 - [Two-port measurement (S21/S12)](#two-port-measurement-s21s12)
 - [Print and screenshots](#print-and-screenshots)
 - [TDR (Time Domain Reflectometry)](#tdr-time-domain-reflectometry)
@@ -180,7 +180,7 @@ Neither family's on-device-screenshot support is implemented.
 
 ### Anything else
 
-Settings → Developer → Custom Analyzer lets you manually define a
+Settings → Analyzer → Custom Analyzer lets you manually define a
 "prototype" -- frequency range, screen size, protocol -- for a device
 not in the table above, without a code change. Currently disabled (not
 safe to use yet -- see `BUILDINFO.md`'s Known Issues). See
@@ -252,9 +252,10 @@ whatever else is using it and try again.
    point by point as data arrives.
 5. Once a sweep finishes, it's already sitting in the **Measurements**
    list on the right, auto-named with an incrementing `NN>` prefix.
-   Double-click the name to rename it, or use **Save** to write it out
-   as an AntScopeZ `.asd` file if you want to keep it outside the app's
-   own settings storage.
+   Right-click it for **Rename...**, or **Save as...** to write it out
+   as a file (AntScopeZ's own `.asd`, or Touchstone/CSV/NWL) if you want
+   to keep it outside the app's own settings storage -- see
+   [Measurements panel](#controls-reference) below.
 
 ## Controls reference
 
@@ -270,8 +271,8 @@ menu bar instead (File / Edit / View / Connect Analyzer / Help).
 
 | Control | What it does |
 |---|---|
-| Import Data... | Loads an external file: Touchstone (.s1p or 2-port .s2p), CSV, NWL, or AntScopeZ's own `.asd` |
-| Export Data... | Exports the *selected* measurement to CSV, NWL, or Touchstone (.s1p, plus .s2p if it's a 2-port measurement) -- select a row in Measurements first -- see [Two-port measurement](#two-port-measurement-s21s12) |
+| Open... | Opens a saved measurement -- AntScopeZ's own `.asd`, Touchstone (.s1p or 2-port .s2p), CSV, or NWL. The file picker's default filter shows every supported format at once; narrow it to one format via the dropdown if you want |
+| Save... | Saves the *selected* measurement -- select a row in Measurements first. Opens the same Save dialog as the Measurements panel's right-click **Save as...** (below): AntScopeZ's own `.asd`, CSV, NWL, or Touchstone (.s1p, plus .s2p if it's a 2-port measurement) -- see [Two-port measurement](#two-port-measurement-s21s12) |
 | Settings... | Opens the [Settings dialog](#settings) |
 | Print... | Opens the [Print dialog](#print-and-screenshots) for the current chart |
 | Save Screenshot... | Saves the *current chart* (not the whole window) straight to a PNG file you pick -- same image Ctrl+C copies, just written to disk instead of the clipboard |
@@ -291,6 +292,7 @@ menu bar instead (File / Edit / View / Connect Analyzer / Help).
 |---|---|
 | Cursor Details / Markers Hint / Cursor Params | Toggle the various hover/cursor readout panels on the charts (Cursor Details and the Markers table are both docked in the main window; Cursor Params still floats) |
 | Show Band Name | Labels the shaded bands on the charts with their names, not just color |
+| Show S21 / Show S12 | Independent show/hide for the S21 tab's two transmission-direction traces -- S21 (forward) on by default, S12 (reverse) off, since S12 is identical to S21 for any reciprocal/passive device (the common case) -- see [Two-port measurement](#two-port-measurement-s21s12) |
 | Band Selector | Shows/hides the band-selector dropdown above the Presets list -- see [Presets and bands](#presets-and-bands) |
 | Band Highlighting | Submenu picking which region's band data to shade on the charts |
 | Language | UI language -- auto-discovered from whatever `QtLanguage_*.qm` files are installed, not a fixed list |
@@ -341,18 +343,39 @@ menu bar instead (File / Edit / View / Connect Analyzer / Help).
 
 **Measurements panel**
 
+There are no buttons below the list -- Open is File-menu-only (above),
+and everything else (renaming, saving, deleting) is a right-click menu
+on the row you want to act on:
+
+| Right-click menu item | What it does |
+|---|---|
+| Select Color... | Opens a color picker for that measurement's traces |
+| Rename... | Prompts for a new name |
+| Save as... | Opens the Save dialog for just that measurement (see *File* above) |
+| Delete | Removes that measurement -- warns first if it's dirty (see Points column below) and Settings > General's warning checkbox is on |
+| Clear All | Removes every measurement in the list -- same dirty warning, covering however many rows are dirty in one combined prompt |
+
+Right-clicking a row (and choosing one of the actions above) also
+selects it, the same as clicking it directly -- so the pen-width
+highlighting and, on the S21 tab, which measurement's traces are drawn
+on top, both follow whatever you just acted on.
+
 | Control | What it does |
 |---|---|
-| Open / Save | Load or save a single measurement as AntScopeZ's own `.asd` format |
-| Delete | Removes the selected measurement |
-| Clear | Removes *every* measurement in the list |
 | Row checkbox | Shows/hides that measurement's trace on the charts |
-| Row pencil icon | Renames the measurement |
-| Points column | Point count, tagged `(s1p)` or `(s2p)` so you can tell a plain 1-port measurement from an imported 2-port one at a glance -- see [Two-port measurement](#two-port-measurement-s21s12) |
+| Points column | Point count, tagged `(s1p)` or `(s2p)` so you can tell a plain 1-port measurement from an imported 2-port one at a glance -- see [Two-port measurement](#two-port-measurement-s21s12). A trailing `*` (e.g. `401 (s2p) *`) marks it *dirty* -- scanned or renamed since it was last saved; saving (any format) or loading from a file clears it |
+| Delete key | Same as right-clicking the selected row and choosing Delete |
 
-**Chart tabs**: SWR, Phase, Z=R+jX, Z=R‖+jX, RL, Smith, TDR, Multi.
-**S21** is a ninth tab that stays hidden until you import a 2-port
-file -- see [Two-port measurement](#two-port-measurement-s21s12).
+Clicking a measurement row also highlights it (a thicker line) on every
+chart, and on the S21 tab specifically brings its traces to the front
+of the chart -- so an older measurement's traces aren't stuck drawing
+underneath a newer one just because it was scanned first. Settings >
+General has spinboxes for both line widths (selected vs. every other
+measurement, 1–10px, default 5/2).
+
+**Chart tabs**: SWR, Phase, Z=R+jX, Z=R‖+jX, RL, Smith, S21, TDR, Multi
+-- see [Two-port measurement](#two-port-measurement-s21s12) for what
+the S21 tab shows.
 
 ### Keyboard and mouse shortcuts, in the plot area
 
@@ -385,7 +408,7 @@ zoom"](#general-tab) to lift those limits.
 ## Settings
 
 The Settings dialog has seven tabs: **General**, **Markers**,
-**OSL Calibration**, **Cable**, **Themes**, **Developer**, and
+**OSL Calibration**, **Cable**, **Themes**, **Analyzer**, and
 **Updates**.
 
 OSL Calibration has its own section -- see
@@ -411,8 +434,10 @@ theme's colors, see the new [Themes tab](#themes-tab) below.
 | Analyzer timeout | Seconds a scan can go without receiving a single data point before AntScopeZ treats it as failed and shows an error, instead of leaving the busy indicator/wait cursor stuck forever (device unreachable, or busy -- already held open by another program or another AntScopeZ window). Default 8 |
 | Report Detailed Errors | Off by default. AntScopeZ always shows a small set of analyzer error messages regardless of this setting (busy/unreachable device, see [Connecting to your analyzer](#connecting-to-your-analyzer)); turning this on additionally surfaces BLE's own, more technical connection/protocol errors in that same dialog -- useful when chasing a flaky BLE connection, more detail than most day-to-day use needs otherwise |
 | Use reconnect to drain unwanted data | Off by default. Neither NanoVNA protocol (classic ASCII or V2/binary) has a wire-level "abort a scan in progress" command -- once asked for N points, the device is going to send all of them. By default, stopping a scan early just waits out whatever's still outstanding and quietly discards it (see [Scan modes](#scan-modes-single-vs-continuous)). Checking this instead closes and reopens the connection right away, often faster for a large scan, but not guaranteed to make every device actually discard what it already queued internally |
+| Warn before deleting or clearing dirty measurements | On by default. A confirmation before the Measurements panel's Delete/Clear All discards a measurement that's *dirty* (scanned or renamed since it was last saved -- see [Measurements panel](#controls-reference)) |
+| Selected / Other measurements' line width | How thick a measurement's trace is drawn on the charts -- 1–10px, default 5 for whichever measurement is currently selected, 2 for every other one loaded at the same time |
 | Data folder (with Browse...) | Where save/export/screenshot dialogs across the app default to -- see [Files and directories](#files-and-directories) |
-| Save actions update this folder | Off by default. When on, completing a *save* (not Open/Import) somewhere else moves Data folder there too, so it follows you; when off, Data folder only changes when you set it here yourself |
+| Save actions update this folder | Off by default. When on, completing a *save* (not Open) somewhere else moves Data folder there too, so it follows you; when off, Data folder only changes when you set it here yourself |
 
 **Scanning**
 
@@ -529,9 +554,9 @@ hit Save.
 | Cancel | Discards unsaved edits, reloads the slot as last saved |
 | Save | Persists your edits. If you're editing the currently *active* theme (see View → Theme), the change applies immediately |
 
-### Developer tab
+### Analyzer tab
 
-<!-- SCREENSHOT: Settings dialog, Developer tab -->
+<!-- SCREENSHOT: Settings dialog, Analyzer tab -->
 
 Two group boxes:
 
@@ -883,10 +908,15 @@ measurement currently in the Measurements list -- so a marker's values
 across several saved scans are all visible at once, not just the
 latest. The View menu's **Markers Hint** checkbox shows or hides this
 table; it's shown (empty, headers only) as soon as it's turned on, even
-before you've placed a marker. Click a marker's **x** to remove it. The
-table scrolls (horizontally and vertically, as needed) if it grows past
-the space given to it -- drag the splitter above it to resize. Which
-columns it shows, and in what order, is set from
+before you've placed a marker. Click a marker's **x** to remove it, or
+right-click anywhere in the table to open a context menu with **Clear All
+Markers** (removes all at once) or **Clear Empty Markers** (removes only
+markers with no valid data across any measurement). The table scrolls
+(horizontally and vertically, as needed) if it grows past the space given
+to it -- drag the splitter above it to resize. Columns auto-widen to fit
+whatever's actually in them, re-checked on every refresh, so a column that
+needs more room than its header label doesn't require a manual resize.
+Which columns it shows, and in what order, is set from
 [Settings → Markers](#markers-tab).
 
 For a 2-port measurement (a `.s2p` import), the Markers table also gains
@@ -927,16 +957,13 @@ to the tab Multi" (or "Add multi-charts") to populate it.
 
 You can add and remove tabs to Multi View using the "+" button to join charts.
 
-S21 isn't offered as a join target -- it's excluded from the list even
-when a 2-port measurement has it populated.
-
 ## Data from AA
 
 <!-- SCREENSHOT: Data from AA dialog (the stored-measurements list) -->
 
 Loads measurement results that already exist in the *analyzer's own*
 on-device memory (not files on your PC -- see
-[Import / Export](#import--export) for that). **File → Data from AA**
+[Open / Save](#open--save) for that). **File → Data from AA**
 opens a list of everything currently stored on the device;
 double-click an entry (or select it and click OK) to load just that one
 into AntScopeZ as a new measurement.
@@ -946,56 +973,69 @@ pick a destination folder, and it loads and saves every stored entry in
 turn as its own `.asd` file (zero-padded index + the device's own name
 for each), with a progress dialog you can Abort partway through.
 
-## Import / Export
+## Open / Save
 
-These are two different File menu items, doing related but distinct
-things:
+**File → Open...** loads a file into a new measurement -- AntScopeZ's
+own `.asd`, Touchstone (`.s1p` or 2-port `.s2p`), CSV, or NWL. The file
+picker defaults to showing every supported format at once ("All
+supported files"); narrow it to one via the dropdown if you'd rather.
 
-- **File → Export Data...** opens a dialog for the measurement
-  currently *selected* in the Measurements list, offering:
-  - **CSV** -- comma-separated values
-  - **NWL** -- APAK-EL format
-  - **Z, RI** / **S, RI** / **S, MA** -- Touchstone (`.s1p`), as
-    impedance or S-parameters, in rectangular (real/imaginary) or polar
-    (magnitude/angle) form
-  - **S2P, RI** / **S2P, MA** / **S2P, DB** -- Touchstone (`.s2p`), all
-    four S-parameters (S11, S21, S12, S22) -- only shown for a
-    measurement that actually has 2-port data; see
-    [Two-port measurement](#two-port-measurement-s21s12)
-- **File → Import Data...** is the general "bring external data in"
-  action -- accepts Touchstone (`.s1p` or 2-port `.s2p`), CSV, NWL, or
-  AntScopeZ's own `.asd`.
+**File → Save...** (or the Measurements panel's right-click **Save
+as...**, see [Measurements panel](#controls-reference)) opens a Save
+dialog for one measurement -- select a row in Measurements first if
+you're using the File menu version. It offers:
 
-Separately, the **Measurements panel's own Open/Save** buttons are
-narrower: they only read/write AntScopeZ's native `.asd` format, for one
-measurement at a time.
+- **AntScopeZ** -- the app's own `.asd` format
+- **CSV** -- comma-separated values
+- **NWL** -- APAK-EL format
+- **Z, RI** / **S, RI** / **S, MA** -- Touchstone (`.s1p`), as
+  impedance or S-parameters, in rectangular (real/imaginary) or polar
+  (magnitude/angle) form
+- **S2P, RI** / **S2P, MA** / **S2P, DB** -- Touchstone (`.s2p`), all
+  four S-parameters (S11, S21, S12, S22) -- only shown for a
+  measurement that actually has 2-port data; see
+  [Two-port measurement](#two-port-measurement-s21s12)
 
-Export and Save both default to your [Data folder](#files-and-directories),
-suggesting a filename built from the measurement's own name (Save) or
-description (Export) rather than whatever you last typed. Import and
-Open default to the same folder but don't move it -- browsing somewhere
-else to import a one-off file doesn't change where your own saves land
-afterward.
+None of these formats except `.asd` store a name (a re-opened Touchstone/
+CSV/NWL file is named after the file itself, same as `.asd`) or 2-port
+data (only S2P captures S21/S12/S22 -- saving a 2-port measurement as
+`.asd`, CSV, NWL, or a plain `.s1p` keeps only its R/X, the same data
+those formats always hold). Saving in any format clears that
+measurement's dirty flag (see [Measurements panel](#controls-reference))
+-- there's no format-specific distinction there, just successfully
+saved vs. not.
+
+Both dialogs default to your [Data folder](#files-and-directories);
+Save suggests a filename built from the measurement's own name rather
+than whatever you last typed. Opening a file from somewhere else
+doesn't move Data folder -- browsing there for a one-off file doesn't
+change where your own saves land afterward.
 
 ## Two-port measurement (S21/S12)
 
 AntScopeZ can display and export 2-port S-parameter data (S11, S21,
 S12, S22), two ways:
 
-- **Import a `.s2p` file** (File → Import Data..., or drag-and-drop) --
-  works for any device's exported data, since it's just reading a file.
-- **A live scan on NanoVNA-family hardware** -- every sweep now requests
-  real S11+S21 directly from the device, not just S11. This is new and
-  not yet validated against real hardware as of this writing; if it
-  doesn't behave as expected on yours, please open an issue. RigExpert-
-  family analyzers have no live 2-port capture -- import a `.s2p` file
-  exported from other VNA software instead, same as before.
+- **Open a `.s2p` file** (File → Open..., or drag-and-drop) -- works for
+  any device's exported data, since it's just reading a file.
+- **A live scan on NanoVNA-family hardware** -- every sweep requests
+  real S11+S21 directly from the device, not just S11 (confirmed against
+  real NanoVNA-H4 hardware; the V2/LiteVNA64 binary protocol is newer
+  and so far only exercised against a companion emulator, not real V2
+  hardware -- if it doesn't behave as expected on yours, please open an
+  issue). RigExpert-family analyzers have no live 2-port capture --
+  import a `.s2p` file exported from other VNA software instead, same
+  as before.
 
-Either way, AntScopeZ automatically reveals a hidden **S21** chart tab,
-plotting S21 and S12 magnitude (dB) and phase together. Every other
-chart tab (SWR, Smith, Z=R+jX, etc.) keeps showing that measurement's
-S11 slice as usual -- a 2-port measurement is still perfectly valid
-1-port data, it just also carries the extra two parameters.
+Either way, the **S21** chart tab (always present, like every other
+tab) plots S21 and S12 magnitude (dB) and phase together for that
+measurement -- **View → Show S21 / Show S12** show/hide the two
+independently (S21 on, S12 off, by default: S12 is identical to S21 for
+any reciprocal/passive device, the common case, so it's opt-in). Every
+other chart tab (SWR, Smith, Z=R+jX, etc.) keeps showing that
+measurement's S11 slice as usual -- a 2-port measurement is still
+perfectly valid 1-port data, it just also carries the extra two
+parameters.
 
 From there:
 
@@ -1005,11 +1045,18 @@ From there:
 - The **Measurements list**'s Points column tags the row `(s2p)`
   instead of `(s1p)`, so you can tell which measurements actually have
   2-port data at a glance.
-- **File → Export Data...** gains three more buttons -- **S2P, RI** /
-  **S2P, MA** / **S2P, DB** -- to write all four S-parameters back out
-  as a Touchstone `.s2p` file; see [Import / Export](#import--export).
-- The **S21** tab is deliberately left out of [Multi view](#multi-view)'s
-  join options.
+- **File → Save...** (or the Measurements panel's right-click **Save
+  as...**) gains three more buttons for a 2-port measurement -- **S2P,
+  RI** / **S2P, MA** / **S2P, DB** -- to write all four S-parameters
+  back out as a Touchstone `.s2p` file; see [Open / Save](#open--save).
+  Every *other* format there (including AntScopeZ's own `.asd`) only
+  ever saves R/X, the same as a 1-port measurement -- S21/S12/S22 are
+  only preserved by an S2P save.
+- Selecting a measurement row on the S21 tab brings its traces to the
+  front of the chart, same as the highlighting on every other tab -- see
+  [Measurements panel](#controls-reference).
+- The **S21** tab can be joined into [Multi view](#multi-view) like any
+  other chart tab.
 
 Typical uses: checking a filter or attenuator's passband/insertion loss
 (S21 magnitude vs. frequency), sanity-checking a passive device's
@@ -1184,7 +1231,7 @@ the edge of that range.
 
 ## Customized analyzer parameters
 
-Settings' **Developer** tab's **Custom Analyzer** group box is intended
+Settings' **Analyzer** tab's **Custom Analyzer** group box is intended
 to let you define a named analyzer preset -- a custom minimum/maximum
 frequency range plus an LCD width/height -- for a unit AntScopeZ
 already recognizes correctly (a clone, or a newer hardware revision of
@@ -1194,7 +1241,7 @@ assumes for that model.
 It's visible (a "This feature is currently under development"
 notice sits at the top of it), and every control on it -- "Use
 customized analyzer", Apply, Auto calibration -- is disabled, except
-one: **Don't restrict frequency** (see [Developer tab](#developer-tab)
+one: **Don't restrict frequency** (see [Analyzer tab](#analyzer-tab)
 above), which is a real, working, unrelated setting that just happens
 to live in this group box. Everything else is shown rather than
 hidden so it isn't forgotten about, not because it's ready to use:
@@ -1218,8 +1265,8 @@ session's own testing.
 | Path | What's there |
 |---|---|
 | `/usr/bin/AntScopeZ` | A thin wrapper script -- sets `LD_LIBRARY_PATH` to the bundled Qt below, then execs the real binary |
-| `/usr/bin/AntScopeZ.bin` | The actual executable |
-| `/usr/bin/qt.conf` | Points Qt's own plugin/library lookup at the bundled copies instead of any system Qt |
+| `/usr/lib/x86_64-linux-gnu/antscopez/AntScopeZ.bin` | The actual executable (deliberately placed in libdir instead of bindir to scope qt.conf to this app only) |
+| `/usr/lib/x86_64-linux-gnu/antscopez/qt.conf` | Points Qt's own plugin/library lookup at the bundled copies instead of any system Qt (placed next to the executable so it only affects AntScopeZ, not other Qt applications in /usr/bin) |
 | `/usr/lib/x86_64-linux-gnu/antscopez/` | AntScopeZ's own private copy of the Qt 6.11 libraries and plugins it was built/packaged against -- see [Qt version](https://github.com/K4HEZ/AntScopeZ#qt-version) for why it's bundled rather than linked against whatever Qt the system has |
 | `/usr/share/antscopez/` | Read-only shared data: `cables.txt`, `itu-regions-defaults.txt`, and every `QtLanguage_<code>.qm` / `qtbase_<code>.qm` translation file |
 | `/usr/share/applications/antscopez.desktop` | The desktop entry (app menu listing) |
@@ -1270,16 +1317,15 @@ adjacent "Save actions update this folder" checkbox -- off by default.
 Opening/importing a file from elsewhere never relocates it either way.
 
 Filenames are generated for you rather than reused from last time: a
-measurement's own name for `.asd` Save and Export, the Print dialog's
-title field for Print, and a timestamp (`yyyyMMdd-hhmmss`, sorts
-correctly regardless of locale) for screenshots -- see
-[Import / Export](#import--export) and
+measurement's own name for Save, the Print dialog's title field for
+Print, and a timestamp (`yyyyMMdd-hhmmss`, sorts correctly regardless of
+locale) for screenshots -- see [Open / Save](#open--save) and
 [Print and screenshots](#print-and-screenshots) above for specifics.
 
 #### Debug logs: `Debug-yyyyMMdd.log`
 
-Written here too, when you turn on one or more of Settings → Developer
-→ Debug Logging's checkboxes (see [Developer tab](#settings)) -- one
+Written here too, when you turn on one or more of Settings → Analyzer
+→ Debug Logging's checkboxes (see [Analyzer tab](#settings)) -- one
 shared file per calendar day, appended to across the day (including
 across restarts), interleaving whichever of Serial/USB-HID/BLE/NanoVNA
 you had logging turned on for so the order things actually happened in
@@ -1412,10 +1458,10 @@ Notes on specific keys:
   `mainX`/`mainY`/`geometry`, ...) is internal window-position/
   zoom-state bookkeeping. Harmless to delete individually if something
   looks stuck -- it just regenerates with defaults.
-- **Developer tab's four "Enable ... debug logs" checkboxes (and BLE's
+- **Analyzer tab's four "Enable ... debug logs" checkboxes (and BLE's
   "Show ping/keepalive traffic") are never written here at all** --
   deliberately session-only, always starting unchecked. See
-  [Developer tab](#settings).
+  [Analyzer tab](#settings).
 
 If your `.ini` has a leftover group named in another language (e.g.
 `[Marcadores]` sitting next to `[Markers]`) from before this was fixed
@@ -1450,12 +1496,12 @@ delete.
   wideband, near-DC sweep -- a normal band-limited scan (e.g. just 20m)
   won't show anything there. See
   [TDR (Time Domain Reflectometry)](#tdr-time-domain-reflectometry).
-- **Developer tab's Custom Analyzer controls are all greyed out.**
+- **Analyzer tab's Custom Analyzer controls are all greyed out.**
   Deliberate, not a bug -- the feature underneath is unfinished. See
   [Customized analyzer parameters](#customized-analyzer-parameters).
 - **Debug logging was on, but the file is missing or empty.** The
   checkboxes reset to unchecked every time you open AntScopeZ (by
-  design -- see [Developer tab](#settings)), so check they're still on;
+  design -- see [Analyzer tab](#settings)), so check they're still on;
   and a checkbox only logs traffic for *that* connection type, so
   nothing gets written unless something's actually connected and
   talking over it. See [Files and directories](#files-and-directories)

@@ -19,6 +19,7 @@ extern int g_maxMeasurements; // see measurements.cpp
 extern QMap<QString, QString> g_mapTabPlotNames; // see mainwindow.cpp
 extern void setAbsoluteFqMaximum();
 extern bool g_bAA55modeNewProtocol;
+extern bool g_warnDirtyDelete; // see mainwindow.cpp
 extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
                             QString title, QString text,
                             QMessageBox::StandardButtons buttons = QMessageBox::Ok,
@@ -33,42 +34,71 @@ void MainWindow::on_actionExport_triggered()
     QList <QTableWidgetItem *> list = ui->tableWidget_measurments->selectedItems();
     if(!list.isEmpty())
     {
-        QTableWidgetItem * item = list.at(0);
-        m_exportDialog = new Export(this);
-        m_exportDialog->setAttribute(Qt::WA_DeleteOnClose);
-        m_exportDialog->setWindowTitle(tr("Export"));
-        m_exportDialog->setMeasurements(m_measurements, item->row());
-        m_exportDialog->exec();
+        exportMeasurementRow(list.at(0)->row());
     }
 }
 
-void MainWindow::on_measurmentsDeleteBtn_clicked()
+// Shared by File > Save (on_actionExport_triggered(), above -- whatever
+// row is currently selected) and the right-click menu's "Save as..."
+// (on_tableWidgetMeasurmentsContextMenu(), the row under the cursor).
+// Harold's call, 2026-09-06: no separate quick-.asd dialog -- "Save as..."
+// is just this same Export dialog, which now offers "AntScopeZ asd" as
+// one of its format buttons rather than being a special case handled
+// elsewhere. Dirty-clearing on a successful save lives in each of
+// Export's format-button handlers (see export.cpp), not here -- this
+// function doesn't know whether the dialog was cancelled or which
+// button (if any) was actually clicked.
+void MainWindow::exportMeasurementRow(int row)
+{
+    m_exportDialog = new Export(this);
+    m_exportDialog->setAttribute(Qt::WA_DeleteOnClose);
+    m_exportDialog->setWindowTitle(tr("Save"));
+    m_exportDialog->setMeasurements(m_measurements, row);
+    m_exportDialog->exec();
+}
+
+// See measurement::dirty's own comment. One combined warning covers
+// however many of the targeted row(s) are dirty -- called by both
+// deleteMeasurementRow() (a single row) and clearAllMeasurements() (every
+// row) rather than duplicating the checkbox/message-box logic in each.
+// Returns true if it's fine to proceed (nothing dirty, warnings off, or
+// the user confirmed anyway).
+static bool confirmDirtyDiscard(QWidget* parent, const QList<measurement*>& targets)
+{
+    if (!g_warnDirtyDelete)
+        return true;
+
+    int dirtyCount = 0;
+    for (measurement* mm : targets) {
+        if (mm != nullptr && mm->dirty)
+            dirtyCount++;
+    }
+    if (dirtyCount == 0)
+        return true;
+
+    QString text = (dirtyCount == 1)
+        ? MainWindow::tr("This measurement has unsaved changes. Delete it anyway?")
+        : MainWindow::tr("%1 of these measurements have unsaved changes. Delete them anyway?").arg(dirtyCount);
+    return g_showMessageBox(parent, QMessageBox::Warning, MainWindow::tr("Unsaved changes"), text,
+                             QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes;
+}
+
+void MainWindow::deleteMeasurementRow(int row)
 {
     if(m_analyzer->isMeasuring())
     {
         return;
     }
-    int columns = ui->tableWidget_measurments->columnCount();
-    QList <QTableWidgetItem *> list = ui->tableWidget_measurments->selectedItems();
-    for(int i = 0; i < list.length(); i+=columns)
-    {
-        QTableWidgetItem * item = list.at(i);
-        int rowNumber = item->row();
-        m_measurements->deleteRow(rowNumber);
-    }
+    if (row < 0 || row >= m_measurements->getMeasurementLength())
+        return;
+
+    if (!confirmDirtyDiscard(this, {m_measurements->getMeasurement(m_measurements->getMeasurementLength()-row-1)}))
+        return;
+
+    m_measurements->deleteRow(row);
 
     if(ui->tableWidget_measurments->rowCount() == 0)
     {
-        //onFullRange(true);
-        //{ Fedoseev's request 2022-11-11
-        //qint64 from = m_lastEnteredFqFrom;
-        //qint64 to =  m_lastEnteredFqTo;
-        //qint64 range = (to - from);
-        //on_dataChanged(from + range/2, range, m_dotsNumber);
-        //}
-        ui->measurmentsSaveBtn->setEnabled(false);
-        ui->measurmentsDeleteBtn->setEnabled(false);
-        ui->measurmentsClearBtn->setEnabled(false);
         ui->actionExport->setEnabled(false);
     }
     else
@@ -83,13 +113,18 @@ void MainWindow::on_measurmentsDeleteBtn_clicked()
     m_measurements->replot();
 }
 
-
-void MainWindow::measurementsClearBtn_clicked(bool)
+void MainWindow::clearAllMeasurements()
 {
     if(m_analyzer->isMeasuring())
     {
         return;
     }
+
+    QList<measurement*> all;
+    for (int i = 0; i < m_measurements->getMeasurementLength(); i++)
+        all.append(m_measurements->getMeasurement(i));
+    if (!confirmDirtyDiscard(this, all))
+        return;
 
     m_measurements->on_measurementComplete();
     m_measurements->resetSmithTracer(); // issue #31 -- don't leave a stale cursor dot after Clear
@@ -113,9 +148,6 @@ void MainWindow::measurementsClearBtn_clicked(bool)
 
     if(ui->tableWidget_measurments->rowCount() == 0)
     {
-        ui->measurmentsSaveBtn->setEnabled(false);
-        ui->measurmentsDeleteBtn->setEnabled(false);
-        ui->measurmentsClearBtn->setEnabled(false);
         ui->actionExport->setEnabled(false);
     }
     if(m_markers)
@@ -158,9 +190,34 @@ void MainWindow::on_tableWidget_measurments_cellClicked(int row, int column)
                 int s21Base = (i-1)*4 + 1;
                 if (s21Base+3 < m_s21Widget->graphCount()) {
                     for (int ii=0; ii<4; ii++) {
-                        QPen s21OwnPen = m_s21Widget->graph(s21Base+ii)->pen();
+                        QCPGraph* g = m_s21Widget->graph(s21Base+ii);
+                        QPen s21OwnPen = g->pen();
                         s21OwnPen.setWidth(pen_width);
-                        m_s21Widget->graph(s21Base+ii)->setPen(s21OwnPen);
+                        g->setPen(s21OwnPen);
+
+                        // Selecting a measurement should bring its S21
+                        // traces to the front of the chart's paint order,
+                        // not just thicken its pen -- QCustomPlot paints a
+                        // layer's graphs in the order they were added, so
+                        // an older (but now selected) measurement's traces
+                        // would otherwise still render underneath every
+                        // measurement scanned after it. setLayer(layer())
+                        // re-appends this graph to the end of its own
+                        // layer's paint-order list (QCPLayerable::
+                        // moveToLayer(layer, false)'s public wrapper) --
+                        // safe regardless of visibility (hidden graphs are
+                        // gated separately, by realVisibility(), so this
+                        // still takes effect for a currently-hidden row --
+                        // the likely next action is checking its
+                        // visibility box on, and it should already be on
+                        // top when that happens) and regardless of order
+                        // relative to graph(index) numbering (QCustomPlot::
+                        // graph()/graphCount() read a separate list, mGraphs,
+                        // only touched by add/removeGraph(), never by
+                        // moveToLayer()/setLayer() -- confirmed against
+                        // qcustomplot.cpp).
+                        if ((i-1) == row && g->layer())
+                            g->setLayer(g->layer());
                     }
                 }
 
@@ -500,122 +557,52 @@ void MainWindow::on_actionPrint_triggered()
     m_print->exec();
 }
 
-void MainWindow::on_measurmentsSaveBtn_clicked()
-{
-    QList <QTableWidgetItem *> list = ui->tableWidget_measurments->selectedItems();
+// Was on_measurmentsSaveBtn_clicked() -- the Save button's quick .asd-only
+// save. Superseded by exportMeasurementRow() (above): "Save as..." on the
+// right-click menu opens the same Export dialog as File > Save now
+// (Harold's call, 2026-09-06 -- one save path, not a special-cased one for
+// .asd), which gained its own "AntScopeZ asd" option. That dialog doesn't
+// rename the measurement to match the saved filename the way this old
+// button used to -- also deliberately dropped, not carried over.
 
-    if(!list.isEmpty())
-    {
-        int row = list.at(0)->row();
-
-        // Suggest the measurement's own name (minus its "NN> " auto-numbering
-        // prefix, with filesystem-unsafe characters swapped for "_" -- the
-        // rename dialog, Measurements::setupUi()'s QInputDialog handler,
-        // accepts any text at all, including "/") as the filename, in
-        // UserDataDir, instead of just reusing whatever filename happened
-        // to be typed last time.
-        QString suggestedName = "Measurement";
-        measurement* selectedMm = m_measurements->getMeasurement(m_measurements->getMeasurementLength()-row-1);
-        if (selectedMm != nullptr) {
-            QString name = selectedMm->name;
-            int namePos = name.indexOf("> ");
-            if (namePos != -1)
-                name = name.mid(namePos+2);
-            name.replace(QRegularExpression("[\\\\/:*?\"<>|]"), "_");
-            name = name.trimmed();
-            if (!name.isEmpty())
-                suggestedName = name;
-        }
-        // withExtension() (not a plain "+ .asd") because suggestedName may
-        // already end in ".asd" -- e.g. if it was derived from a
-        // measurement name that already went through this once (see its
-        // own doc comment for why the naive version of this duplicated
-        // extensions instead of self-healing, issue reported 2026-08-14).
-        QString suggestedPath = FileDialog::withExtension(FileDialog::userDataDir() + "/" + suggestedName, "asd");
-
-        // The filter string must exactly match "*.asd" -- a stray trailing
-        // space before the closing paren here used to make QFileDialog's
-        // own "does the typed name already satisfy the filter" check fail
-        // for every normal ".asd" name, so it appended ".asd" again on top
-        // of the one suggestedPath/suggestedName already added above,
-        // producing "...asd.asd" (issue reported 2026-08-10).
-        QString path = FileDialog::getSaveFileName(this, tr("Save file"), suggestedPath, "AntScopeZ (*.asd)");
-        if(!path.isEmpty())
-        {
-            FileDialog::noteUserDataDirIfEnabled(path);
-            m_measurements->saveData(row, path);
-            QFileInfo fi(path);
-            // completeBaseName(), not baseName(): baseName() truncates at
-            // the *first* '.' in the filename, not the last, so it mangled
-            // any name with its own dots (e.g. a date like "12.08.2026")
-            // instead of just stripping the real ".asd" extension.
-            QString fname = fi.completeBaseName();
-
-            measurement* mm = m_measurements->getMeasurement(m_measurements->getMeasurementLength()-row-1);
-            QString mmName = mm->name;
-            int pos = mmName.indexOf("> ");
-            if (pos != -1)
-                mmName = mmName.left(pos+2);
-            mm->name = mmName + fname;
-            ui->tableWidget_measurments->setColumnWidth(COL_NAME, COL_NAME_WD);
-
-            QTableWidgetItem* itm = ui->tableWidget_measurments->item(row, COL_NAME);
-            QFontMetrics fm(itm->font());
-            int width = COL_NAME_WD;
-            QString elided = fm.elidedText(mm->name, Qt::ElideRight, width);
-            ui->tableWidget_measurments->item(row, COL_NAME)->setText(elided);
-            ui->tableWidget_measurments->resizeColumnToContents(COL_NAME);
-
-        }
-    }
-}
-
-void MainWindow::on_measurementsOpenBtn_clicked()
-{
-    QString path = FileDialog::getOpenFileName(this, tr("Open file"), FileDialog::userDataDir(), "AntScopeZ (*.asd)");
-    if(!path.isEmpty())
-    {
-        m_measurements->loadData( path );
-        ui->measurmentsSaveBtn->setEnabled(true);
-        ui->actionExport->setEnabled(true);
-        ui->measurmentsDeleteBtn->setEnabled(true);
-        ui->measurmentsClearBtn->setEnabled(true);
-    }
-}
+// Was on_measurementsOpenBtn_clicked() -- the Open button only ever
+// handled .asd. Superseded by on_actionImport_triggered() (below), which
+// already offered every supported format including .asd in one dialog.
 
 void MainWindow::openFile(QString path)
 {
     m_measurements->loadData(path);
-    ui->measurmentsSaveBtn->setEnabled(true);
     ui->actionExport->setEnabled(true);
-    ui->measurmentsDeleteBtn->setEnabled(true);
-    ui->measurmentsClearBtn->setEnabled(true);
 }
 
+// actionImport's text is "Open..." now (was "Import...", see todo.txt's
+// note on the Import/Export -> Open/Save terminology change) -- the
+// dialog itself already covered every supported format including
+// AntScopeZ's own .asd, "import" was never really the right word for it.
 void MainWindow::on_actionImport_triggered()
 {
-    QString path = FileDialog::getOpenFileName(this, tr("Open file"), FileDialog::userDataDir(),  "S1p (*.s1p);;"
+    // "All supported files" first so it's the default shown, rather than
+    // defaulting to whichever single format happened to be listed first
+    // (previously S1p) -- requested 2026-09-06.
+    QString path = FileDialog::getOpenFileName(this, tr("Open file"), FileDialog::userDataDir(),
+                                                                                    "All supported files (*.asd *.s1p *.s2p *.csv *.nwl);;"
+                                                                                    "AntScopeZ (*.asd);;"
+                                                                                    "S1p (*.s1p);;"
                                                                                     "S2p (*.s2p);;"
                                                                                     "Csv (*.csv);;"
                                                                                     "Nwl (*.nwl);;"
-                                                                                    "AntScopeZ (*.asd);;"
-
                                                                                     "All files (*.*)");
     if (path.isEmpty())
         return;
 
     m_measurements->loadData(path);
-    ui->measurmentsSaveBtn->setEnabled(true);
     ui->actionExport->setEnabled(true);
-    ui->measurmentsDeleteBtn->setEnabled(true);
-    ui->measurmentsClearBtn->setEnabled(true);
 }
 
 void MainWindow::on_SaveFile(int row, QString path)
 {
     //int row = ui->tableWidget_measurments->rowCount() - 1;
     saveFile(row, path);
-    ui->measurmentsSaveBtn->setEnabled(true);
 }
 
 void MainWindow::saveFile(int row, QString path)
@@ -634,10 +621,7 @@ void MainWindow::on_importFinished(double _fqMin_khz, double _fqMax_khz)
 
     on_dataChanged((qint64)_center, (qint64)_range/2, ui->lineEdit_points->text().toInt());
 
-    ui->measurmentsSaveBtn->setEnabled(true);
     ui->actionExport->setEnabled(true);
-    ui->measurmentsDeleteBtn->setEnabled(true);
-    ui->measurmentsClearBtn->setEnabled(true);
 
     // S21 tab stays hidden (see mainwindow_tabs.cpp's createTabs()) until
     // a measurement actually has real 2-port data to show. A .s2p import
@@ -673,19 +657,60 @@ QString appendSpaces(const QString& str) {
     return tmp + fracPart;
 }
 
+// Was a direct QColorDialog::getColor() popup on right-click, nothing
+// else reachable this way -- Rename (the measurements table's now-removed
+// pencil column), Save/Delete (the now-removed buttons below the table),
+// and Clear All (ditto) each replaced a separate, harder-to-discover
+// control with a row here instead. Keyed off itemAt(pos) throughout, not
+// the table's own selection state -- see exportMeasurementRow()'s comment
+// for why (same reasoning that made the old Save button need a row
+// selected first to do anything at all).
 void MainWindow::on_tableWidgetMeasurmentsContextMenu(const QPoint& pos)
 {
     QTableWidgetItem *item = ui->tableWidget_measurments->itemAt(pos);
-    if (item != nullptr)
-    {
-        int row = item->row();
-        QPen pen = m_swrWidget->graph(row+1)->pen();
-        QColor color = QColorDialog::getColor(pen.color(), this );
-        if( color.isValid() )
-        {
-            changeMeasurmentsColor(row, color);
-        }
+    int row = (item != nullptr) ? item->row() : -1;
+
+    // Actually selects the row (same selectionModel()->select(...,
+    // Select|Rows) pattern used everywhere else in this table, see
+    // Measurements::on_newMeasurement()/deleteRow()) plus the same pen-
+    // width/S21-front/legend refresh a real click would trigger -- done
+    // by whichever action is actually chosen below, not just by right-
+    // clicking to open the menu, so dismissing the menu without picking
+    // anything doesn't change what's selected.
+    auto selectRow = [this, row]() {
+        QModelIndex idx = ui->tableWidget_measurments->model()->index(row, 0, QModelIndex());
+        ui->tableWidget_measurments->selectionModel()->select(idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+        on_tableWidget_measurments_cellClicked(row, 0);
+    };
+
+    QMenu menu(this);
+    if (row != -1) {
+        menu.addAction(tr("Select Color..."), this, [this, row, selectRow]() {
+            selectRow();
+            QPen pen = m_swrWidget->graph(row+1)->pen();
+            QColor color = QColorDialog::getColor(pen.color(), this);
+            if (color.isValid())
+                changeMeasurmentsColor(row, color);
+        });
+        menu.addAction(tr("Rename..."), this, [this, row, selectRow]() {
+            selectRow();
+            m_measurements->renameMeasurement(row);
+        });
+        menu.addAction(tr("Save as..."), this, [this, row, selectRow]() {
+            selectRow();
+            exportMeasurementRow(row);
+        });
+        menu.addAction(tr("Delete"), this, [this, row]() {
+            deleteMeasurementRow(row);
+        });
     }
+    if (m_measurements->getMeasurementLength() > 0) {
+        if (row != -1)
+            menu.addSeparator();
+        menu.addAction(tr("Clear All"), this, &MainWindow::clearAllMeasurements);
+    }
+    if (!menu.isEmpty())
+        menu.exec(ui->tableWidget_measurments->mapToGlobal(pos));
 }
 
 void MainWindow::changeMeasurmentsColor(int _row, QColor& _color)

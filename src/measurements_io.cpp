@@ -129,6 +129,7 @@ void Measurements::loadData(QString path)
         QString nextName = QString("%1> %2").arg(next, 2, 10, QChar('0')).arg(list.last());
         //on_newMeasurement(nextName);
         on_newMeasurement(nextName, fqMinHz, fqMaxHz, dots);
+        m_measurements.last().dirty = false; // loaded from a file, see measurement::dirty's own comment
 
         ProgressDlg* progressDlg = new ProgressDlg();
         progressDlg->setValue(0);
@@ -384,6 +385,7 @@ void Measurements::importData(QString _name, bool /*user_format*/)
         list = _name.split("\\");
     }
     on_newMeasurement(list.last());
+    m_measurements.last().dirty = false; // loaded from a file, see measurement::dirty's own comment
 
     QFile file(_name);
     bool result = file.open(QFile::ReadOnly);
@@ -522,6 +524,39 @@ std::complex<double> Measurements::sparamFromFormat(int iFormat, double v1, doub
     default: // MA -- v1 is linear magnitude, v2 is angle in degrees
         return std::polar(v1, v2/180.0*M_PI);
     }
+}
+
+SParamPoint Measurements::zToSParam(double fq, std::complex<double> z11,
+                                     std::complex<double> z21, std::complex<double> z12,
+                                     std::complex<double> z22, double z0)
+{
+    // Standard 2-port Z-to-S identity (real, positive z0 -- Touchstone's
+    // "R n" applies the same reference impedance to both ports, so there's
+    // no need for the more general unequal-port-impedance form):
+    //
+    //   dZ  = (Z11+Z0)(Z22+Z0) - Z12*Z21
+    //   S11 = ((Z11-Z0)(Z22+Z0) - Z12*Z21) / dZ
+    //   S12 = 2*Z12*Z0 / dZ
+    //   S21 = 2*Z21*Z0 / dZ
+    //   S22 = ((Z11+Z0)(Z22-Z0) - Z12*Z21) / dZ
+    std::complex<double> zRef(z0, 0.0);
+    std::complex<double> cross = z12 * z21;
+    std::complex<double> dZ = (z11 + zRef) * (z22 + zRef) - cross;
+
+    SParamPoint sp;
+    sp.fq = fq;
+    if (std::abs(dZ) > 0.0) {
+        sp.s11 = ((z11 - zRef) * (z22 + zRef) - cross) / dZ;
+        sp.s12 = (2.0 * z12 * zRef) / dZ;
+        sp.s21 = (2.0 * z21 * zRef) / dZ;
+        sp.s22 = ((z11 + zRef) * (z22 - zRef) - cross) / dZ;
+    } else {
+        // dZ == 0 is a degenerate/singular network at this frequency
+        // (division would be NaN/Inf) -- leave this point at a flat zero
+        // rather than poisoning the whole trace with a non-finite value.
+        sp.s11 = sp.s12 = sp.s21 = sp.s22 = std::complex<double>(0.0, 0.0);
+    }
+    return sp;
 }
 
 // std::arg() always wraps into (-180, 180] degrees. A real transmission
@@ -784,17 +819,15 @@ void Measurements::importData(QString _name)
             fqMin = qMin(fqMin, data.fq);
             fqMax = qMax(fqMax, data.fq);
 
-            // iUnit==1 (S) only -- a 2-port Z-parameter file (Z, RI is a
-            // real, allowed combination per the check above) would put
-            // Z21/Z12/Z22 in these same 9 columns, not S21/S12/S22. Those
-            // are a different physical quantity (ohms, not a unitless
-            // ratio) and would need an actual Z-to-S 2-port matrix
-            // conversion to display correctly -- not done here. Silently
-            // treating them as S-parameters would mislabel real data
-            // (wrong units on the S21 tab, Markers, exports) rather than
-            // just leaving it out, so skip populating dataSParam entirely
-            // for a 2-port Z file; the S11-equivalent R/X above (already
-            // correctly converted, iUnit==2 branch) is unaffected.
+            // A 2-port Z-parameter file (Z, RI is a real, allowed
+            // combination per the check above) puts Z21/Z12/Z22 in these
+            // same 9 columns, not S21/S12/S22 -- a different physical
+            // quantity (ohms, not a unitless ratio). #7: these used to be
+            // silently skipped entirely rather than converted; now run
+            // through zToSParam()'s real Z-to-S 2-port matrix conversion,
+            // same as s11c already is via the iUnit==2 branch above for
+            // the RawData R/X. S-parameter files (iUnit==1) need no
+            // conversion -- s11c/s21/s12/s22 are already S-parameters.
             if (lineIs2Port && (iUnit == 1))
             {
                 SParamPoint sp;
@@ -805,9 +838,17 @@ void Measurements::importData(QString _name)
                 sp.s22 = sparamFromFormat(iFormat, s22p1, s22p2);
                 sparamArray.append(sp);
             }
+            else if (lineIs2Port && (iUnit == 2))
+            {
+                std::complex<double> z21 = sparamFromFormat(iFormat, s21p1, s21p2);
+                std::complex<double> z12 = sparamFromFormat(iFormat, s12p1, s12p2);
+                std::complex<double> z22 = sparamFromFormat(iFormat, s22p1, s22p2);
+                sparamArray.append(zToSParam(f*fqmul, s11c, z21, z12, z22, Z0));
+            }
         }while (!line.isNull());
 
         on_newMeasurement(list.last(), static_cast<qint64>(fqMin*1000000), static_cast<qint64>(fqMax*1000000), iPoints);
+        m_measurements.last().dirty = false; // loaded from a file, see measurement::dirty's own comment
         foreach (auto data, rawArray) {
             on_newData(data);
         }
@@ -899,6 +940,7 @@ void Measurements::importData(QString _name)
                 }
             }
             on_newMeasurement(list.last(), static_cast<qint64>(fqMin*1000000), static_cast<qint64>(fqMax*1000000), rawArray.length());
+            m_measurements.last().dirty = false; // loaded from a file, see measurement::dirty's own comment
             foreach (auto data, rawArray) {
                 on_newData(data);
             }
@@ -953,6 +995,7 @@ void Measurements::importData(QString _name)
                 }
             }
             on_newMeasurement(list.last(), static_cast<qint64>(fqMin*1000000), static_cast<qint64>(fqMax*1000000), rawArray.length());
+            m_measurements.last().dirty = false; // loaded from a file, see measurement::dirty's own comment
             foreach (auto data, rawArray) {
                 on_newData(data);
             }

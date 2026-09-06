@@ -114,6 +114,8 @@ Measurements::Measurements(QObject *parent) : QObject(parent),
     m_settings->beginGroup("Measurements");
     m_graphHintEnabled = m_settings->value("GraphHintEnabled",true).toBool();
     m_graphBriefHintEnabled = m_settings->value("GraphBriefHintEnabled",true).toBool();
+    m_s21ShowS21 = m_settings->value("S21ShowS21",true).toBool();
+    m_s21ShowS12 = m_settings->value("S21ShowS12",false).toBool();
     m_settings->endGroup();
 
     m_settings->beginGroup("Cable");
@@ -154,6 +156,8 @@ Measurements::~Measurements()
     m_settings->beginGroup("Measurements");
     m_settings->setValue("GraphHintEnabled",m_graphHintEnabled);
     m_settings->setValue("GraphBriefHintEnabled",m_graphBriefHintEnabled);
+    m_settings->setValue("S21ShowS21",m_s21ShowS21);
+    m_settings->setValue("S21ShowS12",m_s21ShowS12);
     m_settings->endGroup();
 
     m_settings->beginGroup("OneFqWidget");
@@ -219,59 +223,84 @@ void Measurements::setWidgets(CustomPlot * swr,   CustomPlot * phase,
         //m_graphBriefHint->setTextColor("black");
         setBriefHintColor();
     }
-    connect(m_tableWidget, &QTableWidget::cellClicked, [=](int row, int col) {
-        if (col == COL_MENU) {
-            measurement& mm = m_measurements[row];
-            QString prefix;
-            QString name = mm.name;
-            int pos = name.indexOf("> ");
-            if (pos != -1) {
-                prefix = name.left(pos+2);
-                name = name.mid(pos+2);
-            }
-            QInputDialog dlg;
-            QString text;
-            dlg.setLabelText(tr("Measurement name:"));
-            dlg.setTextValue(name);
-            if (dlg.exec() == QDialog::Accepted) {
-                text = dlg.textValue();
-            }
+}
 
-            if (!text.isEmpty()) {
-                mm.name = prefix + text;
+// Was the click handler for the measurements table's now-removed pencil
+// column (COL_MENU) -- rename lives on the right-click context menu now
+// (MainWindow::on_tableWidgetMeasurmentsContextMenu()), which calls this
+// directly with the row under the cursor instead of a clicked cell's.
+void Measurements::renameMeasurement(int row)
+{
+    if (row < 0 || row >= m_measurements.length())
+        return;
+    measurement& mm = m_measurements[row];
+    QString prefix;
+    QString name = mm.name;
+    int pos = name.indexOf("> ");
+    if (pos != -1) {
+        prefix = name.left(pos+2);
+        name = name.mid(pos+2);
+    }
+    QInputDialog dlg;
+    QString text;
+    dlg.setLabelText(tr("Measurement name:"));
+    dlg.setTextValue(name);
+    if (dlg.exec() == QDialog::Accepted) {
+        text = dlg.textValue();
+    }
 
-                m_tableWidget->setColumnWidth(COL_NAME, COL_NAME_WD);
-                QTableWidgetItem* itm = m_tableWidget->item(row, COL_NAME);
-                QFontMetrics fm(itm->font());
-                int width = COL_NAME_WD;
-                QString elided = fm.elidedText(mm.name, Qt::ElideRight, width);
-                m_tableWidget->item(row, COL_NAME)->setText(elided);
+    if (!text.isEmpty()) {
+        mm.name = prefix + text;
+        mm.dirty = true; // see measurement::dirty's own comment
+        m_tableWidget->item(row, COL_POINTS)->setText(pointsCellText(mm));
 
-                QString str = mm.name + tr("\nDouble-click an item to rescale the chart.\nRight-click an item to change color");
-                m_tableWidget->item(row, COL_NAME)->setToolTip(str);
+        m_tableWidget->setColumnWidth(COL_NAME, COL_NAME_WD);
+        QTableWidgetItem* itm = m_tableWidget->item(row, COL_NAME);
+        QFontMetrics fm(itm->font());
+        int width = COL_NAME_WD;
+        QString elided = fm.elidedText(mm.name, Qt::ElideRight, width);
+        m_tableWidget->item(row, COL_NAME)->setText(elided);
 
-                // S21 tab's legend labels this measurement's 4 graphs with
-                // its name as a prefix -- see on_newMeasurement()'s
-                // identical s21NamePrefix. Keep them in sync on rename
-                // regardless of whether this row is the one currently
-                // shown in the legend: updateS21Legend()'s
-                // QCPPlottableLegendItem reads each graph's name() live at
-                // paint time, so a graph whose name was never updated
-                // would still show the old one whenever its row is next
-                // selected.
-                int s21Base = row*4 + 1;
-                if (s21Base+3 < m_s21Widget->graphCount()) {
-                    const QString s21NamePrefix = mm.name.isEmpty() ? QString() : (mm.name + QStringLiteral(" - "));
-                    m_s21Widget->graph(s21Base+0)->setName(s21NamePrefix + tr("S21 (dB)"));
-                    m_s21Widget->graph(s21Base+1)->setName(s21NamePrefix + tr("S21 (deg)"));
-                    m_s21Widget->graph(s21Base+2)->setName(s21NamePrefix + tr("S12 (dB)"));
-                    m_s21Widget->graph(s21Base+3)->setName(s21NamePrefix + tr("S12 (deg)"));
-                    m_s21Widget->replot();
-                }
-            }
+        QString str = mm.name + tr("\nDouble-click an item to rescale the chart.\nRight-click an item for more options");
+        m_tableWidget->item(row, COL_NAME)->setToolTip(str);
+
+        // S21 tab's legend labels this measurement's 4 graphs with
+        // its name as a prefix -- see on_newMeasurement()'s
+        // identical s21NamePrefix. Keep them in sync on rename
+        // regardless of whether this row is the one currently
+        // shown in the legend: updateS21Legend()'s
+        // QCPPlottableLegendItem reads each graph's name() live at
+        // paint time, so a graph whose name was never updated
+        // would still show the old one whenever its row is next
+        // selected.
+        int s21Base = row*4 + 1;
+        if (s21Base+3 < m_s21Widget->graphCount()) {
+            const QString s21NamePrefix = mm.name.isEmpty() ? QString() : (mm.name + QStringLiteral(" - "));
+            m_s21Widget->graph(s21Base+0)->setName(s21NamePrefix + tr("S21 (dB)"));
+            m_s21Widget->graph(s21Base+1)->setName(s21NamePrefix + tr("S21 (deg)"));
+            m_s21Widget->graph(s21Base+2)->setName(s21NamePrefix + tr("S12 (dB)"));
+            m_s21Widget->graph(s21Base+3)->setName(s21NamePrefix + tr("S12 (deg)"));
+            m_s21Widget->replot();
         }
-    });
+    }
+}
 
+// See measurements.h's own comment. number is a plain m_measurements/
+// table row (0=oldest) -- despite Export's own updateDetails()/
+// suggestedPath() resolving m_measureNumber via getMeasurement() (which
+// indexes backwards from newest), the actual export/save calls
+// (exportData()/exportSParamData()/saveData()) all bounds-check and index
+// it directly against m_measurements, unreversed -- confirmed by reading
+// each. Matches deleteMeasurementRow()'s own row, mainwindow_measurements_
+// io.cpp.
+void Measurements::clearDirty(int number)
+{
+    if (number < 0 || number >= m_measurements.length())
+        return;
+    measurement& mm = m_measurements[number];
+    mm.dirty = false;
+    if (m_tableWidget != nullptr && number < m_tableWidget->rowCount() && m_tableWidget->item(number, COL_POINTS) != nullptr)
+        m_tableWidget->item(number, COL_POINTS)->setText(pointsCellText(mm));
 }
 
 // See the comment on m_graphHintBox/m_graphHintLabel's constructor spot
@@ -460,8 +489,66 @@ void Measurements::updateS21Legend(int row)
     int base = row*4 + 1; // +1: graph(0) is a non-measurement placeholder, see mainwindow.cpp
     if (base+3 >= m_s21Widget->graphCount())
         return;
-    for (int i = 0; i < 4; i++)
+    // Skip whichever pair (S21 dB/deg, S12 dB/deg) is currently toggled
+    // off (setS21ShowS21()/setS21ShowS12()) -- a legend entry for a trace
+    // that isn't actually drawn is just confusing.
+    for (int i = 0; i < 4; i++) {
+        if ((i < 2 && !m_s21ShowS21) || (i >= 2 && !m_s21ShowS12))
+            continue;
         m_s21Widget->legend->addItem(new QCPPlottableLegendItem(m_s21Widget->legend, m_s21Widget->graph(base+i)));
+    }
+}
+
+void Measurements::setS21ShowS21(bool show)
+{
+    m_s21ShowS21 = show;
+    updateS21GraphVisibility();
+}
+
+void Measurements::setS21ShowS12(bool show)
+{
+    m_s21ShowS12 = show;
+    updateS21GraphVisibility();
+}
+
+// See measurements.h's own comment on the m_s21ShowS21/m_s21ShowS12
+// declarations for why this exists.
+void Measurements::updateS21GraphVisibility()
+{
+    if (m_s21Widget == nullptr)
+        return;
+    for (int row = 0; row < m_measurements.length(); row++) {
+        int base = row*4 + 1; // +1: graph(0) is a non-measurement placeholder, see mainwindow.cpp
+        if (base+3 >= m_s21Widget->graphCount())
+            continue;
+        bool rowVisible = m_measurements.at(row).visible;
+        m_s21Widget->graph(base+0)->setVisible(rowVisible && m_s21ShowS21); // S21 dB
+        m_s21Widget->graph(base+1)->setVisible(rowVisible && m_s21ShowS21); // S21 deg
+        m_s21Widget->graph(base+2)->setVisible(rowVisible && m_s21ShowS12); // S12 dB
+        m_s21Widget->graph(base+3)->setVisible(rowVisible && m_s21ShowS12); // S12 deg
+    }
+    // The legend's contents (which of a selected row's 4 entries show)
+    // depend on these same toggles -- refresh whichever row is actually
+    // selected, same as on_tableWidget_measurments_cellClicked() would.
+    // Was m_tableWidget->currentRow() -- wrong: every row-selecting call
+    // in this file (here included, via on_newMeasurement()/deleteRow())
+    // selects via selectionModel()->select(..., Select | Rows), which
+    // never sets Qt's separate "current index" concept, only a real
+    // mouse click does. currentRow() (== currentIndex().row()) stayed -1
+    // until the user clicked a row by hand, which is exactly why the
+    // legend only ever came back after doing that -- confirmed live
+    // 2026-09-06. selectedRows() reflects the actual (highlighted)
+    // selection regardless of how it was set, empty is the correct "no
+    // selection" case here (updateS21Legend() already treats an
+    // out-of-range row as "just clear it").
+    int selectedRow = -1;
+    if (m_tableWidget != nullptr && m_tableWidget->selectionModel() != nullptr) {
+        QModelIndexList sel = m_tableWidget->selectionModel()->selectedRows();
+        if (!sel.isEmpty())
+            selectedRow = sel.first().row();
+    }
+    updateS21Legend(selectedRow);
+    m_s21Widget->replot();
 }
 
 // See measurements.h -- one shared formatter for the 3 places that write
@@ -472,7 +559,11 @@ QString Measurements::pointsCellText(const measurement& mm)
 {
     if (mm.dataRX.isEmpty())
         return "--";
-    return QString::number(mm.dataRX.length()) + (mm.dataSParam.isEmpty() ? " (s1p)" : " (s2p)");
+    QString text = QString::number(mm.dataRX.length()) + (mm.dataSParam.isEmpty() ? " (s1p)" : " (s2p)");
+    // See measurement::dirty's own comment.
+    if (mm.dirty)
+        text += " *";
+    return text;
 }
 
 void Measurements::on_newMeasurement(QString name, qint64 from, qint64 to, qint32 dots)
@@ -507,13 +598,13 @@ void Measurements::on_newMeasurement(QString name, qint64 from, qint64 to, qint3
     QTableWidgetItem *item = m_tableWidget->item(row,COL_NAME);
 
     //item->setToolTip(tips);
-    QString str = name + tr("\nDouble-click an item to rescale the chart.\nRight-click an item to change color");
+    QString str = name + tr("\nDouble-click an item to rescale the chart.\nRight-click an item for more options");
     item->setToolTip(str);
     for (int i=0; i<m_tableWidget->rowCount(); i++)
     {
         QTableWidgetItem *item = m_tableWidget->item(i,COL_NAME);
         QString name = item->text();
-        QString str = name + tr("\nDouble-click an item to rescale the chart.\nRight-click an item to change color");
+        QString str = name + tr("\nDouble-click an item to rescale the chart.\nRight-click an item for more options");
         item->setToolTip(str);
     }
     m_measuringInProgress = true;
@@ -684,25 +775,29 @@ void Measurements::on_newMeasurement(QString name)
 
     QPen s21Pen;
     s21Pen.setWidth(ACTIVE_GRAPH_PEN_WIDTH);
-    // All 4 solid now -- S21 used to be dashed and S12 solid so a
-    // reciprocal network (S21==S12, the normal case for passive
-    // components: cables, filters, attenuators) wouldn't paint an
-    // opaque S12 directly over an identical, fully-hidden S21. That
-    // reasoning predated getColor() reliably giving each of the 4 traces
-    // its own distinct hue (see getColor()'s own comment, fixed
-    // 2026-09-04) -- before that fix, indices past the palette collapsed
-    // to the same red, which is presumably why dashing was added as
-    // insurance in the first place. Color alone now tells S21 from S12
-    // apart even when the two curves perfectly overlap, and a thick
-    // (ACTIVE_GRAPH_PEN_WIDTH) dashed line reads poorly at typical zoom
-    // levels -- the dashes themselves were the reported complaint.
-    //
-    // getColor()'s palette isn't uniformly transparent -- index 3
-    // (QColor(255,127,0,255)) is the one fully-opaque entry, everything
-    // else alpha 150. Force a consistent, semi-transparent alpha on all 4
-    // traces here so overlap is never a fully-opaque line hiding another,
-    // regardless of which getColor() index a given trace lands on.
-    auto s21Color = [](int idx) { QColor c = getColor(idx); c.setAlpha(150); return c; };
+    // All 4 solid and fully opaque -- S21 used to be dashed and every
+    // trace semi-transparent (alpha 150) so a reciprocal network
+    // (S21==S12, the normal case for passive components: cables,
+    // filters, attenuators) wouldn't paint an opaque S12 directly over
+    // an identical, fully-hidden S21. Dropped the dash 2026-09-04 (color
+    // alone was judged enough to tell S21 from S12 apart); the
+    // transparency stayed, but that just traded "S21 fully hidden" for a
+    // different, equally confusing problem -- two *different*
+    // measurements' overlapping traces blend into a third color with no
+    // matching legend entry (reported 2026-09-06: a green and a red
+    // measurement's traces showing orange). Force full opacity here
+    // instead: with the S12 toggle now defaulting off (see
+    // setShowS21()/setShowS12()), the common reciprocal-overlap case
+    // mostly doesn't even reach the chart at the same time anymore, and
+    // when S12 *is* turned on for a genuinely non-reciprocal device
+    // (amplifier, isolator), the two curves are expected to diverge
+    // rather than coincide, so opaque-hiding-opaque isn't the live
+    // concern that it was.
+    // getColor()'s own palette isn't uniformly opaque either (index 3 is
+    // the only alpha-255 entry, everything else alpha 150) -- force full
+    // opacity explicitly rather than just trusting whatever a given
+    // index happens to return.
+    auto s21Color = [](int idx) { QColor c = getColor(idx); c.setAlpha(255); return c; };
     s21Pen.setStyle(Qt::SolidLine);
     s21Pen.setColor(s21Color(m_currentIndex));
     m_s21Widget->graph(s21GraphCount-4)->setPen(s21Pen); // S21 dB
@@ -734,24 +829,18 @@ void Measurements::on_newMeasurement(QString name)
         m_measurements.last().name = nextName;
         m_tableWidget->setRowCount(0);
 
-        QIcon icon;
-        icon.addPixmap(QPixmap(":/new/prefix1/pencil.png"), QIcon::Normal, QIcon::Off);
-
         const int cell_side = 24;
         m_tableWidget->setColumnCount(MEASUREMENTS_TABLE_COLUMNS);
-        m_tableWidget->setIconSize(QSize(16, 16));
         m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_VISIBLE, QHeaderView::Fixed);
         // Interactive, not Fixed: the Name column's width was previously
         // locked, so a long measurement name (elided to fit) couldn't be
         // widened to actually read it -- user-draggable now.
         m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_NAME, QHeaderView::Interactive);
         m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_POINTS, QHeaderView::Fixed);
-        m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_MENU, QHeaderView::Fixed);
         m_tableWidget->horizontalHeader()->resizeSection(COL_VISIBLE, cell_side);
         // Was 50 -- wide enough for a bare point count, not for the
         // "(s1p)"/"(s2p)" tag now appended (see pointsCellText()).
         m_tableWidget->horizontalHeader()->resizeSection(COL_POINTS, 75);
-        m_tableWidget->horizontalHeader()->resizeSection(COL_MENU, cell_side);
 
         m_tableWidget->setRowCount(m_measurements.length());
         for(int i = 0; i < m_measurements.length(); ++i)
@@ -781,11 +870,6 @@ void Measurements::on_newMeasurement(QString name)
             item->setTextAlignment(Qt::AlignCenter);
             item->setText(pointsCellText(mm));
             m_tableWidget->setItem(i,COL_POINTS, item);
-
-            item = new QTableWidgetItem();
-            item->setIcon(icon);
-            item->setSizeHint(QSize(cell_side, cell_side));
-            m_tableWidget->setItem(i,COL_MENU, item);
         }
 
         m_tableWidget->reset();
@@ -793,6 +877,13 @@ void Measurements::on_newMeasurement(QString name)
         m_tableWidget->selectionModel()->select(myIndex,QItemSelectionModel::Select | QItemSelectionModel::Rows);
         m_tableWidget->scrollToBottom();
     }
+
+    // New measurement's 4 S21 graphs default to QCPGraph's own
+    // visible=true regardless of the current S21/S12 toggles -- apply the
+    // real combined visibility now rather than leaving them briefly wrong
+    // until some other action (a table click, a checkbox) happens to
+    // recompute it.
+    updateS21GraphVisibility();
 
     // A new measurement is always the selected one (table selection above,
     // when it runs; singlePoint/name-empty measurements skip that block but
@@ -1789,7 +1880,7 @@ void Measurements::on_isRangeChanged(bool _range)
         QTableWidgetItem *item = m_tableWidget->item(i,COL_NAME);
         //item->setToolTip(tips);
         QString name = item->text();
-        QString str = name + tr("\nDouble-click an item to rescale the chart.\nRight-click an item to change color");
+        QString str = name + tr("\nDouble-click an item to rescale the chart.\nRight-click an item for more options");
         item->setToolTip(str);
     }
 }
@@ -1955,11 +2046,14 @@ void Measurements::toggleVisibility(int row, bool _state)
         m_rlWidget->graph(row+1)->setVisible(_state);
         mm.smithCurve->setVisible(_state);
 
+        // Combined with the global S21/S12 toggles (setS21ShowS21()/
+        // setS21ShowS12()) -- this row's own checkbox can't force a
+        // trace on that the S21 tab currently has toggled off entirely.
         int row2 = row*4 + 1; // 4 graphs per measurement now, not 2 -- see deleteRow()'s own comment
-        m_s21Widget->graph(row2+0)->setVisible(_state);
-        m_s21Widget->graph(row2+1)->setVisible(_state);
-        m_s21Widget->graph(row2+2)->setVisible(_state);
-        m_s21Widget->graph(row2+3)->setVisible(_state);
+        m_s21Widget->graph(row2+0)->setVisible(_state && m_s21ShowS21);
+        m_s21Widget->graph(row2+1)->setVisible(_state && m_s21ShowS21);
+        m_s21Widget->graph(row2+2)->setVisible(_state && m_s21ShowS12);
+        m_s21Widget->graph(row2+3)->setVisible(_state && m_s21ShowS12);
 
         int row1 = row*3 + 1;
         m_rpWidget->graph(row1+0)->setVisible(_state);

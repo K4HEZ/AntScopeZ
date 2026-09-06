@@ -49,19 +49,23 @@
 // above-this-many-points threshold (also g_-global, also General tab).
 #define POINTS_MAX 10000
 
-#define MEASUREMENTS_TABLE_COLUMNS 4
+#define MEASUREMENTS_TABLE_COLUMNS 3
 // Order here is the on-screen column order (every table-building/-updating
 // site uses these symbolic names, not hardcoded indices, so reordering the
-// enum alone reorders the columns) -- COL_MENU (the rename pencil) moved
-// left of COL_NAME 2026-09-05, was to its right.
+// enum alone reorders the columns). COL_MENU (the rename pencil) removed
+// 2026-09-06 -- rename moved to the measurements table's right-click menu
+// (MainWindow::on_tableWidgetMeasurmentsContextMenu()), along with Select
+// Color/Save as/Delete/Clear All, so the dedicated column/icon isn't
+// needed any more.
 enum {
     COL_VISIBLE,
-    COL_MENU,
     COL_NAME,
     // Actual points received for that scan (Measurements::on_measurementComplete()) --
     // "--" until the scan finishes. Added to make a device silently returning
     // fewer points than requested (see analyzer/nanovna_analyzer.cpp,
-    // HID/BLE transports) visible without reading a debug log.
+    // HID/BLE transports) visible without reading a debug log. A trailing
+    // " *" (Measurements::pointsCellText()) marks a dirty measurement --
+    // scanned or renamed since the last save, see measurement::dirty.
     COL_POINTS
 
 };
@@ -360,6 +364,22 @@ private:
     void autoCalibrate();
     void showErrorPopup(QString text, int msDuration);
     void changeMeasurmentsColor(int _row, QColor& _color);
+    // Right-click context menu (on_tableWidgetMeasurmentsContextMenu())
+    // actions, each keyed off the row under the cursor rather than
+    // whatever the table's own selection happens to be -- see that
+    // function's own comment. deleteMeasurementRow()/clearAllMeasurements()
+    // replace the old measurmentsDeleteBtn/measurmentsClearBtn click
+    // handlers (buttons removed 2026-09-06, see todo.txt); both warn first
+    // if Settings > General's "warn before deleting/clearing dirty
+    // measurements" is on and anything targeted is dirty.
+    // exportMeasurementRow() replaces the old measurmentsSaveBtn/
+    // on_actionExport_triggered() split -- File > Save and the context
+    // menu's "Save as..." both just open the Export dialog for a given
+    // row now (Harold's call: no separate quick-.asd dialog, and the
+    // Export dialog itself gains an "AntScopeZ asd" option).
+    void deleteMeasurementRow(int row);
+    void clearAllMeasurements();
+    void exportMeasurementRow(int row);
     void changeColorTheme(int themeIndex);
     // Makes `index` the persisted active theme: writes "activeTheme" to
     // QSettings (the one thing changeColorTheme() itself never does --
@@ -451,10 +471,16 @@ public slots:
     void on_analyzerFound(int index);
     void on_analyzerNameFound(QString name);
     void on_deviceDisconnected();
-    // Menu action (issue #34) -- the backend (AnalyzerPro::on_disconnectDevice())
-    // already existed and was used internally (Settings, licenseagent), just
-    // had no user-facing entry point. No-ops if nothing is connected.
-    void on_disconnectAnalyzerRequested();
+    // Menu action (issue #34, also filed independently upstream as #3) --
+    // the backend (AnalyzerPro::on_disconnectDevice()) already existed and
+    // was used internally (Settings, licenseagent), just had no user-facing
+    // entry point. Reuses on_deviceDisconnected() (via AnalyzerPro::
+    // deviceDisconnected()) for all UI cleanup -- no separate path needed,
+    // since on_disconnectDevice() already nulls m_baseAnalyzer *before*
+    // emitting, so on_deviceDisconnected()'s own trailing searchAnalyzer()
+    // call (guarded on m_baseAnalyzer != nullptr) is a no-op either way,
+    // same as it already is for an unexpected drop.
+    void on_actionDisconnectAnalyzer_triggered();
     // Rebuilds the window title from current state (m_analyzerConnected/
     // m_connectedDeviceName) in the active language -- the one place that
     // actually composes it, called from both connect/disconnect and from
@@ -516,14 +542,10 @@ private slots:
     void on_actionUserGuide_triggered();
     void on_actionMarkerComparison_triggered();
     void on_actionTDRMeasurement_triggered();
-    void on_measurmentsDeleteBtn_clicked();
     void on_tableWidget_measurments_cellClicked(int row, int column);
     void on_tableWidget_measurments_cellActivated(int row, int column);
     void on_actionScreenshot_triggered();
     void on_actionPrint_triggered();
-    void on_measurmentsSaveBtn_clicked();
-    void on_measurementsOpenBtn_clicked();
-    void measurementsClearBtn_clicked(bool);
     void on_actionImport_triggered();
     void on_changeMeasureSystemMetric (bool state);
     void on_Z0Changed(double _Z0);

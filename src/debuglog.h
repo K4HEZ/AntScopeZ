@@ -4,7 +4,7 @@
 #include <QByteArray>
 
 // Raw TX/RX logging for the analyzer interfaces (Serial/COM, USB/HID, BLE,
-// NanoVNA), gated per-interface by Settings' Developer tab "Debug Logging"
+// NanoVNA), gated per-interface by Settings' Analyzer tab "Debug Logging"
 // checkboxes. Deliberately session-only: the enable flags here are plain
 // in-memory statics, never persisted to the ini, so logging always starts
 // off and has to be turned on again each run (see the checkboxes' own

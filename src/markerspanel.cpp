@@ -4,6 +4,8 @@
 #include <QCoreApplication>
 #include <QHeaderView>
 #include <QMenu>
+#include <QContextMenuEvent>
+#include <algorithm>
 
 QMap<int, QString> MarkersHeaderColumn::m_mapHeader;
 
@@ -14,7 +16,8 @@ MarkersPanel::MarkersPanel(QWidget *parent) : QWidget(parent)
 
     m_table = new QTableWidget(this);
     m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    m_table->setSelectionMode(QAbstractItemView::NoSelection);
+    m_table->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_table->setSelectionBehavior(QAbstractItemView::SelectRows);
     m_table->verticalHeader()->setVisible(false);
     // Tab/Backtab move focus out of the table instead of cycling between
     // cells -- same reasoning as Presets::setTable() (presets.cpp).
@@ -183,6 +186,16 @@ void MarkersPanel::updateInfo(QList<QList<QVariant>>& info)
             row++;
         }
     }
+
+    // createHeader()'s own resizeColumnsToContents() only ever sees empty
+    // cells (this function, not updateMarkers(), is what actually fills
+    // in real values) -- so a column stayed sized to just its header
+    // label's width forever, however wide the real numbers turned out to
+    // be, until the user manually widened it themselves. Interactive
+    // resize mode (createHeader()) means this doesn't fight a manual
+    // resize permanently -- it just gets recomputed fresh next time real
+    // data changes, same as it would on first load.
+    m_table->resizeColumnsToContents();
 }
 
 void MarkersPanel::clearTable(void)
@@ -261,4 +274,90 @@ QMap<int, QString>& MarkersHeaderColumn::headerMap()
         m_mapHeader.insert(i++, QCoreApplication::translate("MarkersHeaderColumn", "S12 Phase°"));
     }
     return m_mapHeader;
+}
+
+void MarkersPanel::contextMenuEvent(QContextMenuEvent *event)
+{
+    QMenu menu;
+    menu.addAction(tr("Clear All Markers"), this, &MarkersPanel::on_clearAllMarkers);
+    menu.addAction(tr("Clear Empty Markers"), this, &MarkersPanel::on_clearEmptyMarkers);
+    menu.exec(event->globalPos());
+}
+
+QSet<int> MarkersPanel::getEmptyMarkers() const
+{
+    QSet<int> empty;
+
+    // Iterate through each marker row
+    for (int row = 0; row < m_table->rowCount(); ++row) {
+        // Get the marker number from column fieldNum (column 1)
+        QTableWidgetItem* numItem = m_table->item(row, 1);
+        if (numItem == nullptr)
+            continue;
+
+        bool ok = false;
+        int markerNum = numItem->text().toInt(&ok);
+        if (!ok)
+            continue;
+
+        // Check if all data columns (starting from column 4, after fixed columns)
+        // are invalid/blank for this marker.
+        // Fixed columns: fieldDelete (0), fieldNum (1), fieldSerie (2), fieldFQ (3)
+        // Data columns start at 4
+
+        bool hasValidData = false;
+        for (int col = 4; col < m_table->columnCount(); ++col) {
+            QTableWidgetItem* item = m_table->item(row, col);
+            if (item != nullptr && !item->text().isEmpty()) {
+                // Column has text -- check if it's a valid value (not DBL_MAX)
+                bool ok = false;
+                double val = item->text().toDouble(&ok);
+                if (ok && val != DBL_MAX) {
+                    hasValidData = true;
+                    break;
+                }
+            }
+        }
+
+        // If no valid data found in any column for this marker, it's empty
+        if (!hasValidData) {
+            empty.insert(markerNum);
+        }
+    }
+
+    return empty;
+}
+
+void MarkersPanel::on_clearAllMarkers()
+{
+    // Remove all markers: iterate backwards to avoid index shifting issues.
+    // Marker numbers (1, 2, 3...) are 1-based, but removeMarker() expects
+    // 0-based list indices, so subtract 1.
+    for (int i = m_table->rowCount() - 1; i >= 0; --i) {
+        QTableWidgetItem* numItem = m_table->item(i, 1);
+        if (numItem != nullptr) {
+            bool ok = false;
+            int markerNum = numItem->text().toInt(&ok);
+            if (ok) {
+                emit removeMarker(markerNum - 1);
+            }
+        }
+    }
+}
+
+void MarkersPanel::on_clearEmptyMarkers()
+{
+    QSet<int> empty = getEmptyMarkers();
+
+    // Convert set to sorted list, then iterate in reverse (highest index first).
+    // This prevents renumbering issues: when we delete marker N, all markers
+    // with index > N stay unchanged, so we won't accidentally delete the wrong
+    // marker next iteration. Marker numbers (1, 2, 3...) are 1-based,
+    // but removeMarker() expects 0-based list indices, so subtract 1.
+    QList<int> sortedEmpty = empty.values();
+    std::sort(sortedEmpty.begin(), sortedEmpty.end(), std::greater<int>());
+
+    for (int markerNum : sortedEmpty) {
+        emit removeMarker(markerNum - 1);
+    }
 }
