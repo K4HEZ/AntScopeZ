@@ -146,9 +146,9 @@ void MainWindow::on_bandChanged(QString band)
 
         QStringList* bands = m_BandsMap[band];
         setBands(m_swrWidget, bands, MIN_SWR, MAX_SWR);
-        setBands(m_phaseWidget, bands, -180, 180);
-        setBands(m_rsWidget, bands, -2000, 2000);
-        setBands(m_rpWidget, bands, -2000, 2000);
+        setBands(m_phaseWidget, bands, -190, 190); // see setWidgetsSettings()'s comment (issue #4)
+        setBands(m_rsWidget, bands, -5000, 5000); // see setWidgetsSettings()'s comment (issue #5)
+        setBands(m_rpWidget, bands, -5000, 5000);
         setBands(m_rlWidget, bands, 0, 50);
 #if USER_DEFINED_FEATURE
         setBands(m_userWidget, bands, MIN_USER_RANGE, MAX_USER_RANGE);

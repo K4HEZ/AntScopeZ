@@ -44,6 +44,12 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Fixed
 
+- Phase chart: the 180 deg line clipped right at the top/bottom edge of
+  the chart (#4). Y-axis widened from +/-180 to +/-190 deg so the full
+  swing sits visibly inside the plot area.
+- Z=R+jX / Z=R‖jX (Rs/Rp) charts couldn't scale out far enough to see a
+  real high-impedance point, e.g. a badly mismatched antenna feedpoint
+  (#5). Y-axis ceiling raised from +/-2000 to +/-5000 Ohm.
 - ITU region band data (`shared/itu-regions-defaults.txt`, #2): Region 1
   and Region 3 both had "70sm"/"23sm" instead of "70cm"/"23cm" (Region 2
   already had it right). Region 2 was also missing the 33cm (902-928 MHz)

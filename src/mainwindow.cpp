@@ -1364,7 +1364,11 @@ void MainWindow::setWidgetsSettings()
 
     //-------Phase Widget---------------------------------------------
     m_phaseWidget->addGraph();//graph(0)
-    setBands(m_phaseWidget, bands, -180, 180);
+    // y-range widened to +/-190 (issue #4) -- the real data/band-highlight
+    // range is still the physical +/-180 deg swing, but a +/-180 axis
+    // range put the 180 deg line exactly on the plot's top/bottom edge,
+    // clipping it. +/-190 leaves 180 deg visibly inside the plot area.
+    setBands(m_phaseWidget, bands, -190, 190);
     m_phaseWidget->graph(0)->setPen(pen);
     m_phaseWidget->xAxis->setLabel(tr("Frequency, kHz"));
     m_phaseWidget->yAxis->setLabel(tr("Phase, Angle"));
@@ -1381,12 +1385,12 @@ void MainWindow::setWidgetsSettings()
     // code also went through on every interactive tick, not just app code.
     // Restored as clampAxisRange() (above setWidgetsSettings()) instead of
     // back inside qcustomplot.cpp/.h -- see that function's comment.
-    m_phaseWidget->yAxis->setRange(-180, 180);
+    m_phaseWidget->yAxis->setRange(-190, 190);
     m_phaseWidget->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
     m_phaseWidget->axisRect()->setRangeZoom(Qt::Horizontal);
     m_phaseWidget->axisRect()->setRangeDrag(Qt::Horizontal | Qt::Vertical);
     clampAxisRange(m_phaseWidget->xAxis, 0, 10000000);
-    clampAxisRange(m_phaseWidget->yAxis, -180, 180);
+    clampAxisRange(m_phaseWidget->yAxis, -190, 190);
     // See m_swrWidget->xAxis->setNumberFormat()'s comment just above.
     m_phaseWidget->xAxis->setNumberFormat("f");
     m_phaseWidget->xAxis->setNumberPrecision(0);
@@ -1399,7 +1403,10 @@ void MainWindow::setWidgetsSettings()
     //-------RSeries Widget------------------------------------------------
     m_rsWidget->addGraph();//graph(0)
     m_rsWidget->setAutoAddPlottableToLegend(false);
-    setBands(m_rsWidget, bands, -2000, 2000);
+    // Ceiling raised from +/-2000 to +/-5000 (issue #5) -- a real
+    // high-impedance point (e.g. a badly mismatched antenna feedpoint)
+    // couldn't be zoomed out far enough to see at all.
+    setBands(m_rsWidget, bands, -5000, 5000);
     m_rsWidget->graph(0)->setPen(pen);
     m_rsWidget->xAxis->setLabel(tr("Frequency, kHz"));
     m_rsWidget->yAxis->setLabel(tr("Rs, Ohm"));
@@ -1409,7 +1416,7 @@ void MainWindow::setWidgetsSettings()
     m_rsWidget->axisRect()->setRangeZoom(Qt::Horizontal);
     m_rsWidget->axisRect()->setRangeDrag(Qt::Horizontal | Qt::Vertical);
     clampAxisRange(m_rsWidget->xAxis, 0, 10000000);
-    clampAxisRange(m_rsWidget->yAxis, -2000, 2000);
+    clampAxisRange(m_rsWidget->yAxis, -5000, 5000);
     // See m_swrWidget->xAxis->setNumberFormat()'s comment above.
     m_rsWidget->xAxis->setNumberFormat("f");
     m_rsWidget->xAxis->setNumberPrecision(0);
@@ -1422,7 +1429,8 @@ void MainWindow::setWidgetsSettings()
     //-------RParallel Widget------------------------------------------------
     m_rpWidget->addGraph();//graph(0)
     m_rpWidget->setAutoAddPlottableToLegend(false);
-    setBands(m_rpWidget, bands, -2000, 2000);
+    // See m_rsWidget's identical +/-5000 comment above (issue #5).
+    setBands(m_rpWidget, bands, -5000, 5000);
     m_rpWidget->graph(0)->setPen(pen);
     m_rpWidget->xAxis->setLabel(tr("Frequency, kHz"));
     m_rpWidget->yAxis->setLabel(tr("Rp, Ohm"));
@@ -1432,7 +1440,7 @@ void MainWindow::setWidgetsSettings()
     m_rpWidget->axisRect()->setRangeZoom(Qt::Horizontal);
     m_rpWidget->axisRect()->setRangeDrag(Qt::Horizontal | Qt::Vertical);
     clampAxisRange(m_rpWidget->xAxis, 0, 10000000);
-    clampAxisRange(m_rpWidget->yAxis, -2000, 2000);
+    clampAxisRange(m_rpWidget->yAxis, -5000, 5000);
     // See m_swrWidget->xAxis->setNumberFormat()'s comment above.
     m_rpWidget->xAxis->setNumberFormat("f");
     m_rpWidget->xAxis->setNumberPrecision(0);
