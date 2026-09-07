@@ -11,11 +11,16 @@
 // whichever one the cursor passes over. These require actual focus (click
 // or Tab in) first; otherwise the event is ignored, which Qt automatically
 // re-delivers to the parent so page/scroll-area scrolling isn't blocked.
+//
+// QAbstractSpinBox defaults to Qt::WheelFocus, which grants focus as *part
+// of* delivering the wheel event -- so checking hasFocus() in wheelEvent()
+// alone doesn't work, it's always already true by then. Explicitly forcing
+// Qt::StrongFocus (Tab + click, no wheel) in each constructor closes that.
 
 class NoScrollSpinBox : public QSpinBox
 {
 public:
-    using QSpinBox::QSpinBox;
+    explicit NoScrollSpinBox(QWidget *parent = nullptr);
 protected:
     void wheelEvent(QWheelEvent *event) override;
 };
@@ -23,7 +28,7 @@ protected:
 class NoScrollDoubleSpinBox : public QDoubleSpinBox
 {
 public:
-    using QDoubleSpinBox::QDoubleSpinBox;
+    explicit NoScrollDoubleSpinBox(QWidget *parent = nullptr);
 protected:
     void wheelEvent(QWheelEvent *event) override;
 };
@@ -31,7 +36,7 @@ protected:
 class NoScrollComboBox : public QComboBox
 {
 public:
-    using QComboBox::QComboBox;
+    explicit NoScrollComboBox(QWidget *parent = nullptr);
 protected:
     void wheelEvent(QWheelEvent *event) override;
 };
@@ -39,7 +44,7 @@ protected:
 class NoScrollSlider : public QSlider
 {
 public:
-    using QSlider::QSlider;
+    explicit NoScrollSlider(QWidget *parent = nullptr);
 protected:
     void wheelEvent(QWheelEvent *event) override;
 };
