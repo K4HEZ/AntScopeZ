@@ -69,6 +69,17 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   they draw nothing, matching an intentionally-empty `itu-regions.txt`.
   Also fixes `itu-regions.txt`/Settings' ITU Bands tab edits not
   clearing already-drawn bands when the new region has none.
+- Ported 3 Smith-chart fixes from RigExpert AntScope2 2.0.3 that never
+  made it across the QCustomPlot 1.x->2.x rewrite (#10): point
+  indexing that diverged across a Continuous "continue" (could corrupt
+  point ordering); the Smith trace losing its assigned color on every
+  "continue" (pen never reapplied after the curve was recreated); an
+  out-of-range crash risk hovering the Smith chart cursor (a bounds
+  clamp was already written in the code but commented out).
+- `Measurements::saveData()` silently did nothing (no file, no
+  warning) if the save path didn't contain ".asd" -- not guaranteed,
+  since the file dialog never calls `setDefaultSuffix()`. Appends the
+  extension instead of refusing to save (also from AntScope2 2.0.3, #10).
 
 ### Removed
 

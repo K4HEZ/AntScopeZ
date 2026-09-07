@@ -32,51 +32,57 @@ void Measurements::saveData(quint32 number, QString path)
     if (number >= (quint32)g_maxMeasurements)
         number = g_maxMeasurements-1;
 
-    if(path.indexOf(".asd") >= 0 )
+    // Was `if (path.indexOf(".asd") >= 0) { ... }` wrapping the whole
+    // function -- a path without ".asd" in it (FileDialog::getSaveFileName()
+    // doesn't call setDefaultSuffix(), so this isn't guaranteed) made
+    // saveData() silently do nothing at all: no file, no warning. Append
+    // the extension instead of refusing to save (matches RigExpert
+    // AntScope2 2.0.3's fix, issue #10).
+    if (path.indexOf(".asd") < 0)
+        path += ".asd";
+
+    QFile saveFile(path);
+
+    if (!saveFile.open(QIODevice::WriteOnly))
     {
-        QFile saveFile(path);
+        qWarning("Couldn't open save file.");
+        return;
+    }
 
-        if (!saveFile.open(QIODevice::WriteOnly))
+    QVector <RawData> data;
+    if(m_calibration != NULL)
+    {
+        if(m_calibration->getCalibrationEnabled())
         {
-            qWarning("Couldn't open save file.");
-            return;
-        }
-
-        QVector <RawData> data;
-        if(m_calibration != NULL)
-        {
-            if(m_calibration->getCalibrationEnabled())
-            {
-                data = m_measurements.at(number).dataRXCalib;
-            }else
-            {
-                data = m_measurements.at(number).dataRX;
-            }
+            data = m_measurements.at(number).dataRXCalib;
         }else
         {
             data = m_measurements.at(number).dataRX;
         }
-
-        //Dots
-        QJsonObject mainObj;
-        mainObj["DotsNumber"] = data.length();
-
-        //Measurements
-        QJsonArray measurementsArray;
-        for(int i = 0; i < data.length(); ++i)
-        {
-            QJsonObject obj;
-            obj["fq"] = data.at(i).fq;
-            obj["r"] = data.at(i).r;
-            obj["x"] = data.at(i).x;
-            measurementsArray.append(obj);
-        }
-        mainObj["Measurements"] = measurementsArray;
-
-        QJsonDocument saveDoc(mainObj);
-
-        saveFile.write(saveDoc.toJson());
+    }else
+    {
+        data = m_measurements.at(number).dataRX;
     }
+
+    //Dots
+    QJsonObject mainObj;
+    mainObj["DotsNumber"] = data.length();
+
+    //Measurements
+    QJsonArray measurementsArray;
+    for(int i = 0; i < data.length(); ++i)
+    {
+        QJsonObject obj;
+        obj["fq"] = data.at(i).fq;
+        obj["r"] = data.at(i).r;
+        obj["x"] = data.at(i).x;
+        measurementsArray.append(obj);
+    }
+    mainObj["Measurements"] = measurementsArray;
+
+    QJsonDocument saveDoc(mainObj);
+
+    saveFile.write(saveDoc.toJson());
 }
 
 void Measurements::loadData(QString path)
