@@ -122,17 +122,27 @@ Warns before Delete/Clear All discards any dirty measurement.</string>
              <property name="title">
               <string>Measurement system</string>
              </property>
-             <layout class="QVBoxLayout" name="verticalLayout_18">
+             <layout class="QFormLayout" name="formLayout_measurementSystem">
+              <property name="fieldGrowthPolicy">
+               <enum>QFormLayout::FieldGrowthPolicy::FieldsStayAtSizeHint</enum>
+              </property>
               <property name="topMargin">
                <number>20</number>
               </property>
-              <item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_displayMeasurements">
+                <property name="text">
+                 <string>Display measurements</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
                <widget class="NoScrollComboBox" name="measureSystemComboBox">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
+                <property name="maximumSize">
+                 <size>
+                  <width>140</width>
+                  <height>16777215</height>
+                 </size>
                 </property>
                 <item>
                  <property name="text">
@@ -146,95 +156,101 @@ Warns before Delete/Clear All discards any dirty measurement.</string>
                 </item>
                </widget>
               </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_36">
-                <item>
-                 <widget class="NoScrollSpinBox" name="spinBoxMeasurements">
-                  <property name="toolTip">
-                   <string>The maximum number of simultaneously displayed measurements</string>
-                  </property>
-                  <property name="minimum">
-                   <number>1</number>
-                  </property>
-                  <property name="maximum">
-                   <number>15</number>
-                  </property>
-                  <property name="value">
-                   <number>5</number>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLabel" name="label_33">
-                  <property name="toolTip">
-                   <string>The maximum number of simultaneously displayed measurements</string>
-                  </property>
-                  <property name="text">
-                   <string>Max measurements</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_33">
+                <property name="toolTip">
+                 <string>The maximum number of simultaneously displayed measurements</string>
+                </property>
+                <property name="text">
+                 <string>Max measurements</string>
+                </property>
+               </widget>
               </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_37">
-                <item>
-                 <widget class="NoScrollSpinBox" name="spinBoxActiveLineWidth">
-                  <property name="toolTip">
-                   <string>Line width (pixels) for the currently-selected measurement's traces</string>
-                  </property>
-                  <property name="minimum">
-                   <number>1</number>
-                  </property>
-                  <property name="maximum">
-                   <number>10</number>
-                  </property>
-                  <property name="value">
-                   <number>5</number>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLabel" name="label_activeLineWidth">
-                  <property name="toolTip">
-                   <string>Line width (pixels) for the currently-selected measurement's traces</string>
-                  </property>
-                  <property name="text">
-                   <string>Selected measurement line width</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
+              <item row="1" column="1">
+               <widget class="NoScrollSpinBox" name="spinBoxMeasurements">
+                <property name="toolTip">
+                 <string>The maximum number of simultaneously displayed measurements</string>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>100</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="minimum">
+                 <number>1</number>
+                </property>
+                <property name="maximum">
+                 <number>15</number>
+                </property>
+                <property name="value">
+                 <number>5</number>
+                </property>
+               </widget>
               </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_lineWidthInactive">
-                <item>
-                 <widget class="NoScrollSpinBox" name="spinBoxInactiveLineWidth">
-                  <property name="toolTip">
-                   <string>Line width (pixels) for every other loaded measurement's traces</string>
-                  </property>
-                  <property name="minimum">
-                   <number>1</number>
-                  </property>
-                  <property name="maximum">
-                   <number>10</number>
-                  </property>
-                  <property name="value">
-                   <number>2</number>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLabel" name="label_inactiveLineWidth">
-                  <property name="toolTip">
-                   <string>Line width (pixels) for every other loaded measurement's traces</string>
-                  </property>
-                  <property name="text">
-                   <string>Other measurements' line width</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_activeLineWidth">
+                <property name="toolTip">
+                 <string>Line width (pixels) for the currently-selected measurement's traces</string>
+                </property>
+                <property name="text">
+                 <string>Selected measurement line width</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="NoScrollSpinBox" name="spinBoxActiveLineWidth">
+                <property name="toolTip">
+                 <string>Line width (pixels) for the currently-selected measurement's traces</string>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>100</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="minimum">
+                 <number>1</number>
+                </property>
+                <property name="maximum">
+                 <number>10</number>
+                </property>
+                <property name="value">
+                 <number>5</number>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="label_inactiveLineWidth">
+                <property name="toolTip">
+                 <string>Line width (pixels) for every other loaded measurement's traces</string>
+                </property>
+                <property name="text">
+                 <string>Other measurements' line width</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <widget class="NoScrollSpinBox" name="spinBoxInactiveLineWidth">
+                <property name="toolTip">
+                 <string>Line width (pixels) for every other loaded measurement's traces</string>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>100</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="minimum">
+                 <number>1</number>
+                </property>
+                <property name="maximum">
+                 <number>10</number>
+                </property>
+                <property name="value">
+                 <number>2</number>
+                </property>
+               </widget>
               </item>
              </layout>
             </widget>
@@ -313,6 +329,9 @@ Warns before Delete/Clear All discards any dirty measurement.</string>
         <layout class="QVBoxLayout" name="verticalLayout_themesLeft">
          <item>
           <layout class="QFormLayout" name="formLayout_themes">
+           <property name="fieldGrowthPolicy">
+            <enum>QFormLayout::FieldGrowthPolicy::FieldsStayAtSizeHint</enum>
+           </property>
            <item row="0" column="0">
             <widget class="QLabel" name="label_theme">
              <property name="text">
@@ -853,6 +872,16 @@ Was computed from Window Background, now directly-editable.</string>
              <number>20</number>
             </property>
             <item>
+             <widget class="QLabel" name="label_maxMarkers">
+              <property name="toolTip">
+               <string>The maximum number of markers that can be placed at once</string>
+              </property>
+              <property name="text">
+               <string>Maximum number of markers</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="NoScrollSpinBox" name="spinBoxMaxMarkers">
               <property name="toolTip">
                <string>The maximum number of markers that can be placed at once</string>
@@ -865,16 +894,6 @@ Was computed from Window Background, now directly-editable.</string>
               </property>
               <property name="value">
                <number>5</number>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_maxMarkers">
-              <property name="toolTip">
-               <string>The maximum number of markers that can be placed at once</string>
-              </property>
-              <property name="text">
-               <string>Maximum number of markers</string>
               </property>
              </widget>
             </item>
@@ -1689,7 +1708,7 @@ Was computed from Window Background, now directly-editable.</string>
             <string>How long a scan can go without receiving any data before it's treated as failed (device unreachable, or busy -- held open by another program or another AntScopeZ window).</string>
            </property>
            <property name="text">
-            <string>Analyzer timeout:</string>
+            <string>Analyzer timeout (seconds)</string>
            </property>
           </widget>
          </item>
@@ -1698,21 +1717,14 @@ Was computed from Window Background, now directly-editable.</string>
            <property name="toolTip">
             <string>How long a scan can go without receiving any data before it's treated as failed (device unreachable, or busy -- held open by another program or another AntScopeZ window).</string>
            </property>
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>16777215</height>
+            </size>
            </property>
            <property name="maxLength">
             <number>3</number>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="label_analyzerTimeoutUnit">
-           <property name="text">
-            <string>sec</string>
            </property>
           </widget>
          </item>
@@ -1765,6 +1777,9 @@ discards queued data -- only that AntScopeZ resyncs).</string>
           </property>
           <item>
            <layout class="QFormLayout" name="formLayout_scanningCounts">
+            <property name="fieldGrowthPolicy">
+             <enum>QFormLayout::FieldGrowthPolicy::FieldsStayAtSizeHint</enum>
+            </property>
             <item row="0" column="0">
              <widget class="QLabel" name="label_scanPointsMax">
               <property name="toolTip">
@@ -1779,6 +1794,12 @@ discards queued data -- only that AntScopeZ resyncs).</string>
              <widget class="QLineEdit" name="lineEditScanPointsMax">
               <property name="toolTip">
                <string>The Points field/slider's practical ceiling (50-10000). Lower this if your device or scan speed doesn't need the full range.</string>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>70</width>
+                <height>16777215</height>
+               </size>
               </property>
               <property name="maxLength">
                <number>5</number>
@@ -1800,6 +1821,12 @@ discards queued data -- only that AntScopeZ resyncs).</string>
               <property name="toolTip">
                <string>Starting a scan requesting more points than this pops a confirm/cancel warning first (50-10000).</string>
               </property>
+              <property name="maximumSize">
+               <size>
+                <width>70</width>
+                <height>16777215</height>
+               </size>
+              </property>
               <property name="maxLength">
                <number>5</number>
               </property>
@@ -1819,6 +1846,12 @@ discards queued data -- only that AntScopeZ resyncs).</string>
              <widget class="QLineEdit" name="lineEditAnalyzerMaxPoints">
               <property name="toolTip">
                <string>How many points a single sweep request actually carries to the device (50-10000). A scan asking for more gets split into multiple sequential sweeps and stitched together.</string>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>70</width>
+                <height>16777215</height>
+               </size>
               </property>
               <property name="maxLength">
                <number>5</number>
@@ -1843,6 +1876,9 @@ discards queued data -- only that AntScopeZ resyncs).</string>
           <string>Custom Analyzer</string>
          </property>
          <layout class="QFormLayout" name="formLayout_10">
+          <property name="fieldGrowthPolicy">
+           <enum>QFormLayout::FieldGrowthPolicy::FieldsStayAtSizeHint</enum>
+          </property>
           <property name="topMargin">
            <number>20</number>
           </property>
@@ -1915,6 +1951,9 @@ discards queued data -- only that AntScopeZ resyncs).</string>
                      <set>Qt::AlignmentFlag::AlignCenter</set>
                     </property>
                     <layout class="QFormLayout" name="formLayout_2">
+                     <property name="fieldGrowthPolicy">
+                      <enum>QFormLayout::FieldGrowthPolicy::FieldsStayAtSizeHint</enum>
+                     </property>
                      <property name="topMargin">
                       <number>20</number>
                      </property>
@@ -1950,6 +1989,9 @@ discards queued data -- only that AntScopeZ resyncs).</string>
                      <set>Qt::AlignmentFlag::AlignCenter</set>
                     </property>
                     <layout class="QFormLayout" name="formLayout_4">
+                     <property name="fieldGrowthPolicy">
+                      <enum>QFormLayout::FieldGrowthPolicy::FieldsStayAtSizeHint</enum>
+                     </property>
                      <property name="topMargin">
                       <number>20</number>
                      </property>
@@ -2298,6 +2340,9 @@ discards queued data -- only that AntScopeZ resyncs).</string>
           </property>
           <item>
            <layout class="QFormLayout" name="formLayout_scanning">
+            <property name="fieldGrowthPolicy">
+             <enum>QFormLayout::FieldGrowthPolicy::FieldsStayAtSizeHint</enum>
+            </property>
             <item row="0" column="0" colspan="2">
              <widget class="QCheckBox" name="checkBoxExtendedChartZoom">
               <property name="toolTip">
@@ -2333,6 +2378,12 @@ discards queued data -- only that AntScopeZ resyncs).</string>
               <property name="toolTip">
                <string>TCP port the Remote API listens on (loopback only).</string>
               </property>
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
               <property name="minimum">
                <number>1024</number>
               </property>
@@ -2354,44 +2405,78 @@ discards queued data -- only that AntScopeZ resyncs).</string>
          <property name="title">
           <string>Chart Y-Axis Ranges</string>
          </property>
-         <layout class="QFormLayout" name="formLayout_chartAxisRanges">
+         <layout class="QGridLayout" name="gridLayout_chartAxisRanges">
           <property name="topMargin">
            <number>20</number>
           </property>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_phaseAxisMin">
-            <property name="toolTip">
-             <string>Phase chart's Y-axis lower bound, in degrees. Defaults to -180, the app's historical fixed range.</string>
-            </property>
+          <item row="0" column="1">
+           <widget class="QLabel" name="label_chartAxisMinHeader">
             <property name="text">
-             <string>Phase chart Y-axis min (deg)</string>
+             <string>min</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignCenter</set>
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_chartAxisMaxHeader">
+            <property name="text">
+             <string>max</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_phaseAxisMin">
+            <property name="toolTip">
+             <string>Phase chart's Y-axis range, in degrees. Defaults to -180/180, the app's historical fixed range.</string>
+            </property>
+            <property name="text">
+             <string>Phase chart (deg)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
            <widget class="QLineEdit" name="lineEditPhaseAxisMin">
             <property name="toolTip">
              <string>Phase chart's Y-axis lower bound, in degrees. Defaults to -180, the app's historical fixed range.</string>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>70</width>
+              <height>16777215</height>
+             </size>
             </property>
             <property name="maxLength">
              <number>4</number>
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_phaseAxisMax">
-            <property name="toolTip">
-             <string>Phase chart's Y-axis upper bound, in degrees. Defaults to 180, the app's historical fixed range.</string>
-            </property>
-            <property name="text">
-             <string>Phase chart Y-axis max (deg)</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
+          <item row="1" column="2">
            <widget class="QLineEdit" name="lineEditPhaseAxisMax">
             <property name="toolTip">
              <string>Phase chart's Y-axis upper bound, in degrees. Defaults to 180, the app's historical fixed range.</string>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>70</width>
+              <height>16777215</height>
+             </size>
             </property>
             <property name="maxLength">
              <number>4</number>
@@ -2401,42 +2486,69 @@ discards queued data -- only that AntScopeZ resyncs).</string>
           <item row="2" column="0">
            <widget class="QLabel" name="label_zAxisMin">
             <property name="toolTip">
-             <string>Z=R+jX / Z=R‖jX charts' Y-axis lower bound, in ohms. Defaults to -2000, the app's historical fixed range.</string>
+             <string>Series/Parallel Impedance chart's Y-axis range, in ohms. Defaults to -2000/2000, the app's historical fixed range.</string>
             </property>
             <property name="text">
-             <string>Z=R+jX / Z=R‖jX charts Y-axis min (ohm)</string>
+             <string>Series/Parallel Impedance chart (ohm)</string>
             </property>
            </widget>
           </item>
           <item row="2" column="1">
            <widget class="QLineEdit" name="lineEditZAxisMin">
             <property name="toolTip">
-             <string>Z=R+jX / Z=R‖jX charts' Y-axis lower bound, in ohms. Defaults to -2000, the app's historical fixed range.</string>
+             <string>Series/Parallel Impedance charts' Y-axis lower bound, in ohms. Defaults to -2000, the app's historical fixed range.</string>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>70</width>
+              <height>16777215</height>
+             </size>
             </property>
             <property name="maxLength">
              <number>8</number>
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_zAxisMax">
-            <property name="toolTip">
-             <string>Z=R+jX / Z=R‖jX charts' Y-axis upper bound, in ohms. Defaults to 2000, the app's historical fixed range.</string>
-            </property>
-            <property name="text">
-             <string>Z=R+jX / Z=R‖jX charts Y-axis max (ohm)</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
+          <item row="2" column="2">
            <widget class="QLineEdit" name="lineEditZAxisMax">
             <property name="toolTip">
-             <string>Z=R+jX / Z=R‖jX charts' Y-axis upper bound, in ohms. Defaults to 2000, the app's historical fixed range.</string>
+             <string>Series/Parallel Impedance charts' Y-axis upper bound, in ohms. Defaults to 2000, the app's historical fixed range.</string>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>70</width>
+              <height>16777215</height>
+             </size>
             </property>
             <property name="maxLength">
              <number>8</number>
             </property>
            </widget>
+          </item>
+          <item row="0" column="3" rowspan="3">
+           <spacer name="horizontalSpacer_chartAxisRanges">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </widget>
