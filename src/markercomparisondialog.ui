@@ -34,7 +34,7 @@
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QComboBox" name="currentMarkerCombo"/>
+       <widget class="NoScrollComboBox" name="currentMarkerCombo"/>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="qFactorNameLabel">
@@ -98,7 +98,7 @@
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QComboBox" name="targetMarkerCombo"/>
+       <widget class="NoScrollComboBox" name="targetMarkerCombo"/>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="deltaFrequencyNameLabel">
@@ -190,7 +190,7 @@
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QComboBox" name="antennaTypeCombo"/>
+       <widget class="NoScrollComboBox" name="antennaTypeCombo"/>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="antennaLengthNameLabel">
@@ -237,7 +237,7 @@
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QComboBox" name="trimUnitsCombo"/>
+       <widget class="NoScrollComboBox" name="trimUnitsCombo"/>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="calculatedTrimNameLabel">
@@ -311,6 +311,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>NoScrollComboBox</class>
+   <extends>QComboBox</extends>
+   <header location="global">noscrollwidgets.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>

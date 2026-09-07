@@ -99,7 +99,7 @@
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QComboBox" name="scanModeCombo">
+          <widget class="NoScrollComboBox" name="scanModeCombo">
            <property name="minimumSize">
             <size>
              <width>0</width>
@@ -237,7 +237,7 @@
           </widget>
          </item>
          <item row="4" column="1">
-          <widget class="QSlider" name="speedAccuracySlider">
+          <widget class="NoScrollSlider" name="speedAccuracySlider">
            <property name="minimumSize">
             <size>
              <width>0</width>
@@ -406,7 +406,7 @@ process in the settings menu!</string>
          <item>
           <layout class="QVBoxLayout" name="verticalLayout_3">
            <item>
-            <widget class="QComboBox" name="presetsBandComboBox">
+            <widget class="NoScrollComboBox" name="presetsBandComboBox">
              <property name="visible">
               <bool>false</bool>
              </property>
@@ -1304,6 +1304,16 @@ process in the settings menu!</string>
    <extends>QWidget</extends>
    <header location="global">centralwidget.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>NoScrollComboBox</class>
+   <extends>QComboBox</extends>
+   <header location="global">noscrollwidgets.h</header>
+  </customwidget>
+  <customwidget>
+   <class>NoScrollSlider</class>
+   <extends>QSlider</extends>
+   <header location="global">noscrollwidgets.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

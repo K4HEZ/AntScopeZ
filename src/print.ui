@@ -159,7 +159,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QSlider" name="lineSlider">
+          <widget class="NoScrollSlider" name="lineSlider">
            <property name="minimum">
             <number>1</number>
            </property>
@@ -242,6 +242,11 @@
    <extends>QWidget</extends>
    <header location="global">printmarkers.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>NoScrollSlider</class>
+   <extends>QSlider</extends>
+   <header location="global">noscrollwidgets.h</header>
   </customwidget>
  </customwidgets>
  <resources>

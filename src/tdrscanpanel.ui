@@ -34,7 +34,7 @@
        </widget>
       </item>
       <item row="0" column="1" colspan="2">
-       <widget class="QComboBox" name="cableTypeCombo"/>
+       <widget class="NoScrollComboBox" name="cableTypeCombo"/>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="velocityFactorNameLabel">
@@ -67,7 +67,7 @@
        </widget>
       </item>
       <item row="2" column="1">
-       <widget class="QSlider" name="topFreqSlider">
+       <widget class="NoScrollSlider" name="topFreqSlider">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
@@ -101,7 +101,7 @@
        </widget>
       </item>
       <item row="3" column="1">
-       <widget class="QSlider" name="dotsSlider">
+       <widget class="NoScrollSlider" name="dotsSlider">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
@@ -250,7 +250,7 @@
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QComboBox" name="windowCombo">
+       <widget class="NoScrollComboBox" name="windowCombo">
         <item>
          <property name="text">
           <string>Rectangular</string>
@@ -286,7 +286,7 @@
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QDoubleSpinBox" name="kaiserBetaSpin">
+       <widget class="NoScrollDoubleSpinBox" name="kaiserBetaSpin">
         <property name="minimum">
          <double>0.000000000000000</double>
         </property>
@@ -462,6 +462,23 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>NoScrollComboBox</class>
+   <extends>QComboBox</extends>
+   <header location="global">noscrollwidgets.h</header>
+  </customwidget>
+  <customwidget>
+   <class>NoScrollSlider</class>
+   <extends>QSlider</extends>
+   <header location="global">noscrollwidgets.h</header>
+  </customwidget>
+  <customwidget>
+   <class>NoScrollDoubleSpinBox</class>
+   <extends>QDoubleSpinBox</extends>
+   <header location="global">noscrollwidgets.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

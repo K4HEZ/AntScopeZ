@@ -147,6 +147,7 @@ set(ANTSCOPE_SOURCES
     src/measurements_redraw.cpp
     src/measurements_tdr.cpp
     src/modelesspopup.cpp
+    src/noscrollwidgets.cpp
     src/Notification.cpp
     src/onefqbigreadout.cpp
     src/onefqwidget.cpp
@@ -218,6 +219,7 @@ set(ANTSCOPE_HEADERS
     src/markerspanel.h
     src/measurements.h
     src/modelesspopup.h
+    src/noscrollwidgets.h
     src/Notification.h
     src/onefqbigreadout.h
     src/onefqwidget.h

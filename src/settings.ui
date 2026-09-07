@@ -127,7 +127,7 @@ Warns before Delete/Clear All discards any dirty measurement.</string>
                <number>20</number>
               </property>
               <item>
-               <widget class="QComboBox" name="measureSystemComboBox">
+               <widget class="NoScrollComboBox" name="measureSystemComboBox">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -149,7 +149,7 @@ Warns before Delete/Clear All discards any dirty measurement.</string>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_36">
                 <item>
-                 <widget class="QSpinBox" name="spinBoxMeasurements">
+                 <widget class="NoScrollSpinBox" name="spinBoxMeasurements">
                   <property name="toolTip">
                    <string>The maximum number of simultaneously displayed measurements</string>
                   </property>
@@ -179,7 +179,7 @@ Warns before Delete/Clear All discards any dirty measurement.</string>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_37">
                 <item>
-                 <widget class="QSpinBox" name="spinBoxActiveLineWidth">
+                 <widget class="NoScrollSpinBox" name="spinBoxActiveLineWidth">
                   <property name="toolTip">
                    <string>Line width (pixels) for the currently-selected measurement's traces</string>
                   </property>
@@ -209,7 +209,7 @@ Warns before Delete/Clear All discards any dirty measurement.</string>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_lineWidthInactive">
                 <item>
-                 <widget class="QSpinBox" name="spinBoxInactiveLineWidth">
+                 <widget class="NoScrollSpinBox" name="spinBoxInactiveLineWidth">
                   <property name="toolTip">
                    <string>Line width (pixels) for every other loaded measurement's traces</string>
                   </property>
@@ -321,7 +321,7 @@ Warns before Delete/Clear All discards any dirty measurement.</string>
             </widget>
            </item>
            <item row="0" column="1">
-            <widget class="QComboBox" name="themeComboBox"/>
+            <widget class="NoScrollComboBox" name="themeComboBox"/>
            </item>
            <item row="1" column="0">
             <widget class="QLabel" name="label_themeName">
@@ -853,7 +853,7 @@ Was computed from Window Background, now directly-editable.</string>
              <number>20</number>
             </property>
             <item>
-             <widget class="QSpinBox" name="spinBoxMaxMarkers">
+             <widget class="NoScrollSpinBox" name="spinBoxMaxMarkers">
               <property name="toolTip">
                <string>The maximum number of markers that can be placed at once</string>
               </property>
@@ -1226,7 +1226,7 @@ Was computed from Window Background, now directly-editable.</string>
         </layout>
        </item>
        <item>
-        <widget class="QComboBox" name="cableComboBox">
+        <widget class="NoScrollComboBox" name="cableComboBox">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -1406,7 +1406,7 @@ Was computed from Window Background, now directly-editable.</string>
           <item row="2" column="2" rowspan="2">
            <layout class="QHBoxLayout" name="horizontalLayout_20">
             <item>
-             <widget class="QComboBox" name="cableLossComboBox">
+             <widget class="NoScrollComboBox" name="cableLossComboBox">
               <property name="minimumSize">
                <size>
                 <width>20</width>
@@ -1869,7 +1869,7 @@ discards queued data -- only that AntScopeZ resyncs).</string>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QComboBox" name="comboBoxName">
+                   <widget class="NoScrollComboBox" name="comboBoxName">
                     <property name="minimumSize">
                      <size>
                       <width>200</width>
@@ -1893,7 +1893,7 @@ discards queued data -- only that AntScopeZ resyncs).</string>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QComboBox" name="comboBoxPrototype">
+                   <widget class="NoScrollComboBox" name="comboBoxPrototype">
                     <property name="minimumSize">
                      <size>
                       <width>200</width>
@@ -1961,7 +1961,7 @@ discards queued data -- only that AntScopeZ resyncs).</string>
                       </widget>
                      </item>
                      <item row="0" column="1">
-                      <widget class="QSpinBox" name="spinBoxWidth">
+                      <widget class="NoScrollSpinBox" name="spinBoxWidth">
                        <property name="minimumSize">
                         <size>
                          <width>100</width>
@@ -1981,7 +1981,7 @@ discards queued data -- only that AntScopeZ resyncs).</string>
                       </widget>
                      </item>
                      <item row="1" column="1">
-                      <widget class="QSpinBox" name="spinBoxHeight">
+                      <widget class="NoScrollSpinBox" name="spinBoxHeight">
                        <property name="minimumSize">
                         <size>
                          <width>100</width>
@@ -2329,7 +2329,7 @@ discards queued data -- only that AntScopeZ resyncs).</string>
              </widget>
             </item>
             <item row="2" column="1">
-             <widget class="QSpinBox" name="spinBoxRemoteApiPort">
+             <widget class="NoScrollSpinBox" name="spinBoxRemoteApiPort">
               <property name="toolTip">
                <string>TCP port the Remote API listens on (loopback only).</string>
               </property>
@@ -2835,6 +2835,16 @@ discards queued data -- only that AntScopeZ resyncs).</string>
    <extends>QWidget</extends>
    <header location="global">duallistwidget.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>NoScrollComboBox</class>
+   <extends>QComboBox</extends>
+   <header location="global">noscrollwidgets.h</header>
+  </customwidget>
+  <customwidget>
+   <class>NoScrollSpinBox</class>
+   <extends>QSpinBox</extends>
+   <header location="global">noscrollwidgets.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
