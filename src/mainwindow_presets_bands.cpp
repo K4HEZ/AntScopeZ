@@ -103,6 +103,16 @@ bool MainWindow::loadBands()
     bool res = file.open(QFile::ReadOnly);
     if(!res)
         return false;
+
+    // Was never cleared before reloading -- insert() on an already-existing
+    // region title just replaced the map's pointer without freeing the old
+    // QStringList, leaking one per region every reload (harmless-ish at
+    // startup, real once Settings' ITU Bands tab's Save can trigger a
+    // reload mid-session). A region renamed/removed in the text also used
+    // to linger in the map forever instead of actually disappearing.
+    qDeleteAll(m_BandsMap);
+    m_BandsMap.clear();
+
     QTextStream stream(&file);
     QString str;
     QStringList* list = nullptr;
@@ -125,49 +135,109 @@ bool MainWindow::loadBands()
     return true;
 }
 
+// Single source of truth for "current_band" -- was read with two different
+// hardcoded defaults across 5+ call sites ("ITU Region 1 - Europe, Africa"
+// in most; the Band Highlighting menu builder used "", so on a fresh ini
+// nothing ever matched and no menu item got checked, even though the
+// charts *did* show that first default's bands). Also self-heals a
+// current_band that no longer names a real region (renamed/deleted band,
+// or the old "issue #21" drift) by falling back to the first region --
+// alphabetically first, same order m_BandsMap (a QMap) already iterates
+// in -- and persisting that choice immediately instead of silently
+// recomputing the same fallback every time. Requires m_BandsMap already
+// populated (loadBands() called) by the caller.
+QString MainWindow::currentBandRegion()
+{
+    m_settings->beginGroup("Settings");
+    QString band = m_settings->value("current_band", QString()).toString();
+    m_settings->endGroup();
+
+    if (!m_BandsMap.contains(band)) {
+        band = m_BandsMap.isEmpty() ? QString() : m_BandsMap.firstKey();
+        m_settings->beginGroup("Settings");
+        m_settings->setValue("current_band", band);
+        m_settings->endGroup();
+    }
+    return band;
+}
+
+// View > Band Highlighting: one exclusive/checkable action per region in
+// m_BandsMap. Was built once, in the constructor, from a local (non-member)
+// QActionGroup -- fine as long as m_BandsMap never changed after that, but
+// Settings' ITU Bands tab Save now reloads it mid-session, so this needs
+// to be re-callable. ui->menuBandHighlighting->clear() deletes the actions
+// (the menu owns them); the group itself isn't owned by the menu, so it's
+// deleted and recreated here explicitly.
+void MainWindow::rebuildBandHighlightingMenu()
+{
+    ui->menuBandHighlighting->clear();
+    delete m_bandHighlightingGroup;
+    m_bandHighlightingGroup = new QActionGroup(this);
+    m_bandHighlightingGroup->setExclusive(true);
+
+    QString currentBand = currentBandRegion();
+    const QStringList bandNames = m_BandsMap.keys();
+    for (const QString& bandName : bandNames) {
+        QAction* action = ui->menuBandHighlighting->addAction(bandName);
+        action->setCheckable(true);
+        action->setChecked(bandName == currentBand);
+        m_bandHighlightingGroup->addAction(action);
+        connect(action, &QAction::triggered, this, [this, bandName]() {
+            m_settings->beginGroup("Settings");
+            m_settings->setValue("current_band", bandName);
+            m_settings->endGroup();
+            on_bandChanged(bandName);
+        });
+    }
+}
+
 void MainWindow::on_bandChanged(QString band)
 {
-    if (m_BandsMap.contains(band))
-    {
-        // Was a raw `delete` -- QCPAbstractItem::~QCPAbstractItem() never
-        // deregisters itself from its QCustomPlot's own mItems list (only
-        // registerItem()/removeItem() maintain that; QCustomPlot's own doc
-        // comments say as much: "do not delete it manually but use
-        // QCustomPlot::removeItem() instead"). Left a dangling entry per
-        // item in whichever widget owned it, forever -- registerItem()'s
-        // next "item already added" qDebug() (TODO 7b) was that stale
-        // bookkeeping surfacing, not a live-item hazard. parentPlot() is
-        // whichever of swr/phase/rs/rp/rl/user actually owns this one item
-        // (m_itemRectList spans all of them), so removeItem() has to be
-        // called per-item, not once per widget.
-        while (!m_itemRectList.isEmpty()) {
-            QCPAbstractItem* item = m_itemRectList.takeFirst();
-            item->parentPlot()->removeItem(item);
-        }
+    // Was gated behind `if (m_BandsMap.contains(band))` -- skipped this
+    // whole clear+redraw block whenever the region wasn't found (including
+    // a legitimately empty itu-regions.txt), so whatever bands were
+    // already drawn from before just stayed on the charts, never actually
+    // clearing. Runs unconditionally now; setBands() already does nothing
+    // when passed a null bands list (region not found, or has none).
 
-        QStringList* bands = m_BandsMap[band];
-        setBands(m_swrWidget, bands, MIN_SWR, MAX_SWR);
-        setBands(m_phaseWidget, bands, -190, 190); // see setWidgetsSettings()'s comment (issue #4)
-        setBands(m_rsWidget, bands, -5000, 5000); // see setWidgetsSettings()'s comment (issue #5)
-        setBands(m_rpWidget, bands, -5000, 5000);
-        setBands(m_rlWidget, bands, 0, 50);
-#if USER_DEFINED_FEATURE
-        setBands(m_userWidget, bands, MIN_USER_RANGE, MAX_USER_RANGE);
-#endif
-        // setBands()/addBand() only build/position the new items -- nothing
-        // in that path replots, so the chart kept showing the *old* bands
-        // (or none, right after a raw-delete clear) until some unrelated
-        // interaction (e.g. a mouse move) happened to trigger QCustomPlot's
-        // own repaint (TODO 7a).
-        m_swrWidget->replot();
-        m_phaseWidget->replot();
-        m_rsWidget->replot();
-        m_rpWidget->replot();
-        m_rlWidget->replot();
-#if USER_DEFINED_FEATURE
-        m_userWidget->replot();
-#endif
+    // Was a raw `delete` -- QCPAbstractItem::~QCPAbstractItem() never
+    // deregisters itself from its QCustomPlot's own mItems list (only
+    // registerItem()/removeItem() maintain that; QCustomPlot's own doc
+    // comments say as much: "do not delete it manually but use
+    // QCustomPlot::removeItem() instead"). Left a dangling entry per
+    // item in whichever widget owned it, forever -- registerItem()'s
+    // next "item already added" qDebug() (TODO 7b) was that stale
+    // bookkeeping surfacing, not a live-item hazard. parentPlot() is
+    // whichever of swr/phase/rs/rp/rl/user actually owns this one item
+    // (m_itemRectList spans all of them), so removeItem() has to be
+    // called per-item, not once per widget.
+    while (!m_itemRectList.isEmpty()) {
+        QCPAbstractItem* item = m_itemRectList.takeFirst();
+        item->parentPlot()->removeItem(item);
     }
+
+    QStringList* bands = m_BandsMap.value(band, nullptr);
+    setBands(m_swrWidget, bands, MIN_SWR, MAX_SWR);
+    setBands(m_phaseWidget, bands, -190, 190); // see setWidgetsSettings()'s comment (issue #4)
+    setBands(m_rsWidget, bands, -5000, 5000); // see setWidgetsSettings()'s comment (issue #5)
+    setBands(m_rpWidget, bands, -5000, 5000);
+    setBands(m_rlWidget, bands, 0, 50);
+#if USER_DEFINED_FEATURE
+    setBands(m_userWidget, bands, MIN_USER_RANGE, MAX_USER_RANGE);
+#endif
+    // setBands()/addBand() only build/position the new items -- nothing
+    // in that path replots, so the chart kept showing the *old* bands
+    // (or none, right after a raw-delete clear) until some unrelated
+    // interaction (e.g. a mouse move) happened to trigger QCustomPlot's
+    // own repaint (TODO 7a).
+    m_swrWidget->replot();
+    m_phaseWidget->replot();
+    m_rsWidget->replot();
+    m_rpWidget->replot();
+    m_rlWidget->replot();
+#if USER_DEFINED_FEATURE
+    m_userWidget->replot();
+#endif
 
     // Independent of whether the region was found above: keep the Presets
     // band-selector combo (the per-band, not per-region, dropdown) in sync
@@ -200,36 +270,11 @@ void MainWindow::populateBandSelector(const QString& band)
     ui->presetsBandComboBox->setCurrentIndex(0);
     ui->presetsBandComboBox->blockSignals(false);
 
-    // First-run default: seed "enabled" from whether this region actually
-    // has any labeled bands, so a fresh install shows a working control
-    // instead of an enabled-but-empty one. Once a value exists (user choice
-    // or a prior seed), later region switches never touch it again -- an
-    // enabled selector with nothing but "Select a band" in it (e.g. after
-    // switching to a region with no named bands) is fine, not an error.
-    //
-    // ISSUE #23 (2026-09-04): this seed only fires once, on a key that has
-    // never existed -- it can't retroactively flip an old persisted
-    // `false` back on, which is one of the two ways users were seeing the
-    // band selector come up disabled (see MainWindow's constructor,
-    // mainwindow.cpp, for the other -- issue #21's current_band drift
-    // making `enabled` compute false even here). Left this function's own
-    // logic untouched deliberately: it still governs mid-session region
-    // switches (Band Highlighting menu) correctly, respecting whatever
-    // the user currently has toggled. Only the *startup* default was
-    // overridden (unconditionally forced true, ini value ignored) as an
-    // explicit, "for now" stopgap -- this function runs earlier in the
-    // constructor than that override, so whatever `enabled` computes to
-    // here is transient and gets stomped moments later anyway. Not worth
-    // special-casing this function for that -- it'd just be dead logic
-    // duplicated in two places.
-    m_settings->beginGroup("Settings");
-    if (!m_settings->contains("band-selector-enabled")) {
-        m_settings->setValue("band-selector-enabled", ui->presetsBandComboBox->count() > 1);
-    }
-    bool enabled = m_settings->value("band-selector-enabled", false).toBool();
-    m_settings->endGroup();
-
-    ui->presetsBandComboBox->setVisible(enabled);
+    // Visibility is not this function's concern -- it's decided once, by
+    // whoever owns "band-selector-enabled" (MainWindow's constructor and
+    // actionBandSelector's toggle handler, mainwindow.cpp). A region with
+    // no labeled bands still shows the selector, just with nothing but
+    // "Select a band" in it -- that's fine, not an error.
 }
 
 void MainWindow::on_presetsBandComboBox_currentIndexChanged(int index)

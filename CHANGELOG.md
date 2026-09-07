@@ -52,6 +52,23 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   fork's first commit, never previously exercised/reported. `reject()`
   (Esc's actual entry point) now routes through the same cleanup the
   Close button already used correctly.
+- Band Selector: dropped the issue #23 stopgap that force-enabled it on
+  every startup regardless of what was saved -- it's a plain persisted
+  bool again (default `true` only when unset), so turning it off
+  actually survives a restart now (#13).
+- View > Band Highlighting had no region checked on first launch (or
+  after deleting the ini) even though bands were correctly shown --
+  the menu-builder and every other reader of the same `current_band`
+  ini key disagreed on its default. Both now go through one shared,
+  self-healing resolver that also persists its choice immediately.
+- Editing bands in Settings' ITU Bands tab and clicking Save now
+  rebuilds the View > Band Highlighting menu immediately instead of
+  requiring a restart to see a renamed/added/removed region.
+- Charts (and printed output) no longer fall back to a hardcoded
+  18-entry ham-band list when the current region has no band data --
+  they draw nothing, matching an intentionally-empty `itu-regions.txt`.
+  Also fixes `itu-regions.txt`/Settings' ITU Bands tab edits not
+  clearing already-drawn bands when the new region has none.
 
 ### Removed
 

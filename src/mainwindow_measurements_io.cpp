@@ -341,9 +341,7 @@ void MainWindow::on_actionPrint_triggered()
     m_print->updateMarkers(m_markers->getMarkersCount(), m_measurements->getMeasurementLength(),
                            m_markers->updateInfo(m_markers->markersHint()->getColumns()));
 
-    m_settings->beginGroup("Settings");
-    QString band = m_settings->value("current_band", "ITU Region 1 - Europe, Africa").toString();
-    m_settings->endGroup();
+    QString band = currentBandRegion();
     QStringList* bands = nullptr;
     if (m_BandsMap.contains(band))
     {

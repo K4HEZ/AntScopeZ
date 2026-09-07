@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QActionGroup>
 #include <QStyleFactory>
 #include <QCheckBox>
 #include <QLabel>
@@ -314,6 +315,13 @@ private:
     // Continuous mode -- see on_tdrScanRequested()'s own comment.
     double m_tdrSavedVelFactor = 0;
     QMap<QString, QStringList*> m_BandsMap;
+    // Owns the View > Band Highlighting submenu's per-region actions --
+    // rebuildBandHighlightingMenu() deletes and recreates both the group
+    // and its actions from scratch (via ui->menuBandHighlighting->clear())
+    // whenever m_BandsMap changes (startup, and after Settings' ITU Bands
+    // tab Save), so this needs to be a member rather than a constructor-
+    // local like it used to be.
+    QActionGroup* m_bandHighlightingGroup = nullptr;
     int m_activeThemeIndex = 0;
 
     // Guards on_selectDeviceDialog() against opening a second copy of
@@ -331,9 +339,10 @@ private:
 
     void setWidgetsSettings();
     bool loadBands();
+    QString currentBandRegion();
+    void rebuildBandHighlightingMenu();
     void populateBandSelector(const QString& band);
     void setBands(QCustomPlot * widget, QStringList* bands, double y1, double y2);
-    void setBands(QCustomPlot * widget, double y1, double y2);
     void addBand (QCustomPlot * widget, double x1, double x2, double y1, double y2);
     void addBand (QCustomPlot * widget, double x1, double x2, double y1, double y2, QString& name);
     void createTabs (QString sequence);

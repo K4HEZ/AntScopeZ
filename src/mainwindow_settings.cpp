@@ -175,13 +175,13 @@ void MainWindow::on_actionSettings_triggered()
         activateThemeIndex(index);
     });
     // ITU Bands tab Save: reload whichever band region is currently active,
-    // same as the old Edit ITU Bands... dialog's post-save flow.
+    // same as the old Edit ITU Bands... dialog's post-save flow. Also
+    // rebuilds the View > Band Highlighting menu -- a renamed/added/removed
+    // region used to only show up there after restarting the app.
     connect(m_settingsDialog, &Settings::ituBandsChanged, this, [this]() {
-        m_settings->beginGroup("Settings");
-        QString band = m_settings->value("current_band", "ITU Region 1 - Europe, Africa").toString();
-        m_settings->endGroup();
         loadBands();
-        on_bandChanged(band);
+        on_bandChanged(currentBandRegion());
+        rebuildBandHighlightingMenu();
     });
 
     bool was_customized = CustomAnalyzer::customized();
@@ -411,9 +411,7 @@ bool MainWindow::loadLanguage(QString locale)
     // index would silently follow a language switch into whatever band
     // happens to now sit at that same row.
     {
-        m_settings->beginGroup("Settings");
-        QString band = m_settings->value("current_band", "ITU Region 1 - Europe, Africa").toString();
-        m_settings->endGroup();
+        QString band = currentBandRegion();
         QVariant previousSelection = ui->presetsBandComboBox->currentData();
         populateBandSelector(band);
         if (previousSelection.isValid()) {

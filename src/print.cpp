@@ -186,33 +186,19 @@ void Print::setSmithData(QSharedPointer<QCPCurveDataContainer> map, QPen pen, QS
 
 void Print::drawBands(QStringList* _bands, double y1, double y2)
 {
-    if (_bands == nullptr) {
-        addBand(135.7, 137.8, y1, y2);
-        addBand(472, 479, y1, y2);
-        addBand(1800, 2000, y1, y2);
-        addBand(3500, 3800, y1, y2);
-        addBand(7000, 7300, y1, y2);
-        addBand(10100, 10150, y1, y2);
-        addBand(14000, 14350, y1, y2);
-        addBand(18068, 18168, y1, y2);
-        addBand(21000, 21450, y1, y2);
-        addBand(24890, 24990, y1, y2);
-        addBand(27075, 27295, y1, y2);
-        addBand(28000, 29700, y1, y2);
-        addBand(50000, 54000, y1, y2);
-        addBand(144000, 148000, y1, y2);
-        addBand(220000, 225000, y1, y2);
-        addBand(420000, 450000, y1, y2);
-        addBand(902000, 928000, y1, y2);
-        addBand(1240000, 1300000, y1, y2);
-    } else {
-        foreach (QString str, *_bands)
+    // No band data (region not found, or genuinely has none, e.g. an
+    // intentionally-empty itu-regions.txt) -- draw nothing. Used to fall
+    // back to a hardcoded 18-entry ham-band list here instead, same as
+    // MainWindow::setBands() (mainwindow_tabs.cpp) did.
+    if (_bands == nullptr)
+        return;
+
+    foreach (QString str, *_bands)
+    {
+        QStringList list = str.split(',');
+        if (list.size() == 2)
         {
-            QStringList list = str.split(',');
-            if (list.size() == 2)
-            {
-                addBand(list[0].toDouble(), list[1].toDouble(), y1, y2);
-            }
+            addBand(list[0].toDouble(), list[1].toDouble(), y1, y2);
         }
     }
 }

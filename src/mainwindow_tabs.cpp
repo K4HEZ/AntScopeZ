@@ -27,35 +27,15 @@ extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
 // mainwindow.cpp itself for the pieces left behind) -- pure code motion,
 // no behavior change. All pieces still define methods of MainWindow.
 
-void MainWindow::setBands(QCustomPlot * widget, double y1, double y2)
-{
-    addBand(widget,135.7, 137.8, y1, y2);
-    addBand(widget,472, 479, y1, y2);
-    addBand(widget,1800, 2000, y1, y2);
-    addBand(widget,3500, 3800, y1, y2);
-    addBand(widget,7000, 7300, y1, y2);
-    addBand(widget,10100, 10150, y1, y2);
-    addBand(widget,14000, 14350, y1, y2);
-    addBand(widget,18068, 18168, y1, y2);
-    addBand(widget,21000, 21450, y1, y2);
-    addBand(widget,24890, 24990, y1, y2);
-    addBand(widget,27075, 27295, y1, y2);
-    addBand(widget,28000, 29700, y1, y2);
-    addBand(widget,50000, 54000, y1, y2);
-    addBand(widget,144000, 148000, y1, y2);
-    addBand(widget,220000, 225000, y1, y2);
-    addBand(widget,420000, 450000, y1, y2);
-    addBand(widget,902000, 928000, y1, y2);
-    addBand(widget,1240000, 1300000, y1, y2);
-}
-
 void MainWindow::setBands(QCustomPlot * widget, QStringList* bands, double y1, double y2)
 {
+    // No band data (region not found, or genuinely has none, e.g. an
+    // intentionally-empty itu-regions.txt) -- draw nothing. Used to fall
+    // back to a hardcoded 18-entry ham-band list here instead, which drew
+    // bands the user never asked for and had no way to turn off.
     if (bands == nullptr)
-    {
-        setBands(widget, y1, y2);
         return;
-    }
+
     m_settings->beginGroup("Settings");
     // Default true -- was false, mismatched with the View menu checkbox's
     // own default (#8).

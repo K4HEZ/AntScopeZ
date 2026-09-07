@@ -703,10 +703,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionShowBandName, &QAction::toggled, this, [this](bool checked) {
         m_settings->beginGroup("Settings");
         m_settings->setValue("show-band-name", checked);
-        QString band = m_settings->value("current_band", "ITU Region 1 - Europe, Africa").toString();
         m_settings->endGroup();
         loadBands();
-        on_bandChanged(band);
+        on_bandChanged(currentBandRegion());
     });
 
     connect(ui->actionConnectAnalyzer, &QAction::triggered, this, &MainWindow::on_selectDeviceDialog);
@@ -889,55 +888,15 @@ MainWindow::MainWindow(QWidget *parent) :
 
     loadLanguage(m_languageCode);
 
-    // Band Selector: same "band-selector-enabled" QSettings key and
-    // presetsBandComboBox visibility toggle checkBoxBandSelector used to
-    // drive via Settings' bandSelectorEnabledChanged signal.
-    //
-    // ISSUE #23 (2026-09-04): repo owner reported the band dropdown not
-    // showing by default, and decided -- "for now" -- that this control
-    // should just always start enabled on launch, full stop, regardless
-    // of whatever's persisted from a prior run. Two things were previously
-    // making it come up disabled: (a) any settings file predating the
-    // "seed enabled on first run" logic in populateBandSelector()
-    // (mainwindow_presets_bands.cpp) never gets that seed applied
-    // retroactively -- it only fires once, on a key that has never
-    // existed; (b) issue #21 (current_band drift) can make that same seed
-    // compute "disabled" even on an apparently-fresh run, if the
-    // persisted current_band string doesn't match a real loaded region.
-    // Rather than pick between "fix the seed's one-shot guard" and "fix
-    // #21 first and see if that alone resolves it", the owner's call was
-    // to just force this true unconditionally as an immediate, simple
-    // stopgap -- with the real long-term question ("should this persist
-    // across restarts at all, and if so how") deliberately left open,
-    // to be decided later.
-    //
-    // bandSelectorEnabledPersisted below is intentionally read (not
-    // deleted) even though its value doesn't drive the startup default
-    // anymore -- keeps the ini-read code path alive and in the same shape
-    // it'll need to be in whenever that longer-term decision is made,
-    // instead of ripping it out now only to re-add it later. The toggle
-    // handler just below (which DOES still write this key on every
-    // uncheck/recheck) is completely unchanged -- unchecking Band
-    // Selector still works normally for the rest of this run.
-    //
-    // The forced value IS written back to the ini (unlike the first cut of
-    // this stopgap): populateBandSelector() re-reads this same key on every
-    // band-region switch (Settings' region combo, Band Highlighting menu,
-    // Edit ITU Bands...), so leaving the ini untouched meant the very next
-    // region switch after startup silently re-hid the selector, undoing
-    // this override within seconds. Writing it keeps the two in sync for
-    // the rest of this run; the real long-term question (should this
-    // persist across restarts at all) is still open.
+    // Band Selector: "band-selector-enabled" is a plain persisted bool --
+    // true if the key has never been set (fresh install), otherwise
+    // whatever the ini says, full stop. Fixes issue #13: a previous
+    // stopgap (issue #23) force-enabled this on every startup regardless
+    // of the ini, so a user's own "off" choice never survived a restart.
     {
         m_settings->beginGroup("Settings");
-        bool bandSelectorEnabledPersisted = m_settings->value("band-selector-enabled", false).toBool();
-        m_settings->setValue("band-selector-enabled", true);
+        bool bandSelectorEnabled = m_settings->value("band-selector-enabled", true).toBool();
         m_settings->endGroup();
-        qDebug() << "Band Selector: ini had band-selector-enabled ="
-                 << bandSelectorEnabledPersisted
-                 << "-- ignored, forcing enabled=true at startup per issue #23";
-
-        bool bandSelectorEnabled = true; // forced -- see comment above, not read from ini
         ui->actionBandSelector->setChecked(bandSelectorEnabled);
         ui->presetsBandComboBox->setVisible(bandSelectorEnabled);
     }
@@ -950,30 +909,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Band Highlighting submenu: one exclusive/checkable action per band
     // region in m_BandsMap (populated by loadBands(), called from
-    // setWidgetsSettings() earlier in this constructor), mirroring
-    // Settings' bandsCombobox. Picking one writes the same "current_band"
-    // key and reuses on_bandChanged() -- the same effect Settings'
-    // onBandsComboBox_currentIndexChanged()/bandChanged signal used to have.
-    {
-        m_settings->beginGroup("Settings");
-        QString currentBand = m_settings->value("current_band", "").toString();
-        m_settings->endGroup();
-        QActionGroup* bandGroup = new QActionGroup(this);
-        bandGroup->setExclusive(true);
-        const QStringList bandNames = m_BandsMap.keys();
-        for (const QString& bandName : bandNames) {
-            QAction* action = ui->menuBandHighlighting->addAction(bandName);
-            action->setCheckable(true);
-            action->setChecked(bandName == currentBand);
-            bandGroup->addAction(action);
-            connect(action, &QAction::triggered, this, [this, bandName]() {
-                m_settings->beginGroup("Settings");
-                m_settings->setValue("current_band", bandName);
-                m_settings->endGroup();
-                on_bandChanged(bandName);
-            });
-        }
-    }
+    // setWidgetsSettings() earlier in this constructor). Picking one writes
+    // "current_band" and reuses on_bandChanged(). Also rebuilt after
+    // Settings' ITU Bands tab Save (mainwindow_settings.cpp) -- see
+    // rebuildBandHighlightingMenu()'s own comment.
+    rebuildBandHighlightingMenu();
 
     // Language submenu: same discovery Settings::setLanguages() uses
     // (Settings::availableLanguages(), shared so both stay in sync), one
@@ -1464,9 +1404,7 @@ void MainWindow::setWidgetsSettings()
     QString band;
     if (bands_loaded)
     {
-        m_settings->beginGroup("Settings");
-        band = m_settings->value("current_band", "ITU Region 1 - Europe, Africa").toString();
-        m_settings->endGroup();
+        band = currentBandRegion();
         if (m_BandsMap.contains(band))
         {
             bands = m_BandsMap[band];
