@@ -118,6 +118,10 @@ private:
     void initCustomizeTab();
     void initMarkersTab();
     void initThemesTab();
+    void initItuBandsTab();
+    bool loadItuBands();
+    bool loadItuBandsDefaults();
+    bool saveItuBands();
     void refreshThemeFormFields();
     // Loads Style::themeAt(index) into the form (combo selection aside --
     // callers already know which index they want shown) and disables
@@ -139,6 +143,16 @@ private:
     bool vnn_FormOn = true;
     void closeEvent(QCloseEvent *bar);
    //--------------
+
+    // Esc key -- QDialog::reject() is Qt's own guaranteed entry point for
+    // this (unlike closeEvent(), whose interaction with reject()/done() on
+    // a modeless, WA_DeleteOnClose dialog isn't reliable enough to hang
+    // MainWindow::closeSettingsDialog() off of alone -- confirmed broken:
+    // Esc closed the dialog but left File > Settings... permanently
+    // disabled, same as clicking the [X] used to before vnn_FormOn/
+    // closeEvent() were added for that path). Routes through the exact
+    // same closeSettingsDialog() call the Close button uses.
+    void reject() override;
 
 signals:
     void paramsChanged();
@@ -187,6 +201,10 @@ signals:
     // did nothing to the running app, unlike picking it from the View
     // menu, which is what #24 reported.
     void activateTheme(int index);
+    // ITU Bands tab: fired after a successful Save, so MainWindow can
+    // reload the currently-active band region -- same effect the old Edit
+    // ITU Bands... dialog's post-accept flow had.
+    void ituBandsChanged();
 
 private slots:
     void on_browseBtn_clicked();

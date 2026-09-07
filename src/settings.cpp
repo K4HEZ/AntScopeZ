@@ -3,7 +3,6 @@
 #include <QPointer>
 #include "popupindicator.h"
 #include "analyzer/customanalyzer.h"
-#include "editbandsdialog.h"
 #include "mainwindow.h"
 #include "markerspanel.h"
 #include "appregistrationdialog.h"
@@ -11,6 +10,7 @@
 #include "style.h"
 #include "filedialog.h"
 #include "debuglog.h"
+#include <QAbstractButton>
 #include <QFile>
 #include <QFileInfo>
 #include <QDir>
@@ -288,6 +288,8 @@ Settings::Settings(QWidget *parent) :
     initMarkersTab();
 
     initThemesTab();
+
+    initItuBandsTab();
 
     QString cablesPath = Settings::programDataPath("cables.txt");
 
@@ -1318,7 +1320,7 @@ QString Settings::programDataPath(QString _fileName)
 // Linux -- read-only data shipped with the app (cables.txt,
 // itu-regions-defaults.txt). itu-regions.txt is *not* one of these: it's
 // the user's own band edits, and lives in localDataPath() instead (see
-// EditBandsDialog).
+// loadItuBands()/saveItuBands() below).
 #ifdef Q_OS_LINUX
     QDir dir0 = sharedDataFolder();
     return dir0.absoluteFilePath(_fileName);
@@ -1352,6 +1354,13 @@ void  Settings::closeEvent(QCloseEvent *event)
     }
     // then call parent's procedure
    // QWidget::closeEvent(event);
+}
+
+void Settings::reject()
+{
+    vnn_FormOn = false;
+    MainWindow::m_mainWindow->closeSettingsDialog();
+    QDialog::reject();
 }
 
 
@@ -1647,6 +1656,96 @@ void Settings::initThemesTab()
     // covers the Light (index 0) case too, and is harmlessly redundant
     // (reloads identical data) otherwise.
     loadThemeIntoForm(Style::activeThemeIndex());
+}
+
+// Lifted from the old standalone Edit ITU Bands... dialog (EditBandsDialog,
+// now removed) straight onto its own tab -- same file I/O, same three
+// buttons, just living here instead of a separate modal.
+void Settings::initItuBandsTab()
+{
+    QFont font = ui->ituBandsTextEdit->font();
+    font.setPointSize(12);
+    ui->ituBandsTextEdit->setFont(font);
+
+    connect(ui->ituBandsButtonBox, &QDialogButtonBox::clicked, this, [this](QAbstractButton* _button) {
+        QPushButton* button = qobject_cast<QPushButton*>(_button);
+        if (button == ui->ituBandsButtonBox->button(QDialogButtonBox::RestoreDefaults)) {
+            loadItuBandsDefaults();
+        } else if (button == ui->ituBandsButtonBox->button(QDialogButtonBox::Save)) {
+            saveItuBands();
+        } else if (button == ui->ituBandsButtonBox->button(QDialogButtonBox::Cancel)) {
+            loadItuBands(); // no modal to reject out of -- just discard unsaved edits
+        }
+    });
+
+    loadItuBands();
+}
+
+bool Settings::loadItuBandsDefaults()
+{
+    QString ituPath = Settings::programDataPath("itu-regions-defaults.txt");
+
+    QFile file(ituPath);
+    bool res = file.open(QFile::ReadOnly);
+    if (!res) {
+        // Only reachable if the shipped, read-only itu-regions-defaults.txt
+        // itself can't be opened (missing/unreadable/broken install) --
+        // triggered by the "Restore Defaults" button, not normal use.
+        g_showMessageBox(this, QMessageBox::Information, tr("Couldn't load default bands"), file.errorString() + ituPath);
+        return false;
+    }
+
+    ui->ituBandsTextEdit->clear();
+    QTextStream stream(&file);
+    ui->ituBandsTextEdit->setText(stream.readAll());
+    file.close();
+
+    return true;
+}
+
+bool Settings::loadItuBands()
+{
+    QString ituPath = Settings::localDataPath("itu-regions.txt");
+    QFile file(ituPath);
+    if (!file.exists()) {
+        file.setFileName(Settings::programDataPath("itu-regions-defaults.txt"));
+    }
+    bool res = file.open(QFile::ReadOnly);
+    if (!res) {
+        // Only reachable if both itu-regions.txt (the user's own edits, if
+        // any) and the itu-regions-defaults.txt fallback fail to open.
+        g_showMessageBox(this, QMessageBox::Information, tr("Couldn't load bands"), file.errorString() + ituPath);
+        return false;
+    }
+
+    ui->ituBandsTextEdit->clear();
+    QTextStream stream(&file);
+    ui->ituBandsTextEdit->setText(stream.readAll());
+    file.close();
+
+    return true;
+}
+
+bool Settings::saveItuBands()
+{
+    QString ituPath = Settings::localDataPath("itu-regions.txt");
+    QFile file(ituPath);
+    bool res = file.open(QFile::Truncate | QFile::WriteOnly | QFile::Text);
+    if (!res) {
+        // Only reachable if writing itu-regions.txt fails (e.g. a
+        // permissions problem), triggered by the "Save" button.
+        g_showMessageBox(this, QMessageBox::Information, tr("Couldn't save bands"), file.errorString() + ituPath);
+        return false;
+    }
+    QTextStream stream(&file);
+    stream << ui->ituBandsTextEdit->toPlainText();
+
+    file.flush();
+    file.close();
+
+    emit ituBandsChanged();
+
+    return true;
 }
 
 void Settings::on_themeComboBox_currentIndexChanged(int index)

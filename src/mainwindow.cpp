@@ -9,7 +9,6 @@
 #include "printmulti.h"
 #include "style.h"
 #include "filedialog.h"
-#include "editbandsdialog.h"
 #include "remoteapi/remoteapiserver.h"
 #include "debuglog.h"
 #include <QWindow>
@@ -975,21 +974,6 @@ MainWindow::MainWindow(QWidget *parent) :
             });
         }
     }
-
-    // Edit ITU Bands...: same EditBandsDialog flow as Settings'
-    // editBandsBtn, reloading whichever band region is currently active
-    // if anything actually changed.
-    connect(ui->actionEditITUBands, &QAction::triggered, this, [this]() {
-        EditBandsDialog dlg(this);
-        dlg.exec();
-        if (dlg.changed()) {
-            m_settings->beginGroup("Settings");
-            QString band = m_settings->value("current_band", "ITU Region 1 - Europe, Africa").toString();
-            m_settings->endGroup();
-            loadBands();
-            on_bandChanged(band);
-        }
-    });
 
     // Language submenu: same discovery Settings::setLanguages() uses
     // (Settings::availableLanguages(), shared so both stay in sync), one

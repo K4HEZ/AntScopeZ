@@ -186,7 +186,7 @@ void MainWindow::populateBandSelector(const QString& band)
         foreach (const QString& line, *bands) {
             QStringList fields = line.split(',');
             if (fields.size() != 3)
-                continue; // custom 2-field entry (see EditBandsDialog) -- no name to label it with
+                continue; // custom 2-field entry (see Settings' ITU Bands tab) -- no name to label it with
             QString name = fields[2].trimmed();
             if (name.isEmpty())
                 continue;
@@ -240,8 +240,8 @@ void MainWindow::on_presetsBandComboBox_currentIndexChanged(int index)
     QStringList range = ui->presetsBandComboBox->itemData(index).toStringList();
     if (range.size() == 2) {
         // Clamped, not the raw itu-regions text -- a hand-edited
-        // itu-regions.txt (see EditBandsDialog) could otherwise still hand
-        // the plots an out-of-device-range value.
+        // itu-regions.txt (see Settings' ITU Bands tab) could otherwise
+        // still hand the plots an out-of-device-range value.
         double start = clampFqKhz(range.at(0).toDouble());
         double stop = clampFqKhz(range.at(1).toDouble());
 

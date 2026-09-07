@@ -2568,6 +2568,42 @@ discards queued data -- only that AntScopeZ resyncs).</string>
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="tabItuBands">
+      <attribute name="title">
+       <string>ITU Bands</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_ituBands">
+       <item>
+        <widget class="QTextEdit" name="ituBandsTextEdit">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>150</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QDialogButtonBox" name="ituBandsButtonBox">
+         <property name="orientation">
+          <enum>Qt::Orientation::Horizontal</enum>
+         </property>
+         <property name="standardButtons">
+          <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::RestoreDefaults|QDialogButtonBox::StandardButton::Save</set>
+         </property>
+         <property name="centerButtons">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
      <widget class="QWidget" name="Updates">
       <attribute name="title">
        <string>Updates</string>

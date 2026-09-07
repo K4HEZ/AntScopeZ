@@ -23,6 +23,22 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   Analyzer is a live feature now, no longer gated behind the (removed)
   `-developer` flag, and its on/off state and saved presets persist
   across restarts.
+- Spin boxes, combo boxes, and sliders throughout the app no longer
+  react to the mouse wheel unless already focused (click or Tab in
+  first) -- fixes values silently changing while scrolling past a
+  control on a long settings page.
+- Settings dialog: labels/fields grid-aligned and oversized/mis-sized
+  text boxes fixed across General, Markers, Analyzer, and Graphs tabs
+  (several fields were stretching to fill the dialog width, or sitting
+  far from their label, instead of sizing to their actual content).
+- Settings > Graphs > "Chart Y-Axis Ranges" reworked into a 3-column
+  grid (chart name | min | max) instead of 4 separate min/max-labeled
+  rows.
+- "Edit ITU Bands..." moved off its own Edit menu (now removed) onto a
+  new Settings > **ITU Bands** tab, between Graphs and Updates -- same
+  text box and Cancel/Restore Defaults/Save buttons, just living on a
+  tab instead of a standalone dialog. The Analyzer menu now sits where
+  Edit used to (right after File).
 
 ### Fixed
 
@@ -31,6 +47,11 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   caller, so no observed symptom.
 - Settings > Custom Analyzer's "New" button set the prototype combo box
   to the literal text "names[0]" instead of selecting a real entry.
+- Pressing Esc in the Settings dialog closed it but left File >
+  Settings... permanently disabled -- a latent bug present since this
+  fork's first commit, never previously exercised/reported. `reject()`
+  (Esc's actual entry point) now routes through the same cleanup the
+  Close button already used correctly.
 
 ### Removed
 
@@ -40,6 +61,8 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   reachable via Settings > Developer's checkboxes regardless). The
   already-deleted UDP remote-control bridge's leftover documentation in
   BUILDINFO.md was trimmed to match.
+- The standalone "Edit ITU Bands..." dialog (`EditBandsDialog`) -- its
+  functionality now lives on Settings' new ITU Bands tab instead.
 
 ## [2.2.4] - 2026-09-06
 

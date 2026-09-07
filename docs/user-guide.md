@@ -276,7 +276,7 @@ the main window.
 **Menu bar**
 
 There's no toolbar of buttons any more -- everything below lives in the
-menu bar instead (File / Edit / View / Tools / Analyzer / Help).
+menu bar instead (File / Analyzer / View / Tools / Help).
 
 *File*
 
@@ -287,14 +287,7 @@ menu bar instead (File / Edit / View / Tools / Analyzer / Help).
 | Settings... | Opens the [Settings dialog](#settings) |
 | Print... | Opens the [Print dialog](#print-and-screenshots) for the current chart |
 | Save Screenshot... | Saves the *current chart* (not the whole window) straight to a PNG file you pick -- same image Ctrl+C copies, just written to disk instead of the clipboard |
-| Data from AA | Loads measurement results already stored in the analyzer's own memory -- see [Data from AA](#data-from-aa) |
 | Exit | Closes AntScopeZ |
-
-*Edit*
-
-| Control | What it does |
-|---|---|
-| Edit ITU Bands... | Opens the [band editor](#editing-band-definitions) |
 
 *View*
 
@@ -321,6 +314,7 @@ menu bar instead (File / Edit / View / Tools / Analyzer / Help).
 |---|---|
 | Connect... | Opens the [device-connection dialog](#connecting-to-your-analyzer) directly |
 | Screenshot... | Captures the *analyzer's own* on-device screen (not every model supports this -- see [Supported devices](#supported-devices)) -- see [Print and screenshots](#print-and-screenshots) |
+| Data from AA | Loads measurement results already stored in the analyzer's own memory -- see [Data from AA](#data-from-aa) |
 | Disconnect | Ends the current connection without closing AntScopeZ |
 
 *Help*
@@ -637,10 +631,22 @@ Two group boxes:
 
 **Chart Y-Axis Ranges**
 
+A 3-column grid (chart, min, max):
+
 | Control | What it does |
 |---|---|
-| Phase chart Y-axis min / max (deg) | Overrides the Phase chart's fixed ±180° range. Each bound is clamped against its pair (min can't cross max and vice versa) as well as a generous absolute floor/ceiling |
-| Z=R+jX / Z=R‖jX charts Y-axis min / max (ohm) | Same idea, for the Series/Parallel Z charts' fixed ±2000Ω range |
+| Phase chart (deg) | Overrides the Phase chart's fixed ±180° range. Each bound is clamped against its pair (min can't cross max and vice versa) as well as a generous absolute floor/ceiling |
+| Series/Parallel Impedance chart (ohm) | Same idea, for the Z=R+jX / Z=R‖jX charts' fixed ±2000Ω range |
+
+### ITU Bands tab
+
+<!-- SCREENSHOT: Settings dialog, ITU Bands tab -->
+
+The band editor, moved here from its own standalone "Edit ITU Bands..."
+dialog (formerly on the Edit menu, now gone entirely) -- same text box
+and Cancel/Restore Defaults/Save buttons, just living on its own tab
+instead. See [Editing band definitions](#editing-band-definitions) for
+the file format and what each button does.
 
 ### Updates tab
 
@@ -898,15 +904,15 @@ a named ham band from the dropdown above Presets and Start/Stop are set
 for you immediately, formatted as `<name> (<start> - <stop> kHz)`.
 Which bands show up depends on the region picked in View menu → "Band
 Highlighting" (backed by `itu-regions.txt`/`itu-regions-defaults.txt`)
--- Edit menu → "Edit ITU Bands..." opens the band editor if you need to
+-- Settings' **ITU Bands** tab opens the band editor if you need to
 add or adjust one for that region.
 
 ### Editing band definitions
 
-<!-- SCREENSHOT: Edit Bands dialog -->
+<!-- SCREENSHOT: Settings ITU Bands tab -->
 
-The band editor is a plain text editor over the region data, not a
-structured form -- each line is
+The band editor (Settings > ITU Bands) is a plain text editor over the
+region data, not a structured form -- each line is
 `start kHz, stop kHz, band name` (a trailing name is optional; an
 unnamed 2-field line still defines a highlighted range, just without a
 label). One `[Region Name]` header line groups the bands under it, e.g.:
@@ -920,11 +926,11 @@ label). One `[Region Name]` header line groups the bands under it, e.g.:
 ```
 
 **Restore Defaults** reloads the shipped `itu-regions-defaults.txt`
-(discarding your edits in this dialog, not saving over anything until
+(discarding your edits in the text box, not saving over anything until
 you click Save). **Save** writes your edited text to your own
 `itu-regions.txt`, which is what actually gets read from then on --
 the shipped defaults file itself is never modified. **Cancel** discards
-whatever you typed.
+whatever you typed, reloading the last-saved text.
 
 ## Markers
 

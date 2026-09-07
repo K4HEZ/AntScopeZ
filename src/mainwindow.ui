@@ -1032,12 +1032,6 @@ process in the settings menu!</string>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
-   <widget class="QMenu" name="menuEdit">
-    <property name="title">
-     <string>&amp;Edit</string>
-    </property>
-    <addaction name="actionEditITUBands"/>
-   </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
      <string>&amp;View</string>
@@ -1096,10 +1090,9 @@ process in the settings menu!</string>
     <addaction name="actionAbout"/>
    </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuEdit"/>
+   <addaction name="menuAnalyzer"/>
    <addaction name="menuView"/>
    <addaction name="menuTools"/>
-   <addaction name="menuAnalyzer"/>
    <addaction name="menuHelp"/>
   </widget>
   <action name="actionImport">
@@ -1289,11 +1282,6 @@ process in the settings menu!</string>
    </property>
    <property name="toolTip">
     <string>Show the per-band Start/Stop selector above the Presets list</string>
-   </property>
-  </action>
-  <action name="actionEditITUBands">
-   <property name="text">
-    <string>Edit &amp;ITU Bands...</string>
    </property>
   </action>
  </widget>

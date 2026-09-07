@@ -114,7 +114,6 @@ set(ANTSCOPE_SOURCES
     src/CustomPlot.cpp
     src/debuglog.cpp
     src/duallistwidget.cpp
-    src/editbandsdialog.cpp
     src/encodinghelpers.cpp
     src/export.cpp
     src/filedialog.cpp
@@ -205,7 +204,6 @@ set(ANTSCOPE_HEADERS
     src/CustomPlot.h
     src/debuglog.h
     src/duallistwidget.h
-    src/editbandsdialog.h
     src/encodinghelpers.h
     src/export.h
     src/filedialog.h
@@ -272,7 +270,6 @@ set(ANTSCOPE_FORMS
     src/aboutdialog.ui
     src/antscopeupdatedialog.ui
     src/appregistrationdialog.ui
-    src/editbandsdialog.ui
     src/export.ui
     src/inforequestdialog.ui
     src/mainwindow.ui

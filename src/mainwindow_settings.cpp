@@ -174,6 +174,15 @@ void MainWindow::on_actionSettings_triggered()
     connect(m_settingsDialog, &Settings::activateTheme, this, [this](int index) {
         activateThemeIndex(index);
     });
+    // ITU Bands tab Save: reload whichever band region is currently active,
+    // same as the old Edit ITU Bands... dialog's post-save flow.
+    connect(m_settingsDialog, &Settings::ituBandsChanged, this, [this]() {
+        m_settings->beginGroup("Settings");
+        QString band = m_settings->value("current_band", "ITU Region 1 - Europe, Africa").toString();
+        m_settings->endGroup();
+        loadBands();
+        on_bandChanged(band);
+    });
 
     bool was_customized = CustomAnalyzer::customized();
 
