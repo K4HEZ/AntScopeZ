@@ -166,12 +166,21 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   Bluetooth works on Linux.
 - **Windows** — uses the `hidapi` Windows backend, `setupapi`, and the bundled
   FTDI DLLs in `ftdi/`. OpenSSL link flags are currently *not* applied; see the
-  note in `CMakeLists.txt`. `CMakePresets.json` has a `windows-mingw`/
-  `windows-mingw-release` pair (Qt Online Installer's Qt 6.11.2 MinGW kit
-  under `C:/Qt`) and `CMakeLists.txt` has an NSIS packaging block
-  (`cpack -G NSIS`), but this project has not yet been built or run on
-  Windows by this repo's own maintainer -- verification is pending from a
-  contributor with an actual Windows dev machine.
+  note in `CMakeLists.txt` -- confirmed 2026-08-30 this is correct as-is, not
+  an oversight: Qt's prebuilt Windows kit ships a Schannel TLS backend by
+  default and has no OpenSSL 3.x runtime to fall back to, so the one live
+  HTTPS caller (`src/licenseagent.cpp`) works with no extra linkage. `CMakePresets.json`
+  has a `windows-mingw`/`windows-mingw-release` pair (Qt Online Installer's
+  Qt 6.11.2 MinGW kit under `C:/Qt`) and `CMakeLists.txt` has an NSIS
+  packaging block (`cpack -G NSIS`). Merged into `develop` 2026-09-06 (PR #11,
+  `windows-dev-port`, plus a follow-up commit fixing 5 bugs the merge review
+  turned up). A real `windows-mingw` build has been done and verified: it
+  compiles cleanly, `cmake --install` deploys a self-contained `bin/` folder
+  via Qt's `qt_deploy_runtime_dependencies()`, and the deployed `.exe`
+  launches and runs. What's *not* yet verified is anything needing real
+  Windows hardware -- device enumeration/connection (HID, FTDI), `.asd` file
+  association, `WM_DEVICECHANGE` hot-plug detection, per-user settings paths.
+  See `docs/windows-port-audit.md` for the full checklist and findings.
 - **macOS** — uses the `hidapi` mac backend; `build.sh` drives `macdeployqt`. 
   This project has not been tested on macOS due to not owning the hardware.
 

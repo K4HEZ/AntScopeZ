@@ -437,30 +437,31 @@ theme's colors, see the new [Themes tab](#themes-tab) below.
 
 | Control | What it does |
 |---|---|
-| Measurement system | Metric or Imperial units |
-| Max measurements | Cap on how many measurements can be displayed at once |
-| Allow extended chart zoom | Off by default. Lets Ctrl+scroll/Ctrl+`+`/`-` zoom the SWR, Z=R+jX, Z=R‖jX, and RL charts' Y-axis past their normal preset limits (e.g. SWR down to a 0.1-wide window instead of 0.4, RL out to unlimited dB instead of capping at 50), and lets plain scroll zoom the TDR chart's distance axis out past 1000m -- see [Keyboard and mouse shortcuts](#keyboard-and-mouse-shortcuts-in-the-plot-area) |
 | System impedance | The reference impedance (default 50Ω) everything -- SWR, Smith chart center, RL -- is calculated against |
-| Analyzer timeout | Seconds a scan can go without receiving a single data point before AntScopeZ treats it as failed and shows an error, instead of leaving the busy indicator/wait cursor stuck forever (device unreachable, or busy -- already held open by another program or another AntScopeZ window). Default 8 |
 | Report Detailed Errors | Off by default. AntScopeZ always shows a small set of analyzer error messages regardless of this setting (busy/unreachable device, see [Connecting to your analyzer](#connecting-to-your-analyzer)); turning this on additionally surfaces BLE's own, more technical connection/protocol errors in that same dialog -- useful when chasing a flaky BLE connection, more detail than most day-to-day use needs otherwise |
-| Use reconnect to drain unwanted data | Off by default. Neither NanoVNA protocol (classic ASCII or V2/binary) has a wire-level "abort a scan in progress" command -- once asked for N points, the device is going to send all of them. By default, stopping a scan early just waits out whatever's still outstanding and quietly discards it (see [Scan modes](#scan-modes-single-vs-continuous)). Checking this instead closes and reopens the connection right away, often faster for a large scan, but not guaranteed to make every device actually discard what it already queued internally |
 | Warn before deleting or clearing dirty measurements | On by default. A confirmation before the Measurements panel's Delete/Clear All discards a measurement that's *dirty* (scanned or renamed since it was last saved -- see [Measurements panel](#controls-reference)) |
-| Selected / Other measurements' line width | How thick a measurement's trace is drawn on the charts -- 1–10px, default 5 for whichever measurement is currently selected, 2 for every other one loaded at the same time |
-| Data folder (with Browse...) | Where save/export/screenshot dialogs across the app default to -- see [Files and directories](#files-and-directories) |
-| Save actions update this folder | Off by default. When on, completing a *save* (not Open) somewhere else moves Data folder there too, so it follows you; when off, Data folder only changes when you set it here yourself |
 
-**Scanning**
+**Measurement system**
 
 | Control | What it does |
 |---|---|
-| Scanning points maximum | The real practical ceiling for the Points field/slider (50–10000, default 1000) -- replaces what used to be a fixed, recompile-only limit |
-| Warn for scans above | Pops a Cancel-able confirmation before starting a scan that requests more points than this, in case a large scan was set up by accident |
-| Analyzer maximum number of points | Caps how many points a single sweep actually sends to the device (default 1000). Requesting more than that via the Points field doesn't fail or get clamped -- it transparently splits the scan into several sequential sweeps ("stitching") and concatenates the results into one continuous dataset, so a 1000-point analyzer can still deliver e.g. a 4000-point scan, just across four sweeps instead of one. Applies to Single/Continuous/User scans; TDR, Calibration, and S21 are unaffected for now. |
+| Display measurements | Metric or Imperial units |
+| Max measurements | Cap on how many measurements can be displayed at once |
+| Selected / Other measurements' line width | How thick a measurement's trace is drawn on the charts -- 1–10px, default 5 for whichever measurement is currently selected, 2 for every other one loaded at the same time |
+
+**Data folder**
+
+| Control | What it does |
+|---|---|
+| Data folder (with Browse...) | Where save/export/screenshot dialogs across the app default to -- see [Files and directories](#files-and-directories) |
+| Save actions update this folder | Off by default. When on, completing a *save* (not Open) somewhere else moves Data folder there too, so it follows you; when off, Data folder only changes when you set it here yourself |
 
 Register application, Match license, and device/firmware info moved to
 the [Updates tab](#updates-tab). Connect analyzer and "Open 'Connect
 Analyzer' on launch" moved into the Connect Analyzer dialog itself --
 see [Connecting to your analyzer](#connecting-to-your-analyzer).
+Analyzer timeout, "Use reconnect to drain unwanted data", and Scanning
+moved to the [Analyzer tab](#analyzer-tab) below.
 
 ### Markers tab
 
@@ -568,23 +569,25 @@ hit Save.
 
 <!-- SCREENSHOT: Settings dialog, Analyzer tab -->
 
-Two group boxes:
+| Control | What it does |
+|---|---|
+| Analyzer timeout (seconds) | Seconds a scan can go without receiving a single data point before AntScopeZ treats it as failed and shows an error, instead of leaving the busy indicator/wait cursor stuck forever (device unreachable, or busy -- already held open by another program or another AntScopeZ window). Default 8 |
+| Use reconnect to drain unwanted data | Off by default. Neither NanoVNA protocol (classic ASCII or V2/binary) has a wire-level "abort a scan in progress" command -- once asked for N points, the device is going to send all of them. By default, stopping a scan early just waits out whatever's still outstanding and quietly discards it (see [Scan modes](#scan-modes-single-vs-continuous)). Checking this instead closes and reopens the connection right away, often faster for a large scan, but not guaranteed to make every device actually discard what it already queued internally |
 
-**Custom Analyzer** -- everything in it is disabled except one
-checkbox; the rest is shown so you can see it exists (and what it's
-meant to become), not because it currently does anything. See
+**Scanning**
+
+| Control | What it does |
+|---|---|
+| Scanning points maximum | The real practical ceiling for the Points field/slider (50–10000, default 1000) -- replaces what used to be a fixed, recompile-only limit |
+| Warn for scans above | Pops a Cancel-able confirmation before starting a scan that requests more points than this, in case a large scan was set up by accident |
+| Analyzer maximum number of points | Caps how many points a single sweep actually sends to the device (default 1000). Requesting more than that via the Points field doesn't fail or get clamped -- it transparently splits the scan into several sequential sweeps ("stitching") and concatenates the results into one continuous dataset, so a 1000-point analyzer can still deliver e.g. a 4000-point scan, just across four sweeps instead of one. Applies to Single/Continuous/User scans; TDR, Calibration, and S21 are unaffected for now. |
+
+**Use customized analyzer** -- a standalone checkbox sitting above the
+**Custom Analyzer** group box, enabling/disabling every control inside
+it as one unit. Off by default. See
 [Customized analyzer parameters](#customized-analyzer-parameters)
-below for what it's for and why it's not safe to use yet.
-
-The one working control here, right under "Use customized analyzer":
-**Don't restrict frequency**. Checking it disables Start/Stop range
-clamping entirely -- normally, starting a scan silently snaps whatever
-you typed back to your connected device's own documented min/max range
-(see the connected device's entry in
-[Supported devices](#supported-devices)); checking this lets
-you request a scan outside that range instead, useful for probing
-whether a device secretly handles more than its listed spec. Off by
-default -- most users will never need this.
+below for what the group box's controls do and its current known
+limitations.
 
 **Debug Logging** -- four checkboxes, one per analyzer connection type:
 Com/Serial, USB/HID, BLE/Bluetooth, and NanoVNA. Turning one on starts
@@ -609,11 +612,7 @@ These four checkboxes (and Show ping/keepalive traffic) are session-only
 by design -- they always start unchecked when you open AntScopeZ,
 regardless of how you left them last time, so logging never keeps
 running silently in the background across restarts. Turn them back on
-each time you actually want to capture something. **Report Detailed
-Errors** and **Use reconnect to drain unwanted data** used to live here
-too, but are ordinary user-facing preferences, not debug-only ones --
-they moved to [General tab](#general-tab) and persist across restarts
-like the rest of that tab.
+each time you actually want to capture something.
 
 ### Graphs tab
 
@@ -625,7 +624,7 @@ Two group boxes:
 
 | Control | What it does |
 |---|---|
-| Allow extended chart zoom | Same control described under [General tab](#general-tab) above -- lives here now |
+| Allow extended chart zoom | Off by default. Lets Ctrl+scroll/Ctrl+`+`/`-` zoom the SWR, Z=R+jX, Z=R‖jX, and RL charts' Y-axis past their normal preset limits (e.g. SWR down to a 0.1-wide window instead of 0.4, RL out to unlimited dB instead of capping at 50), and lets plain scroll zoom the TDR chart's distance axis out past 1000m -- see [Keyboard and mouse shortcuts](#keyboard-and-mouse-shortcuts-in-the-plot-area) |
 | Enable Remote API | Off by default. Starts a local NDJSON-over-TCP control API (loopback only) that lets an external tool observe/control the connected analyzer -- status/devices/connect/disconnect/sweep/stop/subscribe/last commands, plus live point streaming while a scan runs. See `remoteapi/README.md` for the wire protocol if you're writing a client. Known gaps: BLE devices aren't supported over this API yet, and if more than one device of the same type is attached there's no way to target a specific one by port |
 | Remote API port | TCP port it listens on (loopback only), 1024–65535, default 7443 |
 
@@ -1006,7 +1005,7 @@ You can add and remove tabs to Multi View using the "+" button to join charts.
 
 Loads measurement results that already exist in the *analyzer's own*
 on-device memory (not files on your PC -- see
-[Open / Save](#open--save) for that). **File → Data from AA**
+[Open / Save](#open--save) for that). **Analyzer → Data from AA**
 opens a list of everything currently stored on the device;
 double-click an entry (or select it and click OK) to load just that one
 into AntScopeZ as a new measurement.
@@ -1282,19 +1281,37 @@ already recognizes correctly (a clone, or a newer hardware revision of
 a known model) whose real frequency range differs from what AntScopeZ
 assumes for that model.
 
-It's visible (a "This feature is currently under development"
-notice sits at the top of it), and every control on it -- "Use
-customized analyzer", Apply, Auto calibration -- is disabled, except
-one: **Don't restrict frequency** (see [Analyzer tab](#analyzer-tab)
-above), which is a real, working, unrelated setting that just happens
-to live in this group box. Everything else is shown rather than
-hidden so it isn't forgotten about, not because it's ready to use:
-exercising the underlying feature previously turned up real problems --
-a crash on some paths, a silently-ignored custom range on others, and
-an outright device-protocol rejection when actually scanning with it
-enabled. See `BUILDINFO.md`'s Known Issues for the full technical
-writeup (what's fixed, what's still broken, and where in the code) if
-you're looking to pick this back up.
+**Use customized analyzer**, sitting above the group box (see
+[Analyzer tab](#analyzer-tab) above), enables/disables everything in
+it as one unit; the group box itself has no more "under development"
+notice and its controls are live. Name your preset, pick a real model
+as its Prototype (the group box inherits that model's protocol and
+everything else it needs, only the frequency range and LCD width/height
+are overridden), set Min/Max (kHz) and Width/Height, then New/Remove/Apply
+to manage the list.
+
+That said, this is a young feature and two real limitations remain
+worth knowing before relying on it:
+
+- **A custom frequency range doesn't survive a scan.** Range-clamping
+  code elsewhere in the app (`AnalyzerParameters::normalizeFq()`/
+  `normalizeFqRange()`) isn't yet aware of `CustomAnalyzer` and silently
+  snaps Start/Stop back to the real device's stock range regardless of
+  what your custom profile says. **Don't restrict frequency**, the
+  first control inside the group box, is the one working escape hatch
+  for this today -- checking it disables Start/Stop range clamping
+  entirely instead of narrowing it to your custom profile, so you can
+  request a scan outside any documented range at all (useful for
+  probing whether a device secretly handles more than its listed spec,
+  at the cost of no longer being clamped to *anything*, custom or
+  stock).
+- **Actually scanning with a custom profile against real hardware has
+  been seen to fail at the protocol level** (a RigExpert Match RFE
+  rejected the resulting command outright). Root cause not yet chased.
+
+See `BUILDINFO.md`'s Known Issues for the full technical writeup of
+both, plus what's already been fixed, if you're looking to pick this
+back up.
 
 ## Files and directories
 

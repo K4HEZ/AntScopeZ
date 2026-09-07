@@ -114,6 +114,20 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 - The standalone "Edit ITU Bands..." dialog (`EditBandsDialog`) -- its
   functionality now lives on Settings' new ITU Bands tab instead.
 
+### Documentation
+
+- Ran `update_translations` and translated this cycle's 14 new/changed
+  source strings (Settings' reworked General/Analyzer/Graphs tabs, the
+  new ITU Bands tab, and the About box's updated text) for Ukrainian,
+  Japanese, and Spanish. All 3 `.ts` files are 765/765 finished, 0
+  unfinished.
+- User Guide, roadmap, and BUILDINFO.md updated to match this cycle's
+  menu/Settings reorg (Data from AA's new home, General/Analyzer tabs'
+  actual current contents, Custom Analyzer no longer described as
+  disabled/under development) and to reflect the Windows port merge
+  (build/deploy verified working; real-hardware verification still
+  outstanding -- see `docs/windows-port-audit.md`).
+
 ## [2.2.4] - 2026-09-06
 
 ### Changed
