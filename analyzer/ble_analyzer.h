@@ -21,7 +21,10 @@ enum {
     BLE_REC_ERASE_CMD = (quint8)0xAF,
     BLE_SCREENSHOT_CMD = (quint8)0xAD,
     BLE_PING_CMD = (quint8)0x5A,
-    BLE_CANCEL_CMD = (quint8)0x69,
+    // Was BLE_CANCEL_CMD -- defined but never actually sent anywhere.
+    // stopMeasure() sends it now (see its own comment); renamed to match
+    // RigExpert AntScope2 2.0.3's own name for it.
+    BLE_BREAK_CMD = (quint8)0x69,
     BLE_FULLINFO_CMD = (quint8)0x9B,
     BLE_SCREEN_PAL_CMD = (quint8)0xDA,
     BLE_SCREEN_PAL0_CMD = (quint8)0xD2,
@@ -160,10 +163,14 @@ protected:
     bool checkCRC(const QByteArray& data);
     void returnCRC(const QByteArray& data);
     void setInnerScan(bool _state) { m_innerScan = _state; }
-    // No real wire-level abort sent today -- see BaseAnalyzer's own
-    // comment on this method. (BLE_CANCEL_CMD exists in this protocol's
-    // command set above but stopMeasure() doesn't currently send it --
-    // separate, pre-existing question, not touched here.)
+    // stopMeasure() now sends BLE_BREAK_CMD (sendBreak()) as a best-effort
+    // real wire abort -- ported from RigExpert AntScope2 2.0.3, issue #10 --
+    // but this still returns false: unlike the base class's "off\r" (HID/
+    // Serial, confirmed to genuinely stop the device), nobody has confirmed
+    // BLE_BREAK_CMD reliably halts an FRX transfer already in flight.
+    // Leaving this false keeps the existing, already-hardware-confirmed
+    // drain/reconnect behavior (see BaseAnalyzer's own comment on this
+    // method) as the safe default until that's actually verified.
     bool stopCommandAbortsDevice() const override { return false; }
 
 public slots:
@@ -175,6 +182,8 @@ public slots:
     void getAnalyzerData(QString number);
     void makeScreenshot();
     void stopMeasure();
+    void on_measurementComplete() override;
+    void on_screenshotComplete() override;
 
 private slots:
     void addDevice(const QBluetoothDeviceInfo&);
@@ -184,6 +193,7 @@ private slots:
     void startPing();
     void handlePing();
     void sendPing();
+    void sendBreak();
     void stopPing();
 
 signals:
@@ -204,6 +214,12 @@ private:
     QTimer * m_pingTimer;
     long m_lastReadTimeMS;
     bool m_bWaitingPing = false;
+    // Commands that arrived while a ping response or FRX transfer was
+    // still outstanding -- writing straight to the wire in that state
+    // risks colliding with what's already in flight. Drained one at a
+    // time as each outstanding ping actually completes (dataReceived()'s
+    // BLE_PING_CMD branch). Ported from RigExpert AntScope2 2.0.3, #10.
+    QList<QByteArray> m_postponedCmd;
     bool m_reuChip = false;
     bool m_insideWrite = false;
     bool m_innerScan = false; // scan for restoreConnection purpoces

@@ -80,6 +80,13 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   warning) if the save path didn't contain ".asd" -- not guaranteed,
   since the file dialog never calls `setDefaultSuffix()`. Appends the
   extension instead of refusing to save (also from AntScope2 2.0.3, #10).
+- BLE analyzer: writing a new command (start scan, screenshot, get
+  analyzer data) while a ping response or another transfer was still
+  outstanding risked colliding with it on the wire. New commands now
+  queue and dispatch once the outstanding one actually completes;
+  Stop now sends a real wire abort too (still treated as best-effort,
+  not guaranteed) instead of only a local flag. Ported from RigExpert
+  AntScope2 2.0.3, #10.
 
 ### Removed
 

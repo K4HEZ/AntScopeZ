@@ -383,12 +383,29 @@ void BleAnalyzer::stopPing()
 
 void BleAnalyzer::sendPing()
 {
+    // Don't stack a second ping on top of one still outstanding, or on top
+    // of an FRX transfer in progress -- either would just add another
+    // outstanding write with no way to tell its response apart from the
+    // first. Ported from RigExpert AntScope2 2.0.3, issue #10.
+    if (m_bWaitingPing)
+        return;
+    if (m_frxGo)
+        return;
     m_bWaitingPing = true;
     QByteArray ping;
     ping.fill(0, BLE_PACKET_SIZE);
     ping[0] = (quint8)0x5a;
     ping[BLE_PACKET_SIZE - 1] = CRC32::crc8(ping);
     write(ping);
+}
+
+void BleAnalyzer::sendBreak()
+{
+    QByteArray cmd;
+    cmd.fill(0, BLE_PACKET_SIZE);
+    cmd[0] = BLE_BREAK_CMD;
+    cmd[BLE_PACKET_SIZE - 1] = CRC32::crc8(cmd);
+    write(cmd);
 }
 void BleAnalyzer::handlePing() //vnn_05 1sec timer
 {
@@ -463,6 +480,17 @@ void BleAnalyzer::dataReceived(const QLowEnergyCharacteristic &c, const QByteArr
     }
     if (value[0] == (quint8)BLE_PING_CMD) {
         returnCRC(value);
+        // The outstanding ping just completed -- dispatch whatever got
+        // postponed while it (or an FRX transfer) was in flight. Ported
+        // from RigExpert AntScope2 2.0.3, issue #10.
+        if (!m_postponedCmd.isEmpty()) {
+            m_bWaitingPing = false;
+            QByteArray cmd = m_postponedCmd.takeFirst();
+            write(cmd);
+            m_frxCur = 0;
+            m_frxTime = QDateTime::currentMSecsSinceEpoch();
+            m_frxGo = true;
+        }
         return;
     }
     parseResponse(value);
@@ -570,6 +598,10 @@ void BleAnalyzer::parseRecList(QDataStream& stream)
         }
         m_analyzerRecords.insert(QString::number(m_requestRecord.m_recordCell), m_requestRecord);
         QString str = m_requestRecord.record();
+        // This record's list entry is fully received -- ported from
+        // RigExpert AntScope2 2.0.3, issue #10 (see sendPing()'s comment).
+        m_bWaitingPing = false;
+        m_frxGo = false;
         emit analyzerDataStringArrived(str);
     }
         break;
@@ -635,6 +667,10 @@ void BleAnalyzer::parseFRX(QDataStream& stream)
                 emit newData(data);
             } else {
                 data.r =1;
+                // Past this record's actual point count -- the transfer is
+                // effectively done. Ported from RigExpert AntScope2 2.0.3,
+                // issue #10 (see sendPing()'s comment).
+                m_frxGo = false;
             }
         }
     }
@@ -782,6 +818,12 @@ double BleAnalyzer::shortToDouble(qint16 src)
 void BleAnalyzer::startMeasure(qint64 from_hz, qint64 to_hz, int dotsNumber, bool _frx)
 {
     Q_UNUSED(_frx)
+    // Ported from RigExpert AntScope2 2.0.3, issue #10 -- see sendPing()'s
+    // comment. A postponed command already queued means one of this exact
+    // kind is already waiting its turn; don't pile another one on top.
+    if (!m_postponedCmd.isEmpty())
+        return;
+
     QByteArray data;
     data.append((quint8)BLE_FRX_CMD);
 
@@ -816,10 +858,20 @@ void BleAnalyzer::startMeasure(qint64 from_hz, qint64 to_hz, int dotsNumber, boo
     QString sss = trace("FRX", data);
     setRequest(sss);
 
-    write(data);
-    m_frxCur=0;
-    m_frxTime= QDateTime::currentMSecsSinceEpoch();
-    m_frxGo=true;
+    // Was an unconditional write() -- risked colliding with a ping response
+    // or FRX transfer already in flight. Ported from RigExpert AntScope2
+    // 2.0.3, issue #10 (see sendPing()'s comment).
+    if (m_bWaitingPing) {
+        m_frxGo = false;
+        m_postponedCmd.append(data);
+    } else if (m_frxGo) {
+        qDebug() << "BleAnalyzer::startMeasure() skipped -- FRX already in progress";
+    } else {
+        write(data);
+        m_frxCur=0;
+        m_frxTime= QDateTime::currentMSecsSinceEpoch();
+        m_frxGo=true;
+    }
 }
 
 void BleAnalyzer::startMeasureOneFq(qint64 fqFrom_hz, int dotsNumber, bool frx)
@@ -838,12 +890,21 @@ void BleAnalyzer::sendFullInfo()
 
 void BleAnalyzer::getAnalyzerData()
 {
+    m_analyzerRecords.clear();
     QByteArray data;
     data.fill(0, BLE_PACKET_SIZE);
     data[0] = (quint8)BLE_REC_LIST_CMD;
     data[BLE_PACKET_SIZE - 1] = CRC32::crc8(data);
-    write(data);
-    m_analyzerRecords.clear();
+    // See startMeasure()'s comment.
+    if (m_bWaitingPing || m_frxGo) {
+        m_postponedCmd.append(data);
+    } else {
+        m_bWaitingPing = false;
+        write(data);
+        m_frxCur=0;
+        m_frxTime= QDateTime::currentMSecsSinceEpoch();
+        m_frxGo=true;
+    }
 }
 
 void BleAnalyzer::getAnalyzerData(QString number)
@@ -878,7 +939,16 @@ void BleAnalyzer::getAnalyzerData(QString number)
     data[19] = CRC32::crc8(data);
     //qInfo() << "getAnalyzerData: " << number << center << range << points << m_requestRecord.m_recordName;
     //qInfo() << trace(number, data);
-    write(data);
+    // See startMeasure()'s comment.
+    if (m_bWaitingPing || m_frxGo) {
+        m_postponedCmd.append(data);
+    } else {
+        m_bWaitingPing = false;
+        write(data);
+        m_frxCur=0;
+        m_frxTime= QDateTime::currentMSecsSinceEpoch();
+        m_frxGo=true;
+    }
 }
 
 void BleAnalyzer::makeScreenshot()
@@ -887,12 +957,27 @@ void BleAnalyzer::makeScreenshot()
     data.fill(0, BLE_PACKET_SIZE);
     data[0] = (quint8)BLE_SCREENSHOT_CMD;
     data[BLE_PACKET_SIZE - 1] = CRC32::crc8(data);
-    write(data);
+    // See startMeasure()'s comment.
+    if (m_bWaitingPing || m_frxGo) {
+        m_postponedCmd.append(data);
+    } else {
+        m_bWaitingPing = false;
+        write(data);
+        m_frxCur=0;
+        m_frxTime= QDateTime::currentMSecsSinceEpoch();
+        m_frxGo=true;
+    }
 }
 
 void BleAnalyzer::stopMeasure()
 {
     m_isMeasuring = false;
+    // Best-effort real wire abort -- see stopCommandAbortsDevice()'s own
+    // comment (ble_analyzer.h) for why that still conservatively returns
+    // false despite this. Ported from RigExpert AntScope2 2.0.3, issue #10.
+    m_bWaitingPing = false;
+    m_frxGo = false;
+    sendBreak();
 }
 
 bool BleAnalyzer::refreshConnection()
@@ -900,4 +985,22 @@ bool BleAnalyzer::refreshConnection()
     setInnerScan(true);
     searchAnalyzer();
     return true;
+}
+
+// Ported from RigExpert AntScope2 2.0.3, issue #10 -- see sendPing()'s
+// comment. Resets the queueing state at the two other points (besides a
+// completed ping) a transfer is really done.
+void BleAnalyzer::on_measurementComplete()
+{
+    BaseAnalyzer::on_measurementComplete();
+    m_bWaitingPing = false;
+    m_frxGo = false;
+}
+
+void BleAnalyzer::on_screenshotComplete()
+{
+    BaseAnalyzer::on_screenshotComplete();
+    m_bWaitingPing = false;
+    m_frxGo = false;
+    sendPing();
 }

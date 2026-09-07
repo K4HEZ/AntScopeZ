@@ -550,6 +550,13 @@ void AnalyzerPro::on_measureContinuous(qint64 fqFrom, qint64 fqTo, qint32 dotsNu
         // just NanoVNA.
         if (m_baseAnalyzer != nullptr)
         {
+            // Defensive reset before (re)starting -- BleAnalyzer's override
+            // (ported from RigExpert AntScope2 2.0.3, issue #10) clears its
+            // ping/FRX-in-flight bookkeeping here so a fresh Continuous
+            // cycle never starts with stale state from whatever the
+            // previous one left behind. A plain state reset for every
+            // other backend (BaseAnalyzer's own default), so harmless there.
+            m_baseAnalyzer->on_measurementComplete();
             startStitchedMeasure(fqFrom, fqTo, dotsNumber);
             PopUpIndicator::setIndicatorVisible(true);
             kickWatchdog();
