@@ -7,6 +7,8 @@
 #include "analyzer/ble_analyzer.h"
 #include "style.h"
 
+quint8 Screenshot::screenCompression = 1;
+
 extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
                             QString title, QString text,
                             QMessageBox::StandardButtons buttons = QMessageBox::Ok,
@@ -367,6 +369,14 @@ void Screenshot::on_newData(QByteArray data)
             }
         }
     }else if (model == "AA-650 ZOOM" && binaryProtocol) {
+        // Two distinct wire formats depending on the device's own reported
+        // screenCompression (BleAnalyzer::parseFullInfo(), set from
+        // FULLINFO). Mode 2 is the original RLE'd-2-bit-per-channel format
+        // below; anything else is a run-length-coded RGB565 pair (2 color
+        // bytes + 1 quantity byte), same channel layout every other RGB565
+        // branch here uses, with a per-model R/B swap some models need.
+        // Ported from RigExpert AntScope2 2.0.3, issue #10.
+        if (screenCompression == 2) {
             while (!m_inputData.isEmpty()) {
                 auto data = m_inputData.takeFirst();
                 int quantity = ((data & 0xc0) >> 6) + 1;
@@ -386,10 +396,36 @@ void Screenshot::on_newData(QByteArray data)
                 for (int i=0; i<quantity; i++) {
                     m_imageVector.append(rgb);
                 }
-                qDebug() << QString("{%1} pix=%2[%3]: %4, %5, %6 N:%7")
-                                .arg(data, 2, 16, QChar('0')).arg(quantity).arg(quantity, 2, 16, QChar('0'))
-                                .arg(red).arg(green).arg(blue).arg(m_imageVector.size());
             }
+        } else {
+            while (m_inputData.length() > 3) {
+                int data = (((int)m_inputData.takeFirst())<<8);
+                data += (int)m_inputData.takeFirst();
+                int quantity = (int)m_inputData.takeFirst();
+
+                if (quantity == 0)
+                    continue;
+
+                int red = data&0x1F;
+                int green = (data>>5)&0x3F;
+                int blue = (data>>11)&0x1F;
+
+                if (model == "AA-2000 ZOOM" || model == "AA-3000 ZOOM"
+                        || model == "AA-1500 ZOOM SE" || model == "Match") {
+                    int tmp = red;
+                    red = blue;
+                    blue = tmp;
+                }
+                red = (red<<3) + ( (red&0x10) ? 0x07 : 0 );
+                green = (green<<2) + ( (green&0x20) ? 0x03 : 0 );
+                blue = (blue<<3) + ( (blue&0x10) ? 0x07 : 0 );
+
+                QRgb rgb = qRgb(red,green,blue);
+                for (int i = 0; i < quantity; ++i) {
+                    m_imageVector.append(rgb);
+                }
+            }
+        }
         }else if (model == "NanoVNA") {
         // Flat big-endian RGB565 framebuffer dump, no run-length encoding
         // (issue #9) -- standard bit layout (R high 5 bits, G mid 6, B low

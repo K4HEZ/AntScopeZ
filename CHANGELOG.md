@@ -96,6 +96,12 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   and an empty-queue ping response weren't resetting it either.
 - License tier "BASE"'s max frequency was still 70MHz; RigExpert
   AntScope2 2.0.3 corrected it to 75MHz.
+- AA-650 ZOOM screenshots: the device can report a different pixel-
+  compression mode over BLE (`FULLINFO`'s `screenCompression` field);
+  `Screenshot` only ever decoded the one format, so screenshots came
+  out wrong/garbled on the other mode. Now picks the right decode
+  based on what the device actually reports. Ported from RigExpert
+  AntScope2 2.0.3, #10.
 
 ### Removed
 

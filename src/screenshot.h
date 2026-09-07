@@ -25,6 +25,13 @@ class Screenshot : public QDialog
 public:
     explicit Screenshot(QWidget *parent = 0,int model = 0, int height = 0, int width = 0);
     ~Screenshot();
+    // AA-650 ZOOM's own pixel-compression mode, reported by the device in
+    // its FULLINFO reply (BleAnalyzer::parseFullInfo(), BLE_FULLINFO_DISPLAY)
+    // -- on_newData() picks its AA-650 ZOOM decode branch on this. Static
+    // (not per-instance): set once from FULLINFO, read by whichever
+    // Screenshot dialog gets constructed afterward. Ported from RigExpert
+    // AntScope2 2.0.3, issue #10.
+    static quint8 screenCompression;
 
 
 private:

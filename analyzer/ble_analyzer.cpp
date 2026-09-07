@@ -5,6 +5,7 @@
 #include <QMetaEnum>
 #include "crc32.h"
 #include "debuglog.h"
+#include "screenshot.h"
 
 
 BleAnalyzer::BleAnalyzer(QObject *parent)
@@ -770,6 +771,10 @@ void BleAnalyzer::parseFullInfo(QDataStream& stream)
         quint16 wd, ht;
         quint8 bpp, pix;
         stream >> wd >> ht >> bpp >> pix;
+        // AA-650 ZOOM's own pixel-compression mode -- Screenshot::on_newData()
+        // picks its decode branch on this. Ported from RigExpert AntScope2
+        // 2.0.3, issue #10.
+        Screenshot::screenCompression = pix;
         str = "Display:"; setResponse(str);
         str = QString("  width %1").arg(wd); setResponse(str);
         str = QString("  height %1").arg(ht); setResponse(str);
