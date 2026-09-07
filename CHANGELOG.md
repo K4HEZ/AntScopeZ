@@ -11,6 +11,8 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+## [2.2.5] - 2026-09-07
+
 ### Changed
 
 - File > "Data from AA" moved to the Analyzer menu, under "Screenshot...".
