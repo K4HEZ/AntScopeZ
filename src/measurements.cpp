@@ -901,6 +901,17 @@ void Measurements::on_continueMeasurement(qint64 from, qint64 to, qint32 dots)
     m_currentPoint = 0;
     m_measurements.last().set(from, to, dots); //vnn_0327
 
+    // Captured before removePlottable() below -- it deletes the QCPCurve
+    // (QCustomPlot::removePlottable() always does), so the pen has to be
+    // read off the old curve first or it's gone. Without this, continuing
+    // a scan reset the Smith trace to QCustomPlot's default pen, losing
+    // whatever color this measurement was actually assigned (matches
+    // RigExpert AntScope2 2.0.3's fix, issue #10).
+    QPen pen = m_measurements.last().smithCurve->pen();
+    QPen viewPen = m_viewMeasurements.last().smithCurve->pen();
+    QPen farEndAddPen = m_farEndMeasurementsAdd.last().smithCurve->pen();
+    QPen farEndSubPen = m_farEndMeasurementsSub.last().smithCurve->pen();
+
     // See Measurements::deleteRow()'s comment -- raw delete leaves the
     // QCPCurve dangling in m_smithWidget's own plottable/legend lists.
     m_smithWidget->removePlottable(m_measurements.last().smithCurve);
@@ -920,6 +931,11 @@ void Measurements::on_continueMeasurement(qint64 from, qint64 to, qint32 dots)
     m_viewMeasurements.last().smithCurve = new QCPCurve(m_smithWidget->xAxis, m_smithWidget->yAxis);
     m_farEndMeasurementsAdd.last().smithCurve = new QCPCurve(m_smithWidget->xAxis, m_smithWidget->yAxis);
     m_farEndMeasurementsSub.last().smithCurve = new QCPCurve(m_smithWidget->xAxis, m_smithWidget->yAxis);
+
+    m_measurements.last().smithCurve->setPen(pen);
+    m_viewMeasurements.last().smithCurve->setPen(viewPen);
+    m_farEndMeasurementsAdd.last().smithCurve->setPen(farEndAddPen);
+    m_farEndMeasurementsSub.last().smithCurve->setPen(farEndSubPen);
 }
 
 void Measurements::on_newAnalyzerData(RawData _rawData)
@@ -1281,9 +1297,18 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
 //------------------------------------------------------------------------------
     double pointX,pointY;
     NormRXtoSmithPoint(R/m_Z0, X/m_Z0, pointX, pointY);
-    double len = m_measurements.last().dataRX.length();
+    // Was dataRX.length() -- diverges from m_currentPoint across a
+    // Continuous "continue" (dataRX isn't cleared, m_currentPoint resets to
+    // 0), which is also what on_newCursorSmithPos()'s findedNum bounds
+    // check guards against (see that function's own comment). Matches
+    // RigExpert AntScope2 2.0.3's fix (issue #10), ported here since the
+    // QCustomPlot 1.x->2.x rewrite carried the data structures forward but
+    // not this index fix.
+    double len = m_currentPoint;
     m_measurements.last().smithGraph.add(QCPCurveData(len, pointX, pointY));
-    len = m_measurements.last().dataRX.length()*2 - 1;
+    len = m_currentPoint*2 - 1;
+    if (len < 0)
+        len = 0;
     m_measurements.last().smithGraphView.add(QCPCurveData(len, pointX, pointY));
 
 //------------------------------------------------------------------------------
@@ -1445,9 +1470,13 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
             double ptX,ptY;
             //NormRXtoSmithPoint(R/m_Z0, X/m_Z0, ptX, ptY);
             NormRXtoSmithPoint(Rnorm, Xnorm, ptX, ptY);
-            int len = m_measurements.last().dataRX.length();
+            // See the uncalibrated version above (~line 1284) for why
+            // m_currentPoint, not dataRX.length().
+            int len = m_currentPoint;
             m_measurements.last().smithGraphCalib.add(QCPCurveData(len, ptX, ptY));
-            len = m_measurements.last().dataRX.length()*2 - 1;
+            len = m_currentPoint*2 - 1;
+            if (len < 0)
+                len = 0;
             m_measurements.last().smithGraphViewCalib.add(QCPCurveData(len, ptX, ptY));
              //----------------------calc smith end---------------------------
         }

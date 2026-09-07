@@ -206,11 +206,17 @@ void Measurements::on_newCursorSmithPos (double x, double y, int index)
         {
             rho = graphValueAt(m_measurements.at(index).rhoGraph, frequency);
             phase = graphValueAt(m_measurements.at(index).phaseGraphCalib, frequency);
-//            // HUCK
-//            if (findedNum >= m_measurements.at(index).dataRXCalib.count()) {
-//                findedNum = m_measurements.at(index).dataRXCalib.count()-1;
-//            }
-//            //
+            // findedNum comes from a nearest-point search over smithGraph/
+            // smithGraphCalib (above), a separate container from dataRXCalib
+            // that can end up a different size (e.g. across a Continuous
+            // "continue" -- see on_newData()'s smith-point comment). Without
+            // this clamp, .at(findedNum) below throws/aborts on an
+            // out-of-range index. Matches RigExpert AntScope2 2.0.3's fix
+            // (issue #10); was already here but commented out.
+            if (findedNum >= m_measurements.at(index).dataRXCalib.count())
+                findedNum = m_measurements.at(index).dataRXCalib.count()-1;
+            if (findedNum < 0)
+                findedNum = 0;
             r = m_measurements.at(index).dataRXCalib.at(findedNum).r;
             x1 = m_measurements.at(index).dataRXCalib.at(findedNum).x;
         }
@@ -240,11 +246,11 @@ void Measurements::on_newCursorSmithPos (double x, double y, int index)
         {
             rho = graphValueAt(m_measurements.at(index).rhoGraph, frequency);
             phase = graphValueAt(m_measurements.at(index).phaseGraph, frequency);
-//            // HUCK
-//            if (findedNum >= m_measurements.at(index).dataRX.count()) {
-//                findedNum = m_measurements.at(index).dataRX.count()-1;
-//            }
-//            //
+            // See the calibrated branch above for why this clamp exists.
+            if (findedNum >= m_measurements.at(index).dataRX.count())
+                findedNum = m_measurements.at(index).dataRX.count()-1;
+            if (findedNum < 0)
+                findedNum = 0;
             r = m_measurements.at(index).dataRX.at(findedNum).r;
             x1 = m_measurements.at(index).dataRX.at(findedNum).x;
         }
