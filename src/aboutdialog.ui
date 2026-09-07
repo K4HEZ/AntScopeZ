@@ -6,18 +6,18 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>239</width>
-    <height>270</height>
+    <width>490</width>
+    <height>397</height>
    </rect>
-  </property>
-  <property name="windowTitle">
-   <string>About AntScopeZ</string>
   </property>
   <property name="minimumSize">
    <size>
     <width>239</width>
     <height>270</height>
    </size>
+  </property>
+  <property name="windowTitle">
+   <string>About AntScopeZ</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -102,6 +102,16 @@
       </widget>
      </item>
      <item>
+      <widget class="QLabel" name="buildLabel">
+       <property name="text">
+        <string notr="true">0</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer_2">
        <property name="orientation">
         <enum>Qt::Orientation::Horizontal</enum>
@@ -115,16 +125,6 @@
       </spacer>
      </item>
     </layout>
-   </item>
-   <item>
-    <widget class="QLabel" name="buildLabel">
-     <property name="text">
-      <string notr="true">0</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignmentFlag::AlignCenter</set>
-     </property>
-    </widget>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_flag">
@@ -197,20 +197,23 @@ color: #000000;
    </item>
    <item>
     <widget class="QLabel" name="creditsLabel">
+     <property name="statusTip">
+      <string notr="true"/>
+     </property>
      <property name="text">
-      <string>Created by K4HEZ, with assistance from KC5CD, based on RigExpert's &lt;a href=&quot;https://rigexpert.com/software/antscope2/&quot;&gt;AntScope2&lt;/a&gt;.</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;AntScopeZ is a fork of RigExpert's &lt;a href=&quot;https://rigexpert.com/software/antscope2/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#27bf73;&quot;&gt;AntScope2&lt;/span&gt;&lt;/a&gt; software. We wish to thank all the open-source contributers that make tools like this possible. ...and &lt;a href=&quot;www.rigexpert.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#27bf73;&quot;&gt;RigExpert&lt;/span&gt;&lt;/a&gt; for choosing open-source!&lt;br/&gt;&lt;br/&gt;KC5CD has made significant contributions to this project and provides testing and builds for the Windows environment. Claude AI has helped us both.&lt;/p&gt;&lt;p&gt;See the github repository @ &lt;a href=&quot;https://github.com/K4HEZ/AntScopeZ&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#27bf73;&quot;&gt;K4HEZ / AntScopeZ&lt;/span&gt;&lt;/a&gt; for latest versions, to open issues, and to obtain source code.&lt;/p&gt;&lt;p&gt;73 &lt;br/&gt;-K4HEZ&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="textFormat">
       <enum>Qt::TextFormat::RichText</enum>
      </property>
-     <property name="openExternalLinks">
-      <bool>true</bool>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
      </property>
-     <property name="alignment">
-      <set>Qt::AlignmentFlag::AlignCenter</set>
+     <property name="openExternalLinks">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
