@@ -490,6 +490,13 @@ void BleAnalyzer::dataReceived(const QLowEnergyCharacteristic &c, const QByteArr
             m_frxCur = 0;
             m_frxTime = QDateTime::currentMSecsSinceEpoch();
             m_frxGo = true;
+        } else {
+            // Was only reset via the next 1Hz handlePing() tick otherwise
+            // (up to ~1s of needlessly queuing a command that could have
+            // gone straight out). Ported from RigExpert AntScope2 2.0.3
+            // follow-up commit, issue #10.
+            m_bWaitingPing = false;
+            m_frxGo = false;
         }
         return;
     }
@@ -598,15 +605,22 @@ void BleAnalyzer::parseRecList(QDataStream& stream)
         }
         m_analyzerRecords.insert(QString::number(m_requestRecord.m_recordCell), m_requestRecord);
         QString str = m_requestRecord.record();
-        // This record's list entry is fully received -- ported from
-        // RigExpert AntScope2 2.0.3, issue #10 (see sendPing()'s comment).
-        m_bWaitingPing = false;
-        m_frxGo = false;
         emit analyzerDataStringArrived(str);
     }
         break;
+    case (qint8)0xFF: {
+        // The *whole list* is done -- not case 2 above, which fires once
+        // per record and could reset this mid-fetch, letting a queued
+        // command through before the list transfer actually finished.
+        // Ported from RigExpert AntScope2 2.0.3 follow-up commit, issue #10
+        // (see sendPing()'s comment).
+        m_bWaitingPing = false;
+        m_frxGo = false;
+    }
+        break;
     default: {
-
+        m_bWaitingPing = false;
+        m_frxGo = false;
     }
         break;
     }
@@ -775,6 +789,11 @@ void BleAnalyzer::parseFullInfo(QDataStream& stream)
         QString hw = bytesToString(stream);
         str = "HW: " + hw;
         setResponse(str);
+        // FULLINFO's last field -- the exchange is done. Ported from
+        // RigExpert AntScope2 2.0.3 follow-up commit, issue #10 (see
+        // sendPing()'s comment).
+        m_bWaitingPing = false;
+        m_frxGo = false;
     }
         break;
     }

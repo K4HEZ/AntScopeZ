@@ -87,6 +87,15 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   Stop now sends a real wire abort too (still treated as best-effort,
   not guaranteed) instead of only a local flag. Ported from RigExpert
   AntScope2 2.0.3, #10.
+- Follow-up to the BLE queueing fix above: the Screenshot dialog's
+  completion never actually reached the BLE analyzer at all
+  (`AnalyzerPro::on_screenshotComplete()` was missing the call), so its
+  queueing state could stay stuck after a screenshot; a per-record
+  reset in the analyzer-data list fetch could clear it mid-fetch
+  instead of only once the whole list was done; FULLINFO's last field
+  and an empty-queue ping response weren't resetting it either.
+- License tier "BASE"'s max frequency was still 70MHz; RigExpert
+  AntScope2 2.0.3 corrected it to 75MHz.
 
 ### Removed
 
