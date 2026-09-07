@@ -6,7 +6,6 @@
 #include "customgraph.h"
 #include "glwidget.h"
 
-extern bool g_developerMode;
 extern QMap<QString, QString> g_mapTabPlotNames;
 int g_maxMeasurements = MAX_MEASUREMENTS;
 // See measurements.h's ACTIVE_GRAPH_PEN_WIDTH/INACTIVE_GRAPH_PEN_WIDTH --

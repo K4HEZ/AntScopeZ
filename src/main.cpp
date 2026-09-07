@@ -6,10 +6,8 @@
 #include "analyzer/customanalyzer.h"
 #include "settings.h"
 #include "style.h"
-#include "debuglog.h"
 #include <QSettings>
 
-bool g_developerMode = false;
 bool g_usbOnly = false;
 bool g_raspbian = false;
 bool g_bAA55modeNewProtocol = false;
@@ -148,88 +146,10 @@ int main(int argc, char *argv[])
     //a.eventDispatcher()->installNativeEventFilter(&myEventfilter);
 #endif
 
-    // -developer is intentionally inert as of 2026-08-10, regardless of
-    // whether it's passed on the command line. As of 2026-08-20 this flag
-    // gates exactly two things: CustomAnalyzer::load() (startup preset
-    // loading, mainwindow.cpp) and the abandoned UDP remote-control bridge
-    // (onefqwidget.cpp, see BUILDINFO.md -- not being fixed, kept on this
-    // flag only because there's nowhere better for it). The User Defined
-    // tab, the "Don't restrict frequency" checkbox, and the Ctrl+Alt+
-    // Shift+M/N auto-calibration debug shortcuts used to ride this same
-    // flag too, but were deliberately moved off it that day (to their own
-    // compile-time constants, or fully ungated) -- see BUILDINFO.md's
-    // "Compile-time feature gates" for why. Investigating a "User Defined"
-    // tab crash led to actually exercising Custom Analyzer for the first
-    // time in a while, which turned up enough problems that shipping it
-    // live to anyone who happens to pass -developer isn't safe:
-    //
-    //   - FIXED this session: AnalyzerPro::slotFullInfo() (analyzerpro.cpp)
-    //     null-derefed AnalyzerParameters::byName(getModelString()) --
-    //     getModelString() returns CustomAnalyzer::currentPrototype() while
-    //     customized, which is never a real model name (defaults to the
-    //     literal placeholder "Custom"), so byName() reliably returned
-    //     nullptr and the very next line crashed on it. Now reads
-    //     AnalyzerParameters::current() instead (the real, physically
-    //     connected device, already resolved by serial-number prefix at
-    //     connection time) -- license-level bookkeeping is about the real
-    //     hardware, not whatever custom override is configured for display.
-    //   - FIXED this session: Settings::initCustomizeTab() (settings.cpp)
-    //     unconditionally .hide()'d comboBoxPrototype and its label, despite
-    //     correctly populating it with every AnalyzerParameters model name
-    //     right below -- so the one control that lets you pick a valid
-    //     reference model literally couldn't be used. Unhidden.
-    //   - STILL BROKEN: the custom min/max frequency override doesn't
-    //     survive a scan even once a valid prototype is picked.
-    //     AnalyzerParameters::normalizeFq()/normalizeFqRange()
-    //     (analyzerparameters.h) unconditionally clamp to
-    //     AnalyzerParameters::current()'s real stock range and have no idea
-    //     CustomAnalyzer exists; on_dataChanged() (mainwindow.cpp) calls
-    //     normalizeFqRange() on every range change, so "Full Range" and a
-    //     typed Stop value both get silently clamped straight back down to
-    //     the real device's limit. Called from ~8 sites total
-    //     (mainwindow.cpp), not just the one -- needs those made
-    //     customization-aware, not a single call-site patch.
-    //   - STILL BROKEN, not diagnosed: running an actual scan against a real
-    //     device (RigExpert Match RFE, this session) with "Use customized
-    //     analyzer" checked gets the command rejected at the protocol level
-    //     -- HidAnalyzer::sendData() qDebug()s
-    //     `***** ERROR:  "Error.Not recognized"` in response to
-    //     `07046f66660d0000...` (zero-padded to the fixed HID report size).
-    //     Root cause unknown; deliberately not chased this pass.
-    //   - Settings::on_addButton() ("New") sets the (no longer hidden)
-    //     comboBoxPrototype's current text to the literal string
-    //     `"names[0]"` -- dead placeholder, never indexed into a real list.
-    //     Harmless now that the combo box is visible and user-selectable,
-    //     but still worth fixing properly.
-    //   - Reported, not yet diagnosed: Customize tab's controls "not laid
-    //     out cleanly" at runtime (no screenshot yet to compare against the
-    //     .ui markup, which looks structurally normal on its own).
-    //
-    // See BUILDINFO.md's "Known issues" for the full writeup (matching the
-    // S21-tab entry's depth) -- this comment is the short version. Flip
-    // g_developerMode back to `true` here once the two STILL BROKEN items
-    // above are actually fixed, not before; the args.contains() check itself
-    // is left in place so that's a one-line change.
-    if (args.contains("-developer")) {
-        //g_developerMode = true;
-
-        // Debug Logging (Settings > Developer) enable flags, one per
-        // checkbox -- lets a repro run start with the right logging already
-        // on instead of having to open Settings and tick it by hand every
-        // time. Gated behind -developer same as everything else on this
-        // line (not g_developerMode, which stays inert -- see this block's
-        // own comment above): the checkboxes themselves are always reachable
-        // regardless of -developer, this is only about skipping the manual
-        // GUI step, not resurrecting the broader gate.
-        if (args.contains("-comserial"))
-            DebugLog::setSerialEnabled(true);
-        if (args.contains("-usbhid"))
-            DebugLog::setUsbHidEnabled(true);
-        if (args.contains("-nanovna"))
-            DebugLog::setNanovnaEnabled(true);
-        if (args.contains("-ble"))
-            DebugLog::setBleEnabled(true);
-    }
+    // -developer/g_developerMode removed 2026-09-07 -- Custom Analyzer no
+    // longer depends on it and is live now. Debug Logging is reachable via
+    // Settings > Developer regardless. See BUILDINFO.md's "Developer mode"
+    // and "Known issues" for detail/remaining Custom Analyzer bugs.
     if (args.contains("-usb-only")) {
         g_usbOnly = true;
     }

@@ -22,7 +22,6 @@ extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
                             QString title, QString text,
                             QMessageBox::StandardButtons buttons = QMessageBox::Ok,
                             QMessageBox::StandardButton defaultButton = QMessageBox::NoButton);
-extern bool g_developerMode;
 extern int g_maxMeasurements; // see measurements.cpp
 extern int g_activeGraphPenWidth; // see measurements.cpp
 extern int g_inactiveGraphPenWidth; // see measurements.cpp
@@ -164,15 +163,13 @@ Settings::Settings(QWidget *parent) :
     // forgets they left on. Drives DebugLog's per-interface enable flags
     // directly (also plain in-memory, not persisted) rather than through
     // QSettings. Read back DebugLog's own current state rather than just
-    // assuming unchecked -- it can already be true here, e.g. the
-    // -comserial/-usbhid/-nanovna/-ble CLI flags (main.cpp) set it before
-    // Settings is ever opened, and this dialog itself is reconstructed
-    // fresh every time Settings is opened (not a singleton reused across
-    // opens), so hardcoding setChecked(false) -- as this used to -- reset
-    // the *visible* checkbox on every reopen too, not just once per
-    // launch, regardless of whether logging was actually still running
-    // underneath. Confirmed live 2026-09-04: checked "NanoVNA", closed
-    // Settings, reopened it, box was back to unchecked.
+    // assuming unchecked -- this dialog itself is reconstructed fresh every
+    // time Settings is opened (not a singleton reused across opens), so
+    // hardcoding setChecked(false) -- as this used to -- reset the
+    // *visible* checkbox on every reopen too, not just once per launch,
+    // regardless of whether logging was actually still running underneath.
+    // Confirmed live 2026-09-04: checked "NanoVNA", closed Settings,
+    // reopened it, box was back to unchecked.
     ui->debugLogSerialCheckBox->setChecked(DebugLog::serialEnabled());
     ui->debugLogUsbHidCheckBox->setChecked(DebugLog::usbHidEnabled());
     ui->debugLogBleCheckBox->setChecked(DebugLog::bleEnabled());
@@ -285,8 +282,7 @@ Settings::Settings(QWidget *parent) :
     // Custom Analyzer used to be removeTab()'d entirely unless
     // g_developerMode was on. Shown unconditionally now instead -- developer
     // mode itself isn't the risk here, and hiding this tab just meant nobody
-    // but us ever saw it needed finishing. Everything on it is already
-    // disabled/under development regardless (see initCustomizeTab()).
+    // but us ever saw it needed finishing.
     initCustomizeTab();
 
     initMarkersTab();
@@ -1456,21 +1452,14 @@ void Settings::initCustomizeTab()
     ui->comboBoxName->blockSignals(false);
     ui->comboBoxPrototype->blockSignals(false);
 
-    // "Use customized analyzer" is under development -- forced off and
-    // disabled entirely regardless of whatever CustomAnalyzer::customized()
-    // last had saved, rather than seeding the checkbox/controls from it as
-    // this used to. on_enableCustomizeControls(false) also persists
-    // CustomAnalyzer::customize(false), so this is a real "not customized"
-    // state, not just a greyed-out checkbox with stale customization still
-    // saved underneath it.
-    ui->customizeCheckBox->setChecked(false);
-    on_enableCustomizeControls(false);
+    ui->customizeCheckBox->setChecked(CustomAnalyzer::customized());
+    on_enableCustomizeControls(CustomAnalyzer::customized());
 
     // "Don't restrict frequency" -- lives here (not tied to
     // customizeCheckBox/on_enableCustomizeControls() above, which is
-    // Custom Analyzer's own separate, still-broken feature) purely for
-    // placement -- a developer-facing setting belongs on the Analyzer
-    // tab. No longer g_developerMode-gated itself (ungated 2026-08-20):
+    // Custom Analyzer's own separate setting) purely for placement -- a
+    // developer-facing setting belongs on the Analyzer tab. No longer
+    // g_developerMode-gated itself (ungated 2026-08-20):
     // living on this tab is the gating now, not the -developer flag.
     // Checked means "don't restrict" is ON, i.e. m_restrictFq is FALSE --
     // matches on_fqRestrictCheckBox_clicked()'s and the other setter's
@@ -1489,12 +1478,6 @@ void Settings::initCustomizeTab()
     ui->lineEditMaxR->setText(QString::number(m_settings->value("cable_res_max", 40).toDouble()));
     ui->lineEditStepR->setText(QString::number(m_settings->value("cable_res_steps", 100).toDouble()));
     m_settings->endGroup();
-
-    // The whole Custom Analyzer tab is under development -- disabling the
-    // outer groupbox cascades to every descendant (checkbox, combos,
-    // buttons, both sub-groupboxes, and every static label) in one line,
-    // so nothing in it looks editable while nothing is wired up yet.
-    ui->groupBoxCustomAnalyzer->setEnabled(false);
 }
 
 // Populates the Markers tab's DualListWidget from the current
@@ -1781,14 +1764,8 @@ void Settings::markThemeDirty()
 
 void Settings::on_enableCustomizeControls(bool enable)
 {
-    ui->comboBoxName->setEnabled(enable);
-    ui->comboBoxPrototype->setEnabled(enable);
-    ui->lineEditMin->setEnabled(enable);
-    ui->lineEditMax->setEnabled(enable);
-    ui->spinBoxWidth->setEnabled(enable);
-    ui->spinBoxHeight->setEnabled(enable);
-    ui->btnAdd->setEnabled(enable);
-    ui->btnRemove->setEnabled(enable);
+    // Enables/disables the groupbox -- cascades to every descendant.
+    ui->groupBoxCustomAnalyzer->setEnabled(enable);
     CustomAnalyzer::customize(enable);
 }
 
@@ -1863,7 +1840,8 @@ void Settings::on_removeButton()
 void Settings::on_addButton()
 {
     ui->comboBoxName->setCurrentText("");
-    ui->comboBoxPrototype->setCurrentText("names[0]");
+    // Was the literal string "names[0]" -- dead placeholder.
+    ui->comboBoxPrototype->setCurrentIndex(0);
     ui->lineEditMin->setText("0");
     ui->lineEditMax->setText("0");
     ui->spinBoxWidth->setValue(0);

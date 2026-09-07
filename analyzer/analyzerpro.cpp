@@ -242,12 +242,16 @@ QString AnalyzerPro::getSerialNumber(void) const
 
 QString AnalyzerPro::getMinFq()
 {
-    return CustomAnalyzer::customized() ? CustomAnalyzer::currentPrototype() : AnalyzerParameters::getMinFq();
+    // Was CustomAnalyzer::currentPrototype() -- a model name, not a
+    // frequency; copy-paste from getModelString() above.
+    CustomAnalyzer* ca = CustomAnalyzer::customized() ? CustomAnalyzer::getCurrent() : nullptr;
+    return ca != nullptr ? ca->minFq() : AnalyzerParameters::getMinFq();
 }
 
 QString AnalyzerPro::getMaxFq()
 {
-    return CustomAnalyzer::customized() ? CustomAnalyzer::currentPrototype() : AnalyzerParameters::getMaxFq();
+    CustomAnalyzer* ca = CustomAnalyzer::customized() ? CustomAnalyzer::getCurrent() : nullptr;
+    return ca != nullptr ? ca->maxFq() : AnalyzerParameters::getMaxFq();
 }
 
 // Splits [fqFrom, fqTo] into however many g_analyzerMaxPoints-sized slices

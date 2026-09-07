@@ -13,7 +13,6 @@
 #include <QWindow>
 
 extern QString appendSpaces(const QString& number);
-extern bool g_developerMode; // see main.cpp
 extern bool g_usbOnly;
 extern int g_maxMeasurements; // see measurements.cpp
 extern QMap<QString, QString> g_mapTabPlotNames; // see mainwindow.cpp

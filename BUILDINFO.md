@@ -353,40 +353,45 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
     same device rejects that command too, and this codebase has no record
     anywhere of which RigExpert model/firmware, if any, actually accepts
     either one.
-- **Developer mode (`-developer` flag) is intentionally disabled as of
-  2026-08-10 -- `main.cpp` no longer sets `g_developerMode` even when the
-  flag is passed (the `args.contains("-developer")` check itself is left in
-  place, so re-enabling is a one-line change once the items below are
-  fixed).** As of 2026-08-20 it gates exactly two things:
-  `CustomAnalyzer::load(m_settings)` (startup preset loading, `mainwindow.cpp`)
-  and the UDP remote-control bridge (`onefqwidget.cpp`, deliberately
-  abandoned -- see its own bullet below). Everything else that used to be
-  on this flag was audited and deliberately moved off it the same day, on
-  the reasoning that `-developer` is meant to become a *real, live* flag
-  again once the Custom Analyzer bugs below are fixed -- at which point
-  anything still riding on it would suddenly become reachable by any
-  `.deb` user who reads this file, not just something to flip locally for
-  testing. See the "Compile-time feature gates" bullet further down for
-  where each thing landed instead. It does **not** gate a points ceiling
-  -- that claim was true of a since-replaced mechanism
-  (`MAX_DOTS`/`spinBoxPoints`, neither of which exist in the code anymore)
-  and is stale as of the scan-stitching rework: the actual ceiling today
-  is `g_pointsMax`/`g_pointsWarnThreshold`/`g_analyzerMaxPoints`
-  (Settings > General), independently user-editable, bounded
-  50-`POINTS_MAX` (`mainwindow.h`, currently 10000), with no
-  `g_developerMode` check anywhere in that path.
+- **Developer mode (`-developer` flag, `g_developerMode`) -- inert from
+  2026-08-10, removed entirely 2026-09-07.** `main.cpp` stopped setting
+  `g_developerMode` on 2026-08-10 even when `-developer` was passed; as of
+  2026-08-20 it gated exactly two things: `CustomAnalyzer::load(m_settings)`
+  (startup preset loading, `mainwindow.cpp`) and what a since-removed
+  comment called an "abandoned UDP remote-control bridge" in
+  `onefqwidget.cpp` -- already gone from that file by then, actually
+  (removed by commit `d27827e`, "Remove OneFqWidget's dead UDP
+  remote-control stub, superseded by json-tcp-api" -- see the
+  `remoteapi/`-module note further down; this paragraph's older wording
+  didn't know that yet). By 2026-09-07, `CustomAnalyzer::load()` had been
+  unhooked from the flag too (Custom Analyzer is meant to be a live,
+  user-facing feature, not something needing `-developer`), leaving
+  `g_developerMode` with no live runtime call site anywhere -- so the flag,
+  the global, every `extern bool g_developerMode;` declaration (15 files),
+  and the `-developer`-gated `-comserial`/`-usbhid`/`-nanovna`/`-ble` CLI
+  shortcut for pre-enabling Debug Logging (never the only way to reach
+  it -- Settings > Developer's four checkboxes always worked regardless)
+  were all deleted outright that day rather than left inert. It did
+  **not** gate a points ceiling -- that claim was true of a since-replaced
+  mechanism (`MAX_DOTS`/`spinBoxPoints`, neither of which exist in the code
+  anymore) and was stale as of the scan-stitching rework: the actual
+  ceiling today is `g_pointsMax`/`g_pointsWarnThreshold`/
+  `g_analyzerMaxPoints` (Settings > General), independently user-editable,
+  bounded 50-`POINTS_MAX` (`mainwindow.h`, currently 10000), with no
+  `g_developerMode` check ever in that path.
   **As of 2026-08-13, it no longer gates Settings' Custom Analyzer group
   box** (renamed from "Customize"; as of 2026-08-14 it lives inside the
   renamed "Developer" tab, alongside the unrelated "Debug Logging" group
-  box added the same day -- see `CHANGELOG.md`) -- it's always shown now,
-  with every control on it explicitly disabled instead (see `Settings::
-  initCustomizeTab()`), so the still-broken feature described below stays
-  visible-but-inert rather than invisible. Custom Analyzer is still the
-  reason developer mode itself is off, though: a "User Defined" tab crash
-  (fixed separately, see `CHANGELOG.md`) led to actually exercising this
-  feature for what looks like the first time in a while, and it turned up
-  enough problems that shipping it live to anyone who passes `-developer`
-  isn't safe yet.
+  box added the same day -- see `CHANGELOG.md`). **As of 2026-09-07 the
+  group box is no longer force-disabled either** -- "Use customized
+  analyzer" moved out to its own item directly above the group box and
+  now genuinely enables/disables it (`Settings::on_enableCustomizeControls()`
+  cascades via `groupBoxCustomAnalyzer->setEnabled()`), and
+  `Settings::initCustomizeTab()` seeds both the checkbox and the group
+  box's enabled state from the real saved `CustomAnalyzer::customized()`
+  value on open, instead of always forcing both off. The two STILL BROKEN
+  items below are unfixed as of this date, so turning the feature on for
+  real use still runs into them.
   - **What it's for:** define a named preset that overrides a real,
     already-detected model's min/max frequency and LCD width/height --
     aimed at a clone or updated-range unit that AntScopeZ already
@@ -422,6 +427,24 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
     every `AnalyzerParameters` model name right below -- so the one control
     that lets you pick a valid reference model literally couldn't be used.
     Unhidden; confirmed it populates.
+  - **FIXED 2026-09-07:** `AnalyzerPro::getMinFq()`/`getMaxFq()`
+    (`analyzerpro.cpp`) returned `CustomAnalyzer::currentPrototype()` while
+    customized -- a copy-paste from `getModelString()` right above, which
+    correctly wants a model-name string; these two want a frequency
+    instead. Never actually called from anywhere (`AnalyzerPro`'s own
+    `getMinFq()`/`getMaxFq()` have no live callers -- everything else on
+    this list reimplements the same `CustomAnalyzer::customized() ? ... :
+    AnalyzerParameters::getMinFq()/getMaxFq()` check inline at its own call
+    site instead), so harmless in practice, but wrong: any future caller
+    doing `.toULongLong()` on a non-numeric string like `"AA-230 ZOOM"`
+    silently gets `0`. Now returns `CustomAnalyzer::getCurrent()->minFq()/
+    maxFq()`, falling back to `AnalyzerParameters::getMinFq()/getMaxFq()`
+    if there's no current alias.
+  - **FIXED 2026-09-07:** `Settings::on_addButton()` ("New") set the
+    (no longer hidden) `comboBoxPrototype`'s current text to the literal
+    string `"names[0]"` -- dead placeholder, never actually indexed into a
+    real list. Now `setCurrentIndex(0)`, selecting the combo's actual first
+    entry (populated in `initCustomizeTab()`).
   - **STILL BROKEN:** the custom min/max frequency override doesn't survive
     a scan even with a valid prototype picked. `AnalyzerParameters::
     normalizeFq()`/`normalizeFqRange()` (`analyzerparameters.h`)
@@ -432,9 +455,9 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
     clamped straight back down to the real device's limit. Called from
     roughly 8 sites total in `mainwindow.cpp`, not just the one -- fixing
     this means making those two static methods customization-aware (same
-    `CustomAnalyzer::customized() ? ... : ...` pattern
-    `AnalyzerPro::getMinFq()/getMaxFq()` already use), not patching call
-    sites individually.
+    `CustomAnalyzer::customized() ? ... : ...` pattern the individual
+    `mainwindow_scan.cpp`/`mainwindow_frequency.cpp` call sites already use
+    inline), not patching call sites individually.
   - **STILL BROKEN, not diagnosed:** running an actual scan against a real
     device (RigExpert Match RFE) with "Use customized analyzer" checked
     gets the outgoing command rejected at the protocol level --
@@ -445,11 +468,23 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
     encodes a frequency value that becomes malformed once it's built from a
     custom range instead of a real model's, but that's a guess, not a
     finding.
-  - `Settings::on_addButton()` ("New") sets the (no longer hidden)
-    `comboBoxPrototype`'s current text to the literal string `"names[0]"`
-    -- dead placeholder, never actually indexed into a real list. Harmless
-    now that the combo box is visible and user-selectable (you can just
-    pick a real entry yourself), but still wrong and worth fixing properly.
+  - **Screenshot width/height (investigated 2026-09-07): client-side only,
+    by design -- not a bug, but a hard limit worth knowing.**
+    `MainWindow::on_actionScreenshotAA_triggered()` correctly substitutes a
+    custom profile's width/height for the real model's when customized,
+    and `Screenshot` (`screenshot.cpp`) consistently uses whatever it's
+    given throughout buffer allocation, pixel decoding, and preview
+    scaling -- no dimension bugs found there. But
+    `HidAnalyzer::makeScreenshot()`/`ComAnalyzer::makeScreenshot()`
+    (`analyzer/hid_analyzer.cpp`, `analyzer/com_analyzer.cpp`) send the
+    bare `screenshot\r` command with no width/height encoded in it at all
+    -- the real device streams its own native, fixed-resolution pixel data
+    regardless of what's configured here. A custom profile's width/height
+    only decode correctly if they're set to match a real connected
+    device's actual native screen resolution; there's no protocol-level
+    way to make the device produce a different one, so this is really the
+    same class of problem as the "Error.Not recognized" scan rejection
+    above, not something fixable purely in `Screenshot`.
   - Reported, not yet diagnosed: the Customize tab's controls looking "not
     laid out cleanly" at runtime -- no screenshot yet to compare against
     the `.ui` markup, which looks like a structurally normal form layout
@@ -560,45 +595,22 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
       produced confusing symptoms (including a false lead on the crash
       above) that looked code-related until the device state was ruled
       out.
-  - **UDP remote-control bridge (`OneFqWidget`) -- investigated 2026-08-20,
-    deliberately not pursued.** Opens two plain-text UDP sockets when
-    `g_developerMode` is true (`onefqwidget.cpp`/`.h`). Present since this
-    repo's very first commit (`eb1cce9`, "AntScopeZ 2.1.4 baseline") --
-    inherited from AntScope2, not fork-original; no comment anywhere says
-    what it was built to talk to.
-
-    | Direction | Port | Format | Effect |
-    |---|---|---|---|
-    | Receive | 6051 (`UDP_PORT_RECEIVE`) | `AA2, SETFQ, <freq_MHz>` | Stops any in-progress measurement, starts/redirects a One Fq measurement at `<freq_MHz>` |
-    | Send | 6050 (`UDP_PORT_SEND`) | `AA1, <freq_MHz>, <SWR>` | Meant to fire once the requested-frequency reading arrives, back to whichever host sent `SETFQ` |
-
-    Found not viable as-is, for two independent reasons:
-    - **The receive socket's lifetime is backwards for any real use.** It
-      only exists while `OneFqWidget` is already open -- i.e. a One Fq
-      session has to already be running, started by a human at the
-      keyboard, before a remote `SETFQ` can do anything. A remote client
-      can redirect an already-running session, not start one from cold --
-      the opposite of what "remote control" would need.
-    - **Likely unit mismatch on the reply side, never exercised end-to-end
-      to catch it.** `processPendingDatagrams()` converts the incoming MHz
-      string to kHz; the connected lambda in `measurements_onefq.cpp`
-      multiplies by 1000 again for both the actual measurement request and
-      the stored broadcast-trigger value, landing on a Hz-scale number
-      (`144,000,000` for `144.0`). The reply only fires on
-      `_data.FQ == m_broadcastFq` in `OneFqWidget::addData()`, and
-      `_data.FQ` looks to be carried in MHz elsewhere in this codebase --
-      if so, that equality can never hold, and the reply silently never
-      sends. Not fully traced/proven; nobody had reason to chase it
-      further once the bigger design gap above was found.
-
-    **Decided 2026-08-20: not worth fixing in place.** No evidence
-    anything has ever spoken this protocol to it (no companion tool, no
-    reference, code untouched since the baseline commit), it doesn't serve
-    the tuning-aid use case One Fq mode is actually wanted for, and fixing
-    it properly means redesigning the listener's lifetime anyway -- at
-    which point it stops being "finish what's there" and becomes a new
-    feature. See the `remote-network-control-idea` memory note for the
-    direction actually worth pursuing instead, if this ever comes back up.
+  - **UDP remote-control bridge (`OneFqWidget`) -- removed, not just
+    disabled.** Investigated 2026-08-20: two plain-text UDP sockets
+    (ports 6050/6051, `AA1`/`AA2`/`SETFQ` text protocol), gated behind
+    `g_developerMode`, present since this repo's very first commit
+    (`eb1cce9`) and inherited from AntScope2. Found not viable as-is (the
+    receive socket's lifetime was backwards for real remote control -- it
+    only existed while a One Fq session a human had already started was
+    open -- plus a likely unit-mismatch bug on the reply side, never
+    exercised end-to-end to confirm). Decided 2026-08-20 not worth fixing
+    in place; deleted outright by commit `d27827e` ("Remove OneFqWidget's
+    dead UDP remote-control stub, superseded by json-tcp-api") rather than
+    left dormant -- `onefqwidget.cpp`/`.h` have no socket code left at all.
+    See the `remote-network-control-idea` memory note for the direction
+    actually worth pursuing if remote control comes back up; the
+    `remoteapi/` module (TCP JSON API, `json-tcp-api` branch) is the
+    real, current remote-control mechanism.
 
 - **Compile-time feature gates -- `USER_DEFINED_FEATURE` and
   `CALIBRATION_DEBUG_TOOLS` (both `CMakeLists.txt`, default `0`).** Added
@@ -620,18 +632,22 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
     preset/band code, the widget setup/connect block, print pen-width
     handling, measurement-delete cleanup, plus the dead `.csv`
     User-Data-reload shortcut in `measurements_io.cpp`, left
-    uncommented-and-wrapped exactly as it was rather than fixed). "Come
-    back to this if/when `EFRX`-capable hardware turns up" -- see the
+    uncommented-and-wrapped exactly as it was rather than fixed -- its
+    extra `g_developerMode` inner gate was dropped 2026-09-07 along with
+    that flag, so it's reachable on `USER_DEFINED_FEATURE` alone now,
+    still unconfirmed-working either way). "Come back to this if/when
+    `EFRX`-capable hardware turns up" -- see the
     `s21-and-user-defined-live-capture-deferred` memory note.
   - **`CALIBRATION_DEBUG_TOOLS`** -- both Ctrl+Alt+Shift+M/N shortcuts
     (`mainwindow_scan.cpp`) and the `WAIT_CALFIVEKOHM`/
     `WAIT_CALFIVEKOHM_START` response parsing they depend on
     (`analyzer/hid_analyzer.cpp`). Never meant to be end-user-reachable at
-    all, regardless of what happens to `g_developerMode` -- see
-    `CMakeLists.txt`'s own warning comment for the full reasoning
-    (short version: these alter the device's *own* internal calibration,
-    not this app's software-side OSL data, using undocumented commands
-    RigExpert has never published anywhere this project has access to).
+    all, regardless of what happened to `g_developerMode` (removed
+    entirely 2026-09-07, see above) -- see `CMakeLists.txt`'s own warning
+    comment for the full reasoning (short version: these alter the
+    device's *own* internal calibration, not this app's software-side OSL
+    data, using undocumented commands RigExpert has never published
+    anywhere this project has access to).
 
   Three smaller things audited the same pass turned out not to need a
   flag *at all*, runtime or compile-time, and were ungated outright:

@@ -64,10 +64,9 @@ void MainWindow::on_singleStart_clicked()
         ui->fullBtn->setEnabled(true);
         ui->fullBtn->setChecked(true);
         ui->continuousStartBtn->setChecked(false);
-        // One Fq mode isn't gated by g_developerMode (see the trigger just
-        // below, and on_measurementComplete()'s own comment) -- cleaning
-        // it up on stop shouldn't be either, or the floating widget is
-        // left orphaned when stopping via Single without the flag set.
+        // Always clean up One Fq mode's floating widget on stop, or it's
+        // left orphaned (see the trigger just below, and
+        // on_measurementComplete()'s own comment).
         m_measurements->hideOneFqWidget();
         // on_startOneFq() disables these four unconditionally when One Fq
         // mode starts; nothing on any stop path re-enabled them until now
@@ -84,16 +83,13 @@ void MainWindow::on_singleStart_clicked()
     ui->fullBtn->setEnabled(false);
     ui->fullBtn->setChecked(false);
 
-    //if (g_developerMode)
-    {
-        ui->singleStart->setChecked(true);
-        quint64 fqFrom = ui->lineEdit_fqFrom->text().remove(' ').toLongLong();
-        quint64 fqTo = ui->lineEdit_fqTo->text().remove(' ').toLongLong();
-        bool oneFq = m_isRange ? (fqTo==0) : (fqTo==fqFrom);
-        if (oneFq) {
-            on_startOneFq(fqFrom, m_dotsNumber, false);
-            return;
-        }
+    ui->singleStart->setChecked(true);
+    quint64 fqFrom = ui->lineEdit_fqFrom->text().remove(' ').toLongLong();
+    quint64 fqTo = ui->lineEdit_fqTo->text().remove(' ').toLongLong();
+    bool oneFq = m_isRange ? (fqTo==0) : (fqTo==fqFrom);
+    if (oneFq) {
+        on_startOneFq(fqFrom, m_dotsNumber, false);
+        return;
     }
 
 
@@ -220,9 +216,8 @@ void MainWindow::on_continuousStartBtn_clicked(bool checked)
         m_isContinuos = false;
         m_measurements->setContinuous(false);
 
-        // Same reasoning as on_singleStart_clicked()'s stop path -- One Fq
-        // mode isn't gated by g_developerMode, so cleaning it up on stop
-        // shouldn't be either.
+        // Same reasoning as on_singleStart_clicked()'s stop path -- always
+        // clean up One Fq mode's widget on stop.
         m_measurements->hideOneFqWidget();
         ui->actionExport->setEnabled(true);
         return;
@@ -237,17 +232,13 @@ void MainWindow::on_continuousStartBtn_clicked(bool checked)
         return;
     }
 
-    // Not gated by g_developerMode -- One Fq mode itself isn't (matches
-    // on_singleStart_clicked()'s equivalent check). Scoped to `checked`
-    // (true only for a genuine user press of Continuous) rather than
-    // g_developerMode -- that was the actual bug: on_measurementComplete()
+    // Scoped to `checked` (true only for a genuine user press of
+    // Continuous) -- that was the actual bug: on_measurementComplete()
     // calls this function with checked=false to stop One Fq mode after
     // each batch, and this block used to fire on *that* call too (nothing
     // here ever looked at `checked`), silently restarting instead of
-    // stopping. With g_developerMode on, that produced a self-sustaining
-    // restart loop; with it off, this whole block was skipped, so it fell
-    // through to a normal (and useless -- zero-width-range) continuous
-    // scan instead. Confirmed 2026-08-20.
+    // stopping, producing a self-sustaining restart loop. Confirmed
+    // 2026-08-20.
     if (checked) {
         quint64 fqFrom = ui->lineEdit_fqFrom->text().remove(' ').toLongLong();
         quint64 fqTo = ui->lineEdit_fqTo->text().remove(' ').toLongLong();
@@ -547,9 +538,9 @@ void MainWindow::on_measurementComplete()
     if (m_analyzer->connectionType() == ReDeviceInfo::NANO ||
         m_analyzer->connectionType() == ReDeviceInfo::NANOV2)
         return;
-    // One Fq mode (Start==Stop or Range==0) isn't gated by g_developerMode
-    // -- it's reachable in the shipped build regardless. Every wire request
-    // is a single FRX1 now (see on_startOneFq()), so "one batch" here means
+    // One Fq mode (Start==Stop or Range==0) is reachable in the shipped
+    // build. Every wire request is a single FRX1 now (see on_startOneFq()),
+    // so "one batch" here means
     // one point -- looping (Single: m_oneFqRemaining more times; Continuous:
     // forever) happens app-side by re-triggering on_startOneFq() from here,
     // not by asking the device for a bigger batch.

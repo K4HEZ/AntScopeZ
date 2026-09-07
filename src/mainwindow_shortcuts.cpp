@@ -457,22 +457,6 @@ void MainWindow::on_pressCtrlPlus ()
         QPoint delta = QPoint(0,1);
         Qt::ScrollPhase phase = Qt::NoScrollPhase;        QWheelEvent event(pos, pos, delta, delta, Qt::NoButton, Qt::ControlModifier, phase, false);
         mouseWheel_swr(&event);
-//        int limit = g_developerMode ? 1 : SWR_ZOOM_LIMIT;
-//        if(m_swrZoomState > limit)
-//        {
-//            m_swrZoomState = m_swrZoomState - m_swrZoomState/10;
-//            m_swrWidget->yAxis->setRangeUpper(m_swrZoomState+0.02);
-//            m_swrWidget->yAxis->setRangeLower(MIN_SWR);
-//            m_swrWidget->replot();
-//            if(m_markers)
-//            {
-//                QTimer::singleShot(5, m_markers, SLOT(redraw()));
-//            }
-//            if(m_measurements)
-//            {
-//                QTimer::singleShot(1, m_measurements, SLOT(on_redrawGraphs()));
-//            }
-//        }
 
     }else if(str == "tab_phase")
     {

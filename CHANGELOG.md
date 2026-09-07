@@ -11,6 +11,36 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+### Changed
+
+- File > "Data from AA" moved to the Analyzer menu, under "Screenshot...".
+- Settings > Analyzer: "Use reconnect to drain unwanted data" moved from
+  the General tab, placed under "Analyzer timeout:".
+- Settings > Analyzer > Custom Analyzer: "Use customized analyzer"
+  checkbox moved out of the group box to directly above it, and now
+  enables/disables every control inside. The "under development" label
+  and the group box's permanent forced-disable are gone -- Custom
+  Analyzer is a live feature now, no longer gated behind the (removed)
+  `-developer` flag, and its on/off state and saved presets persist
+  across restarts.
+
+### Fixed
+
+- Custom Analyzer: `AnalyzerPro::getMinFq()`/`getMaxFq()` returned a
+  model-name string instead of a frequency (copy-paste bug); had no live
+  caller, so no observed symptom.
+- Settings > Custom Analyzer's "New" button set the prototype combo box
+  to the literal text "names[0]" instead of selecting a real entry.
+
+### Removed
+
+- The `-developer` CLI flag and `g_developerMode`, along with the
+  `-comserial`/`-usbhid`/`-nanovna`/`-ble` CLI shortcut for pre-enabling
+  Debug Logging -- both already inert/redundant (Debug Logging is always
+  reachable via Settings > Developer's checkboxes regardless). The
+  already-deleted UDP remote-control bridge's leftover documentation in
+  BUILDINFO.md was trimmed to match.
+
 ## [2.2.4] - 2026-09-06
 
 ### Changed

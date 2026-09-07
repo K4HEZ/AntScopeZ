@@ -7,7 +7,6 @@
 #include "glwidget.h"
 #include "style.h"
 
-extern bool g_developerMode;
 extern QMap<QString, QString> g_mapTabPlotNames;
 extern int g_maxMeasurements; // defined in measurements.cpp
 
@@ -873,12 +872,11 @@ void Measurements::importData(QString _name)
         // Never confirmed working (User Defined tab, gated by
         // USER_DEFINED_FEATURE -- see CMakeLists.txt); left exactly as it
         // was rather than fixed, per 2026-08-20 decision to just gate it
-        // off until real EFRX-capable hardware turns up.
+        // off until real EFRX-capable hardware turns up. Also required
+        // g_developerMode until that flag was removed 2026-09-07.
 #if USER_DEFINED_FEATURE
-        if (g_developerMode) {
-            importData(_name, true);
-            return;
-        }
+        importData(_name, true);
+        return;
 #endif
 
         QStringList list;

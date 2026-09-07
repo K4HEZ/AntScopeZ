@@ -7,7 +7,6 @@
 #include "glwidget.h"
 #include "style.h"
 
-extern bool g_developerMode;
 extern QMap<QString, QString> g_mapTabPlotNames;
 extern int g_maxMeasurements; // defined in measurements.cpp
 extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,

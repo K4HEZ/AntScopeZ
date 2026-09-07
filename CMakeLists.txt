@@ -332,14 +332,10 @@ target_compile_definitions(AntScopeZ PRIVATE USER_DEFINED_FEATURE=0)
 # #  reference-load signal-scaling adjustment. Neither is documented by      #
 # #  RigExpert anywhere this project has access to, and neither has ever     #
 # #  been meant for end users -- unlike USER_DEFINED_FEATURE above, there's  #
-# #  no plan for this to ever ship on, to anyone, regardless of what happens #
-# #  to g_developerMode/-developer. Previously gated by g_developerMode      #
-# #  alone; moved to its own compile-time constant 2026-08-20 specifically   #
-# #  because -developer is a *documented, temporarily-inert* flag (see the   #
-# #  comment in main.cpp) intended to become live again once Custom          #
-# #  Analyzer's bugs are fixed -- at which point it would otherwise expose   #
-# #  live-hardware calibration commands to any .deb user who reads           #
-# #  BUILDINFO.md, an unintended and unacceptable coupling. Leave this at 0. #
+# #  no plan for this to ever ship on, to anyone, regardless of any runtime  #
+# #  flag (g_developerMode/-developer, removed 2026-09-07, used to gate      #
+# #  this alone -- moved to its own compile-time constant 2026-08-20).       #
+# #  Leave this at 0.                                                        #
 # #############################################################################
 target_compile_definitions(AntScopeZ PRIVATE CALIBRATION_DEBUG_TOOLS=0)
 

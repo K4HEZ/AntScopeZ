@@ -105,23 +105,6 @@ than help for day-to-day use. Always-shown messages
             </widget>
            </item>
            <item>
-            <widget class="QCheckBox" name="checkBoxReconnectToDrain">
-             <property name="toolTip">
-              <string>Neither classic ASCII nor V2/LiteVNA64 binary NanoVNA
-protocols have a "abort scan in progress" command.
-Once asked for N points, the device sends all of them.
-
-By default: stops listening and discards outstanding data.
-Checked: closes/reopens connection immediately (faster
-for large scans, but doesn't guarantee the device
-discards queued data -- only that AntScopeZ resyncs).</string>
-             </property>
-             <property name="text">
-              <string>Use reconnect to drain unwanted data</string>
-             </property>
-            </widget>
-           </item>
-           <item>
             <widget class="QCheckBox" name="checkBoxWarnDirtyDelete">
              <property name="toolTip">
               <string>A measurement is "dirty" if scanned or renamed
@@ -1749,6 +1732,23 @@ Was computed from Window Background, now directly-editable.</string>
         </layout>
        </item>
        <item>
+        <widget class="QCheckBox" name="checkBoxReconnectToDrain">
+         <property name="toolTip">
+          <string>Neither classic ASCII nor V2/LiteVNA64 binary NanoVNA
+protocols have a "abort scan in progress" command.
+Once asked for N points, the device sends all of them.
+
+By default: stops listening and discards outstanding data.
+Checked: closes/reopens connection immediately (faster
+for large scans, but doesn't guarantee the device
+discards queued data -- only that AntScopeZ resyncs).</string>
+         </property>
+         <property name="text">
+          <string>Use reconnect to drain unwanted data</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="groupBoxScanning">
          <property name="minimumSize">
           <size>
@@ -1831,6 +1831,13 @@ Was computed from Window Background, now directly-editable.</string>
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="customizeCheckBox">
+         <property name="text">
+          <string>Use customized analyzer</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="groupBoxCustomAnalyzer">
          <property name="title">
           <string>Custom Analyzer</string>
@@ -1840,28 +1847,11 @@ Was computed from Window Background, now directly-editable.</string>
            <number>20</number>
           </property>
           <item row="0" column="0">
-           <widget class="QLabel" name="customizeUnderDevelopmentLabel">
-            <property name="text">
-             <string>This feature is currently under development.</string>
-            </property>
-            <property name="wordWrap">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
            <layout class="QHBoxLayout" name="horizontalLayout_34">
             <item>
              <layout class="QVBoxLayout" name="verticalLayout_12">
               <item>
                <layout class="QVBoxLayout" name="verticalLayout_11">
-                <item>
-                 <widget class="QCheckBox" name="customizeCheckBox">
-                  <property name="text">
-                   <string>Use customized analyzer</string>
-                  </property>
-                 </widget>
-                </item>
                 <item>
                  <widget class="QCheckBox" name="fqRestrictCheckBox">
                   <property name="text">
@@ -2178,7 +2168,7 @@ Was computed from Window Background, now directly-editable.</string>
             </item>
            </layout>
           </item>
-          <item row="1" column="1">
+          <item row="0" column="1">
            <spacer name="horizontalSpacer_7">
             <property name="orientation">
              <enum>Qt::Orientation::Horizontal</enum>

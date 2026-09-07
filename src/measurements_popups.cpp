@@ -8,7 +8,6 @@
 #include "style.h"
 #include "../analyzer/qcpgraphdatahelpers.h"
 
-extern bool g_developerMode;
 extern QMap<QString, QString> g_mapTabPlotNames;
 extern int g_maxMeasurements; // defined in measurements.cpp
 extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,

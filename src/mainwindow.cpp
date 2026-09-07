@@ -16,7 +16,6 @@
 #include <QActionGroup>
 
 extern QString appendSpaces(const QString& number);
-extern bool g_developerMode; // see main.cpp
 extern bool g_usbOnly;
 extern int g_maxMeasurements; // see measurements.cpp
 extern int g_maxMarkers; // see markers.cpp
@@ -369,8 +368,9 @@ MainWindow::MainWindow(QWidget *parent) :
     // m_dotsNumber itself is loaded) clamps against it.
     ui->speedAccuracySlider->setMaximum(g_pointsMax);
 
-    if (g_developerMode)
-        CustomAnalyzer::load(m_settings);
+    // Was gated behind g_developerMode; ungated 2026-09-07 -- Custom
+    // Analyzer is a live feature now.
+    CustomAnalyzer::load(m_settings);
 
     setWindowFlags(windowFlags() | Qt::CustomizeWindowHint |
                                    Qt::WindowMinimizeButtonHint |
