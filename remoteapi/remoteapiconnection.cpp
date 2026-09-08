@@ -432,6 +432,19 @@ QJsonObject RemoteApiConnection::cmdSweep(const QJsonObject& request, QString* e
         *error = QStringLiteral("points must be between 1 and %1").arg(POINTS_MAX);
         return QJsonObject();
     }
+    // A zero-span sweep (start_hz == stop_hz) isn't just "a range of one
+    // frequency" -- on at least one real device (RigExpert Match, see
+    // AntScope2 issue #24 / this project's issue #37) it hangs the
+    // hardware outright. The GUI avoids this by routing the equivalent
+    // input to a genuine single-frequency measurement instead
+    // (on_singleStart_clicked()'s oneFq branch, mainwindow_scan.cpp) --
+    // this API has no such mode yet (see the linked feature request), so
+    // for now the only safe option is to reject it outright rather than
+    // pass a request through that's known to hang real hardware.
+    if (startHz == stopHz) {
+        *error = QStringLiteral("start_hz and stop_hz must differ (single-frequency reads aren't supported by this API yet)");
+        return QJsonObject();
+    }
 
     if (!m_mainWindow->isAnalyzerConnected()) {
         *error = QStringLiteral("not connected to a device");

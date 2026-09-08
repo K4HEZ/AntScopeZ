@@ -28,10 +28,21 @@ directions.
 | `{"cmd":"devices"}` | `{"devices":[{"type":"hid"\|"serial"\|"nano","name":..,"serial"?:..,"port"?:..}]}` -- currently connected HID/serial/NanoVNA hardware. BLE not included (async scan-then-callback, not a synchronous list). |
 | `{"cmd":"connect","type":"hid"\|"serial"\|"nano","name":"...","port"?:"..."}` | Connect by type + model name (from `devices`' own `name` field). `port` optionally disambiguates serial devices. Immediate `{"connected":true}` once the local connect call succeeds; a later `{"event":"connected","device":{...}}` broadcast to every open connection once the real handshake completes. BLE is rejected explicitly (not yet supported). |
 | `{"cmd":"disconnect"}` | Disconnects the current device; broadcasts `{"event":"disconnected"}`. |
-| `{"cmd":"sweep","start_hz":<int>,"stop_hz":<int>,"points":<int>}` | Starts a sweep on the connected device. `{"ok":false,"error":"busy: ..."}` if a scan (from any source, including the GUI) is already running. Immediate `{"started":true}`; points stream to every subscribed connection as `{"event":"point",...}`, then `{"event":"sweep_done","count":N}`. |
+| `{"cmd":"sweep","start_hz":<int>,"stop_hz":<int>,"points":<int>}` | Starts a sweep on the connected device. `{"ok":false,"error":"busy: ..."}` if a scan (from any source, including the GUI) is already running. `{"ok":false,"error":"start_hz and stop_hz must differ..."}` if they're equal -- see "Single-frequency reads" below. Immediate `{"started":true}`; points stream to every subscribed connection as `{"event":"point",...}`, then `{"event":"sweep_done","count":N}`. |
 | `{"cmd":"stop"}` | Stops the running sweep. `{"ok":false,"error":"not measuring"}` if idle. |
 | `{"cmd":"subscribe","stream":"points"}` / `{"cmd":"unsubscribe",...}` | Toggles whether this connection receives `point`/`sweep_done` events -- independent of who started the sweep, so a connection can just watch. |
 | `{"cmd":"last"}` | `{"points":[...]}` -- the most recently completed (or in-progress) sweep's points, for a client that connects after a scan finished. |
+
+### Single-frequency reads
+
+`sweep` requires `start_hz != stop_hz` -- intentionally, not an oversight. The
+GUI has its own single-frequency mode (Single Fq) that's safe because it
+routes to a genuinely different measurement request on the wire; this API has
+no equivalent yet, and a zero-span "sweep" of one repeated frequency isn't a
+harmless substitute -- on at least one real device (RigExpert Match) it hangs
+the hardware outright. Rather than pass that through, the API rejects it.
+Planned for a future release -- see the "single frequency scans" feature
+request in this project's issue tracker.
 
 ## Point shape
 

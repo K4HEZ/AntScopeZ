@@ -23,6 +23,11 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   `Print::drawBands()` only handled a 2-field band-data shape that no real
   band entry actually has (they're all 3 fields, `freq1,freq2,name`). The
   live chart already handled this correctly; print now matches it.
+- Remote API: `sweep` now rejects `start_hz == stop_hz` instead of passing a
+  zero-span sweep through to the device -- known to hang at least one real
+  device (RigExpert Match). The GUI already avoided this via its own
+  single-frequency mode; the Remote API has no equivalent yet (tracked
+  separately).
 
 ## [2.2.5] - 2026-09-07
 
