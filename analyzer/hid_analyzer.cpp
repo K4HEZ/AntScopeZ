@@ -491,15 +491,21 @@ void HidAnalyzer::hidRead (void)
     {
         return;
     }
-    unsigned char readBuff[64];
+    unsigned char readBuff[64] = {0};
     int read = hid_read(m_hidDevice, readBuff, 64);
     m_mutexRead.lock();
     if(read > 0)
     {
         DebugLog::usbHidRx(QByteArray((const char*)readBuff, read));
-        if(readBuff[0] == ANTSCOPE_REPORT)
+        if(readBuff[0] == ANTSCOPE_REPORT && read >= 2)
         {
-            for(int i = 0; i < readBuff[1]; i++)
+            // readBuff[1] is a device-supplied payload length (0-255) --
+            // clamp to both the buffer's own capacity and how many bytes
+            // hid_read() actually delivered this call, so a device (or
+            // firmware bug) reporting an inflated length can't walk past
+            // either bound. See issue #15.
+            int payloadLen = qMin((int)readBuff[1], qMin(read - 2, (int)sizeof(readBuff) - 2));
+            for(int i = 0; i < payloadLen; i++)
             {
                 m_incomingBuffer.append(readBuff[i+2]);
             }

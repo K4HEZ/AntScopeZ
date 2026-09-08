@@ -32,6 +32,10 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   firmware) caused an out-of-bounds read while checking its CRC --
   `QByteArray`'s own bounds check is a `Q_ASSERT`, compiled out entirely in
   release builds. Now rejected explicitly before any parsing touches it.
+- HID: a device reporting a payload length larger than what it actually sent
+  (raw stack array, no bounds check possible in any build mode) caused a
+  stack over-read of up to ~193 bytes. Now clamped to both the buffer size
+  and the actual bytes received.
 
 ## [2.2.5] - 2026-09-07
 
