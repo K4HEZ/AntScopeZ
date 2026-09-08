@@ -106,7 +106,11 @@ Measurements::Measurements(QObject *parent) : QObject(parent),
     m_calibrationMode(false),
     m_Z0(50),
     m_dotsNumber(50),
-    m_smithTracer(NULL)
+    m_smithTracer(NULL),
+    // Was uninitialized -- only ever assigned inside on_focus() -- so
+    // showHideHints()/updatePopUp() could read it before the first
+    // WindowActivate ever fires. false matches pre-activation state.
+    m_focus(false)
 {    
     QString path = Settings::setIniFile();
     m_settings = new QSettings(path,QSettings::IniFormat);
