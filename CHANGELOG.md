@@ -40,7 +40,14 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   applying firmware isn't exposed as a feature yet) silently reported
   success regardless of whether the device actually verified the write, due
   to a stale-read HIDAPI queue. Now checks every chunk's response, not just
-  the first.
+  the first -- in both `HidFirmwareUpdater::update()` and a second,
+  independent copy of the same write loop in `HidAnalyzer::update()`.
+- HID firmware update (same unreachable-today feature) would hang forever
+  waiting to enter the device's bootloader after sending RESET --
+  `m_bootMode`, the condition the wait loop was blocking on, was never set
+  `true` anywhere in the codebase. Replaced with a bounded poll for the
+  device re-enumerating under its bootloader VID:PID, matched by serial
+  number.
 
 ## [2.2.5] - 2026-09-07
 

@@ -45,6 +45,11 @@ public:
 
     void nonblocking (int nonblock);
     void preUpdate();
+    // Bounded poll for the device re-enumerating under RE_BOOT_VID/
+    // RE_BOOT_PID after a RESET, matched by m_serialNumber (persists
+    // across the mode switch). Reopens the device and sets m_bootMode on
+    // success. See issue #19.
+    bool waitForBootDevice(int timeoutMs);
     QString hidError(hid_device* _device);
     virtual bool connectAnalyzer();
     virtual void disconnectAnalyzer();

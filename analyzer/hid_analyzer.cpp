@@ -2,6 +2,7 @@
 #include "customanalyzer.h"
 #include <QtConcurrent/QtConcurrentRun>
 #include <QThread>
+#include <QElapsedTimer>
 #include "analyzerpro.h"
 #include "debuglog.h"
 
@@ -732,6 +733,30 @@ void HidAnalyzer::preUpdate ()
     searchAnalyzer(true);
 }
 
+bool HidAnalyzer::waitForBootDevice(int timeoutMs)
+{
+    QElapsedTimer timer;
+    timer.start();
+    while (timer.elapsed() < timeoutMs) {
+        QCoreApplication::processEvents();
+
+        wchar_t* serial = new wchar_t[m_serialNumber.length() + 1];
+        m_serialNumber.toWCharArray(serial);
+        serial[m_serialNumber.length()] = 0;
+        hid_device* dev = hid_open(RE_BOOT_VID, RE_BOOT_PID, serial);
+        delete[] serial;
+
+        if (dev != nullptr) {
+            m_hidDevice = dev;
+            hid_set_nonblocking(m_hidDevice, 1);
+            m_bootMode = true;
+            return true;
+        }
+        QThread::msleep(100);
+    }
+    return false;
+}
+
 bool HidAnalyzer::update (QIODevice *fw)
 {
     m_hidReadTimer->stop();
@@ -746,16 +771,24 @@ bool HidAnalyzer::update (QIODevice *fw)
         hid_write(m_hidDevice, buff, sizeof(buff));
         qDebug() << "RESET: " << hidError(m_hidDevice);
 
-        QTimer::singleShot(5000, this, [this]() {
-            this->preUpdate();
-        });
-        while(1)//for(int i = 0; i < 565535; ++i)
-        {
-            if(m_bootMode)
-                break;
-            QCoreApplication::processEvents();
-        }
-        if(!m_bootMode)
+        // The device reboots into its DFU bootloader after RESET,
+        // re-enumerating under a different VID:PID (RE_BOOT_VID/
+        // RE_BOOT_PID) -- the old handle is dead the instant that
+        // happens. Close it, then poll for the device coming back in
+        // boot mode, matched by the serial number that persists across
+        // the mode switch, bounded so this can never hang forever.
+        //
+        // Was: an unconditional while(1) tied to m_bootMode, plus a
+        // 5-second QTimer::singleShot to preUpdate() that could never
+        // set it either -- searchAnalyzer() (which preUpdate() calls)
+        // is gated behind g_usbOnly, and even with that on, only ever
+        // matches RE_VID/RE_PID (application mode), never
+        // RE_BOOT_VID/RE_BOOT_PID. m_bootMode was never assigned true
+        // anywhere in this file -- a guaranteed, unconditional hang,
+        // not just a conditional risk. See issue #19.
+        hid_close(m_hidDevice);
+        m_hidDevice = nullptr;
+        if (!waitForBootDevice(10000))
         {
             g_showMessageBox(nullptr, QMessageBox::Warning,tr("Warning"),tr("Can't enter to boot mode!"));
             return false;
@@ -801,16 +834,17 @@ bool HidAnalyzer::update (QIODevice *fw)
         emit updatePercentChanged(i*100/totsize);
         QCoreApplication::processEvents();
 
-        if (firstWrite)
+        // Was only checked after the *first* chunk here too -- same stale
+        // HIDAPI-read-queue bug as HidFirmwareUpdater::update() (issue
+        // #20), independently present in this second, separately-
+        // maintained copy of the same write loop. See issue #19.
+        res = waitAnswer();
+        firstWrite = false;
+        if (!res)
         {
-            res = waitAnswer();
-            firstWrite = false;
-            if (!res)
-            {
-                emit updatePercentChanged(100);
-                return false;
-                break;
-            }
+            emit updatePercentChanged(100);
+            return false;
+            break;
         }
     }
     emit updatePercentChanged(100);
