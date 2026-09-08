@@ -28,6 +28,10 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   device (RigExpert Match). The GUI already avoided this via its own
   single-frequency mode; the Remote API has no equivalent yet (tracked
   separately).
+- BLE: a notification shorter than a full packet (e.g. from mismatched/older
+  firmware) caused an out-of-bounds read while checking its CRC --
+  `QByteArray`'s own bounds check is a `Q_ASSERT`, compiled out entirely in
+  release builds. Now rejected explicitly before any parsing touches it.
 
 ## [2.2.5] - 2026-09-07
 

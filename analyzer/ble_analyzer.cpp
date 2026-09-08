@@ -470,6 +470,20 @@ void BleAnalyzer::dataReceived(const QLowEnergyCharacteristic &c, const QByteArr
         return;
     DebugLog::bleRx(value, value.size() > 0 && (quint8)value[0] == BLE_PING_CMD);
     m_lastReadTimeMS = QDateTime::currentMSecsSinceEpoch();
+    // checkCRC()/returnCRC() (and, transitively, parseResponse() below) all
+    // index data[BLE_PACKET_SIZE-1] unconditionally -- a notification
+    // shorter than that reads past the end of value's actual allocation.
+    // QByteArray::operator[]'s bounds check is a Q_ASSERT, compiled out
+    // entirely under QT_NO_DEBUG (every real release build), so this must
+    // be checked explicitly rather than relying on that. See issue #16.
+    if (value.size() < BLE_PACKET_SIZE) {
+        qInfo() << "errorShortPacket" << value.size();
+        QString err = tr("Analyzer error: short packet (%1 of %2 bytes). (data: %3)")
+                          .arg(value.size()).arg(BLE_PACKET_SIZE).arg(QString::fromLatin1(value.toHex(' ')));
+        setError(err);
+        emit crcError();
+        return;
+    }
     if (!checkCRC(value)) {
         qInfo() << "errorCRC";
         // The packet itself is the diagnostic data here -- small (BLE_PACKET_SIZE),
