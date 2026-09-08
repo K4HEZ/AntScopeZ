@@ -67,12 +67,18 @@ bool HidFirmwareUpdater::update(const ReDeviceInfo &dev, QIODevice *fw)
             return false;
         }
 
-        if (firstWrite) {
-            res = waitAnswer();
-            firstWrite = false;
-            if (!res) {
-                break;
-            }
+        // Was only checked after the *first* chunk -- HIDAPI's background
+        // read thread queues unread reports (capped, discarding the
+        // oldest), so leaving every BL_CMD_DATA chunk's response unread
+        // let stale earlier "OK" replies accumulate and get consumed later
+        // by the final BL_CMD_CHECK's own waitAnswer() call below instead
+        // of its real answer -- silently reporting a passing integrity
+        // check regardless of whether the device actually verified the
+        // write. See issue #20.
+        res = waitAnswer();
+        firstWrite = false;
+        if (!res) {
+            break;
         }
     }
 

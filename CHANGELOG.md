@@ -36,6 +36,11 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   (raw stack array, no bounds check possible in any build mode) caused a
   stack over-read of up to ~193 bytes. Now clamped to both the buffer size
   and the actual bytes received.
+- HID firmware-update integrity check (currently unreachable from the UI --
+  applying firmware isn't exposed as a feature yet) silently reported
+  success regardless of whether the device actually verified the write, due
+  to a stale-read HIDAPI queue. Now checks every chunk's response, not just
+  the first.
 
 ## [2.2.5] - 2026-09-07
 
