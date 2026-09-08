@@ -27,6 +27,9 @@
       <string>Preview</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_5">
+      <property name="topMargin">
+       <number>20</number>
+      </property>
       <item>
        <layout class="QVBoxLayout" name="widgetsLayout">
         <item>
@@ -134,22 +137,24 @@
       <widget class="QGroupBox" name="groupBoxSettings">
        <property name="minimumSize">
         <size>
-         <width>225</width>
+         <width>190</width>
          <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>210</width>
+         <height>16777215</height>
         </size>
        </property>
        <property name="title">
         <string>Settings</string>
        </property>
-       <widget class="QWidget" name="layoutWidget">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>20</y>
-          <width>211</width>
-          <height>24</height>
-         </rect>
-        </property>
+       <layout class="QVBoxLayout" name="verticalLayout_printSettings">
+       <property name="topMargin">
+        <number>20</number>
+       </property>
+       <item>
         <layout class="QHBoxLayout" name="horizontalLayout_4">
          <item>
           <widget class="QLabel" name="label_3">
@@ -178,7 +183,21 @@
           </widget>
          </item>
         </layout>
-       </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkBoxPrintBandHighlighting">
+         <property name="toolTip">
+          <string>Toner saver: off by default. Band highlighting is shaded across the full chart height, so leaving this unchecked keeps Print/PDF/Save-as-image output ink-light. The on-screen chart and File &gt; Screenshot are unaffected either way.</string>
+         </property>
+         <property name="text">
+          <string>Print Band Highlighting</string>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       </layout>
       </widget>
      </item>
      <item>
@@ -187,8 +206,8 @@
         <widget class="QPushButton" name="pngPrintBtn">
          <property name="minimumSize">
           <size>
-           <width>75</width>
-           <height>75</height>
+           <width>60</width>
+           <height>60</height>
           </size>
          </property>
          <property name="text">
@@ -201,8 +220,8 @@
         <widget class="QPushButton" name="pdfPrintBtn">
          <property name="minimumSize">
           <size>
-           <width>75</width>
-           <height>75</height>
+           <width>60</width>
+           <height>60</height>
           </size>
          </property>
          <property name="text">
@@ -215,8 +234,8 @@
         <widget class="QPushButton" name="printBtn">
          <property name="minimumSize">
           <size>
-           <width>75</width>
-           <height>75</height>
+           <width>60</width>
+           <height>60</height>
           </size>
          </property>
          <property name="text">
@@ -225,6 +244,19 @@
         </widget>
        </item>
       </layout>
+     </item>
+     <item>
+      <spacer name="verticalSpacer_printSettings">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
      </item>
     </layout>
    </item>

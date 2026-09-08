@@ -26,6 +26,12 @@ Print::Print(QWidget *parent) :
     if(rect.x() != 0)
         this->setGeometry(rect);
 
+    // Default false (not printed) -- a fresh Print with bands now actually
+    // drawing (see drawBands()'s own comment) would otherwise silently
+    // start using far more toner/ink than users are used to.
+    ui->checkBoxPrintBandHighlighting->setChecked(
+        m_settings->value("print-band-highlighting", false).toBool());
+
     m_settings->endGroup();
 
     QFont font = ui->widgetGraph->xAxis->tickLabelFont();
@@ -45,6 +51,7 @@ Print::~Print()
 {
     m_settings->beginGroup("Print");
     m_settings->setValue("geometry", this->geometry());
+    m_settings->setValue("print-band-highlighting", ui->checkBoxPrintBandHighlighting->isChecked());
     m_settings->endGroup();
 
     delete ui;
@@ -193,12 +200,24 @@ void Print::drawBands(QStringList* _bands, double y1, double y2)
     if (_bands == nullptr)
         return;
 
+    // Was only handling the 2-field "freq1,freq2" shape -- every real band
+    // entry (shared/itu-regions-defaults.txt, and any user itu-regions.txt)
+    // is 3 fields ("freq1,freq2,name"), so this drew nothing at all,
+    // always, for every region -- confirmed via AntScope2#1/issue #29. Now
+    // mirrors MainWindow::setBands()'s own 2-vs-3-field handling exactly,
+    // including the "show-band-name" setting.
+    m_settings->beginGroup("Settings");
+    bool showName = m_settings->value("show-band-name", true).toBool();
+    m_settings->endGroup();
+
     foreach (QString str, *_bands)
     {
         QStringList list = str.split(',');
-        if (list.size() == 2)
+        if (list.size() == 2 || !showName)
         {
             addBand(list[0].toDouble(), list[1].toDouble(), y1, y2);
+        } else if (list.size() == 3) {
+            addBand(list[0].toDouble(), list[1].toDouble(), y1, y2, list[2]);
         }
     }
 }
@@ -206,9 +225,9 @@ void Print::drawBands(QStringList* _bands, double y1, double y2)
 void Print::addBand (double x1, double x2, double y1, double y2, QCustomPlot* plot)
 {
     QCPItemRect * xRectItem = new QCPItemRect( plot );
-//    m_itemRectList.append(xRectItem);
+    m_bandItemList.append(xRectItem);
 
-    xRectItem->setVisible          (true);
+    xRectItem->setVisible          (ui->checkBoxPrintBandHighlighting->isChecked());
     xRectItem->setPen              (QPen(Qt::transparent));
     xRectItem->setBrush            (QBrush(QColor(50,50,150,50)));
 
@@ -224,6 +243,35 @@ void Print::addBand (double x1, double x2, double y1, double y2, QCustomPlot* pl
 void Print::addBand (double x1, double x2, double y1, double y2)
 {
     addBand(x1, x2, y1, y2, ui->widgetGraph);
+}
+
+// Same as the above, plus a rotated band-name label -- mirrors
+// MainWindow::addBand()'s 5-arg overload (mainwindow_tabs.cpp) exactly.
+void Print::addBand (double x1, double x2, double y1, double y2, QString& name)
+{
+    addBand(x1, x2, y1, y2, ui->widgetGraph);
+
+    if (name.isEmpty())
+        return;
+
+    QRectF rr(QPointF(x1, y1), QPointF(x2, y2));
+    QPointF pt = rr.center();
+    QCPItemText* textItem = new QCPItemText( ui->widgetGraph );
+    m_bandItemList.append(textItem);
+    textItem->setVisible(ui->checkBoxPrintBandHighlighting->isChecked());
+    textItem->setColor(QColor(50,50,150,150));
+    textItem->setPen(Qt::NoPen);
+    textItem->setText(name);
+    textItem->position->setCoords(pt.x(), pt.y());
+    textItem->setPositionAlignment(Qt::AlignHCenter);
+    textItem->setRotation(270);
+}
+
+void Print::on_checkBoxPrintBandHighlighting_toggled(bool checked)
+{
+    for (QCPAbstractItem* item : std::as_const(m_bandItemList))
+        item->setVisible(checked);
+    ui->widgetGraph->replot();
 }
 
 void Print::setHead(QString string)

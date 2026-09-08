@@ -11,6 +11,19 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+### Added
+
+- Print dialog: "Print Band Highlighting" checkbox (toner saver, off by
+  default) -- see the Fixed entry below for why this needed a default.
+
+### Fixed
+
+- Print/PDF/copy-image output: band highlighting (SWR/Phase/Rs/Rp/RL/S21/
+  TDR/User tabs) was silently drawing nothing, for every region, always --
+  `Print::drawBands()` only handled a 2-field band-data shape that no real
+  band entry actually has (they're all 3 fields, `freq1,freq2,name`). The
+  live chart already handled this correctly; print now matches it.
+
 ## [2.2.5] - 2026-09-07
 
 ### Changed

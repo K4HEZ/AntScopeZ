@@ -32,6 +32,7 @@ public:
     void drawBands(QStringList* _bands, double y1, double y2);
     virtual void addBand (double x1, double x2, double y1, double y2);
     void addBand (double x1, double x2, double y1, double y2, QCustomPlot* plot);
+    void addBand (double x1, double x2, double y1, double y2, QString& name);
     void setHead(QString string);
 
     void updateTable();
@@ -49,6 +50,7 @@ protected slots:
     void on_printBtn_clicked();
     void on_pdfPrintBtn_clicked();
     void on_pngPrintBtn_clicked();
+    void on_checkBoxPrintBandHighlighting_toggled(bool checked);
 
 protected:
     Ui::Print *ui;
@@ -82,6 +84,10 @@ protected:
     QVector <QCPItemText*> m_mTextList;
     QVector <QCPCurveDataContainer*> m_curveDataList;
     QVector <QCPItemText*> m_textList;
+    // Band-highlight rects/labels drawBands()/addBand() create -- kept so
+    // checkBoxPrintBandHighlighting's toggled() handler can show/hide them
+    // live without redoing the whole drawBands() pass.
+    QVector <QCPAbstractItem*> m_bandItemList;
 
     bool m_isSmithGraph;
     QString m_graphName;
