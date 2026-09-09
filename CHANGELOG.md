@@ -56,6 +56,9 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   applying itself only for that one dropdown selection.
 - Settings > Cable: the cable length field now matches the width of the
   other numeric fields on that tab (was unconstrained).
+- AA-230 firmware-info read: a slow or partial reply shorter than the
+  expected fixed-size response caused an out-of-bounds heap read. Now
+  clamped to the actual bytes received.
 
 ## [2.2.5] - 2026-09-07
 

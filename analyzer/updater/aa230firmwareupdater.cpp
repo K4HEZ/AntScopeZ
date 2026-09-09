@@ -128,7 +128,15 @@ AA230FirmwareUpdater::FirmwareInfo AA230FirmwareUpdater::firmwareInfo(const ReDe
         return info;
     }
 
-    memcpy(&info, arr.constData(), sizeof(FirmwareInfo));
+    // The probe loop above gives up after 10 timeouts regardless of how
+    // many bytes actually arrived -- a slow/partial reply shorter than
+    // sizeof(FirmwareInfo) used to read past arr's actual allocation
+    // here. FirmwareInfo has no versioning/length-prefix in this
+    // protocol -- a real, complete reply is always exactly this size --
+    // so clamping can never affect a genuine response, only the already-
+    // abnormal short one. info was already zero-initialized above, so
+    // anything short of a full reply is safely zero-padded. See issue #17.
+    memcpy(&info, arr.constData(), qMin((size_t)arr.size(), sizeof(info)));
 
     return info;
 }
