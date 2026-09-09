@@ -48,6 +48,14 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   `true` anywhere in the codebase. Replaced with a bounded poll for the
   device re-enumerating under its bootloader VID:PID, matched by serial
   number.
+- Settings > Cable: subtract/add cable's result was off by ~3.28x
+  (attenuation and phase both) specifically when "dB/100feet" -- the
+  default -- was the selected loss unit, relative to the other three
+  (equivalent) choices. A leftover unit correction, made redundant once
+  cable length was normalized to feet at the input boundary, was still
+  applying itself only for that one dropdown selection.
+- Settings > Cable: the cable length field now matches the width of the
+  other numeric fields on that tab (was unconstrained).
 
 ## [2.2.5] - 2026-09-07
 

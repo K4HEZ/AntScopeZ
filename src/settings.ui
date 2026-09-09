@@ -1542,6 +1542,12 @@ Was computed from Window Background, now directly-editable.</string>
            <layout class="QHBoxLayout" name="horizontalLayout_cableLength">
             <item>
              <widget class="QLineEdit" name="cableLen">
+              <property name="maximumSize">
+               <size>
+                <width>70</width>
+                <height>16777215</height>
+               </size>
+              </property>
               <property name="alignment">
                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
               </property>

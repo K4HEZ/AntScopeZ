@@ -172,11 +172,18 @@ RawData Measurements::calcFarEnd(const RawData& data, int idx, bool refreshGraph
         Alphal = -Alphal;
         Betal = -Betal;
     }
-    if (m_cableLossUnits==0)
-    {
-        Alphal *= FEETINMETER;
-        Betal *= FEETINMETER;
-    }
+    // Was: an extra *FEETINMETER correction here, applied only when
+    // m_cableLossUnits==0 (dB/100feet, the default). Alpha/Beta are
+    // already correctly "per foot" for every loss-unit choice (Klen
+    // above already normalizes to that basis), and m_cableLength is
+    // *always* already in feet by the time it reaches here regardless of
+    // which unit is displayed (Settings::getCableLength() converts at
+    // the UI boundary) -- so this extra multiply threw the result off by
+    // FEETINMETER (~3.28x) specifically for the default dropdown
+    // selection, and only that one. Verified numerically: the other
+    // three loss-unit choices already agreed with each other exactly:
+    // removing this makes dB/100feet agree with them too, rather than
+    // being the odd one out. See issue #31.
 
     Complex Sinh_gl = Complex( cos(Betal) * sinh(Alphal), sin(Betal) * cosh(Alphal) );
     Complex Cosh_gl = Complex( cos(Betal) * cosh(Alphal), sin(Betal) * sinh(Alphal) );
