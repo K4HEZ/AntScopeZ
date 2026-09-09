@@ -1,0 +1,19 @@
+---
+# Bug-catching checks only -- deliberately not the style/readability
+# families (those would just be noise against this codebase's existing
+# conventions). bugprone-*/clang-analyzer-* is the same class of thing
+# AddressSanitizer catches at runtime (see CMakeLists.txt's
+# ANTSCOPEZ_SANITIZE), but statically -- catches paths that are hard to
+# actually exercise (e.g. the firmware-flash code), at the cost of some
+# false positives.
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-narrowing-conversions,
+  clang-analyzer-*,
+  cppcoreguidelines-slicing,
+
+WarningsAsErrors: ''
+HeaderFilterRegex: '(analyzer|src|remoteapi|devinfo|ftdi)/.*'
+FormatStyle: none

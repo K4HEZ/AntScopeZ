@@ -399,6 +399,30 @@ target_link_libraries(AntScopeZ PRIVATE
 
 
 #
+# AddressSanitizer / UndefinedBehaviorSanitizer
+#
+# Off by default -- meaningfully slower and not what you want in a normal
+# debug/release build. Configure a separate build dir with this on to catch
+# the bug class several past issues turned out to be (BLE/HID/AA-230
+# out-of-bounds reads on a short or malformed device reply): the instant a
+# bad read/write happens, ASan aborts with the exact file/line/call stack,
+# instead of it silently reading garbage (or nothing, in a release build
+# where Q_ASSERT-based bounds checks are compiled out).
+#
+#   cmake -B build-debug-asan -DCMAKE_BUILD_TYPE=Debug -DANTSCOPEZ_SANITIZE=ON
+#   cmake --build build-debug-asan --target AntScopeZ -j8
+#   ./build-debug-asan/AntScopeZ
+#
+# Only catches what actually executes -- still needs a real device (or
+# crafted input) to exercise the bad path, same as testing normally.
+option(ANTSCOPEZ_SANITIZE "Build with AddressSanitizer + UndefinedBehaviorSanitizer" OFF)
+if(ANTSCOPEZ_SANITIZE)
+    target_compile_options(AntScopeZ PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer -g)
+    target_link_options(AntScopeZ PRIVATE -fsanitize=address,undefined)
+endif()
+
+
+#
 # Platform handling
 #
 

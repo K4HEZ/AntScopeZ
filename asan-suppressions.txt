@@ -1,0 +1,19 @@
+# AddressSanitizer suppressions -- known bugs in system libraries, not ours.
+#
+# Recommended for normal interactive testing (from build-debug-asan/):
+#   ASAN_OPTIONS="suppressions=../asan-suppressions.txt:detect_leaks=0" ./AntScopeZ
+#
+# detect_leaks=0: LeakSanitizer's exit-time report is mostly noise for a Qt/
+# GTK GUI app -- fontconfig/pango/cairo/gtk3 theme-plugin allocations that
+# live for the process's whole lifetime, plus our own genuinely-intentional
+# ones (e.g. AnalyzerParameters::fill()'s static device table). Confirmed
+# 2026-09-09: nothing in that report was an actual bug. Drop detect_leaks=0
+# for a dedicated leak-hunting pass if one's ever wanted -- separate concern
+# from the buffer/UAF/stack-overflow detection this build is really for.
+
+# libxcb-cursor's cursor-theme parsing reads 1 byte past a heap allocation
+# in xcb_cursor_load_cursor() (confirmed via strchr's ASan report,
+# 2026-09-09, libxcb-cursor.so.0 on Linux Mint 22.2) -- fires the moment Qt
+# applies a cursor to any shown widget (QWindowPrivate::applyCursor()),
+# i.e. immediately on startup, well before any AntScopeZ code runs.
+interceptor_via_lib:libxcb-cursor
