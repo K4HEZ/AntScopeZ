@@ -724,6 +724,7 @@ void BleAnalyzer::parseFullInfo(QDataStream& stream)
     stream >> field;
     // TODO license support
     // ...
+    qInfo() << "BleAnalyzer::parseFullInfo field" << field;
 
     switch (field) {
     case (quint8)BLE_FULLINFO_NAME:
@@ -769,8 +770,18 @@ void BleAnalyzer::parseFullInfo(QDataStream& stream)
         stream >> major >> minor >> build;
         str = "S/N: " + serial;
         setResponse(str);
-        str = QString("Version: %1.%2.%3").arg(major).arg(minor).arg(build);
+        // Was only ever formatted for the on-screen device-info log, never
+        // stored -- getVersion()/getRevision() (BaseAnalyzer::m_version/
+        // m_revision) stayed empty for every BLE device, unlike ComAnalyzer/
+        // HidAnalyzer which do set them. That's what fed the update-check
+        // URL's blank fw=/revision= fields. Best-effort format, unconfirmed
+        // against what the update server actually expects for a BLE device.
+        m_version = QString("%1.%2.%3").arg(major).arg(minor).arg(build);
+        m_revision = m_version;
+        str = QString("Version: %1").arg(m_version);
         setResponse(str);
+        qInfo() << "BleAnalyzer::parseFullInfo SERIAL_VER: serial" << m_serialNumber
+                 << "version" << m_version;
     }
         break;
     case (quint8)BLE_FULLINFO_MCU_TYPE_STR:
@@ -919,6 +930,7 @@ void BleAnalyzer::startMeasureOneFq(qint64 fqFrom_hz, int dotsNumber, bool frx)
 
 void BleAnalyzer::sendFullInfo()
 {
+    qInfo() << "BleAnalyzer::sendFullInfo() requesting device info";
     QByteArray data;
     data.fill(0, BLE_PACKET_SIZE);
     data[0] = (quint8)BLE_FULLINFO_CMD;

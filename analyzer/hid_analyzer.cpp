@@ -628,6 +628,18 @@ qint32 HidAnalyzer::parse (QByteArray arr)
                     // skip FULLINFO field `NAME` to keep version obtained in VER
                     continue;
                 } else if (str.contains("LIC")) {
+                    // Newer devices (e.g. Match) report full info as
+                    // "serial,version,LICx" instead of the older
+                    // "MODEL REV x vYYY" string parsed below -- that older
+                    // format is what actually sets m_version/m_revision, so
+                    // this one never did. slotFullInfo() (AnalyzerPro) only
+                    // reads the LICx part of this string; grab the version
+                    // here since this is the one place that sees it.
+                    QStringList parts = str.split(',');
+                    if (parts.size() >= 2 && !parts.at(1).isEmpty()) {
+                        m_version = parts.at(1);
+                        m_revision = m_version;
+                    }
                     qInfo() << "===== signalFullInfo" << str;
                     emit signalFullInfo(str);
                     continue;

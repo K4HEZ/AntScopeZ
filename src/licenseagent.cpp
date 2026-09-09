@@ -44,7 +44,7 @@ void LicenseAgent::registerApllication(QString user, QString email)
 
 void LicenseAgent::requestEmailStatus()
 {
-    QString url = SERVER_NAME;
+    QString url = licenseServerUrl();
     QString strRaw = QString("Name=%1&&&Eml=%2&&&").arg(m_userName, m_email);
     QString strData = EncodingHelpers::encodeString(strRaw);
     url += QString("?nGet=1&nRaw=1&raw=%1").arg(strData);
@@ -55,9 +55,11 @@ void LicenseAgent::requestEmailStatus()
     request.setTransferTimeout(REPLY_TIMEOUT);
 
     m_mng.clearAccessCache();
-    QSslConfiguration conf = request.sslConfiguration();
-    conf.setPeerVerifyMode(QSslSocket::VerifyNone);
-    request.setSslConfiguration(conf);
+    if (!g_useTls) {
+        QSslConfiguration conf = request.sslConfiguration();
+        conf.setPeerVerifyMode(QSslSocket::VerifyNone);
+        request.setSslConfiguration(conf);
+    }
 
     setState(WaitEmailStatusWeb);
     sendRequest(request);
@@ -119,7 +121,7 @@ void LicenseAgent::requestLicense(QString key)
     QString name = MainWindow::m_mainWindow->analyzer()->getModelString();
     QString serial = MainWindow::m_mainWindow->analyzer()->getSerialNumber();
     QString license = MainWindow::m_mainWindow->analyzer()->getLicense();
-    QString url = SERVER_NAME;
+    QString url = licenseServerUrl();
     QString strRaw = QString("dvName=%1&&&dvSN=%2&&&lcCode=%3&&&lcName=%4&&&").arg(name, serial, key, license);
     QString strData = EncodingHelpers::encodeString(strRaw);
     url += QString("?nGet=4&nRaw=1&raw=%1").arg(strData);
@@ -130,9 +132,11 @@ void LicenseAgent::requestLicense(QString key)
     request.setTransferTimeout(REPLY_TIMEOUT);
 
     m_mng.clearAccessCache();
-    QSslConfiguration conf = request.sslConfiguration();
-    conf.setPeerVerifyMode(QSslSocket::VerifyNone);
-    request.setSslConfiguration(conf);
+    if (!g_useTls) {
+        QSslConfiguration conf = request.sslConfiguration();
+        conf.setPeerVerifyMode(QSslSocket::VerifyNone);
+        request.setSslConfiguration(conf);
+    }
 
     setState(WaitLicense);
     m_canceled = false; // stale cancel from a prior request could wrongly short-circuit this new one
@@ -237,7 +241,7 @@ void LicenseAgent::requestUserInfo()
 
 void LicenseAgent::requestInfo()
 {
-    QString url = SERVER_NAME;
+    QString url = licenseServerUrl();
     qInfo() << "LicenseAgent::requestuserinfo" << url;
 //    QString strRaw = QString("dvName=%1&&&dvSN=%2&&&lcName=%3&&&")
 //                         .arg(m_infoRequest.deviceName, m_infoRequest.serialNumber,
@@ -256,9 +260,11 @@ void LicenseAgent::requestInfo()
     request.setTransferTimeout(REPLY_TIMEOUT);
 
     m_mng.clearAccessCache();
-    QSslConfiguration conf = request.sslConfiguration();
-    conf.setPeerVerifyMode(QSslSocket::VerifyNone);
-    request.setSslConfiguration(conf);
+    if (!g_useTls) {
+        QSslConfiguration conf = request.sslConfiguration();
+        conf.setPeerVerifyMode(QSslSocket::VerifyNone);
+        request.setSslConfiguration(conf);
+    }
 
     setState(WaitInfoWeb);
     //showModeless(tr("Register device"),tr("Registration..."), tr("Cancel"));
@@ -309,7 +315,7 @@ bool LicenseAgent::infoWebIsEmpty()
 void LicenseAgent::requestUnit()
 {
     qInfo() << "LicenseAgent::requestUnit ";
-    QString url = SERVER_NAME;
+    QString url = licenseServerUrl();
     QString strRaw = QString("dvSN=%1&&&Eml=%2&&&Name=%3&&&dtPur=%4&&&dvName=%5&&&")
                          .arg(m_unitRequest.serialNumber, m_unitRequest.email,
                               m_unitRequest.userName, m_unitRequest.purchargeDate,
@@ -323,9 +329,11 @@ void LicenseAgent::requestUnit()
     request.setTransferTimeout(REPLY_TIMEOUT);
 
     m_mng.clearAccessCache();
-    QSslConfiguration conf = request.sslConfiguration();
-    conf.setPeerVerifyMode(QSslSocket::VerifyNone);
-    request.setSslConfiguration(conf);
+    if (!g_useTls) {
+        QSslConfiguration conf = request.sslConfiguration();
+        conf.setPeerVerifyMode(QSslSocket::VerifyNone);
+        request.setSslConfiguration(conf);
+    }
 
     setState(WaitUnitWeb);
     sendRequest(request);
@@ -383,7 +391,7 @@ void LicenseAgent::requestStatus_B16(QByteArray data)
         showModeless(tr("Request status B16"), tr("Something went wrong")), tr("Ok");
         return;
     }
-    QString url = SERVER_NAME;
+    QString url = licenseServerUrl();
     QString strData(data.toHex());
     url += QString("?nGet=21&nRaw=21&raw=073E%1").arg(strData.toUpper());
     url += "85";
@@ -394,9 +402,11 @@ void LicenseAgent::requestStatus_B16(QByteArray data)
     request.setTransferTimeout(REPLY_TIMEOUT);
 
     m_mng.clearAccessCache();
-    QSslConfiguration conf = request.sslConfiguration();
-    conf.setPeerVerifyMode(QSslSocket::VerifyNone);
-    request.setSslConfiguration(conf);
+    if (!g_useTls) {
+        QSslConfiguration conf = request.sslConfiguration();
+        conf.setPeerVerifyMode(QSslSocket::VerifyNone);
+        request.setSslConfiguration(conf);
+    }
 
     setState(WaitProfileB16);
     sendRequest(request);
@@ -404,7 +414,7 @@ void LicenseAgent::requestStatus_B16(QByteArray data)
 
 void LicenseAgent::requestInfo_B16(QByteArray data)
 {
-    QString url = SERVER_NAME;
+    QString url = licenseServerUrl();
     QString strData(data.toHex());
     url += QString("?nGet=22&nRaw=21&raw=073E%1").arg(strData.toUpper());
     url += "85";
@@ -415,9 +425,11 @@ void LicenseAgent::requestInfo_B16(QByteArray data)
     request.setTransferTimeout(REPLY_TIMEOUT);
 
     m_mng.clearAccessCache();
-    QSslConfiguration conf = request.sslConfiguration();
-    conf.setPeerVerifyMode(QSslSocket::VerifyNone);
-    request.setSslConfiguration(conf);
+    if (!g_useTls) {
+        QSslConfiguration conf = request.sslConfiguration();
+        conf.setPeerVerifyMode(QSslSocket::VerifyNone);
+        request.setSslConfiguration(conf);
+    }
 
     setState(WaitInfoB16);
     sendRequest(request);

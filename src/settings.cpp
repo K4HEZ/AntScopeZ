@@ -13,6 +13,7 @@
 #include <QAbstractButton>
 #include <QFile>
 #include <QFileInfo>
+#include <QStandardPaths>
 #include <QDir>
 #include <QLocale>
 #include <QStyle>
@@ -31,6 +32,7 @@ extern int g_pointsMax; // see mainwindow.cpp
 extern int g_pointsWarnThreshold; // see mainwindow.cpp
 extern int g_analyzerMaxPoints; // see mainwindow.cpp
 extern bool g_extendedChartZoom; // see mainwindow.cpp
+extern bool g_useTls; // see mainwindow.cpp
 extern bool g_remoteApiEnabled; // see mainwindow.cpp
 extern int g_remoteApiPort; // see mainwindow.cpp
 extern int g_analyzerTimeoutSec; // see mainwindow.cpp
@@ -112,7 +114,6 @@ Settings::Settings(QWidget *parent) :
 
     ui->browseLine->setText(tr("Choose file"));
     ui->updateProgressBar->hide();
-    ui->checkUpdatesBtn->setEnabled(false);
 
     ui->openProgressBar->hide();
     ui->shortProgressBar->hide();
@@ -141,6 +142,7 @@ Settings::Settings(QWidget *parent) :
     ui->lineEditScanWarnThreshold->setText(QString::number(g_pointsWarnThreshold));
     ui->lineEditAnalyzerMaxPoints->setText(QString::number(g_analyzerMaxPoints));
     ui->checkBoxExtendedChartZoom->setChecked(g_extendedChartZoom);
+    ui->checkBoxUseTls->setChecked(g_useTls);
     ui->checkBoxRemoteApiEnabled->setChecked(g_remoteApiEnabled);
     ui->spinBoxRemoteApiPort->setValue(g_remoteApiPort);
     ui->lineEdit_analyzerTimeout->setText(QString::number(g_analyzerTimeoutSec));
@@ -256,28 +258,14 @@ Settings::Settings(QWidget *parent) :
     connect(ui->lineEditPoints, &QLineEdit::editingFinished, this, &Settings::on_PointsFinished);
     connect(ui->exportBtn, &QPushButton::clicked, this, &Settings::on_exportCableSettings);
 
-    // Bug #2247 / firmware-update concerns: "Check for firmware updates"
-    // phones home to RigExpert (device serial/OS/CPU/language/our own
-    // version, in the URL -- see AnalyzerPro::on_checkUpdatesBtn_clicked())
-    // over a connection with TLS certificate verification disabled (see
-    // Downloader). The Updates tab itself stays visible and enabled
-    // (previously removeTab()'d outright) rather than disappearing, but
-    // every control in the firmware section is explicitly disabled below --
-    // see also the matching #if 0 guards around the actual network-calling
-    // functions in analyzerpro.cpp/downloader.cpp, so this can't be
-    // reawakened by an accidental code path either, not just a disabled
-    // button.
-    ui->groupBox15->setEnabled(false);        // "Info" (read-only, but greys the box/title along with its labels)
-    ui->analyzerModelLabel->setEnabled(false);
-    ui->versionLabel->setEnabled(false);
-    ui->serialLabel->setEnabled(false);
-    ui->groupBox_2->setEnabled(false);        // "Update from file"
-    ui->browseLine->setEnabled(false);
-    ui->browseBtn->setEnabled(false);
-    ui->updateProgressBar->setEnabled(false);
-    ui->updateBtn->setEnabled(false);
-    ui->checkUpdatesBtn->setEnabled(false);
-    ui->groupBox_10->setEnabled(false);       // "Analyzer" (outer box/title)
+    // Bug #2247 / firmware-update concerns -- resolved: "Check for firmware
+    // updates" phones home to RigExpert (device serial/OS/CPU/language/our
+    // own version), which is a real disclosure, but this Updates tab's own
+    // notice label above covers it, so the user can decide for themselves.
+    // g_useTls (mainwindow.cpp, "Use TLS" checkbox on this tab) covers the
+    // connection itself -- see issue #14. Only updateBtn starts disabled,
+    // and only because there's no file chosen yet.
+    ui->updateBtn->setEnabled(false);         // re-enabled once a file is actually chosen, see on_browseBtn_clicked()
 
     // Custom Analyzer used to be removeTab()'d entirely unless
     // g_developerMode was on. Shown unconditionally now instead -- developer
@@ -419,6 +407,7 @@ Settings::~Settings()
     g_pointsWarnThreshold = qBound(50, ui->lineEditScanWarnThreshold->text().toInt(), POINTS_MAX);
     g_analyzerMaxPoints = qBound(50, ui->lineEditAnalyzerMaxPoints->text().toInt(), POINTS_MAX);
     g_extendedChartZoom = ui->checkBoxExtendedChartZoom->isChecked();
+    g_useTls = ui->checkBoxUseTls->isChecked();
     g_remoteApiEnabled = ui->checkBoxRemoteApiEnabled->isChecked();
     g_remoteApiPort = ui->spinBoxRemoteApiPort->value();
     // Unlike the flags above (passively consulted elsewhere), this one
@@ -441,6 +430,7 @@ Settings::~Settings()
     m_settings->setValue("pointsWarnThreshold", g_pointsWarnThreshold);
     m_settings->setValue("analyzerMaxPoints", g_analyzerMaxPoints);
     m_settings->setValue("extendedChartZoom", g_extendedChartZoom);
+    m_settings->setValue("useTls", g_useTls);
     m_settings->setValue("remoteApiEnabled", g_remoteApiEnabled);
     m_settings->setValue("remoteApiPort", g_remoteApiPort);
     m_settings->setValue("reportDetailedErrors", DebugLog::detailedErrorsEnabled());
@@ -492,7 +482,16 @@ void Settings::setZ0(double _Z0)
 
 void Settings::on_browseBtn_clicked()
 {
-    // TODO obsolete
+    // Defaults to the configured data folder -- where "Check for firmware
+    // updates" saves a file to, if that's how the user got one -- but any
+    // .bin the user has is fine, whatever its origin.
+    QString dir = FileDialog::userDataDir();
+    QString path = FileDialog::getOpenFileName(this, tr("Open firmware file"), dir, "*.bin");
+    if (path.isEmpty())
+        return;
+    m_pathToFw = path;
+    ui->browseLine->setText(path);
+    ui->updateBtn->setEnabled(true);
 }
 
 void Settings::on_checkUpdatesBtn_clicked()
@@ -507,6 +506,21 @@ void Settings::on_checkUpdatesBtn_clicked()
     connect(m_generalTimer, SIGNAL(timeout()), this, SLOT(on_generalTimerTick()));
     m_generalTimer->start(200);
     emit checkUpdatesBtn();
+}
+
+// Real completion of the network check (AnalyzerPro::checkUpdatesComplete),
+// as opposed to on_generalTimerTick()'s fixed-duration animation below --
+// stops the "Checking..." animation right away instead of leaving it to
+// cycle for however long is left on its own timer.
+void Settings::on_checkUpdatesComplete()
+{
+    if(m_generalTimer)
+    {
+        m_generalTimer->stop();
+        delete m_generalTimer;
+        m_generalTimer = NULL;
+    }
+    ui->checkUpdatesBtn->setText(tr("Check for firmware updates"));
 }
 
 void Settings::on_generalTimerTick()
@@ -554,11 +568,6 @@ void Settings::setAnalyzer(AnalyzerPro * analyzer)
         //if(m_analyzer->getModel() != 0)
         if (true)
         {
-            // checkUpdatesBtn is permanently disabled now regardless of
-            // connection state -- see its setEnabled(false) at construction
-            // -- so no enabling toggle here any more. The info labels still
-            // update normally; a disabled QLabel still shows its real text,
-            // just visually greyed along with the rest of that section.
             ui->analyzerModelLabel->setText(m_analyzer->getModelString());
             ui->serialLabel->setText(m_analyzer->getSerialNumber());
             QString version = QString::number(m_analyzer->getVersion());
@@ -618,8 +627,48 @@ void Settings::findBootloader (void)
     // obsolete
 }
 
+// Vendor firmware .bin files carry a 512-byte header: 12 bytes of binary
+// magic/checksum, then newline-separated ASCII (model, version, revision,
+// build date, build time), padded with 'f' bytes out to the full 512.
+// Confirmed against a real downloaded file (AA-230 ZOOM v1.94) while
+// building this feature -- same format AnalyzerPro::readFile()'s own
+// m_INFOSIZE=512 skip already assumes. Returns empty if the file's too
+// short or doesn't look like a real header, so the caller can fall back
+// to just naming the file.
+static QString firmwareFileSummary(const QString& path)
+{
+    QFile f(path);
+    if (!f.open(QIODevice::ReadOnly))
+        return QString();
+    QByteArray header = f.read(512);
+    f.close();
+    if (header.size() < 512)
+        return QString();
+    QStringList lines = QString::fromLatin1(header.mid(12)).split('\n');
+    if (lines.size() < 5)
+        return QString();
+    return Settings::tr("%1, firmware v%2 (built %3 %4)")
+        .arg(lines.at(0), lines.at(1), lines.at(3), lines.at(4));
+}
+
 void Settings::on_updateBtn_clicked()
 {
+    // Last-chance confirmation before actually flashing -- this can brick
+    // the connected device if interrupted or given the wrong file. "No" is
+    // the default button deliberately, not "Yes": an accidental Enter
+    // press must not start a flash.
+    QString summary = firmwareFileSummary(m_pathToFw);
+    QString warnText = tr("About to flash firmware to the connected analyzer (%1).\n\n"
+                          "File: %2\n%3\n\n"
+                          "Do not disconnect the device while this is in progress. "
+                          "This cannot be undone. Proceed?")
+        .arg(ui->analyzerModelLabel->text(), m_pathToFw,
+             summary.isEmpty() ? tr("(file header not recognized -- double-check this is the right file)") : summary);
+    int result = g_showMessageBox(this, QMessageBox::Warning, tr("Confirm Firmware Update"), warnText,
+                                   QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+    if (result != QMessageBox::Yes)
+        return;
+
     ui->updateBtn->setEnabled(false);
     ui->updateBtn->setText(tr("Updating..."));
     ui->updateProgressBar->show();

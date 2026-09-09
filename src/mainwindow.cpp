@@ -65,6 +65,12 @@ int g_analyzerMaxPoints = 1000;
 // developer/debug feature. Default off, matching pre-existing behavior for
 // anyone who never had -developer passed.
 bool g_extendedChartZoom = false;
+// "Use TLS" (Settings > Updates) -- gates both the scheme (https/http) and
+// certificate verification for every RigExpert network request
+// (licenseagent.cpp's registration flow, downloader.cpp's firmware-update
+// check). Default true (secure); off is an escape hatch for a vendor-side
+// cert problem, not something to leave off routinely. See issue #14.
+bool g_useTls = true;
 // "Enable Remote API" (Settings > General) -- starts a local NDJSON-over-TCP
 // control API (remoteapi/, json-tcp-api branch), loopback-only by default.
 // Default off: opening a network port, even loopback-only, shouldn't happen
@@ -348,6 +354,7 @@ MainWindow::MainWindow(QWidget *parent) :
     g_pointsWarnThreshold = m_settings->value("pointsWarnThreshold", 1000).toInt();
     g_analyzerMaxPoints = m_settings->value("analyzerMaxPoints", 1000).toInt();
     g_extendedChartZoom = m_settings->value("extendedChartZoom", false).toBool();
+    g_useTls = m_settings->value("useTls", true).toBool();
     g_remoteApiEnabled = m_settings->value("remoteApiEnabled", false).toBool();
     g_remoteApiPort = m_settings->value("remoteApiPort", 7443).toInt();
     g_analyzerTimeoutSec = m_settings->value("analyzerTimeoutSec", 8).toInt();
@@ -1130,6 +1137,7 @@ MainWindow::~MainWindow()
     m_settings->setValue("pointsWarnThreshold", g_pointsWarnThreshold);
     m_settings->setValue("analyzerMaxPoints", g_analyzerMaxPoints);
     m_settings->setValue("extendedChartZoom", g_extendedChartZoom);
+    m_settings->setValue("useTls", g_useTls);
     m_settings->setValue("remoteApiEnabled", g_remoteApiEnabled);
     m_settings->setValue("remoteApiPort", g_remoteApiPort);
     m_settings->setValue("analyzerTimeoutSec", g_analyzerTimeoutSec);

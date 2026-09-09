@@ -231,6 +231,10 @@ signals:
     // on_stopMeasure().
     void drainingChanged(bool draining);
     void statusMessageChanged(const QString& text);
+    // Fires when the "Check for firmware updates" request actually
+    // finishes (success or failure) -- lets Settings stop its "Checking..."
+    // animation right then instead of on its own fixed timer.
+    void checkUpdatesComplete();
 
 public slots:
     bool refreshConnection(); // use SelectionParameters::selected

@@ -15,6 +15,15 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 - Print dialog: "Print Band Highlighting" checkbox (toner saver, off by
   default) -- see the Fixed entry below for why this needed a default.
+- Firmware update is fully live: Settings > Updates > "Update from file" --
+  Browse opens a real file picker (was a stub), Update flashes the chosen
+  file to the connected analyzer after a confirmation dialog ("No" is the
+  default button -- an accidental Enter must not start a flash). "Check for
+  firmware updates" (the internet-facing check-and-download half) is live
+  too now, gated behind the new "Use TLS" checkbox (see Fixed, below). Both
+  the file picker and the downloaded firmware save to the configured data
+  folder (Settings > General), not the OS Downloads folder. Every check/
+  download request logs its URL, HTTP status, and any error to the console.
 
 ### Fixed
 
@@ -36,6 +45,11 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   (raw stack array, no bounds check possible in any build mode) caused a
   stack over-read of up to ~193 bytes. Now clamped to both the buffer size
   and the actual bytes received.
+- Every RigExpert network request (app registration, and now firmware
+  update) unconditionally disabled TLS certificate verification, regardless
+  of scheme. New "Use TLS" checkbox (Settings > Updates, on by default)
+  drives both the scheme and certificate verification now; off is an
+  escape hatch for a vendor-side certificate problem, not routine.
 - HID firmware-update integrity check (currently unreachable from the UI --
   applying firmware isn't exposed as a feature yet) silently reported
   success regardless of whether the device actually verified the write, due
@@ -59,6 +73,31 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 - AA-230 firmware-info read: a slow or partial reply shorter than the
   expected fixed-size response caused an out-of-bounds heap read. Now
   clamped to the actual bytes received.
+- Settings > Updates > "Check for firmware updates": the "Checking..."
+  button animation ran on its own fixed 5s timer regardless of when the
+  request actually finished, so a fast failure/error dialog could appear
+  while "Checking..." kept cycling for several more seconds afterward. Now
+  stops the moment the real result arrives.
+- "Check for firmware updates" with no analyzer connected sent RigExpert a
+  request with blank model/serial fields and showed a generic failure
+  dialog. Now checked upfront with a clear "connect an analyzer first"
+  message instead.
+- HID devices that report full info as `serial,version,LICx` (e.g. Match)
+  instead of the older `MODEL REV x vYYY` string never had their version/
+  revision recorded anywhere -- `AnalyzerPro::slotFullInfo()` only read the
+  `LICx` part and threw the rest away, leaving the update-check URL's
+  `fw=`/`revision=` permanently blank for these devices. Now parsed.
+- Some BLE devices' firmware (confirmed on a real Match unit) never sends
+  the full-info field that carries serial number/version at all over BLE
+  -- not a parsing bug, the data isn't on the wire. "Check for firmware
+  updates" now fails fast with a message pointing at USB instead of
+  sending a request that can never identify the device.
+- "Check for firmware updates" showed "Please try later" even when the
+  request succeeded outright (HTTP 200, no network error) but RigExpert's
+  server had nothing to report -- confirmed by hand against the live
+  endpoint that it currently returns an empty result for every input,
+  real or fake, so that's not a transient condition worth retrying. Now
+  says so plainly instead.
 
 ## [2.2.5] - 2026-09-07
 

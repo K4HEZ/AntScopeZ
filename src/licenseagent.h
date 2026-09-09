@@ -8,8 +8,15 @@
 #include "popup.h"
 #include "modelesspopup.h"
 
-// #define SERVER_NAME "http://regdev.rigexpert.com/index.php"
-#define SERVER_NAME "http://regdev.rigexpert.com/index.php"
+// Was: a hardcoded plain-http SERVER_NAME macro (unconditionally
+// unverified, regardless of the scheme). g_useTls (mainwindow.cpp, "Use
+// TLS" on Settings > Updates) now drives both the scheme and the
+// certificate-verify mode below. See issue #14.
+extern bool g_useTls;
+inline QString licenseServerUrl()
+{
+    return QString("%1regdev.rigexpert.com/index.php").arg(g_useTls ? "https://" : "http://");
+}
 
 #define EMAIL_TIMEOUT 180*1000
 #define REQUEST_DELAY 5*1000

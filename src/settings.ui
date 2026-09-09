@@ -2618,9 +2618,22 @@ discards queued data -- only that AntScopeZ resyncs).</string>
        <item>
         <widget class="QLabel" name="label_9">
          <property name="text">
-          <string>Notice:  The items on this page use the internet to send and receive information about you and your devices.  This may include email addresses, software versions, analyzer details, serial numbers and other information not deemed to be of sensitive nature.  This data may traverse the internet unencrypted if the vendor has not enabled SSL security.</string>
+          <string>Notice:  The items on this page use the internet to send and receive information about you and your devices.  This may include email addresses, software versions, analyzer details, serial numbers and other information not deemed to be of sensitive nature.  Use TLS below controls whether this traffic is encrypted and certificate-verified.</string>
          </property>
          <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkBoxUseTls">
+         <property name="toolTip">
+          <string>On by default. Turn off only if the vendor's server has a certificate problem and you need this to keep working anyway -- not something to leave off routinely.</string>
+         </property>
+         <property name="text">
+          <string>Use TLS</string>
+         </property>
+         <property name="checked">
           <bool>true</bool>
          </property>
         </widget>

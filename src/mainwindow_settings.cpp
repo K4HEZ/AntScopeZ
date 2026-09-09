@@ -163,6 +163,22 @@ void MainWindow::on_actionSettings_triggered()
     connect(m_settingsDialog, &Settings::checkUpdatesBtn,
             m_analyzer, &AnalyzerPro::on_checkUpdatesBtn_clicked);
 
+    // Settings' "Update from file" (updateBtn/on_browseBtn_clicked()) --
+    // same story as checkUpdatesBtn above, had no receiver. readFile()
+    // opens the chosen .bin, skips its 512-byte info header, and hands
+    // the rest to updateFirmware() -- confirmed against a real downloaded
+    // vendor firmware file that this header size is exactly right.
+    connect(m_settingsDialog, &Settings::updateBtn,
+            m_analyzer, &AnalyzerPro::readFile);
+
+    // Settings' "Checking..." button animation used to run for a fixed 5s
+    // regardless of when the real network request actually finished, so a
+    // fast failure showed its error dialog while "Checking..." kept
+    // cycling for several more seconds afterward. This stops it exactly
+    // when AnalyzerPro says the check is actually done.
+    connect(m_analyzer, SIGNAL(checkUpdatesComplete()),
+            m_settingsDialog, SLOT(on_checkUpdatesComplete()));
+
     connect(m_settingsDialog, &Settings::fqRestrictChecked, this, [this](bool checked) {
         this->m_fqRestrict=checked;
     });

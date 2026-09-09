@@ -209,6 +209,7 @@ signals:
 private slots:
     void on_browseBtn_clicked();
     void on_checkUpdatesBtn_clicked();
+    void on_checkUpdatesComplete();
     void on_updateBtn_clicked();
     void on_percentChanged(qint32 percent);
     void findBootloader (void);

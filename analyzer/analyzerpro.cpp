@@ -13,6 +13,7 @@
 #include "nanovna_v2_analyzer.h"
 #include "ble_analyzer.h"
 #include "settings.h"
+#include "filedialog.h"
 
 // static member
 QList<AnalyzerParameters*> AnalyzerParameters::m_analyzers;
@@ -23,6 +24,7 @@ extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
                             QMessageBox::StandardButton defaultButton = QMessageBox::NoButton);
 extern int g_analyzerMaxPoints; // see mainwindow.cpp
 extern int g_analyzerTimeoutSec; // see mainwindow.cpp
+extern bool g_useTls; // see mainwindow.cpp
 
 AnalyzerPro::AnalyzerPro(QObject *parent) : QObject(parent),
     m_baseAnalyzer(nullptr),
@@ -111,20 +113,27 @@ QString AnalyzerPro::getRevision() const
 // this any more (see checkFirmwareUpdate()'s removal), so this used to also
 // have a non-manual branch here that rate-limited itself to once/day and
 // raised a passive notification instead of the dialog; that's gone too.
-//
-// WARNING: Disabled due to firmware-update concerns, same as
-// on_checkUpdatesBtn_clicked() above -- this is only ever reached via that
-// function's now-disabled m_downloader->startDownloadInfo() call, but
-// disabled here too rather than relying on that alone. See the comment
-// there before re-enabling anything in this chain.
 void AnalyzerPro::on_downloadInfoComplete()
 {
-#if 0
+    // Tells Settings the check is actually done, so its "Checking..." button
+    // animation can stop right now instead of running out its own fixed
+    // timer regardless of whether the real result already arrived.
+    emit checkUpdatesComplete();
+
     QString ver = m_downloader->version();
     if(ver.isEmpty())
     {
-        g_showMessageBox(nullptr, QMessageBox::Information, tr("Latest version"),
-                             tr("Can not get the latest version.\nPlease try later."));
+        QString reason = m_downloader->error();
+        // An empty reason means the request itself succeeded (HTTP 200,
+        // no network error) but RigExpert's server had nothing to report
+        // for this device -- confirmed by hand against the live endpoint
+        // with several real and made-up model/version combinations, all
+        // returning the same empty <FIRMWARE/>. That's not a transient
+        // failure worth retrying, unlike an actual network/HTTP error.
+        QString text = reason.isEmpty()
+                ? tr("No update information is available from RigExpert for this device.")
+                : tr("Can not get the latest version.\nPlease try later.\n\n(%1)").arg(reason);
+        g_showMessageBox(nullptr, QMessageBox::Information, tr("Latest version"), text);
     }else
     {
         double internetVersion = ver.toDouble();//ver.remove(".").toInt();
@@ -142,25 +151,19 @@ void AnalyzerPro::on_downloadInfoComplete()
         }
         m_updateDialog->exec();
     }
-#endif
 }
 
 // Downloads and saves the firmware file, but stops short of flashing it --
 // AnalyzerPro::updateFirmware()/BaseAnalyzer::update() (the actual apply
-// step) is deliberately not called here. Applying vendor firmware isn't
-// something this (non-vendor-distributed) build should attempt on its own;
-// the user can take the saved file to the vendor's own tool if they want to
-// apply it.
-//
-// WARNING: Disabled due to firmware-update concerns, same as
-// on_checkUpdatesBtn_clicked() above -- only reachable via that now-disabled
-// chain, but disabled here too rather than relying on that alone.
+// step) is deliberately not called here. The user takes the saved file to
+// Settings > Updates > "Update from file" (browseBtn/updateBtn, now wired
+// up -- see mainwindow_settings.cpp) to actually flash it -- a separate,
+// deliberate confirmation step, not folded into this automatic download.
 void AnalyzerPro::on_downloadFileComplete()
 {
-#if 0
     *m_pfw = m_downloader->file();
 
-    QString dir = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
+    QString dir = FileDialog::userDataDir();
     if (dir.isEmpty())
         dir = Settings::localDataFolder();
     QDir().mkpath(dir);
@@ -176,18 +179,12 @@ void AnalyzerPro::on_downloadFileComplete()
     } else {
         m_updateDialog->setFinished(tr("Could not save firmware file."));
     }
-#endif
 }
 
-// WARNING: Disabled due to firmware-update concerns, same as
-// on_checkUpdatesBtn_clicked() above -- only reachable via that now-disabled
-// chain, but disabled here too rather than relying on that alone.
 void AnalyzerPro::on_internetUpdate()
 {
-#if 0
     m_downloader->startDownloadFw();
     m_updateDialog->setStatusText(tr("Downloading firmware..."));
-#endif
 }
 
 void AnalyzerPro::readFile(QString pathToFw)
@@ -951,20 +948,47 @@ void AnalyzerPro::on_updatePercentChanged(int number)
 // see the removed checkFirmwareUpdate()/needCheckForUpdate() for the
 // automatic daily-check path this used to also have.
 //
-// WARNING: Disabled due to firmware-update concerns -- this builds a URL
-// that phones home to RigExpert with the device's serial number, firmware
-// revision, the user's OS/CPU/language, and our own app version, over a
-// connection with TLS certificate verification disabled (see Downloader).
-// checkUpdatesBtn is permanently disabled in Settings' constructor so this
-// can't be reached from the UI, but the function itself is kept intact
-// (not deleted) so the implementation isn't lost to a future cleanup pass.
-// The #if 0 below -- not just the disabled button -- is what stops this
-// from doing anything if something still calls it directly in code. Do not
-// remove the #if 0 without a deliberate decision to re-enable phoning home
-// to RigExpert.
+// This builds a URL that phones home to RigExpert with the device's serial
+// number, firmware revision, the user's OS/CPU/language, and our own app
+// version. That's a real disclosure -- covered by the Updates tab's own
+// notice label, so the user can decide for themselves whether to click
+// this button at all, rather than the feature being unconditionally off.
+// The connection itself now honors g_useTls (mainwindow.cpp, "Use TLS" on
+// Settings > Updates) via Downloader/licenseServerUrl(), instead of
+// unconditionally disabling certificate verification. See issue #14.
 void AnalyzerPro::on_checkUpdatesBtn_clicked()
 {
-#if 0
+    // The URL below is built entirely from the connected device's own
+    // reported model/serial/revision -- with nothing connected there's no
+    // way to know which firmware to even ask about. Fail here with a clear
+    // reason rather than sending RigExpert a request with those fields
+    // blank and showing a generic "can not get the latest version" for a
+    // completely different reason.
+    if (m_baseAnalyzer == nullptr || AnalyzerParameters::getName().isEmpty())
+    {
+        emit checkUpdatesComplete();
+        g_showMessageBox(nullptr, QMessageBox::Information, tr("Firmware update"),
+                          tr("Connect an analyzer first -- the update check needs to "
+                             "know its model and serial number."));
+        return;
+    }
+
+    // Confirmed live: at least some Match units' BLE firmware never sends
+    // the SERIAL_VER full-info field at all (only NAME/MEASURER/HW_STR),
+    // so getSerialNumber() stays empty over that connection -- not a
+    // parsing bug, the data just isn't on the wire. Fail here with a
+    // useful reason instead of sending RigExpert a request that can never
+    // identify the device.
+    if (getSerialNumber().isEmpty())
+    {
+        emit checkUpdatesComplete();
+        g_showMessageBox(nullptr, QMessageBox::Information, tr("Firmware update"),
+                          tr("This device isn't reporting a serial number over this "
+                             "connection, so an update check can't identify it. "
+                             "Try connecting over USB instead of Bluetooth."));
+        return;
+    }
+
     if(m_downloader == nullptr)
     {
         m_downloader = new Downloader();
@@ -976,7 +1000,7 @@ void AnalyzerPro::on_checkUpdatesBtn_clicked()
                 this, SLOT(on_progress(qint64,qint64)));
     }
 
-    QString url = "https://www.rigexpert.com/getfirmware?app=antscope2&model=";
+    QString url = QString("%1www.rigexpert.com/getfirmware?app=antscope2&model=").arg(g_useTls ? "https://" : "http://");
     QString name = AnalyzerParameters::getName();
     if (name == "AA-1500 SE")
         name = "AA-1500 ZOOM SE"; // HUCK short names supprt
@@ -991,7 +1015,6 @@ void AnalyzerPro::on_checkUpdatesBtn_clicked()
     url += "&fw=" + getVersionString();
 
     m_downloader->startDownloadInfo(QUrl(url));
-#endif
 }
 
 void AnalyzerPro::on_progress(qint64 downloaded,qint64 total)

@@ -2,6 +2,8 @@
 
 Q_LOGGING_CATEGORY(DOWNLOADER, "downloader")
 
+extern bool g_useTls; // see mainwindow.cpp
+
 Downloader::Downloader(QObject *parent) :
     QObject(parent),
     m_state(Finished),
@@ -20,19 +22,14 @@ Downloader::~Downloader()
 
 }
 
-// WARNING: Disabled due to firmware-update concerns -- fires the actual
-// network request AnalyzerPro::on_checkUpdatesBtn_clicked() builds the URL
-// for (phones home to RigExpert with device/OS/telemetry, over a
-// connection with TLS certificate verification disabled just below). That
-// caller is already disabled, but this is the layer that actually talks to
-// the network, so it's disabled here too rather than trusting every caller
-// to stay disabled forever -- Downloader isn't used anywhere else in this
-// codebase (checked), so nothing else depends on this actually firing. Do
-// not remove the #if 0 without a deliberate decision to re-enable phoning
-// home to RigExpert.
+// Fires the actual network request AnalyzerPro::on_checkUpdatesBtn_clicked()
+// builds the URL for. Re-enabled alongside that caller -- see g_useTls
+// (mainwindow.cpp, "Use TLS" on Settings > Updates) and issue #14: this
+// used to unconditionally disable certificate verification regardless of
+// that setting; now it only does when the user has explicitly turned TLS
+// off.
 Downloader::State Downloader::startDownloadInfo(QUrl url)
 {
-#if 0
     if (m_state == InProgress) {
         return m_state;
     }
@@ -40,31 +37,27 @@ Downloader::State Downloader::startDownloadInfo(QUrl url)
     QNetworkRequest request(url);
 
     m_mng.clearAccessCache();
-    QSslConfiguration conf = request.sslConfiguration();
-    conf.setPeerVerifyMode(QSslSocket::VerifyNone);
-    request.setSslConfiguration(conf);
+    if (!g_useTls) {
+        QSslConfiguration conf = request.sslConfiguration();
+        conf.setPeerVerifyMode(QSslSocket::VerifyNone);
+        request.setSslConfiguration(conf);
+    }
 
     m_mng.get(request);
 
-    //qCDebug(DOWNLOADER) << "start download info " << url;
+    qInfo() << "Firmware check: requesting" << url.toString();
 
     m_state = InProgress;
 
     m_isInfo = true;
     m_sendStatisics = false;
     return Started;
-#else
-    Q_UNUSED(url)
-    return Finished;
-#endif
 }
 
-// WARNING: Disabled due to firmware-update concerns, same as
-// startDownloadInfo() above -- downloads the actual firmware binary once a
-// URL for it has been found.
+// Downloads the actual firmware binary once a URL for it has been found.
+// Same re-enable/TLS reasoning as startDownloadInfo() above.
 Downloader::State Downloader::startDownloadFw()
 {
-#if 0
     if (m_state == InProgress) {
         return m_state;
     }
@@ -74,15 +67,17 @@ Downloader::State Downloader::startDownloadFw()
 
     QUrl url(m_link);
 
-    qCDebug(DOWNLOADER) << "start download link " << url;
+    qInfo() << "Firmware download: requesting" << url.toString();
 
     QNetworkRequest request(url);
     QNetworkReply *reply;
 
     m_mng.clearAccessCache();
-    QSslConfiguration conf = request.sslConfiguration();
-    conf.setPeerVerifyMode(QSslSocket::VerifyNone);
-    request.setSslConfiguration(conf);
+    if (!g_useTls) {
+        QSslConfiguration conf = request.sslConfiguration();
+        conf.setPeerVerifyMode(QSslSocket::VerifyNone);
+        request.setSslConfiguration(conf);
+    }
 
     reply = m_mng.get(request);
     connect(reply, SIGNAL(downloadProgress(qint64,qint64)),
@@ -96,9 +91,6 @@ Downloader::State Downloader::startDownloadFw()
     m_state = InProgress;
 
     return m_state;
-#else
-    return Finished;
-#endif
 }
 
 // WARNING: Disabled due to firmware-update concerns, same as
@@ -140,9 +132,14 @@ void Downloader::fileDownloaded(QNetworkReply *reply)
 
     m_arr = reply->readAll();
 
-    //QString str_data(m_arr);
-    //qDebug() << "Downloader::fileDownloaded" << str_data;
-
+    int httpStatus = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    bool ok = reply->error() == QNetworkReply::NoError;
+    // errorString() reads misleadingly like a real error ("Unknown error")
+    // even when error() is NoError, so only include it when there's an
+    // actual error to report.
+    qInfo() << "Firmware" << (m_isInfo ? "check" : "download") << "reply:"
+            << reply->url().toString() << "HTTP" << httpStatus
+            << (ok ? QStringLiteral("OK") : reply->errorString());
 
     if (reply->error() != QNetworkReply::NoError ) {
         m_lastError = reply->errorString();
@@ -150,10 +147,13 @@ void Downloader::fileDownloaded(QNetworkReply *reply)
         m_link.clear();
     } else if(!m_isInfo && isHTML(m_arr)) {
         m_lastError = tr("Server does not have firmware file.");
+        qInfo() << "Firmware download: server returned HTML instead of a firmware file";
     } else {
         m_lastError.clear();
         if (m_isInfo) {
             parse(&m_arr);
+            if (m_ver.isEmpty())
+                qInfo() << "Firmware check: HTTP OK but no <VERSION> in the response body:" << m_arr;
         }
     }
 
