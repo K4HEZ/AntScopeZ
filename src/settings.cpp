@@ -263,9 +263,15 @@ Settings::Settings(QWidget *parent) :
     // own version), which is a real disclosure, but this Updates tab's own
     // notice label above covers it, so the user can decide for themselves.
     // g_useTls (mainwindow.cpp, "Use TLS" checkbox on this tab) covers the
-    // connection itself -- see issue #14. Only updateBtn starts disabled,
-    // and only because there's no file chosen yet.
-    ui->updateBtn->setEnabled(false);         // re-enabled once a file is actually chosen, see on_browseBtn_clicked()
+    // connection itself -- see issue #14.
+    //
+    // updateBtn (actually flashing a chosen file) stays permanently
+    // disabled, deliberately -- unlike checkUpdatesBtn/browseBtn above.
+    // Never re-enabled anywhere (see on_browseBtn_clicked() and
+    // on_percentChanged()); its own greyed-out state is the only "this is
+    // off" notice needed, so on_updateBtn_clicked() can never actually
+    // fire from the UI.
+    ui->updateBtn->setEnabled(false);
 
     // Custom Analyzer used to be removeTab()'d entirely unless
     // g_developerMode was on. Shown unconditionally now instead -- developer
@@ -491,7 +497,7 @@ void Settings::on_browseBtn_clicked()
         return;
     m_pathToFw = path;
     ui->browseLine->setText(path);
-    ui->updateBtn->setEnabled(true);
+    // updateBtn stays disabled -- see the constructor's comment.
 }
 
 void Settings::on_checkUpdatesBtn_clicked()
@@ -677,10 +683,13 @@ void Settings::on_updateBtn_clicked()
 
 void Settings::on_percentChanged(qint32 percent)
 {
+    // Shared by both the download-progress path ("Check for firmware
+    // updates") and the flash-progress path ("Update from file") --
+    // updateBtn itself is never touched here, since it stays permanently
+    // disabled (see the constructor's comment) and on_updateBtn_clicked()
+    // can't fire to begin with.
     if(percent == 100)
     {
-        ui->updateBtn->setText(tr("Update"));
-        ui->updateBtn->setEnabled(true);
         ui->updateProgressBar->hide();
         ui->updateProgressBar->setValue(0);
     }

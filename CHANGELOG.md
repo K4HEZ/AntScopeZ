@@ -15,15 +15,15 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 - Print dialog: "Print Band Highlighting" checkbox (toner saver, off by
   default) -- see the Fixed entry below for why this needed a default.
-- Firmware update is fully live: Settings > Updates > "Update from file" --
-  Browse opens a real file picker (was a stub), Update flashes the chosen
-  file to the connected analyzer after a confirmation dialog ("No" is the
-  default button -- an accidental Enter must not start a flash). "Check for
-  firmware updates" (the internet-facing check-and-download half) is live
-  too now, gated behind the new "Use TLS" checkbox (see Fixed, below). Both
-  the file picker and the downloaded firmware save to the configured data
-  folder (Settings > General), not the OS Downloads folder. Every check/
-  download request logs its URL, HTTP status, and any error to the console.
+- Settings > Updates > "Check for firmware updates" (the internet-facing
+  check-and-download half of firmware update) is live now, gated behind
+  the new "Use TLS" checkbox (see Fixed, below). Downloaded firmware saves
+  to the configured data folder (Settings > General), not the OS Downloads
+  folder. Every check/download request logs its URL, HTTP status, and any
+  error to the console. Browse (file picker, also live now) lets you look
+  at a chosen file's info, but the Update button -- actually flashing it to
+  the connected analyzer -- stays deliberately disabled; its own greyed-out
+  state is the only notice needed.
 
 ### Fixed
 
