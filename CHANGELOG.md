@@ -99,6 +99,17 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   real or fake, so that's not a transient condition worth retrying. Now
   says so plainly instead.
 
+### Documentation
+
+- README.md and the user guide's Updates tab / troubleshooting sections
+  rewritten to match this cycle's actual firmware-update state (Check for
+  firmware updates and Browse are live now; Update stays disabled) instead
+  of the older entirely-disabled description.
+- BUILDINFO.md: documented the new `ANTSCOPEZ_SANITIZE` build option and
+  `.clang-tidy` config.
+- Translations: `update_translations` run, 15 new strings translated
+  (uk/ja/es). All three `.ts` files fully finished, 0 unfinished.
+
 ## [2.2.5] - 2026-09-07
 
 ### Changed

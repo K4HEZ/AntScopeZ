@@ -654,18 +654,32 @@ the file format and what each button does.
 Your installed AntScopeZ version sits at the top, next to a
 **Check for Software Updates** button -- there's no update-checking
 mechanism built yet, so that button is a disabled placeholder for now.
-Below it, the rest of the tab (analyzer info, "Update from file",
-"Check for firmware updates") is disabled too, with a warning
-explaining why: "Check for firmware updates" would contact RigExpert's
-own servers directly, which this fork deliberately doesn't do. Get
-firmware updates from RigExpert's own site/software instead.
 
-**Register application / Match license / Register device / Update
-license / Device info** -- RigExpert's own registration and licensing
-system. This talks to RigExpert's servers and isn't something this fork
-tests or supports -- see the disclaimer in
-[README.md](https://github.com/K4HEZ/AntScopeZ#readme). Use the
-vendor's own software for anything licensing-related.
+A notice explains that the rest of this tab talks to RigExpert's
+servers -- device serial number, OS/CPU/language, app version and, for
+registration, your name/email. **Use TLS** (on by default) controls
+whether that traffic is encrypted and certificate-verified; turn it off
+only if the vendor's server has a certificate problem and you need this
+to keep working anyway, not something to leave off routinely.
+
+**Register application / Match license / Device info / Update license /
+Register device** -- RigExpert's own registration and licensing system.
+Live and working, but talks to RigExpert's servers directly and isn't
+something this fork tests or supports beyond making sure the connection
+itself is sound -- see the disclaimer in
+[README.md](https://github.com/K4HEZ/AntScopeZ#readme).
+
+**Check for firmware updates** runs a real check against RigExpert's
+server. As of this writing that server doesn't return update
+information for any device or input tried (confirmed directly against
+the live endpoint) -- not something fixable on this end, since the
+request and what comes back are both already correct. **Browse** lets
+you pick a `.bin` file and see its embedded model/version/build info.
+**Update** (actually flashing the chosen file to the connected device)
+stays disabled on purpose: it isn't reliable enough yet across the
+range of devices and OSes this needs to work on, and a bad flash can
+brick the device. Get firmware updates from RigExpert's own site/
+software instead.
 
 ## Interpreting your data
 
@@ -1552,10 +1566,14 @@ delete.
   Language list.** Confirm the filename matches `QtLanguage_<code>.qm`
   exactly and it's in the right folder -- see
   [Files and directories](#files-and-directories).
-- **"Check for firmware updates" is greyed out / does nothing.** That's
-  deliberate -- it would contact RigExpert's own servers directly, which
-  this fork doesn't do. See [Settings' Updates tab](#updates-tab). Get
-  firmware updates from RigExpert's own site/software instead.
+- **"Check for firmware updates" says no update information is
+  available.** RigExpert's own server doesn't return update information
+  right now, for any device -- not something this fork can fix. See
+  [Settings' Updates tab](#updates-tab). Get firmware updates from
+  RigExpert's own site/software instead.
+- **"Update" (flash from file) is greyed out.** That's deliberate -- it
+  isn't reliable enough yet to expose, and a bad flash can brick the
+  device. See [Settings' Updates tab](#updates-tab).
 - **TDR chart is empty after a scan.** TDR only populates from a
   wideband, near-DC sweep -- a normal band-limited scan (e.g. just 20m)
   won't show anything there. See

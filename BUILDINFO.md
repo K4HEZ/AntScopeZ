@@ -41,12 +41,37 @@ it's missing.
 
 ## Build options
 
-None currently -- `ANTSCOPE_NEW_CONNECTION`, `ANTSCOPE_NEW_ANALYZER`, and
-`ANTSCOPE_OLD_TDR` used to gate old code paths they replaced; all three were
-always `ON`, and the flags and their dead OFF-path code are gone.
-`ANTSCOPE_DEBUG_BLE`'s raw TX/RX `qDebug()` calls are commented out at their
-call sites in `analyzer/ble_analyzer.cpp` instead of a build option --
-uncomment locally when actually debugging Bluetooth.
+`ANTSCOPEZ_SANITIZE` (off by default) builds with AddressSanitizer +
+UndefinedBehaviorSanitizer -- catches out-of-bounds reads/writes and
+similar live, with an exact file/line/stack, instead of by code audit.
+Configure a separate build dir (`CMAKE_PREFIX_PATH` must be passed
+explicitly, or CMake silently resolves the system's older bundled Qt6
+instead of the one under `/opt/Qt`):
+
+```sh
+cmake -B build-debug-asan -DCMAKE_BUILD_TYPE=Debug -DANTSCOPEZ_SANITIZE=ON \
+  -DCMAKE_PREFIX_PATH=/opt/Qt/6.11.2/gcc_64
+cmake --build build-debug-asan --target AntScopeZ --parallel
+```
+
+Run with `ASAN_OPTIONS="suppressions=../asan-suppressions.txt:detect_leaks=0" ./AntScopeZ`
+from `build-debug-asan/` -- the suppressions file (repo root) covers a
+real bug in `libxcb-cursor` (not ours) and turns off LeakSanitizer's
+exit-time report, which for a Qt/GTK GUI app is almost entirely
+third-party-library noise rather than anything actionable.
+
+`.clang-tidy` (repo root) is also available for static analysis --
+`bugprone-*`/`clang-analyzer-*` checks, no separate install needed since
+both it and `clang-tidy` itself already ship with Qt Creator's bundled
+clang toolchain. Point it at `build-debug/.qtc_clangd/compile_commands.json`
+(already generated for clangd).
+
+Otherwise none currently -- `ANTSCOPE_NEW_CONNECTION`, `ANTSCOPE_NEW_ANALYZER`,
+and `ANTSCOPE_OLD_TDR` used to gate old code paths they replaced; all
+three were always `ON`, and the flags and their dead OFF-path code are
+gone. `ANTSCOPE_DEBUG_BLE`'s raw TX/RX `qDebug()` calls are commented
+out at their call sites in `analyzer/ble_analyzer.cpp` instead of a
+build option -- uncomment locally when actually debugging Bluetooth.
 
 ## macOS packaging
 
