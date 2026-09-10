@@ -11,6 +11,8 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+## [2.2.6] - 2026-09-10
+
 ### Added
 
 - Print dialog: "Print Band Highlighting" checkbox (toner saver, off by
