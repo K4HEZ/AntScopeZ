@@ -36,6 +36,8 @@ other brands) -- built for, and maintained by, the ham radio community.
 
 **[⬇ Download the latest release](https://github.com/K4HEZ/AntScopeZ/releases/latest)**
 &nbsp;·&nbsp;
+[All releases](https://github.com/K4HEZ/AntScopeZ/releases)
+&nbsp;·&nbsp;
 [Browse the source](https://github.com/K4HEZ/AntScopeZ)
 &nbsp;·&nbsp;
 [Report an issue](https://github.com/K4HEZ/AntScopeZ/issues)
