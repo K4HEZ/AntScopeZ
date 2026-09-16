@@ -419,9 +419,13 @@ public:
         m_analyzers << new AnalyzerParameters(idx++, "AA-1000", "100", "1000000", 240, 320);
         m_analyzers << new AnalyzerParameters(idx++, "AA-1400", "100", "1400000", 240, 320);
         m_analyzers << new AnalyzerParameters(idx++, "AA-1500 ZOOM", "100", "1500000", 240, 320, PREFIX_SERIAL_NUMBER_AA1500_ZOOM);
-        // 320x240 LCD (NanoVNASaver's NanoVNA.py screenwidth/screenheight) --
-        // real screenshot support landed, issue #9.
-        m_analyzers << new AnalyzerParameters(idx++, "NanoVNA", "100", "1000000", 240, 320);
+        // 480x320 LCD -- real screenshot support landed, issue #9; screen
+        // size corrected 2026-09-16 from a live device's Debug Logging
+        // capture (see CAPTURE_WIDTH/CAPTURE_HEIGHT in nanovna_analyzer.h
+        // for the full story). NanoVNASaver's NanoVNA.py documents 320x240
+        // for the classic NanoVNA/NanoVNA-H; this app doesn't yet
+        // distinguish that from larger-screen variants like this one.
+        m_analyzers << new AnalyzerParameters(idx++, "NanoVNA", "100", "1000000", 320, 480);
         // Binary register+FIFO protocol (NanovnaV2Analyzer), distinct from
         // classic NanoVNA/H/H4's ASCII shell (NanovnaAnalyzer) above --
         // frequency ceilings from the reference clients' own board-revision

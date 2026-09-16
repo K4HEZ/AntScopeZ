@@ -139,13 +139,31 @@ private:
     QByteArray m_lastScanCommand;
 
     // "capture" reply: one echoed "\r\n"-terminated line, then a flat
-    // 320x240 raw RGB565 framebuffer dump (big-endian per pixel) -- no
+    // 480x320 raw RGB565 framebuffer dump (big-endian per pixel) -- no
     // length header, unlike the binary scan reply above, so the expected
     // size is just the fixed screen dimensions. Same byte-counted
     // approach as parseBinaryScan() for the same reason (raw pixel bytes
     // can legitimately equal 0x0D/0x0A).
-    static constexpr int CAPTURE_WIDTH = 320;
-    static constexpr int CAPTURE_HEIGHT = 240;
+    //
+    // Confirmed 2026-09-16 against a live device's Debug Logging capture:
+    // the actual "capture" payload was 307200 bytes (480*320*2), not the
+    // previously-assumed 320x240 (153600 bytes) -- that mismatch caused
+    // parseCapture() to slice off only the first half of every frame,
+    // which then got reshaped against the wrong stride in
+    // Screenshot::on_newData()'s NanoVNA branch. Large solid-color runs
+    // (thick trace lines, divider bars) survived the resulting row
+    // misalignment more or less intact; fine multi-row detail (text
+    // glyphs, dotted grid lines) did not, which is what made screenshots
+    // look "broken up" into scattered dots while the general plot shape
+    // stayed recognizable.
+    //
+    // This is a real screen-size difference between NanoVNA hardware
+    // variants (this app has no capability query to detect it live), not
+    // a protocol bug -- if a classic 320x240 NanoVNA/NanoVNA-H ever needs
+    // to be supported alongside this, these constants will need to become
+    // per-device rather than fixed here.
+    static constexpr int CAPTURE_WIDTH = 480;
+    static constexpr int CAPTURE_HEIGHT = 320;
     qint32 parseCapture();
 
     void startFallbackSweep();               // classic sweep/frequencies/data 0 [/data 1] sequence
