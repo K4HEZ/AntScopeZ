@@ -2,6 +2,7 @@
 #include <qserialport.h>
 #include <QMessageBox>
 #include <cstring>
+#include "customanalyzer.h"
 #include "debuglog.h"
 
 // static members
@@ -571,7 +572,22 @@ qint32 NanovnaAnalyzer::parseBinaryScan()
 
 qint32 NanovnaAnalyzer::parseCapture()
 {
-    const int IMAGE_BYTES = CAPTURE_WIDTH * CAPTURE_HEIGHT * 2; // RGB565, 2 bytes/pixel
+    // Screen size varies across NanoVNA-family hardware (issue #54) --
+    // CAPTURE_WIDTH/CAPTURE_HEIGHT is just the default (480x320, the
+    // common case). A Custom Analyzer profile (Settings > Analyzer) with
+    // prototype "NanoVNA" and its own LCD width/height overrides it, the
+    // same way mainwindow_analyzer.cpp's on_actionScreenshotAA_triggered()
+    // already resolves the Screenshot dialog's own size -- this just
+    // keeps the actual wire-format byte count in sync with that.
+    int width = CAPTURE_WIDTH;
+    int height = CAPTURE_HEIGHT;
+    if (CustomAnalyzer::customized()) {
+        if (CustomAnalyzer* ca = CustomAnalyzer::getCurrent()) {
+            width = ca->width();
+            height = ca->height();
+        }
+    }
+    const int IMAGE_BYTES = width * height * 2; // RGB565, 2 bytes/pixel
 
     // Firmware echoes "capture" back as its own line before the real
     // framebuffer dump -- same one-line-echo behavior "scan"/"data 1"
