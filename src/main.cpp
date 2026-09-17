@@ -3,6 +3,7 @@
 #include <QMessageBox>
 #include <QAbstractNativeEventFilter>
 #include <QIcon>
+#include <QLoggingCategory>
 #include "analyzer/customanalyzer.h"
 #include "settings.h"
 #include "style.h"
@@ -110,6 +111,14 @@ int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
 int main(int argc, char *argv[])
 {
     qputenv("QT_ACCESSIBILITY", "0");
+    // The env var above doesn't actually stop Qt's Linux AT-SPI bridge from
+    // probing the session's accessibility bus -- see measurements.h's
+    // m_oneFqWidget/m_oneFqBigReadout comment for a 2026-08-24 crash that
+    // happened deep inside that bridge despite it already being set. This
+    // just silences the resulting "qt.accessibility.atspi: ... does not
+    // implement ..." warning printed when the probe gets an unexpected
+    // response; it doesn't change whether the probe itself happens.
+    QLoggingCategory::setFilterRules("qt.accessibility.atspi.warning=false");
 
     // Fix for 4K Display Issues Disabled
     QApplication a(argc, argv);
