@@ -46,9 +46,10 @@ other brands) -- built for, and maintained by, the ham radio community.
 
 ## Screenshots
 
-![SWR sweep across the 20m band with the menu bar, docked Cursor Details panel, and band highlighting, Light theme](assets/screenshots/SWR-Chart.png)
-*An SWR sweep across the 20m band -- menu bar, 3-pane layout, docked
-Cursor Details panel, and band highlighting -- Light theme.*
+![SWR sweep across the 40m band with the Edit menu, Presets, Measurements, and Markers panels, docked Cursor Details panel, Dark theme](assets/screenshots/AntScopeZ.png)
+*An SWR sweep across the 40m band -- menu bar (with the Edit menu),
+3-pane layout, docked Cursor Details panel, and the Markers table --
+Dark theme.*
 
 ## Why AntScopeZ?
 
