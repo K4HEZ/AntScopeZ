@@ -75,9 +75,6 @@ QString Export::suggestedPath(const QString &ext) const
         : m_measurements->getMeasurement(m_measurements->getMeasurementLength() - 1 - m_measureNumber);
     if (mm != nullptr) {
         QString suggestedName = mm->name;
-        int namePos = suggestedName.indexOf("> ");
-        if (namePos != -1)
-            suggestedName = suggestedName.mid(namePos+2);
         suggestedName.replace(QRegularExpression("[\\\\/:*?\"<>|]"), "_");
         suggestedName = suggestedName.trimmed();
         if (!suggestedName.isEmpty())

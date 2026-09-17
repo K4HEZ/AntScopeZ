@@ -50,7 +50,7 @@
 // above-this-many-points threshold (also g_-global, also General tab).
 #define POINTS_MAX 10000
 
-#define MEASUREMENTS_TABLE_COLUMNS 3
+#define MEASUREMENTS_TABLE_COLUMNS 4
 // Order here is the on-screen column order (every table-building/-updating
 // site uses these symbolic names, not hardcoded indices, so reordering the
 // enum alone reorders the columns). COL_MENU (the rename pencil) removed
@@ -60,6 +60,15 @@
 // needed any more.
 enum {
     COL_VISIBLE,
+    // measurement::serialNumber -- a stable per-measurement identifier
+    // assigned once at creation (Measurements::nextSerialNumber()), whether
+    // the measurement came from a scan or a loaded file. Added so the
+    // Markers panel's own "#" column (fieldSerie, markerspanel.h) has a
+    // real, collision-free value to show instead of the measurement's
+    // transient position in this list -- see the marker-numbering
+    // investigation this replaced (issue: two unrelated measurements could
+    // both show marker "#"=1).
+    COL_SERIAL,
     COL_NAME,
     // Actual points received for that scan (Measurements::on_measurementComplete()) --
     // "--" until the scan finishes. Added to make a device silently returning
@@ -196,6 +205,14 @@ private:
     QPointer<QMessageBox> m_analyzerErrorBox;
     Export *m_exportDialog = nullptr;
     Markers *m_markers = nullptr;
+    // menuEdit's three QMenu::addSection() group headers -- built in code
+    // (buildEditMenu(), mainwindow_editmenu.cpp) since Designer's .ui format
+    // has no declarative addSection(). Kept so loadLanguage() can retranslate
+    // them directly; ui->retranslateUi(this) only knows about actions it
+    // declared itself, not ones added to a menu at runtime.
+    QAction *m_editSectionPresets = nullptr;
+    QAction *m_editSectionMeasurements = nullptr;
+    QAction *m_editSectionMarkers = nullptr;
     QSettings *m_settings = nullptr;
     Calibration *m_calibration = nullptr;
     MarkerComparisonDialog *m_markerComparisonDialog = nullptr;
@@ -389,6 +406,14 @@ private:
     void deleteMeasurementRow(int row);
     void clearAllMeasurements();
     void exportMeasurementRow(int row);
+    // Flips the row's own visibility checkbox (COL_VISIBLE) -- routes
+    // through the checkbox item rather than calling Measurements::
+    // toggleVisibility() directly so the existing itemChanged handler
+    // (mainwindow.cpp) stays the single place that reacts to it.
+    void toggleMeasurementVisibility(int row);
+    // Populates menuEdit with QMenu::addSection() group headers -- called
+    // once from the constructor. See m_editSectionPresets's comment.
+    void buildEditMenu();
     void changeColorTheme(int themeIndex);
     // Makes `index` the persisted active theme: writes "activeTheme" to
     // QSettings (the one thing changeColorTheme() itself never does --
@@ -525,6 +550,7 @@ public slots:
     void on_tableWidget_presets_cellActivated(int row, int column);
     void on_presetsDeleteBtn_clicked();
     void on_pressetsUpBtn_clicked();
+    void on_tableWidget_presets_customContextMenuRequested(const QPoint& pos);
     void on_presetsBandComboBox_currentIndexChanged(int index);
     void on_actionExport_triggered();
     void on_measurementComplete();
@@ -542,6 +568,24 @@ public slots:
     void on_refreshConnection();
 
 private slots:
+    // Edit menu (menuEdit/menuEditMeasurements/menuEditMarkers/
+    // menuEditPresets) -- issue #52. Same actions as the three tables' own
+    // right-click menus, keyed off each table's current selection instead
+    // of a right-click position. updateEditMenuState() enables/disables
+    // them right before the menu opens (see its own comment).
+    void updateEditMenuState();
+    void on_actionEditMeasurementsSelectColor_triggered();
+    void on_actionEditMeasurementsRename_triggered();
+    void on_actionEditMeasurementsSaveAs_triggered();
+    void on_actionEditMeasurementsDelete_triggered();
+    void on_actionEditMeasurementsToggleVisibility_triggered();
+    void on_actionEditMeasurementsClearAll_triggered();
+    void on_actionEditMarkersClearSelected_triggered();
+    void on_actionEditMarkersClearAll_triggered();
+    void on_actionEditMarkersClearEmpty_triggered();
+    void on_actionEditPresetsAdd_triggered();
+    void on_actionEditPresetsDelete_triggered();
+    void on_actionEditPresetsMoveUp_triggered();
     void on_actionAnalyzerData_triggered();
     void on_tabWidget_currentChanged(int index);
     void on_actionScreenshotAA_triggered();

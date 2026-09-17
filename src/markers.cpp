@@ -322,11 +322,12 @@ QList<QVariant> Markers::emptyMarkerRow(double fq0, int markerNumber, const QLis
 QList<QVariant> Markers::computeMarkerRow(double fq0, int markerNumber, int i, const QList<int>& _columnTypes)
 {
             QList<QVariant> row;
-            int index = i;
-            QString name = m_measurements->getMeasurement(i)->name;
-            int pos = name.indexOf('>');
-            if (pos != -1)
-                index = name.left(2).toInt();
+            // measurement::serialNumber -- a stable per-measurement id
+            // assigned once at creation (Measurements::nextSerialNumber()),
+            // not the measurement's transient position in the list (which
+            // this used to fall back to, and which could -- and did --
+            // collide with an unrelated measurement's real scan number).
+            int index = m_measurements->getMeasurement(i)->serialNumber;
             row << QVariant(); // fieldDelete
             row << QVariant(markerNumber); // fieldMarker
             row << QVariant(index); // fieldSerie

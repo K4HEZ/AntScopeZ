@@ -123,6 +123,7 @@ set(ANTSCOPE_SOURCES
     src/main.cpp
     src/mainwindow.cpp
     src/mainwindow_analyzer.cpp
+    src/mainwindow_editmenu.cpp
     src/mainwindow_frequency.cpp
     src/mainwindow_markers.cpp
     src/mainwindow_measurements_io.cpp

@@ -237,23 +237,16 @@ void Measurements::renameMeasurement(int row)
     if (row < 0 || row >= m_measurements.length())
         return;
     measurement& mm = m_measurements[row];
-    QString prefix;
-    QString name = mm.name;
-    int pos = name.indexOf("> ");
-    if (pos != -1) {
-        prefix = name.left(pos+2);
-        name = name.mid(pos+2);
-    }
     QInputDialog dlg;
     QString text;
     dlg.setLabelText(tr("Measurement name:"));
-    dlg.setTextValue(name);
+    dlg.setTextValue(mm.name);
     if (dlg.exec() == QDialog::Accepted) {
         text = dlg.textValue();
     }
 
     if (!text.isEmpty()) {
-        mm.name = prefix + text;
+        mm.name = text;
         mm.dirty = true; // see measurement::dirty's own comment
         m_tableWidget->item(row, COL_POINTS)->setText(pointsCellText(mm));
 
@@ -636,7 +629,9 @@ void Measurements::on_newMeasurement(QString name)
         deleteRow(0);
     }
 
+    int serialNumber = nextSerialNumber(); // computed before appending -- see its own comment
     m_measurements.append( measurement());
+    m_measurements.last().serialNumber = serialNumber;
     m_viewMeasurements.append( measurement());
     m_farEndMeasurementsAdd.append( measurement());
     m_farEndMeasurementsSub.append( measurement());
@@ -823,24 +818,22 @@ void Measurements::on_newMeasurement(QString name)
             m_graphBriefHint->show();
         }
 
-        QString nextName = name;
-        if (name.indexOf("##") == 0)
-        {
-            int next = nextPrefix();
-            nextName = QString("%1> %2").arg(next, 2, 10, QChar('0')).arg(name.mid(2));
-        }
-        m_measurements.last().name = nextName;
+        m_measurements.last().name = name;
         m_tableWidget->setRowCount(0);
 
         const int cell_side = 24;
         m_tableWidget->setColumnCount(MEASUREMENTS_TABLE_COLUMNS);
         m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_VISIBLE, QHeaderView::Fixed);
+        m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_SERIAL, QHeaderView::Fixed);
         // Interactive, not Fixed: the Name column's width was previously
         // locked, so a long measurement name (elided to fit) couldn't be
         // widened to actually read it -- user-draggable now.
         m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_NAME, QHeaderView::Interactive);
         m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_POINTS, QHeaderView::Fixed);
         m_tableWidget->horizontalHeader()->resizeSection(COL_VISIBLE, cell_side);
+        // Wide enough for two digits (serialNumber wraps at 99, see
+        // nextSerialNumber()) plus a little breathing room.
+        m_tableWidget->horizontalHeader()->resizeSection(COL_SERIAL, 30);
         // Was 50 -- wide enough for a bare point count, not for the
         // "(s1p)"/"(s2p)" tag now appended (see pointsCellText()).
         m_tableWidget->horizontalHeader()->resizeSection(COL_POINTS, 75);
@@ -855,6 +848,11 @@ void Measurements::on_newMeasurement(QString name)
             item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
             item->setCheckState(mm.visible ? Qt::Checked : Qt::Unchecked);
             m_tableWidget->setItem(i,COL_VISIBLE, item);
+
+            item = new QTableWidgetItem();
+            item->setTextAlignment(Qt::AlignCenter);
+            item->setText(QString::number(mm.serialNumber));
+            m_tableWidget->setItem(i,COL_SERIAL, item);
 
             item = new QTableWidgetItem();
             m_tableWidget->setItem(i,COL_NAME, item);

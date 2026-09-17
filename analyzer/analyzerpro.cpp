@@ -484,7 +484,7 @@ void AnalyzerPro::on_measure (qint64 fqFrom, qint64 fqTo, qint32 dotsNumber)
         // into the saved filename as "_"-for-":" and then confuse the
         // extension-stripping on the next save (dots from the date read as
         // part of the "extension" to remove). See CHANGELOG.md.
-        QString name = datetime.toString("##yyyyMMdd-hhmmss");
+        QString name = datetime.toString("yyyyMMdd-hhmmss");
         emit newMeasurement(name, fqFrom, fqTo, dotsNumber);
         m_chartCounter = 0;
         if (m_baseAnalyzer != nullptr)
@@ -508,7 +508,7 @@ void AnalyzerPro::on_measureS21 (qint64 fqFrom, qint64 fqTo, qint32 dotsNumber)
     {
         setIsMeasuring(true);
         QDateTime datetime = QDateTime::currentDateTime();
-        QString name = datetime.toString("##yyyyMMdd-hhmmss"); // see on_measure()'s comment
+        QString name = datetime.toString("yyyyMMdd-hhmmss"); // see on_measure()'s comment
         emit newMeasurement(name, fqFrom, fqTo, dotsNumber);
         m_dotsNumber = dotsNumber;
         m_chartCounter = 0;
@@ -570,7 +570,7 @@ void AnalyzerPro::on_measureUser (qint64 fqFrom, qint64 fqTo, qint32 dotsNumber)
     {
         setIsMeasuring(true);
         QDateTime datetime = QDateTime::currentDateTime();
-        QString name = datetime.toString("##yyyyMMdd-hhmmss"); // see on_measure()'s comment
+        QString name = datetime.toString("yyyyMMdd-hhmmss"); // see on_measure()'s comment
         emit newMeasurement(name, fqFrom, fqTo, dotsNumber);
         m_chartCounter = 0;
         // Same NANO exclusion, same bug, same fix as on_measureContinuous()

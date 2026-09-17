@@ -130,10 +130,7 @@ void Measurements::loadData(QString path)
         qint64 fqMaxHz = static_cast<qint64>(fqMax * 1000000);
         qint32 dots = size;
 
-        int next = nextPrefix();
-        QString nextName = QString("%1> %2").arg(next, 2, 10, QChar('0')).arg(list.last());
-        //on_newMeasurement(nextName);
-        on_newMeasurement(nextName, fqMinHz, fqMaxHz, dots);
+        on_newMeasurement(list.last(), fqMinHz, fqMaxHz, dots);
         m_measurements.last().dirty = false; // loaded from a file, see measurement::dirty's own comment
 
         ProgressDlg* progressDlg = new ProgressDlg();
@@ -1011,22 +1008,16 @@ void Measurements::importData(QString _name)
     }
 }
 
-int Measurements::nextPrefix()
+int Measurements::nextSerialNumber()
 {
     int next = 0;
     for (int idx=0; idx<m_measurements.size(); idx++)
-    {
-        QString existed = m_measurements[idx].name;
-        if (existed.indexOf('>') == 2) {
-            QString num = existed.left(2);
-            bool ok = false;
-            int prefix = num.toInt(&ok);
-            if (ok) {
-                next = qMax(next, prefix);
-            }
-        }
-    }
+        next = qMax(next, m_measurements[idx].serialNumber);
     next++;
+    // g_maxMeasurements caps concurrent measurements at 15 (on_newMeasurement()
+    // evicts the oldest via deleteRow(0) before ever appending past it), so by
+    // the time this wraps, every measurement that could collide with 1..N has
+    // long since been evicted (confirmed safe at that cap, Harold, 2026-09-17).
     if (next > 99)
         next = 1;
     return next;

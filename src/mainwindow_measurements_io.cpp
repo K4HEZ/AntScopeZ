@@ -697,6 +697,9 @@ void MainWindow::on_tableWidgetMeasurmentsContextMenu(const QPoint& pos)
             selectRow();
             exportMeasurementRow(row);
         });
+        menu.addAction(tr("Toggle Visibility"), this, [this, row]() {
+            toggleMeasurementVisibility(row);
+        });
         menu.addAction(tr("Delete"), this, [this, row]() {
             deleteMeasurementRow(row);
         });
@@ -708,6 +711,14 @@ void MainWindow::on_tableWidgetMeasurmentsContextMenu(const QPoint& pos)
     }
     if (!menu.isEmpty())
         menu.exec(ui->tableWidget_measurments->mapToGlobal(pos));
+}
+
+void MainWindow::toggleMeasurementVisibility(int row)
+{
+    QTableWidgetItem* item = ui->tableWidget_measurments->item(row, COL_VISIBLE);
+    if (item == nullptr)
+        return;
+    item->setCheckState(item->checkState() == Qt::Checked ? Qt::Unchecked : Qt::Checked);
 }
 
 void MainWindow::changeMeasurmentsColor(int _row, QColor& _color)

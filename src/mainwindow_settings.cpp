@@ -440,6 +440,14 @@ bool MainWindow::loadLanguage(QString locale)
         }
     }
 
+    // menuEdit's QMenu::addSection() headers -- built in code
+    // (buildEditMenu()), so retranslateUi() above never sees them.
+    if (m_editSectionPresets != nullptr) {
+        m_editSectionPresets->setText(tr("Presets"));
+        m_editSectionMeasurements->setText(tr("Measurements"));
+        m_editSectionMarkers->setText(tr("Markers"));
+    }
+
     if (m_settingsDialog != nullptr)
         m_settingsDialog->on_translate();
     if (m_measurements != nullptr)

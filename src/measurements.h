@@ -161,7 +161,9 @@ public:
     bool getGraphBriefHintEnabled(void);
     void saveData(quint32 number, QString path);
     void loadData(QString path);
-    int  nextPrefix();
+    // measurement::serialNumber's assigner -- max used + 1, wrap at 99.
+    // Runs for every new measurement (scan or loaded file).
+    int  nextSerialNumber();
 
     void exportData(QString _name, int _type, int _number, bool _applyCable=false, QString _description=QString());
     // 2-port Touchstone (.s2p) export -- straight from dataSParam (real

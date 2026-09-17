@@ -583,6 +583,14 @@ MainWindow::MainWindow(QWidget *parent) :
     m_presets = new Presets(this);
     connect(this, SIGNAL(isRangeChanged(bool)), m_presets, SLOT(on_isRangeChanged(bool)));
     m_presets->setTable(ui->tableWidget_presets);
+    // Issue #52 -- Add/Delete/Move Up as a right-click menu too, not just
+    // the buttons above the table (same pattern as tableWidget_measurments).
+    ui->tableWidget_presets->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->tableWidget_presets, &QTableWidget::customContextMenuRequested, this, &MainWindow::on_tableWidget_presets_customContextMenuRequested);
+    // Edit menu (issue #52) -- enable/disable state is only ever read right
+    // before the menu is shown, not tracked continuously.
+    buildEditMenu();
+    connect(ui->menuEdit, &QMenu::aboutToShow, this, &MainWindow::updateEditMenuState);
 
     m_measurements = new Measurements (this);
     connect(this, SIGNAL(isRangeChanged(bool)), m_measurements, SLOT(on_isRangeChanged(bool)));

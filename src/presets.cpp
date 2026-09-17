@@ -96,11 +96,13 @@ void Presets::deleteRow (int number)
         number--;
     }
 
+    // Rows, not one Select call per column -- selecting column 0 and 1
+    // individually (as this used to) left column 2 (Points) looking
+    // unselected, since QItemSelectionModel::Select without Rows only ever
+    // selects the exact index given, regardless of the view's own
+    // SelectRows behavior (that only governs mouse-driven selection).
     QModelIndex myIndex = m_tableWidget->model()->index( number, 0, QModelIndex());
-    m_tableWidget->selectionModel()->select(myIndex,QItemSelectionModel::Select);
-
-    myIndex = m_tableWidget->model()->index( number, 1, QModelIndex());
-    m_tableWidget->selectionModel()->select(myIndex,QItemSelectionModel::Select);
+    m_tableWidget->selectionModel()->select(myIndex,QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
 }
 
 void Presets::moveRowUp (int number)
@@ -118,12 +120,10 @@ void Presets::moveRowUp (int number)
     m_fqPointsList.insert(number-1,points);
     refresh();
 
-    m_tableWidget->selectionModel()->clearSelection();
+    // See deleteRow()'s identical comment -- ClearAndSelect|Rows on a single
+    // index replaces the old two-column-only manual selection.
     QModelIndex myIndex = m_tableWidget->model()->index( number-1, 0, QModelIndex());
-    m_tableWidget->selectionModel()->select(myIndex,QItemSelectionModel::Select);
-
-    myIndex = m_tableWidget->model()->index( number-1, 1, QModelIndex());
-    m_tableWidget->selectionModel()->select(myIndex,QItemSelectionModel::Select);
+    m_tableWidget->selectionModel()->select(myIndex,QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
 }
 
 void Presets::refresh()

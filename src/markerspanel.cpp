@@ -68,14 +68,49 @@ void MarkersPanel::on_customContextMenuRequested(const QPoint& pos)
 {
     if (m_markers == 0)
         return; // nothing to clear
+    // rowAt(), not itemAt(pos)->row() -- column 0 (the "X" button) is a cell
+    // widget, not a QTableWidgetItem, so itemAt() misses it and a right-click
+    // on the button itself would otherwise never find a row.
+    int row = m_table->rowAt(pos.y());
+
     QMenu menu(this);
-    QAction* clearAll = menu.addAction(tr("Clear All"));
+    if (row != -1) {
+        menu.addAction(tr("Clear Selected Marker"), this, [this, row]() {
+            removeMarkerAtRow(row);
+        });
+    }
+    QAction* clearAll = menu.addAction(tr("Clear All Markers"));
     connect(clearAll, &QAction::triggered, this, &MarkersPanel::clearAllMarkers);
     // "Clear Empty Markers" used to live on contextMenuEvent(), but m_table's
     // CustomContextMenu policy (above) consumes the event before it can ever
     // reach that override -- folded in here instead so it's reachable again.
     menu.addAction(tr("Clear Empty Markers"), this, &MarkersPanel::on_clearEmptyMarkers);
     menu.exec(m_table->viewport()->mapToGlobal(pos));
+}
+
+bool MarkersPanel::hasSelectedMarker() const
+{
+    return !m_table->selectedItems().isEmpty();
+}
+
+void MarkersPanel::clearSelectedMarker()
+{
+    QList<QTableWidgetItem*> sel = m_table->selectedItems();
+    if (sel.isEmpty())
+        return;
+    removeMarkerAtRow(sel.first()->row());
+}
+
+void MarkersPanel::removeMarkerAtRow(int row)
+{
+    QTableWidgetItem* numItem = m_table->item(row, 1); // fieldNum, frozen column
+    if (numItem == nullptr)
+        return;
+    bool ok = false;
+    int markerNum = numItem->text().toInt(&ok);
+    if (!ok)
+        return;
+    emit removeMarker(markerNum - 1);
 }
 
 void MarkersPanel::on_remove()
@@ -281,46 +316,48 @@ QMap<int, QString>& MarkersHeaderColumn::headerMap()
 
 QSet<int> MarkersPanel::getEmptyMarkers() const
 {
-    QSet<int> empty;
+    // A marker spans one row per measurement (updateMarkers()), so "empty"
+    // has to be decided across every one of a marker's rows, not row by
+    // row -- checking each row in isolation flagged a marker empty the
+    // moment *any one* of its measurements lacked data at that frequency,
+    // even while another measurement had real data there (2026-09-18).
+    //
+    // Can't identify a row's marker by reading column 1 (fieldNum) back out
+    // of the table either: updateInfo() only ever writes that column on a
+    // block's first row ("j != 0" skip, avoids repainting a merged-looking
+    // column on every sub-row) -- every other row's column 1 is blank, so
+    // reading it back for row 2+ of any block silently discarded exactly
+    // the rows most likely to hold the real data. Rows are laid out in
+    // fixed-size contiguous per-marker blocks instead, so the marker number
+    // is derived from row position, matching updateMarkers()'s own layout.
+    QSet<int> seen;
+    QSet<int> hasData;
 
-    // Iterate through each marker row
+    if (m_markers == 0)
+        return seen;
+
+    int rowsPerMarker = m_measurements == 0 ? 1 : m_measurements;
+
     for (int row = 0; row < m_table->rowCount(); ++row) {
-        // Get the marker number from column fieldNum (column 1)
-        QTableWidgetItem* numItem = m_table->item(row, 1);
-        if (numItem == nullptr)
-            continue;
+        int markerNum = row / rowsPerMarker + 1;
+        seen.insert(markerNum);
 
-        bool ok = false;
-        int markerNum = numItem->text().toInt(&ok);
-        if (!ok)
-            continue;
-
-        // Check if all data columns (starting from column 4, after fixed columns)
-        // are invalid/blank for this marker.
-        // Fixed columns: fieldDelete (0), fieldNum (1), fieldSerie (2), fieldFQ (3)
-        // Data columns start at 4
-
-        bool hasValidData = false;
+        // Data columns start at 4, after the fixed fieldDelete/fieldNum/
+        // fieldSerie/fieldFQ columns. formatText() already renders any
+        // invalid/DBL_MAX value as an empty string, so a non-empty cell
+        // here is always real data -- no need to re-parse it.
         for (int col = 4; col < m_table->columnCount(); ++col) {
             QTableWidgetItem* item = m_table->item(row, col);
             if (item != nullptr && !item->text().isEmpty()) {
-                // Column has text -- check if it's a valid value (not DBL_MAX)
-                bool ok = false;
-                double val = item->text().toDouble(&ok);
-                if (ok && val != DBL_MAX) {
-                    hasValidData = true;
-                    break;
-                }
+                hasData.insert(markerNum);
+                break;
             }
-        }
-
-        // If no valid data found in any column for this marker, it's empty
-        if (!hasValidData) {
-            empty.insert(markerNum);
         }
     }
 
-    return empty;
+    // Empty = seen but never found data in any of its rows.
+    seen.subtract(hasData);
+    return seen;
 }
 
 void MarkersPanel::on_clearEmptyMarkers()

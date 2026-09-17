@@ -92,6 +92,31 @@ void MainWindow::on_pressetsUpBtn_clicked()
     }
 }
 
+// Right-click equivalent of the Add/Delete/Move Up buttons above -- issue
+// #52. "Add" always acts the same regardless of what (if anything) was
+// clicked: like the button, it reads the current Start/Stop (or Center/
+// Range) fields, not the clicked row, so there's nothing row-specific for
+// it to do differently.
+void MainWindow::on_tableWidget_presets_customContextMenuRequested(const QPoint& pos)
+{
+    QTableWidgetItem *item = ui->tableWidget_presets->itemAt(pos);
+    int row = (item != nullptr) ? item->row() : -1;
+
+    QMenu menu(this);
+    menu.addAction(tr("Add"), this, &MainWindow::on_presetsAddBtn_clicked);
+    if (row != -1) {
+        menu.addAction(tr("Delete"), this, [this, row]() {
+            m_presets->deleteRow(row);
+        });
+        if (row != 0) {
+            menu.addAction(tr("Move Up"), this, [this, row]() {
+                m_presets->moveRowUp(row);
+            });
+        }
+    }
+    menu.exec(ui->tableWidget_presets->mapToGlobal(pos));
+}
+
 bool MainWindow::loadBands()
 {
     QString ituPath = Settings::localDataPath("itu-regions.txt");

@@ -50,6 +50,12 @@ public:
     explicit MarkersPanel(QWidget *parent = nullptr);
     ~MarkersPanel();
 
+    // Edit menu equivalents of the table's own right-click actions -- these
+    // act on the current table selection since a menu-bar item has no
+    // right-click position to hit-test against.
+    bool hasMarkers() const { return m_markers > 0; }
+    bool hasSelectedMarker() const;
+
 public slots:
     void clearTable(void);
     void on_remove();
@@ -57,6 +63,7 @@ public slots:
     QList<int> getColumns();
     void updateMarkers(int markers, int measurements, bool force = false);
     void updateInfo(QList<QList<QVariant>>& info);
+    void clearSelectedMarker();
 
     // Rebuilds the header/table from the current [Markers]header ini value.
     // Column choice/order is owned entirely by Settings' Markers tab
@@ -68,6 +75,10 @@ public slots:
     // Rebuilds header text in the newly-selected UI language.
     void on_translate();
 
+    // Also reachable from the Edit menu (menuEditMarkers), not just the
+    // table's own right-click menu -- see mainwindow_editmenu.cpp.
+    void on_clearEmptyMarkers();
+
 protected:
     void createHeader();
     QString formatText(int type, QVariant val);
@@ -77,9 +88,6 @@ signals:
     void changeColumns();
     // Issue #36 -- table's right-click "Clear All".
     void clearAllMarkers();
-
-private slots:
-    void on_clearEmptyMarkers();
 
 private:
     QVBoxLayout* m_layout;
@@ -97,6 +105,12 @@ private:
 
     // Detect which markers have no valid data across all measurements
     QSet<int> getEmptyMarkers() const;
+
+    // Shared by the context menu's "Clear Selected Marker" and
+    // clearSelectedMarker() -- reads the marker number back out of column 1
+    // (fieldNum, frozen there -- see createHeader()) rather than deriving it
+    // from row/rowCount math, same reasoning as getEmptyMarkers().
+    void removeMarkerAtRow(int row);
 };
 
 #endif // MARKERSPANEL_H

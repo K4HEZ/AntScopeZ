@@ -151,6 +151,14 @@ struct UserData {
 struct measurement
 {
     QString name;
+    // Stable identity assigned once at creation (Measurements::
+    // nextSerialNumber()) -- covers every measurement, scan or loaded file
+    // alike, and is what both the Measurements table's own "#" column and
+    // the Markers panel's "#" column show. Replaced an earlier "01>"/"02>"
+    // prefix baked into scan names for the same purpose (removed 2026-09-17
+    // -- it only ever covered scans, not loaded files, and its own counter
+    // could disagree with this one once both existed side by side).
+    int serialNumber = 0;
     bool visible = true;
     // True if this measurement's on-disk copy (if any) doesn't match what's
     // in memory -- defaults true (a live scan), set false on load from a
