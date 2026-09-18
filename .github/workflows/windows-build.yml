@@ -74,6 +74,12 @@ jobs:
           name: windows-screenshot
           path: windows-screenshot.png
 
+      # CPack's NSIS generator needs makensis, which the runner image lacks.
+      - name: Install NSIS
+        run: |
+          choco install nsis -y --no-progress
+          "C:\Program Files (x86)\NSIS" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+
       - name: Package installer
         working-directory: build
         run: cpack -G NSIS
