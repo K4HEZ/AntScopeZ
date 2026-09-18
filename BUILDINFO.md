@@ -596,17 +596,19 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
     real, current remote-control mechanism.
 
 - **Custom Analyzer (Settings > Analyzer) -- live, user-facing.** Not
-  gated by `-developer` (removed) or any compile-time flag. Working today:
-  overriding a NanoVNA's screenshot width/height (below, #54). Not working
-  yet: a custom frequency range surviving a scan, and scans against a
-  Match RFE with the feature on (both under STILL BROKEN below).
-  **TODO -- research the frequency clamp and re-test scans end to end.**
+  gated by `-developer` (removed) or any compile-time flag. Meant for
+  NanoVNAs and clones whose screen geometry or frequency range AntScopeZ
+  doesn't know -- pointless for RigExpert models, whose values are already
+  in the model table. Working today: overriding a NanoVNA's screenshot
+  width/height (below, #54). Unverified: a custom frequency range
+  surviving a scan (see STILL BROKEN below).
+  **TODO -- research the frequency clamp and test it end to end.**
   - **What it's for:** define a named preset that overrides a real,
     already-detected model's min/max frequency and LCD width/height --
-    aimed at a clone or updated-range unit that AntScopeZ already
-    identifies correctly (via the device's own reported version string)
-    but whose real frequency range differs from what AntScopeZ assumes for
-    that model. Picking a "prototype" only seeds sensible defaults; it
+    aimed at a NanoVNA, clone or updated-range unit that AntScopeZ
+    identifies (e.g. via the device's own reported version string, or the
+    classic NanoVNA VID:PID) but whose real frequency range or screen
+    differs from what AntScopeZ assumes for that model. Picking a "prototype" only seeds sensible defaults; it
     never changes which protocol/commands are used to talk to the device.
   - **Architecture:** `CustomAnalyzer` (`analyzer/customanalyzer.h/.cpp`)
     holds the persisted presets (`m_map` of alias -> preset,
@@ -654,8 +656,9 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
     string `"names[0]"` -- dead placeholder, never actually indexed into a
     real list. Now `setCurrentIndex(0)`, selecting the combo's actual first
     entry (populated in `initCustomizeTab()`).
-  - **STILL BROKEN:** the custom min/max frequency override doesn't survive
-    a scan even with a valid prototype picked. `AnalyzerParameters::
+  - **STILL BROKEN (from code reading; not reproduced live):** the custom
+    min/max frequency override is expected not to survive a scan even with
+    a valid prototype picked. `AnalyzerParameters::
     normalizeFq()`/`normalizeFqRange()` (`analyzerparameters.h`)
     unconditionally clamp to `AnalyzerParameters::current()`'s real stock
     range and have no concept of `CustomAnalyzer` at all;
@@ -667,16 +670,6 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
     `CustomAnalyzer::customized() ? ... : ...` pattern the individual
     `mainwindow_scan.cpp`/`mainwindow_frequency.cpp` call sites already use
     inline), not patching call sites individually.
-  - **STILL BROKEN, not diagnosed:** running an actual scan against a real
-    device (RigExpert Match RFE) with "Use customized analyzer" checked
-    gets the outgoing command rejected at the protocol level --
-    `HidAnalyzer::sendData()` logs
-    `***** ERROR:  "Error.Not recognized"` in response to sending
-    `07046f66660d0000...` (zero-padded to the fixed HID report size).
-    Root cause not chased this pass -- worth checking whether the command
-    encodes a frequency value that becomes malformed once it's built from a
-    custom range instead of a real model's, but that's a guess, not a
-    finding.
   - **Screenshot width/height: RigExpert HID/COM captures are client-side
     only (investigated 2026-09-07); NanoVNA captures honor the profile
     (2026-09-17, #54).**

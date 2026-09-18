@@ -224,7 +224,7 @@ Settings → Analyzer → Custom Analyzer lets you manually define a
 "prototype" -- frequency range, screen size, protocol -- for a device
 not in the table above, without a code change. It's live but young:
 setting a different LCD size (e.g. for a NanoVNA variant) works, while a
-custom frequency range doesn't yet survive a scan. See
+custom frequency range hasn't been verified to survive a scan. See
 [Customized analyzer parameters](#customized-analyzer-parameters) below.
 
 ## First-time setup checklist
@@ -622,6 +622,13 @@ it as one unit. Off by default. See
 [Customized analyzer parameters](#customized-analyzer-parameters)
 below for what the group box's controls do and its current known
 limitations.
+
+**Auto-calibration** length/resistance fields (Min/Max/Steps) -- a
+routine for older analyzers (an AA-1400-style R,L calibration; the
+AA-230 ZOOM-style C,L variant isn't implemented). It isn't active in a
+normal build: the fields save, but nothing starts it. See
+[BUILDINFO.md](../BUILDINFO.md)'s Known issues (it's a build-time flag)
+for the details.
 
 **Debug Logging** -- four checkboxes, one per analyzer connection type:
 Com/Serial, USB/HID, BLE/Bluetooth, and NanoVNA. Turning one on starts
@@ -1333,19 +1340,18 @@ the edge of that range.
 
 Settings' **Analyzer** tab's **Custom Analyzer** group box lets you
 define a named analyzer preset -- a custom minimum/maximum frequency
-range plus an LCD width/height -- for a unit AntScopeZ already
-recognizes correctly (a clone, or a newer hardware revision of a known
-model). Two things it's for:
+range plus an LCD width/height -- for a NanoVNA, clone, or newer
+hardware revision whose range or screen AntScopeZ doesn't know. There's
+no reason to use it with a RigExpert analyzer, whose range and screen
+are already known. Two things it's for:
 
 - **A different screen size (works today).** A NanoVNA variant whose LCD
   isn't the default 480x320 (see [NanoVNA](#nanovna)) gets a profile with
   Prototype `NanoVNA` and the unit's real Width/Height; with **Use
   customized analyzer** ticked, Analyzer → Screenshot... reads and
-  decodes that size instead. On RigExpert analyzers the width/height
-  only affect how the image is decoded, so they have to match the
-  device's real screen.
-- **A different frequency range (not yet working -- see the
-  limitations below).**
+  decodes that size instead.
+- **A different frequency range (not verified to work -- see the
+  limitation below).**
 
 **Use customized analyzer**, sitting above the group box (see
 [Analyzer tab](#analyzer-tab) above), enables/disables everything in
@@ -1356,29 +1362,21 @@ everything else it needs, only the frequency range and LCD width/height
 are overridden), set Min/Max (kHz) and Width/Height, then New/Remove/Apply
 to manage the list.
 
-That said, this is a young feature and two real limitations remain
-worth knowing before relying on it:
+That said, this is a young feature, and one limitation is worth knowing
+before relying on it:
 
-- **A custom frequency range doesn't survive a scan.** Range-clamping
+- **A custom frequency range may not survive a scan.** Range-clamping
   code elsewhere in the app (`AnalyzerParameters::normalizeFq()`/
-  `normalizeFqRange()`) isn't yet aware of `CustomAnalyzer` and silently
-  snaps Start/Stop back to the real device's stock range regardless of
-  what your custom profile says. **Don't restrict frequency**, the
-  first control inside the group box, is the one working escape hatch
-  for this today -- checking it disables Start/Stop range clamping
-  entirely instead of narrowing it to your custom profile, so you can
-  request a scan outside any documented range at all (useful for
-  probing whether a device secretly handles more than its listed spec,
-  at the cost of no longer being clamped to *anything*, custom or
-  stock).
-- **Actually scanning with a custom profile against real hardware has
-  been seen to fail at the protocol level** (a RigExpert Match RFE
-  rejected the resulting command outright). Root cause not yet chased,
-  and untested on NanoVNA-family hardware.
+  `normalizeFqRange()`) isn't aware of `CustomAnalyzer` and, going by the
+  code, snaps Start/Stop back to the device's stock range regardless of
+  what your custom profile says. This hasn't been tested end to end yet.
+  **Don't restrict frequency**, the first control inside the group box,
+  is meant as a workaround -- checking it disables Start/Stop range
+  clamping entirely instead of narrowing it to your custom profile, at
+  the cost of no longer being clamped to *anything*, custom or stock.
 
-See `BUILDINFO.md`'s Known Issues for the full technical writeup of
-both, plus what's already been fixed, if you're looking to pick this
-back up.
+See `BUILDINFO.md`'s Known Issues for the technical writeup, plus what's
+already been fixed, if you're looking to pick this back up.
 
 ## Files and directories
 
