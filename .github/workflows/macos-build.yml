@@ -43,7 +43,7 @@ jobs:
         run: >
           cmake -B build
           -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_OSX_ARCHITECTURES=arm64;x86_64
+          "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64"
           -DCMAKE_PREFIX_PATH=${{ env.QT_ROOT_DIR }}
 
       - name: Build
