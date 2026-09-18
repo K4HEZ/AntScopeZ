@@ -8,7 +8,7 @@ title: AntScopeZ
 A modern antenna-analyzer application for RigExpert & NanoVNA (and a few
 other brands) -- built for, and maintained by, the ham radio community.
 
-### Version 2.2.6 Released for Windows & Linux Sept. 11, 2026
+### Version 2.2.7 Released for Windows, macOS & Linux Sept. 18, 2026
 
 ## Features
 
