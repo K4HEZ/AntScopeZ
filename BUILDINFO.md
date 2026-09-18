@@ -387,8 +387,10 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   repeat: confirm the real live string via `strings` against
   `libQt6Widgets.so.6` (or wherever it actually lives), then add one
   `<message>` per affected language here.
-- **The S21 tab is import-only -- there's still no live S21/S12 capture
-  from real hardware.** As of the 2-port `.s2p` import work, the tab is
+- **On RigExpert-family analyzers the S21 tab is import-only -- there's
+  still no live S21/S12 capture from real hardware.** (NanoVNA-family
+  hardware does capture S11+S21 live on every sweep, since 2026-08-31;
+  everything below is about the RigExpert path.) As of the 2-port `.s2p` import work, the tab is
   no longer unconditionally hidden: `MainWindow::on_importFinished()`
   shows it as soon as an import populates `dataSParam`
   (`mainwindow_measurements_io.cpp`), and it's fully documented as a
@@ -423,10 +425,8 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
     two-port capability flag, a UI path to trigger live capture on the
     S21 tab when connected to a capable device over HID, and add
     `WAIT_S21_DATA` handling to `com_analyzer.cpp`/`ble_analyzer.cpp` if
-    S21 should also work over serial/BLE. See also the
-    `nanovna-two-port-work-deferred` note -- this is folded into the same
-    future pass, blocked on owning real 2-port-capable hardware to test
-    against.
+    S21 should also work over serial/BLE. Blocked on owning real
+    2-port-capable RigExpert hardware to test against.
   - **Confirmed rejected on this session's test hardware:** `FDB10\r`
     against a RigExpert Match RFE (firmware `FT810`, per its own
     `CDIC`/`SN` reply) gets `Error.Not recognized` back over HID
@@ -452,7 +452,7 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   the global, every `extern bool g_developerMode;` declaration (15 files),
   and the `-developer`-gated `-comserial`/`-usbhid`/`-nanovna`/`-ble` CLI
   shortcut for pre-enabling Debug Logging (never the only way to reach
-  it -- Settings > Developer's four checkboxes always worked regardless)
+  it -- Settings > Analyzer's four Debug Logging checkboxes always worked regardless)
   were all deleted outright that day rather than left inert. It did
   **not** gate a points ceiling -- that claim was true of a since-replaced
   mechanism (`MAX_DOTS`/`spinBoxPoints`, neither of which exist in the code
@@ -463,7 +463,7 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   `g_developerMode` check ever in that path.
   **As of 2026-08-13, it no longer gates Settings' Custom Analyzer group
   box** (renamed from "Customize"; as of 2026-08-14 it lives inside the
-  renamed "Developer" tab, alongside the unrelated "Debug Logging" group
+  renamed "Developer" tab (since renamed "Analyzer", #6), alongside the unrelated "Debug Logging" group
   box added the same day -- see `CHANGELOG.md`). **As of 2026-09-07 the
   group box is no longer force-disabled either** -- "Use customized
   analyzer" moved out to its own item directly above the group box and
@@ -472,105 +472,7 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   `Settings::initCustomizeTab()` seeds both the checkbox and the group
   box's enabled state from the real saved `CustomAnalyzer::customized()`
   value on open, instead of always forcing both off. The two STILL BROKEN
-  items below are unfixed as of this date, so turning the feature on for
-  real use still runs into them.
-  - **What it's for:** define a named preset that overrides a real,
-    already-detected model's min/max frequency and LCD width/height --
-    aimed at a clone or updated-range unit that AntScopeZ already
-    identifies correctly (via the device's own reported version string)
-    but whose real frequency range differs from what AntScopeZ assumes for
-    that model. Picking a "prototype" only seeds sensible defaults; it
-    never changes which protocol/commands are used to talk to the device.
-  - **Architecture:** `CustomAnalyzer` (`analyzer/customanalyzer.h/.cpp`)
-    holds the persisted presets (`m_map` of alias -> preset,
-    `m_currentAlias`, `m_useCustomized`) and saves/loads them under the
-    `AntScopeZ.ini` `[CustomAnalyzers]` group. `Settings::initCustomizeTab()`
-    (`settings.cpp`) wires up the Customize tab UI. Three
-    `AnalyzerPro` methods -- `getModelString()`, `getMinFq()`, `getMaxFq()`
-    (`analyzerpro.cpp`) -- are the actual integration points: each checks
-    `CustomAnalyzer::customized()` and substitutes the custom value in place
-    of the real device's `AnalyzerParameters` entry (the fixed table of
-    ~35 real RigExpert models, `analyzer/analyzerparameters.h`).
-  - **FIXED:** `AnalyzerPro::slotFullInfo()` (`analyzerpro.cpp`) null-derefed
-    `AnalyzerParameters::byName(getModelString())` -- `getModelString()`
-    returns `CustomAnalyzer::currentPrototype()` while customized, which is
-    never a real model name (defaults to the literal placeholder
-    `"Custom"`), so `byName()` reliably returned `nullptr` and the very next
-    line crashed on it (confirmed via `coredumpctl`: SIGSEGV, null `this` +
-    member offset, on a RigExpert Match RFE reporting its license level
-    mid-scan). Now reads `AnalyzerParameters::current()` instead -- the
-    real, physically connected device, already resolved by serial-number
-    prefix at connection time
-    (`SelectDeviceDialog::onApply()` -> `AnalyzerParameters::setCurrent()`).
-    License-level bookkeeping describes the real hardware, not whatever
-    override is configured for display/range purposes.
-  - **FIXED:** `Settings::initCustomizeTab()` unconditionally `.hide()`'d
-    `comboBoxPrototype` and its label, despite correctly populating it with
-    every `AnalyzerParameters` model name right below -- so the one control
-    that lets you pick a valid reference model literally couldn't be used.
-    Unhidden; confirmed it populates.
-  - **FIXED 2026-09-07:** `AnalyzerPro::getMinFq()`/`getMaxFq()`
-    (`analyzerpro.cpp`) returned `CustomAnalyzer::currentPrototype()` while
-    customized -- a copy-paste from `getModelString()` right above, which
-    correctly wants a model-name string; these two want a frequency
-    instead. Never actually called from anywhere (`AnalyzerPro`'s own
-    `getMinFq()`/`getMaxFq()` have no live callers -- everything else on
-    this list reimplements the same `CustomAnalyzer::customized() ? ... :
-    AnalyzerParameters::getMinFq()/getMaxFq()` check inline at its own call
-    site instead), so harmless in practice, but wrong: any future caller
-    doing `.toULongLong()` on a non-numeric string like `"AA-230 ZOOM"`
-    silently gets `0`. Now returns `CustomAnalyzer::getCurrent()->minFq()/
-    maxFq()`, falling back to `AnalyzerParameters::getMinFq()/getMaxFq()`
-    if there's no current alias.
-  - **FIXED 2026-09-07:** `Settings::on_addButton()` ("New") set the
-    (no longer hidden) `comboBoxPrototype`'s current text to the literal
-    string `"names[0]"` -- dead placeholder, never actually indexed into a
-    real list. Now `setCurrentIndex(0)`, selecting the combo's actual first
-    entry (populated in `initCustomizeTab()`).
-  - **STILL BROKEN:** the custom min/max frequency override doesn't survive
-    a scan even with a valid prototype picked. `AnalyzerParameters::
-    normalizeFq()`/`normalizeFqRange()` (`analyzerparameters.h`)
-    unconditionally clamp to `AnalyzerParameters::current()`'s real stock
-    range and have no concept of `CustomAnalyzer` at all;
-    `MainWindow::on_dataChanged()` calls `normalizeFqRange()` on every range
-    change, so both "Full Range" and a typed Stop value get silently
-    clamped straight back down to the real device's limit. Called from
-    roughly 8 sites total in `mainwindow.cpp`, not just the one -- fixing
-    this means making those two static methods customization-aware (same
-    `CustomAnalyzer::customized() ? ... : ...` pattern the individual
-    `mainwindow_scan.cpp`/`mainwindow_frequency.cpp` call sites already use
-    inline), not patching call sites individually.
-  - **STILL BROKEN, not diagnosed:** running an actual scan against a real
-    device (RigExpert Match RFE) with "Use customized analyzer" checked
-    gets the outgoing command rejected at the protocol level --
-    `HidAnalyzer::sendData()` logs
-    `***** ERROR:  "Error.Not recognized"` in response to sending
-    `07046f66660d0000...` (zero-padded to the fixed HID report size).
-    Root cause not chased this pass -- worth checking whether the command
-    encodes a frequency value that becomes malformed once it's built from a
-    custom range instead of a real model's, but that's a guess, not a
-    finding.
-  - **Screenshot width/height (investigated 2026-09-07): client-side only,
-    by design -- not a bug, but a hard limit worth knowing.**
-    `MainWindow::on_actionScreenshotAA_triggered()` correctly substitutes a
-    custom profile's width/height for the real model's when customized,
-    and `Screenshot` (`screenshot.cpp`) consistently uses whatever it's
-    given throughout buffer allocation, pixel decoding, and preview
-    scaling -- no dimension bugs found there. But
-    `HidAnalyzer::makeScreenshot()`/`ComAnalyzer::makeScreenshot()`
-    (`analyzer/hid_analyzer.cpp`, `analyzer/com_analyzer.cpp`) send the
-    bare `screenshot\r` command with no width/height encoded in it at all
-    -- the real device streams its own native, fixed-resolution pixel data
-    regardless of what's configured here. A custom profile's width/height
-    only decode correctly if they're set to match a real connected
-    device's actual native screen resolution; there's no protocol-level
-    way to make the device produce a different one, so this is really the
-    same class of problem as the "Error.Not recognized" scan rejection
-    above, not something fixable purely in `Screenshot`.
-  - Reported, not yet diagnosed: the Customize tab's controls looking "not
-    laid out cleanly" at runtime -- no screenshot yet to compare against
-    the `.ui` markup, which looks like a structurally normal form layout
-    on its own.
+  items (see the "Custom Analyzer" entry below) are unfixed as of this date.
   - Separate feature living on the same tab, not part of Custom Analyzer
     itself: the six "Auto-calibration" length/resistance fields
     (`cable_length_min/max/steps`, `cable_res_min/max/steps`) feed
@@ -689,10 +591,125 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
     in place; deleted outright by commit `d27827e` ("Remove OneFqWidget's
     dead UDP remote-control stub, superseded by json-tcp-api") rather than
     left dormant -- `onefqwidget.cpp`/`.h` have no socket code left at all.
-    See the `remote-network-control-idea` memory note for the direction
-    actually worth pursuing if remote control comes back up; the
+    The
     `remoteapi/` module (TCP JSON API, `json-tcp-api` branch) is the
     real, current remote-control mechanism.
+
+- **Custom Analyzer (Settings > Analyzer) -- live, user-facing.** Not
+  gated by `-developer` (removed) or any compile-time flag. Working today:
+  overriding a NanoVNA's screenshot width/height (below, #54). Not working
+  yet: a custom frequency range surviving a scan, and scans against a
+  Match RFE with the feature on (both under STILL BROKEN below).
+  **TODO -- research the frequency clamp and re-test scans end to end.**
+  - **What it's for:** define a named preset that overrides a real,
+    already-detected model's min/max frequency and LCD width/height --
+    aimed at a clone or updated-range unit that AntScopeZ already
+    identifies correctly (via the device's own reported version string)
+    but whose real frequency range differs from what AntScopeZ assumes for
+    that model. Picking a "prototype" only seeds sensible defaults; it
+    never changes which protocol/commands are used to talk to the device.
+  - **Architecture:** `CustomAnalyzer` (`analyzer/customanalyzer.h/.cpp`)
+    holds the persisted presets (`m_map` of alias -> preset,
+    `m_currentAlias`, `m_useCustomized`) and saves/loads them under the
+    `AntScopeZ.ini` `[CustomAnalyzers]` group. `Settings::initCustomizeTab()`
+    (`settings.cpp`) wires up the Custom Analyzer group box on the Analyzer tab. Three
+    `AnalyzerPro` methods -- `getModelString()`, `getMinFq()`, `getMaxFq()`
+    (`analyzerpro.cpp`) -- are the actual integration points: each checks
+    `CustomAnalyzer::customized()` and substitutes the custom value in place
+    of the real device's `AnalyzerParameters` entry (the fixed table of
+    ~35 real RigExpert models, `analyzer/analyzerparameters.h`).
+  - **FIXED:** `AnalyzerPro::slotFullInfo()` (`analyzerpro.cpp`) null-derefed
+    `AnalyzerParameters::byName(getModelString())` -- `getModelString()`
+    returns `CustomAnalyzer::currentPrototype()` while customized, which is
+    never a real model name (defaults to the literal placeholder
+    `"Custom"`), so `byName()` reliably returned `nullptr` and the very next
+    line crashed on it (confirmed via `coredumpctl`: SIGSEGV, null `this` +
+    member offset, on a RigExpert Match RFE reporting its license level
+    mid-scan). Now reads `AnalyzerParameters::current()` instead -- the
+    real, physically connected device, already resolved by serial-number
+    prefix at connection time
+    (`SelectDeviceDialog::onApply()` -> `AnalyzerParameters::setCurrent()`).
+    License-level bookkeeping describes the real hardware, not whatever
+    override is configured for display/range purposes.
+  - **FIXED:** `Settings::initCustomizeTab()` unconditionally `.hide()`'d
+    `comboBoxPrototype` and its label, despite correctly populating it with
+    every `AnalyzerParameters` model name right below -- so the one control
+    that lets you pick a valid reference model literally couldn't be used.
+    Unhidden; confirmed it populates.
+  - **FIXED 2026-09-07:** `AnalyzerPro::getMinFq()`/`getMaxFq()`
+    (`analyzerpro.cpp`) returned `CustomAnalyzer::currentPrototype()` while
+    customized -- a copy-paste from `getModelString()` right above, which
+    correctly wants a model-name string; these two want a frequency
+    instead. Never actually called from anywhere (`AnalyzerPro`'s own
+    `getMinFq()`/`getMaxFq()` have no live callers -- everything else on
+    this list reimplements the same `CustomAnalyzer::customized() ? ... :
+    AnalyzerParameters::getMinFq()/getMaxFq()` check inline at its own call
+    site instead), so harmless in practice, but wrong: any future caller
+    doing `.toULongLong()` on a non-numeric string like `"AA-230 ZOOM"`
+    silently gets `0`. Now returns `CustomAnalyzer::getCurrent()->minFq()/
+    maxFq()`, falling back to `AnalyzerParameters::getMinFq()/getMaxFq()`
+    if there's no current alias.
+  - **FIXED 2026-09-07:** `Settings::on_addButton()` ("New") set the
+    (no longer hidden) `comboBoxPrototype`'s current text to the literal
+    string `"names[0]"` -- dead placeholder, never actually indexed into a
+    real list. Now `setCurrentIndex(0)`, selecting the combo's actual first
+    entry (populated in `initCustomizeTab()`).
+  - **STILL BROKEN:** the custom min/max frequency override doesn't survive
+    a scan even with a valid prototype picked. `AnalyzerParameters::
+    normalizeFq()`/`normalizeFqRange()` (`analyzerparameters.h`)
+    unconditionally clamp to `AnalyzerParameters::current()`'s real stock
+    range and have no concept of `CustomAnalyzer` at all;
+    `MainWindow::on_dataChanged()` calls `normalizeFqRange()` on every range
+    change, so both "Full Range" and a typed Stop value get silently
+    clamped straight back down to the real device's limit. Called from
+    roughly 8 sites total in `mainwindow.cpp`, not just the one -- fixing
+    this means making those two static methods customization-aware (same
+    `CustomAnalyzer::customized() ? ... : ...` pattern the individual
+    `mainwindow_scan.cpp`/`mainwindow_frequency.cpp` call sites already use
+    inline), not patching call sites individually.
+  - **STILL BROKEN, not diagnosed:** running an actual scan against a real
+    device (RigExpert Match RFE) with "Use customized analyzer" checked
+    gets the outgoing command rejected at the protocol level --
+    `HidAnalyzer::sendData()` logs
+    `***** ERROR:  "Error.Not recognized"` in response to sending
+    `07046f66660d0000...` (zero-padded to the fixed HID report size).
+    Root cause not chased this pass -- worth checking whether the command
+    encodes a frequency value that becomes malformed once it's built from a
+    custom range instead of a real model's, but that's a guess, not a
+    finding.
+  - **Screenshot width/height: RigExpert HID/COM captures are client-side
+    only (investigated 2026-09-07); NanoVNA captures honor the profile
+    (2026-09-17, #54).**
+    `MainWindow::on_actionScreenshotAA_triggered()` substitutes a custom
+    profile's width/height for the real model's when customized, and
+    `Screenshot` (`screenshot.cpp`) uses whatever it's given throughout
+    buffer allocation, pixel decoding, and preview scaling. For RigExpert
+    devices, `HidAnalyzer::makeScreenshot()`/`ComAnalyzer::makeScreenshot()`
+    (`analyzer/hid_analyzer.cpp`, `analyzer/com_analyzer.cpp`) send the
+    bare `screenshot\r` command with no width/height in it -- the device
+    streams its own native, fixed-resolution pixel data, so a custom
+    profile's width/height only decode correctly if set to match the real
+    screen; no protocol-level way to change it.
+    NanoVNA (classic) is different: `NanovnaAnalyzer::parseCapture()`
+    (`nanovna_analyzer.cpp`) resolves the byte count to read off the
+    serial stream from the active profile's width/height when
+    `CustomAnalyzer::customized()` is set (commit `842c390`), falling back
+    to the 480x320 default otherwise.
+  - **NanoVNA screen size (#54) -- this is what Custom Analyzer is for
+    today.** The classic `NanoVNA` model entry
+    (`analyzer/analyzerparameters.h`, `NanovnaAnalyzer::CAPTURE_WIDTH`/
+    `CAPTURE_HEIGHT`) defaults to 480x320 (RGB565, 307200-byte `capture`
+    payload, confirmed from a raw debug log on a real H4-class unit); it
+    was 320x240 (NanoVNASaver's documented classic size) until #54.
+    NanoVNA variants with a different LCD are supported by defining a
+    profile with prototype `NanoVNA` and the unit's real width/height,
+    then ticking "Use customized analyzer" -- confirmed working. Automatic
+    per-device screen-size detection was researched and declined (no
+    other-variant hardware to support or test against).
+  - Reported, not yet diagnosed: the Analyzer tab's Custom Analyzer controls looking "not
+    laid out cleanly" at runtime -- no screenshot yet to compare against
+    the `.ui` markup, which looks like a structurally normal form layout
+    on its own.
 
 - **Compile-time feature gates -- `USER_DEFINED_FEATURE` and
   `CALIBRATION_DEBUG_TOOLS` (both `CMakeLists.txt`, default `0`).** Added
@@ -718,8 +735,8 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
     extra `g_developerMode` inner gate was dropped 2026-09-07 along with
     that flag, so it's reachable on `USER_DEFINED_FEATURE` alone now,
     still unconfirmed-working either way). "Come back to this if/when
-    `EFRX`-capable hardware turns up" -- see the
-    `s21-and-user-defined-live-capture-deferred` memory note.
+    `EFRX`-capable hardware turns up" -- blocked on
+    hardware that accepts `FDB`/`EFRX` (a Match RFE rejects both).
   - **`CALIBRATION_DEBUG_TOOLS`** -- both Ctrl+Alt+Shift+M/N shortcuts
     (`mainwindow_scan.cpp`) and the `WAIT_CALFIVEKOHM`/
     `WAIT_CALFIVEKOHM_START` response parsing they depend on
@@ -733,10 +750,10 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
 
   Three smaller things audited the same pass turned out not to need a
   flag *at all*, runtime or compile-time, and were ungated outright:
-  - **"Don't restrict frequency"** (Settings > Developer > Custom
+  - **"Don't restrict frequency"** (Settings > Analyzer > Custom
     Analyzer, directly under "Use customized analyzer") -- relocated
     there from Settings > General purely for placement (it's a
-    developer-facing setting, living on the Developer tab is gate enough
+    developer-facing setting, living on the Analyzer tab is gate enough
     on its own), with no flag dependency left at all -- `m_fqRestrict`
     always reads/writes the real saved value now. Fixed a real,
     previously-invisible bug along the way: `Settings::initCustomizeTab()`

@@ -11,6 +11,12 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+### Documentation
+
+- User guide/BUILDINFO: Custom Analyzer documented as live (screen size
+  works, frequency range doesn't yet); NanoVNA screenshot, S21 and stale
+  tab-name fixes.
+
 ## [2.2.7] - 2026-09-18
 
 ### Added

@@ -144,8 +144,8 @@ prefix. If this section and that function ever disagree, the code wins.
 
 *Caveat: not every device below is one the maintainer personally owns and
 can confirm actually works. It is for this reason the firmware update
-mechanism is also disabled -- so you don't risk bricking a device from
-something untested/unreproducible.* **Use this software at your own
+flashing is also disabled (Settings → Updates' **Update** button) -- so
+you don't risk bricking a device from something untested/unreproducible.* **Use this software at your own
 risk.**
 
 ### RigExpert AA-series
@@ -198,7 +198,11 @@ Two independent protocol families, both supported:
   version register read. Also requests real 2-port S11+S21 on every
   sweep. Not yet validated against real V2/LiteVNA64 hardware.
 
-Neither family's on-device-screenshot support is implemented.
+On-device screenshots (Analyzer → Screenshot...) work on the classic
+ASCII family, at 480x320 by default -- a variant with a different screen
+size needs a [Custom Analyzer](#customized-analyzer-parameters) profile
+(prototype `NanoVNA`, the unit's real width/height). Not yet implemented
+for the V2/LiteVNA64 family.
 
 ### Other devices
 
@@ -218,8 +222,9 @@ Neither family's on-device-screenshot support is implemented.
 
 Settings → Analyzer → Custom Analyzer lets you manually define a
 "prototype" -- frequency range, screen size, protocol -- for a device
-not in the table above, without a code change. Currently disabled (not
-safe to use yet -- see `BUILDINFO.md`'s Known Issues). See
+not in the table above, without a code change. It's live but young:
+setting a different LCD size (e.g. for a NanoVNA variant) works, while a
+custom frequency range doesn't yet survive a scan. See
 [Customized analyzer parameters](#customized-analyzer-parameters) below.
 
 ## First-time setup checklist
@@ -1185,7 +1190,7 @@ image or document:
   The Print button/dialog isn't available while the Multi tab is
   active -- clicking it does nothing in that case.
 - **Analyzer → Screenshot...** captures the *analyzer's own* on-device
-  screen (not every model supports this -- see
+  screen (not every model supports this; NanoVNA classic does, see
   [Supported devices](#supported-devices)) and opens its own small
   dialog: add an optional comment, then **Export to PDF**,
   **Export to BMP**, or **To clipboard**. **Refresh** re-captures the
@@ -1326,12 +1331,21 @@ the edge of that range.
 
 ## Customized analyzer parameters
 
-Settings' **Analyzer** tab's **Custom Analyzer** group box is intended
-to let you define a named analyzer preset -- a custom minimum/maximum
-frequency range plus an LCD width/height -- for a unit AntScopeZ
-already recognizes correctly (a clone, or a newer hardware revision of
-a known model) whose real frequency range differs from what AntScopeZ
-assumes for that model.
+Settings' **Analyzer** tab's **Custom Analyzer** group box lets you
+define a named analyzer preset -- a custom minimum/maximum frequency
+range plus an LCD width/height -- for a unit AntScopeZ already
+recognizes correctly (a clone, or a newer hardware revision of a known
+model). Two things it's for:
+
+- **A different screen size (works today).** A NanoVNA variant whose LCD
+  isn't the default 480x320 (see [NanoVNA](#nanovna)) gets a profile with
+  Prototype `NanoVNA` and the unit's real Width/Height; with **Use
+  customized analyzer** ticked, Analyzer → Screenshot... reads and
+  decodes that size instead. On RigExpert analyzers the width/height
+  only affect how the image is decoded, so they have to match the
+  device's real screen.
+- **A different frequency range (not yet working -- see the
+  limitations below).**
 
 **Use customized analyzer**, sitting above the group box (see
 [Analyzer tab](#analyzer-tab) above), enables/disables everything in
@@ -1359,7 +1373,8 @@ worth knowing before relying on it:
   stock).
 - **Actually scanning with a custom profile against real hardware has
   been seen to fail at the protocol level** (a RigExpert Match RFE
-  rejected the resulting command outright). Root cause not yet chased.
+  rejected the resulting command outright). Root cause not yet chased,
+  and untested on NanoVNA-family hardware.
 
 See `BUILDINFO.md`'s Known Issues for the full technical writeup of
 both, plus what's already been fixed, if you're looking to pick this
@@ -1614,7 +1629,8 @@ delete.
   won't show anything there. See
   [TDR (Time Domain Reflectometry)](#tdr-time-domain-reflectometry).
 - **Analyzer tab's Custom Analyzer controls are all greyed out.**
-  Deliberate, not a bug -- the feature underneath is unfinished. See
+  They stay greyed until **Use customized analyzer** (just above the
+  group box) is ticked. See
   [Customized analyzer parameters](#customized-analyzer-parameters).
 - **Debug logging was on, but the file is missing or empty.** The
   checkboxes reset to unchecked every time you open AntScopeZ (by
