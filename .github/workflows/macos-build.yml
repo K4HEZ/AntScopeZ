@@ -33,6 +33,10 @@ jobs:
           host: 'mac'
           target: 'desktop'
           arch: 'clang_64'
+          # SerialPort and Bluetooth (analyzer/devinfo components this
+          # project's find_package(Qt6 ... COMPONENTS) requires) are addon
+          # modules, not part of the base clang_64 essentials package.
+          modules: 'qtserialport qtconnectivity'
           cache: true
 
       - name: Configure
