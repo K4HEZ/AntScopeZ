@@ -35,7 +35,7 @@ endif()
 # Clear it to an empty string right when 2.2.7 actually ships (matching
 # commit + `v2.2.7` tag, same pattern as `v2.2.6`/`v2.2.5`), then bump
 # version.txt and set this back to "-dev" to start the next cycle.
-set(ANTSCOPEZ_VER_SUFFIX "-dev")
+set(ANTSCOPEZ_VER_SUFFIX "")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -1352,10 +1352,16 @@ if(WIN32)
     file(TO_NATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/shared/cables.txt" ANTSCOPE_NSIS_CABLES_PATH)
     file(TO_NATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/shared/itu-regions-defaults.txt" ANTSCOPE_NSIS_ITU_PATH)
     file(TO_NATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/docs/user-guide.md" ANTSCOPE_NSIS_GUIDE_PATH)
+    # CPack writes these values into CPackConfig.cmake unescaped, so every
+    # backslash (paths here, the `$APPDATA` dirs below) is doubled to
+    # survive being re-parsed as a CMake string (`\A` is an invalid escape).
+    foreach(_v ANTSCOPE_NSIS_CABLES_PATH ANTSCOPE_NSIS_ITU_PATH ANTSCOPE_NSIS_GUIDE_PATH)
+        string(REPLACE "\\" "\\\\" ${_v} "${${_v}}")
+    endforeach()
     set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS
         "SetShellVarContext all
-        CreateDirectory $APPDATA\\AntScopeZ
-        SetOutPath $APPDATA\\AntScopeZ
+        CreateDirectory $APPDATA\\\\AntScopeZ
+        SetOutPath $APPDATA\\\\AntScopeZ
         File ${ANTSCOPE_NSIS_CABLES_PATH}
         File ${ANTSCOPE_NSIS_ITU_PATH}
         File ${ANTSCOPE_NSIS_GUIDE_PATH}
@@ -1368,7 +1374,7 @@ if(WIN32)
     # the same reasons as the install commands above.
     set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS
         "SetShellVarContext all
-        RMDir /r $APPDATA\\AntScopeZ
+        RMDir /r $APPDATA\\\\AntScopeZ
         SetShellVarContext current"
     )
 

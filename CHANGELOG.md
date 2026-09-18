@@ -11,8 +11,14 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+## [2.2.7] - 2026-09-18
+
 ### Added
 
+- Windows: builds and packages via GitHub Actions (NSIS `-win64.exe`
+  installer, Qt bundled). See issue #58.
+- Edit menu for markers, measurements and presets (rename, color, delete,
+  clear, add, move up).
 - Update check: About shows the latest released version (from `version.txt`
   on master); Settings > Updates has "Check for updates at startup".
   `version.txt` is now the build's version source of truth.
@@ -20,8 +26,22 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   `.app`/`.dmg`, Qt 6.11's own macOS 13+ floor) -- unsigned/not notarized
   (no Apple Developer account), so first launch needs right-click > Open
   or `xattr -cr` past Gatekeeper. Confirmed launching for real via CI
-  screenshot on arm64; Intel (x86_64) smoke test in progress. No real
-  hardware (analyzer USB/HID/BLE) testing possible in CI. See issue #57.
+  screenshot on arm64. No real hardware (analyzer USB/HID/BLE) testing
+  possible in CI. See issue #57.
+
+### Fixed
+
+- NanoVNA screenshot capture was broken/dotted on 480x320 screens; capture
+  size now follows the Custom Analyzer LCD size (issue #54).
+- Marker/measurement numbering and sync bugs; Clear Empty Markers (#55).
+- Spurious `qt.accessibility.atspi` warning at startup (#56).
+- Windows installer: CPack NSIS config had unescaped backslashes that
+  newer CMake rejects.
+
+### Documentation
+
+- Translations: `update_translations` run, 27 new strings translated
+  (uk/ja/es), 0 unfinished.
 
 ## [2.2.6] - 2026-09-10
 

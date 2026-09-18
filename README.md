@@ -76,15 +76,14 @@ See [`remoteapi/`](remoteapi/) for the implementation and protocol details.
 
 ## Windows
 
-Windows support is a beta effort (releases tagged `-win-beta`); see
+Windows support is new as of 2.2.7; see
 [BUILDINFO.md](BUILDINFO.md)'s platform notes for what has and hasn't been
 verified against real hardware yet.
 
 ### Installing a prebuilt release
 
-Download the `AntScopeZ-<version>-win64-beta.zip` asset from the
-[Releases page](https://github.com/kc5cd/AntScopeZ/releases), extract it
-anywhere, and run `AntScopeZ.exe` inside the extracted `bin\` folder --
+Download the `AntScopeZ-<version>-win64.exe` installer from the
+[Releases page](https://github.com/K4HEZ/AntScopeZ/releases) and run it --
 it's a fully self-contained build (Qt DLLs and plugins included), so no
 separate Qt install is required.
 
