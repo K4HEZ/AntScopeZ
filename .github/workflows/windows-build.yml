@@ -22,30 +22,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v4
+      - uses: actions/setup-python@v5
         with:
-          version: '6.11.2'
-          host: 'windows'
-          target: 'desktop'
-          arch: 'win64_mingw'
-          # SerialPort and Bluetooth are addon modules, not part of the base
-          # essentials package (same gap hit on the macOS workflow).
-          modules: 'qtserialport qtconnectivity'
-          # Must be Qt's own MinGW build (ABI-matched to the Qt libraries) --
-          # the runner's preinstalled system gcc is a different, incompatible
-          # version. Ninja itself has no ABI concerns, so the runner's own
-          # preinstalled Ninja is used as-is, no separate tool needed for it.
-          tools: 'tools_mingw1310,qt.tools.win64_mingw1310'
-          cache: true
+          python-version: '3.x'
+
+      # PyPI's released aqtinstall (3.3.0, what install-qt-action would
+      # normally pip-install) has a genuine bug for Windows + Qt 6.11.x
+      # specifically: it constructs a doubled repo path
+      # (.../qt6_6112/qt6_6112/Updates.xml, 404s) and fails outright.
+      # Confirmed fixed on aqtinstall's git main (3.3.1.dev166) but not yet
+      # released to PyPI, so install-qt-action's aqtversion pin (PyPI-only)
+      # can't reach the fix -- installing aqt straight from git instead.
+      - name: Install Qt (aqtinstall from git main -- see comment above)
+        run: |
+          pip install "aqtinstall @ git+https://github.com/miurahr/aqtinstall.git"
+          aqt install-qt windows desktop 6.11.2 win64_mingw --outputdir "${{ github.workspace }}\Qt" --modules qtserialport qtconnectivity
+          aqt install-tool windows desktop tools_mingw1310 qt.tools.win64_mingw1310 --outputdir "${{ github.workspace }}\Qt"
 
       - name: Configure
         run: >
           cmake -B build -G Ninja
           -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_C_COMPILER="$env:IQTA_TOOLS/mingw1310_64/bin/gcc.exe"
-          -DCMAKE_CXX_COMPILER="$env:IQTA_TOOLS/mingw1310_64/bin/g++.exe"
-          -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR"
+          -DCMAKE_C_COMPILER="${{ github.workspace }}\Qt\Tools\mingw1310_64\bin\gcc.exe"
+          -DCMAKE_CXX_COMPILER="${{ github.workspace }}\Qt\Tools\mingw1310_64\bin\g++.exe"
+          -DCMAKE_PREFIX_PATH="${{ github.workspace }}\Qt\6.11.2\mingw_64"
 
       - name: Build
         run: cmake --build build --parallel
