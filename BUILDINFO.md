@@ -226,7 +226,11 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   HTTPS caller (`src/licenseagent.cpp`) works with no extra linkage. `CMakePresets.json`
   has a `windows-mingw`/`windows-mingw-release` pair (Qt Online Installer's
   Qt 6.11.2 MinGW kit under `C:/Qt`) and `CMakeLists.txt` has an NSIS
-  packaging block (`cpack -G NSIS`). Merged into `develop` 2026-09-06 (PR #11,
+  packaging block (`cpack -G NSIS`); `.github/workflows/windows-build.yml`
+  (issue #58) builds it on every push to develop, installs NSIS via
+  Chocolatey (the runner lacks `makensis`), smoke-launches the staged exe,
+  and uploads the installer. Released as `AntScopeZ-<version>-win64.exe`
+  from 2.2.7. Merged into `develop` 2026-09-06 (PR #11,
   `windows-dev-port`, plus a follow-up commit fixing 5 bugs the merge review
   turned up). A real `windows-mingw` build has been done and verified: it
   compiles cleanly, `cmake --install` deploys a self-contained `bin/` folder
@@ -245,7 +249,9 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   screenshot: the arm64 build compiles, links, bundles Qt, launches, and
   renders its main window correctly. An `intel-smoketest` CI job
   separately launches that same universal `.dmg` on a real Intel
-  (`macos-15-intel`) runner to confirm the x86_64 slice too. Unsigned and not
+  (`macos-15-intel`) runner -- confirmed launching 2026-09-18, so the x86_64
+  slice is good too. Released as `AntScopeZ-<version>-macOS.dmg` from 2.2.7
+  (CPack's `-Darwin.dmg` renamed when attached to the release). Unsigned and not
   notarized (no Apple Developer account) -- Gatekeeper blocks a plain
   double-click; right-click > Open, or `xattr -cr`, gets past it. What's
   *not* verified at all: anything needing real analyzer hardware (USB

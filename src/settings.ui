@@ -2641,10 +2641,10 @@ discards queued data -- only that AntScopeZ resyncs).</string>
        <item>
         <widget class="QCheckBox" name="checkBoxCheckUpdates">
          <property name="toolTip">
-          <string>Fetches the latest released version number from GitHub when AntScopeZ starts; shown in Help &gt; About.</string>
+          <string>Fetches the latest released version number from GitHub when Help &gt; About is opened.</string>
          </property>
          <property name="text">
-          <string>Check for updates at startup</string>
+          <string>Check for updates</string>
          </property>
          <property name="checked">
           <bool>true</bool>

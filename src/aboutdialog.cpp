@@ -20,10 +20,14 @@ AboutDialog::AboutDialog(UpdateChecker *checker, QWidget *parent) :
     // Version and build timestamp share one label for now.
     ui->versionLabel->setText(QString(ANTSCOPEZ_VER) + "  (" + tr("Build: ") + ANTSCOPEZ_BUILD_TIMESTAMP + ")");
 
-    updateLatestLabel();
     if (m_checker) {
         connect(m_checker, &UpdateChecker::finished, this, &AboutDialog::updateLatestLabel);
+        // Covers a setting enabled mid-session, and retries a failed startup check.
+        if (g_checkUpdates && m_checker->state() != UpdateChecker::State::Done) {
+            m_checker->start();
+        }
     }
+    updateLatestLabel();
 
     updateFlagLabelWidths();
 }

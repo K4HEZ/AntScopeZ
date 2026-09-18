@@ -145,17 +145,17 @@ li.checked::marker { content: &quot;±2&quot;; }
         <translation>Compilación: </translation>
     </message>
     <message>
-        <location filename="../src/aboutdialog.cpp" line="40"/>
+        <location filename="../src/aboutdialog.cpp" line="44"/>
         <source>[disabled in settings]</source>
         <translation>[desactivado en Configuración]</translation>
     </message>
     <message>
-        <location filename="../src/aboutdialog.cpp" line="42"/>
+        <location filename="../src/aboutdialog.cpp" line="46"/>
         <source>unavailable</source>
         <translation>no disponible</translation>
     </message>
     <message>
-        <location filename="../src/aboutdialog.cpp" line="46"/>
+        <location filename="../src/aboutdialog.cpp" line="50"/>
         <source>checking...</source>
         <translation>comprobando...</translation>
     </message>
@@ -1287,13 +1287,13 @@ Debe reconectar el analizador.</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="76"/>
-        <location filename="../src/mainwindow.cpp" line="1443"/>
-        <location filename="../src/mainwindow.cpp" line="1503"/>
-        <location filename="../src/mainwindow.cpp" line="1544"/>
-        <location filename="../src/mainwindow.cpp" line="1568"/>
-        <location filename="../src/mainwindow.cpp" line="1590"/>
-        <location filename="../src/mainwindow.cpp" line="1638"/>
-        <location filename="../src/mainwindow.cpp" line="1702"/>
+        <location filename="../src/mainwindow.cpp" line="1440"/>
+        <location filename="../src/mainwindow.cpp" line="1500"/>
+        <location filename="../src/mainwindow.cpp" line="1541"/>
+        <location filename="../src/mainwindow.cpp" line="1565"/>
+        <location filename="../src/mainwindow.cpp" line="1587"/>
+        <location filename="../src/mainwindow.cpp" line="1635"/>
+        <location filename="../src/mainwindow.cpp" line="1699"/>
         <location filename="../src/mainwindow_settings.cpp" line="383"/>
         <location filename="../src/mainwindow_settings.cpp" line="385"/>
         <location filename="../src/mainwindow_settings.cpp" line="387"/>
@@ -1305,7 +1305,7 @@ Debe reconectar el analizador.</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="133"/>
-        <location filename="../src/mainwindow.cpp" line="994"/>
+        <location filename="../src/mainwindow.cpp" line="991"/>
         <location filename="../src/mainwindow_frequency.cpp" line="42"/>
         <location filename="../src/mainwindow_frequency.cpp" line="45"/>
         <source>Center</source>
@@ -1410,7 +1410,7 @@ de calibración en el menú de configuración!</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="494"/>
-        <location filename="../src/mainwindow.cpp" line="989"/>
+        <location filename="../src/mainwindow.cpp" line="986"/>
         <location filename="../src/mainwindow_frequency.cpp" line="34"/>
         <location filename="../src/mainwindow_frequency.cpp" line="37"/>
         <source>Start</source>
@@ -1418,7 +1418,7 @@ de calibración en el menú de configuración!</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="499"/>
-        <location filename="../src/mainwindow.cpp" line="990"/>
+        <location filename="../src/mainwindow.cpp" line="987"/>
         <location filename="../src/mainwindow_frequency.cpp" line="35"/>
         <location filename="../src/mainwindow_frequency.cpp" line="38"/>
         <source>Stop</source>
@@ -1756,48 +1756,48 @@ de calibración en el menú de configuración!</translation>
         <translation> - Analizador no conectado</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="480"/>
+        <location filename="../src/mainwindow.cpp" line="477"/>
         <location filename="../src/mainwindow_scan.cpp" line="713"/>
         <source>Ready</source>
         <translation>Listo</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="482"/>
+        <location filename="../src/mainwindow.cpp" line="479"/>
         <location filename="../src/mainwindow_analyzer.cpp" line="122"/>
         <source>Not connected</source>
         <translation>No conectado</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="774"/>
+        <location filename="../src/mainwindow.cpp" line="771"/>
         <source>File of AntScopeZ</source>
         <translation>Archivo de AntScopeZ</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="898"/>
+        <location filename="../src/mainwindow.cpp" line="895"/>
         <location filename="../src/mainwindow_settings.cpp" line="410"/>
         <source>Press F%1</source>
         <translation>Presione F%1</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="988"/>
+        <location filename="../src/mainwindow.cpp" line="985"/>
         <location filename="../src/mainwindow_frequency.cpp" line="36"/>
         <source>Presets (limits), kHz</source>
         <translation>Preajustes (límites), kHz</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="993"/>
+        <location filename="../src/mainwindow.cpp" line="990"/>
         <location filename="../src/mainwindow_frequency.cpp" line="44"/>
         <source>Presets (center, range), kHz</source>
         <translation>Preajustes (centro, rango), kHz</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="995"/>
+        <location filename="../src/mainwindow.cpp" line="992"/>
         <location filename="../src/mainwindow_frequency.cpp" line="46"/>
         <source>Range(+/-)</source>
         <translation>Rango(+/-)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1444"/>
+        <location filename="../src/mainwindow.cpp" line="1441"/>
         <location filename="../src/mainwindow_settings.cpp" line="384"/>
         <location filename="../src/mainwindow_settings.cpp" line="396"/>
         <location filename="../src/mainwindow_tabs.cpp" line="129"/>
@@ -1805,57 +1805,57 @@ de calibración en el menú de configuración!</translation>
         <translation>SWR</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1504"/>
+        <location filename="../src/mainwindow.cpp" line="1501"/>
         <location filename="../src/mainwindow_settings.cpp" line="386"/>
         <source>Phase, Angle</source>
         <translation>Fase, ángulo</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1545"/>
+        <location filename="../src/mainwindow.cpp" line="1542"/>
         <location filename="../src/mainwindow_settings.cpp" line="388"/>
         <source>Rs, Ohm</source>
         <translation>Rs, Ohm</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1569"/>
+        <location filename="../src/mainwindow.cpp" line="1566"/>
         <location filename="../src/mainwindow_settings.cpp" line="390"/>
         <source>Rp, Ohm</source>
         <translation>Rp, Ohm</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1591"/>
+        <location filename="../src/mainwindow.cpp" line="1588"/>
         <location filename="../src/mainwindow_settings.cpp" line="392"/>
         <source>RL, dB</source>
         <translation>RL, dB</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1612"/>
+        <location filename="../src/mainwindow.cpp" line="1609"/>
         <location filename="../src/mainwindow_settings.cpp" line="393"/>
         <source>Length, m</source>
         <translation>Longitud, m</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1626"/>
+        <location filename="../src/mainwindow.cpp" line="1623"/>
         <source>SR/IR</source>
         <translation>SR/IR</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1631"/>
+        <location filename="../src/mainwindow.cpp" line="1628"/>
         <source>|Z|</source>
         <translation>|Z|</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1655"/>
+        <location filename="../src/mainwindow.cpp" line="1652"/>
         <source>S21, dB</source>
         <translation>S21, dB</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1666"/>
+        <location filename="../src/mainwindow.cpp" line="1663"/>
         <source>Phase, deg</source>
         <translation>Fase, grados</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1703"/>
+        <location filename="../src/mainwindow.cpp" line="1700"/>
         <location filename="../src/mainwindow_measurements_io.cpp" line="514"/>
         <location filename="../src/mainwindow_settings.cpp" line="405"/>
         <location filename="../src/mainwindow_tabs.cpp" line="310"/>
@@ -3077,16 +3077,6 @@ Haga clic derecho en un elemento para ver más opciones</translation>
         <translation>General</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2644"/>
-        <source>Fetches the latest released version number from GitHub when AntScopeZ starts; shown in Help &gt; About.</source>
-        <translation>Obtiene de GitHub el número de la última versión publicada al iniciar AntScopeZ; se muestra en Ayuda &gt; Acerca de.</translation>
-    </message>
-    <message>
-        <location filename="../src/settings.ui" line="2647"/>
-        <source>Check for updates at startup</source>
-        <translation>Buscar actualizaciones al iniciar</translation>
-    </message>
-    <message>
         <location filename="../src/settings.ui" line="2840"/>
         <location filename="../src/settings.cpp" line="324"/>
         <source>Register application</source>
@@ -3909,6 +3899,16 @@ ahora es editable directamente.</translation>
         <location filename="../src/settings.ui" line="2615"/>
         <source>Updates</source>
         <translation>Actualizaciones</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="2644"/>
+        <source>Fetches the latest released version number from GitHub when Help &gt; About is opened.</source>
+        <translation>Obtiene de GitHub el número de la última versión publicada al abrir Ayuda &gt; Acerca de.</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="2647"/>
+        <source>Check for updates</source>
+        <translation>Buscar actualizaciones</translation>
     </message>
     <message>
         <location filename="../src/settings.ui" line="2680"/>

@@ -145,17 +145,17 @@ li.checked::marker { content: &quot;±2&quot;; }
         <translation>Збірка: </translation>
     </message>
     <message>
-        <location filename="../src/aboutdialog.cpp" line="40"/>
+        <location filename="../src/aboutdialog.cpp" line="44"/>
         <source>[disabled in settings]</source>
         <translation>[вимкнено в налаштуваннях]</translation>
     </message>
     <message>
-        <location filename="../src/aboutdialog.cpp" line="42"/>
+        <location filename="../src/aboutdialog.cpp" line="46"/>
         <source>unavailable</source>
         <translation>недоступно</translation>
     </message>
     <message>
-        <location filename="../src/aboutdialog.cpp" line="46"/>
+        <location filename="../src/aboutdialog.cpp" line="50"/>
         <source>checking...</source>
         <translation>перевірка...</translation>
     </message>
@@ -1282,13 +1282,13 @@ You should reconnect analyzer.</source>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="76"/>
-        <location filename="../src/mainwindow.cpp" line="1443"/>
-        <location filename="../src/mainwindow.cpp" line="1503"/>
-        <location filename="../src/mainwindow.cpp" line="1544"/>
-        <location filename="../src/mainwindow.cpp" line="1568"/>
-        <location filename="../src/mainwindow.cpp" line="1590"/>
-        <location filename="../src/mainwindow.cpp" line="1638"/>
-        <location filename="../src/mainwindow.cpp" line="1702"/>
+        <location filename="../src/mainwindow.cpp" line="1440"/>
+        <location filename="../src/mainwindow.cpp" line="1500"/>
+        <location filename="../src/mainwindow.cpp" line="1541"/>
+        <location filename="../src/mainwindow.cpp" line="1565"/>
+        <location filename="../src/mainwindow.cpp" line="1587"/>
+        <location filename="../src/mainwindow.cpp" line="1635"/>
+        <location filename="../src/mainwindow.cpp" line="1699"/>
         <location filename="../src/mainwindow_settings.cpp" line="383"/>
         <location filename="../src/mainwindow_settings.cpp" line="385"/>
         <location filename="../src/mainwindow_settings.cpp" line="387"/>
@@ -1300,7 +1300,7 @@ You should reconnect analyzer.</source>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="133"/>
-        <location filename="../src/mainwindow.cpp" line="994"/>
+        <location filename="../src/mainwindow.cpp" line="991"/>
         <location filename="../src/mainwindow_frequency.cpp" line="42"/>
         <location filename="../src/mainwindow_frequency.cpp" line="45"/>
         <source>Center</source>
@@ -1455,7 +1455,7 @@ process in the settings menu!</source>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="494"/>
-        <location filename="../src/mainwindow.cpp" line="989"/>
+        <location filename="../src/mainwindow.cpp" line="986"/>
         <location filename="../src/mainwindow_frequency.cpp" line="34"/>
         <location filename="../src/mainwindow_frequency.cpp" line="37"/>
         <source>Start</source>
@@ -1463,7 +1463,7 @@ process in the settings menu!</source>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="499"/>
-        <location filename="../src/mainwindow.cpp" line="990"/>
+        <location filename="../src/mainwindow.cpp" line="987"/>
         <location filename="../src/mainwindow_frequency.cpp" line="35"/>
         <location filename="../src/mainwindow_frequency.cpp" line="38"/>
         <source>Stop</source>
@@ -1756,32 +1756,32 @@ process in the settings menu!</source>
         <translation> - Аналізатор не підключено</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="898"/>
+        <location filename="../src/mainwindow.cpp" line="895"/>
         <location filename="../src/mainwindow_settings.cpp" line="410"/>
         <source>Press F%1</source>
         <oldsource>Press(F%1)</oldsource>
         <translation>Натисніть F%1</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="988"/>
+        <location filename="../src/mainwindow.cpp" line="985"/>
         <location filename="../src/mainwindow_frequency.cpp" line="36"/>
         <source>Presets (limits), kHz</source>
         <translation>Попередні установки (межі), кГц</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="993"/>
+        <location filename="../src/mainwindow.cpp" line="990"/>
         <location filename="../src/mainwindow_frequency.cpp" line="44"/>
         <source>Presets (center, range), kHz</source>
         <translation>Попередні установки (центр, діапазон), кГц</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="995"/>
+        <location filename="../src/mainwindow.cpp" line="992"/>
         <location filename="../src/mainwindow_frequency.cpp" line="46"/>
         <source>Range(+/-)</source>
         <translation>Діапазон (+/-)</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1444"/>
+        <location filename="../src/mainwindow.cpp" line="1441"/>
         <location filename="../src/mainwindow_settings.cpp" line="384"/>
         <location filename="../src/mainwindow_settings.cpp" line="396"/>
         <location filename="../src/mainwindow_tabs.cpp" line="129"/>
@@ -1789,46 +1789,46 @@ process in the settings menu!</source>
         <translation>КСХ</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1545"/>
+        <location filename="../src/mainwindow.cpp" line="1542"/>
         <location filename="../src/mainwindow_settings.cpp" line="388"/>
         <source>Rs, Ohm</source>
         <translation>Rs, Ом</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1569"/>
+        <location filename="../src/mainwindow.cpp" line="1566"/>
         <location filename="../src/mainwindow_settings.cpp" line="390"/>
         <source>Rp, Ohm</source>
         <translation>Rp, Ом</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1591"/>
+        <location filename="../src/mainwindow.cpp" line="1588"/>
         <location filename="../src/mainwindow_settings.cpp" line="392"/>
         <source>RL, dB</source>
         <translation>RL, дБ</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1612"/>
+        <location filename="../src/mainwindow.cpp" line="1609"/>
         <location filename="../src/mainwindow_settings.cpp" line="393"/>
         <source>Length, m</source>
         <translation>Довжина, м</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1626"/>
+        <location filename="../src/mainwindow.cpp" line="1623"/>
         <source>SR/IR</source>
         <translation>SR/IR</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1631"/>
+        <location filename="../src/mainwindow.cpp" line="1628"/>
         <source>|Z|</source>
         <translation>|Z|</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1655"/>
+        <location filename="../src/mainwindow.cpp" line="1652"/>
         <source>S21, dB</source>
         <translation>S21, дБ</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1666"/>
+        <location filename="../src/mainwindow.cpp" line="1663"/>
         <source>Phase, deg</source>
         <translation>Фаза, град</translation>
     </message>
@@ -2064,7 +2064,7 @@ Connect it, then open Settings and go to the &quot;OSL Calibration&quot; tab to 
         <translation>Закрити все </translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1703"/>
+        <location filename="../src/mainwindow.cpp" line="1700"/>
         <location filename="../src/mainwindow_measurements_io.cpp" line="514"/>
         <location filename="../src/mainwindow_settings.cpp" line="405"/>
         <location filename="../src/mainwindow_tabs.cpp" line="310"/>
@@ -2073,24 +2073,24 @@ Connect it, then open Settings and go to the &quot;OSL Calibration&quot; tab to 
         <translation>Спеціальний</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="774"/>
+        <location filename="../src/mainwindow.cpp" line="771"/>
         <source>File of AntScopeZ</source>
         <translation>Файл AntScopeZ</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="480"/>
+        <location filename="../src/mainwindow.cpp" line="477"/>
         <location filename="../src/mainwindow_scan.cpp" line="713"/>
         <source>Ready</source>
         <translation>Готово</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="482"/>
+        <location filename="../src/mainwindow.cpp" line="479"/>
         <location filename="../src/mainwindow_analyzer.cpp" line="122"/>
         <source>Not connected</source>
         <translation>Не підключено</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1504"/>
+        <location filename="../src/mainwindow.cpp" line="1501"/>
         <location filename="../src/mainwindow_settings.cpp" line="386"/>
         <source>Phase, Angle</source>
         <translation>Фаза, Кут</translation>
@@ -3216,16 +3216,6 @@ Right-click an item for more options</source>
         <translation>Верхня межа осі Y графіка фази, у градусах. За замовчуванням 180 -- історичний фіксований діапазон застосунку.</translation>
     </message>
     <message>
-        <location filename="../src/settings.ui" line="2644"/>
-        <source>Fetches the latest released version number from GitHub when AntScopeZ starts; shown in Help &gt; About.</source>
-        <translation>Отримує з GitHub номер останньої випущеної версії під час запуску AntScopeZ; відображається в Довідка &gt; Про AntScopeZ.</translation>
-    </message>
-    <message>
-        <location filename="../src/settings.ui" line="2647"/>
-        <source>Check for updates at startup</source>
-        <translation>Перевіряти оновлення під час запуску</translation>
-    </message>
-    <message>
         <location filename="../src/settings.ui" line="2663"/>
         <source>RigExpert Specific Features</source>
         <translation>Функції, специфічні для RigExpert</translation>
@@ -3316,6 +3306,16 @@ Right-click an item for more options</source>
         <location filename="../src/settings.ui" line="1651"/>
         <source>Cable length</source>
         <translation>Довжина кабелю</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="2644"/>
+        <source>Fetches the latest released version number from GitHub when Help &gt; About is opened.</source>
+        <translation>Отримує з GitHub номер останньої випущеної версії, коли відкривається Довідка &gt; Про AntScopeZ.</translation>
+    </message>
+    <message>
+        <location filename="../src/settings.ui" line="2647"/>
+        <source>Check for updates</source>
+        <translation>Перевіряти оновлення</translation>
     </message>
     <message>
         <location filename="../src/settings.ui" line="2840"/>

@@ -71,7 +71,7 @@ bool g_extendedChartZoom = false;
 // check). Default true (secure); off is an escape hatch for a vendor-side
 // cert problem, not something to leave off routinely. See issue #14.
 bool g_useTls = true;
-// "Check for updates at startup" (Settings > Updates).
+// "Check for updates" (Settings > Updates); the fetch runs when About opens.
 bool g_checkUpdates = true;
 // "Enable Remote API" (Settings > General) -- starts a local NDJSON-over-TCP
 // control API (remoteapi/, json-tcp-api branch), loopback-only by default.
@@ -372,9 +372,6 @@ MainWindow::MainWindow(QWidget *parent) :
     m_settings->endGroup();
 
     m_updateChecker = new UpdateChecker(this);
-    if (g_checkUpdates) {
-        m_updateChecker->start();
-    }
 
     // g_pointsMax just replaced the placeholder set right after
     // ui->setupUi() above with the user's real, saved value -- apply it to

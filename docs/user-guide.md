@@ -87,32 +87,52 @@ translation/band overrides), delete that folder yourself too:
 rm -rf ~/.config/AntScopeZ
 ```
 
-### Windows, macOS, or other Linux distros
+### Windows
 
-No released installer package for Windows or macOS yet, and Linux
-distributions that aren't Debian/Ubuntu-based won't have a native
-package either -- build from source instead. See
-[BUILDINFO.md](../BUILDINFO.md) for requirements and build steps.
-"Uninstalling" a from-source build is just deleting the build directory
-and (if you want a clean slate) whatever per-user config folder it
-wrote to (see [Files and directories](#files-and-directories) for the
-Windows/macOS equivalents).
+Download `AntScopeZ-<version>-win64.exe` from the
+[latest release](https://github.com/K4HEZ/AntScopeZ/releases/latest) and
+run it. It's a self-contained installer (Qt libraries included), so no
+separate Qt install is needed. The installer isn't code-signed, so
+Windows SmartScreen may say "Windows protected your PC" -- click **More
+info** > **Run anyway**.
 
-Windows now has a native build (Qt 6.11.2, MinGW) that packages as an
-NSIS installer (`AntScopeZ-<version>-win64.exe`), but it's not yet a
-published release -- built and smoke-tested only, real hardware
-verification (USB/HID/FTDI device access, `.asd` file association,
-etc.) is still outstanding. See `docs/windows-port-audit.md` if you
-want to build and try it yourself.
+It installs to Program Files with a Start Menu shortcut, and puts the
+shared data (`cables.txt`, `itu-regions-defaults.txt`, this guide) in a
+`ProgramData\AntScopeZ` folder. To uninstall, use Windows' *Installed
+apps* list or the Start Menu's Uninstall entry; that removes the program
+and its `ProgramData\AntScopeZ` folder, and deliberately leaves your own
+settings and calibration data in `%APPDATA%\AntScopeZ` alone (see
+[Files and directories](#files-and-directories)).
 
-macOS now builds via GitHub Actions as a universal (arm64 + x86_64)
-`.app`/`.dmg` (Qt 6.11's own macOS 13 Ventura+ floor), confirmed
-actually launching via a CI-captured screenshot, but it's not yet a
-published release either -- and since there's no Apple Developer
-account behind it, the `.app` is unsigned and not notarized. Gatekeeper
-will refuse a plain double-click on first launch: right-click the app >
-Open (once), or run `xattr -cr AntScopeZ.app` first. See
-[README.md](../README.md#macos) if you want to build it yourself.
+Windows support is new in 2.2.7. It's built and smoke-tested (launches,
+renders) by CI, but real-hardware verification -- USB/HID/FTDI analyzer
+access, `.asd` file association -- is still outstanding, so reports are
+very welcome. See `docs/windows-port-audit.md` for the details.
+
+### macOS
+
+Download `AntScopeZ-<version>-macOS.dmg` from the
+[latest release](https://github.com/K4HEZ/AntScopeZ/releases/latest),
+open it, and drag AntScopeZ to Applications. It's a universal build
+(Apple Silicon and Intel, macOS 13 Ventura or newer). Both architectures
+are confirmed to launch, but nothing has been tried against a real
+analyzer yet (USB/HID, BLE) -- CI has none.
+
+With no Apple Developer account behind it, the app is unsigned and not
+notarized, so Gatekeeper refuses a plain double-click on first launch:
+right-click the app > **Open** (once), or run `xattr -cr
+/Applications/AntScopeZ.app` first. To uninstall, drag the app to the
+Trash; your own settings live in an `AntScopeZ` folder in your home
+folder and are left alone (see [Files and directories](#files-and-directories)).
+
+### Other Linux distributions
+
+Linux distributions that aren't Debian/Ubuntu-based won't have a native
+package -- build from source instead. See [BUILDINFO.md](../BUILDINFO.md)
+for requirements and build steps. "Uninstalling" a from-source build is
+just deleting the build directory and (if you want a clean slate)
+whatever per-user config folder it wrote to (see
+[Files and directories](#files-and-directories)).
 
 ## Supported devices
 
@@ -660,12 +680,13 @@ the file format and what each button does.
 
 <!-- SCREENSHOT: Settings dialog, Updates tab -->
 
-**Check for updates at startup** (on by default) fetches the latest
-released version number when AntScopeZ starts; **Help > About** shows it
-as *Latest Version*, under your installed version. Nothing is downloaded
-or installed -- get new releases from the link in the About box. With the
-box unticked, About shows *[disabled in settings]*, and a change takes
-effect at the next launch. The check reads one small file
+**Check for updates** (on by default) makes **Help > About** fetch the
+latest released version number when it opens, and show it as *Latest
+Version* under your installed version. The result is kept for the rest of
+the session, and a failed check is retried the next time About opens.
+Nothing is downloaded or installed -- get new releases from the link in
+the About box. With the box unticked, About shows *[disabled in
+settings]* and nothing is fetched. The check reads one small file
 (`version.txt` on the GitHub master branch) and sends nothing about you
 or your devices; **Use TLS** below applies to it too.
 
@@ -1368,10 +1389,10 @@ session's own testing.
 follows that prefix instead -- `sharedDataFolder()`/`ANTSCOPE_SHARED_DATA_DIR`
 is computed from it at build time, not hardcoded.)
 
-**Windows/macOS:** no installer package yet, so this table doesn't apply
--- both keep the simpler "everything sits next to the executable" layout
-a dev build uses on every platform (see the next section for where
-*your own* files still live either way).
+**Windows/macOS:** this table is the Linux `.deb` only. The Windows
+installer puts the program under Program Files and the shared data in
+`ProgramData\AntScopeZ`; macOS is a plain `.app` bundle (see the next
+section for where *your own* files live on every platform).
 
 ### Your own files: `~/.config/AntScopeZ/`
 

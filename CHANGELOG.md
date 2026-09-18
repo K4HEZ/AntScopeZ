@@ -20,7 +20,8 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 - Edit menu for markers, measurements and presets (rename, color, delete,
   clear, add, move up).
 - Update check: About shows the latest released version (from `version.txt`
-  on master); Settings > Updates has "Check for updates at startup".
+  on master), fetched when About opens; Settings > Updates has "Check for
+  updates" (on by default).
   `version.txt` is now the build's version source of truth.
 - macOS: builds and packages via GitHub Actions (universal arm64+x86_64
   `.app`/`.dmg`, Qt 6.11's own macOS 13+ floor) -- unsigned/not notarized

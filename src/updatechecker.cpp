@@ -34,9 +34,10 @@ void UpdateChecker::start()
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
         // Anything but a bare x.y.z (error page, captive portal) counts as failed.
-        const QString text = QString::fromUtf8(reply->readAll()).trimmed();
         static const QRegularExpression re(QStringLiteral("^\\d+\\.\\d+\\.\\d+$"));
-        if (reply->error() == QNetworkReply::NoError && re.match(text).hasMatch()) {
+        const bool ok = reply->error() == QNetworkReply::NoError;
+        const QString text = ok ? QString::fromUtf8(reply->readAll()).trimmed() : QString();
+        if (ok && re.match(text).hasMatch()) {
             m_latest = text;
             m_state = State::Done;
         } else {

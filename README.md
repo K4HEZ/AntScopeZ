@@ -85,7 +85,8 @@ verified against real hardware yet.
 Download the `AntScopeZ-<version>-win64.exe` installer from the
 [Releases page](https://github.com/K4HEZ/AntScopeZ/releases) and run it --
 it's a fully self-contained build (Qt DLLs and plugins included), so no
-separate Qt install is required.
+separate Qt install is required. The installer is unsigned, so SmartScreen
+may warn: **More info** > **Run anyway**.
 
 ### Building from source
 
@@ -124,10 +125,10 @@ Then run `pkg-windows\bin\AntScopeZ.exe`.
 
 macOS support builds via GitHub Actions (see
 [BUILDINFO.md](BUILDINFO.md)'s platform notes for what has and hasn't
-been verified against real hardware yet). Not yet a published release --
-the workflow (`.github/workflows/macos-build.yml`) produces a universal
-(arm64 + x86_64) `.app`/`.dmg` as a build artifact on every push, but no
-tagged download exists yet.
+been verified against real hardware yet). Download
+`AntScopeZ-<version>-macOS.dmg` (universal arm64 + x86_64) from the
+[Releases page](https://github.com/K4HEZ/AntScopeZ/releases); the
+workflow (`.github/workflows/macos-build.yml`) builds it on every push.
 
 There's no Apple Developer account behind these builds, so the `.app` is
 unsigned and not notarized: macOS Gatekeeper will refuse a plain
