@@ -1,0 +1,85 @@
+name: Windows build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [develop]
+    paths:
+      - '**.c'
+      - '**.cpp'
+      - '**.h'
+      - '**.ui'
+      - 'CMakeLists.txt'
+      - '.github/workflows/windows-build.yml'
+
+jobs:
+  # x86_64 only -- matches the local windows-mingw preset's kit (Qt 6.11.2
+  # MinGW 13.1.0). Qt6 already floors at Windows 10, so no deployment-target
+  # tuning is needed the way macOS needed one.
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.11.2'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_mingw'
+          # SerialPort and Bluetooth are addon modules, not part of the base
+          # essentials package (same gap hit on the macOS workflow).
+          modules: 'qtserialport qtconnectivity'
+          # Must be Qt's own MinGW build (ABI-matched to the Qt libraries) --
+          # the runner's preinstalled system gcc is a different, incompatible
+          # version. Ninja itself has no ABI concerns, so the runner's own
+          # preinstalled Ninja is used as-is, no separate tool needed for it.
+          tools: 'tools_mingw1310,qt.tools.win64_mingw1310'
+          cache: true
+
+      - name: Configure
+        run: >
+          cmake -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_C_COMPILER="$env:IQTA_TOOLS/mingw1310_64/bin/gcc.exe"
+          -DCMAKE_CXX_COMPILER="$env:IQTA_TOOLS/mingw1310_64/bin/g++.exe"
+          -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR"
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Stage install (for smoke test, separate from the installer below)
+        run: cmake --install build --prefix "${{ github.workspace }}\stage"
+
+      # Confirms the exe actually launches, not just that it linked.
+      - name: Launch and screenshot
+        run: |
+          Start-Process "${{ github.workspace }}\stage\bin\AntScopeZ.exe"
+          Start-Sleep -Seconds 5
+          $p = Get-Process AntScopeZ -ErrorAction SilentlyContinue
+          if (-not $p) { Write-Error "AntScopeZ did not launch"; exit 1 }
+          Add-Type -AssemblyName System.Windows.Forms,System.Drawing
+          $bounds = [System.Windows.Forms.SystemInformation]::VirtualScreen
+          $bmp = New-Object System.Drawing.Bitmap $bounds.Width, $bounds.Height
+          $graphics = [System.Drawing.Graphics]::FromImage($bmp)
+          $graphics.CopyFromScreen($bounds.Location, [System.Drawing.Point]::Empty, $bounds.Size)
+          $bmp.Save("windows-screenshot.png")
+          Stop-Process -Name AntScopeZ -Force
+
+      - name: Upload screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-screenshot
+          path: windows-screenshot.png
+
+      - name: Package installer
+        working-directory: build
+        run: cpack -G NSIS
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: AntScopeZ-windows
+          path: build/AntScopeZ-*-win64.exe
