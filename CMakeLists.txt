@@ -31,11 +31,11 @@ endif()
 # Debian's own version-format rules. This suffix is for humans instead: it
 # only feeds ANTSCOPEZ_VER (About box, title bar, startup log line -- see
 # target_compile_definitions() below), so an in-progress build reads
-# "2.2.7-dev" instead of silently claiming to be the exact 2.2.7 release.
-# Clear it to an empty string right when 2.2.7 actually ships (matching
-# commit + `v2.2.7` tag, same pattern as `v2.2.6`/`v2.2.5`), then bump
+# "2.2.8-dev" instead of silently claiming to be the exact 2.2.8 release.
+# Clear it to an empty string right when 2.2.8 actually ships (matching
+# commit + `v2.2.8` tag, same pattern as `v2.2.7`/`v2.2.6`), then bump
 # version.txt and set this back to "-dev" to start the next cycle.
-set(ANTSCOPEZ_VER_SUFFIX "")
+set(ANTSCOPEZ_VER_SUFFIX "-dev")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
