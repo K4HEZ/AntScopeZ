@@ -574,8 +574,7 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
       `"144.000000,15.XX,-38.XX\r\n"`-style telemetry unprompted --
       interleaved into unrelated replies (even `VER`/`FULLINFO` right
       after connecting), rejected new measurement commands with
-      `Error.Measurer busy...`, and didn't visibly stop on `off\r`. A full
-      power cycle cleared it. Not a code bug -- flagged here since it
+      `Error.Measurer busy...`. A full power cycle cleared it. Not a code bug -- flagged here since it
       produced confusing symptoms (including a false lead on the crash
       above) that looked code-related until the device state was ruled
       out.
