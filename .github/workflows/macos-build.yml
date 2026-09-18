@@ -1,0 +1,104 @@
+name: macOS build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [develop]
+    paths:
+      - '**.c'
+      - '**.cpp'
+      - '**.h'
+      - '**.ui'
+      - 'CMakeLists.txt'
+      - 'Info.plist'
+      - '.github/workflows/macos-build.yml'
+
+jobs:
+  # Builds a single universal (arm64 + x86_64) .app/.dmg on one Apple Silicon
+  # runner -- Qt's own macOS package is already a universal binary (verified
+  # against the actual 6.11.1 QtCore via `file`), so no separate per-arch
+  # build/lipo step is needed. Unsigned/not notarized: no Apple Developer
+  # account. Users will need to right-click > Open, or `xattr -cr`, past
+  # Gatekeeper on first launch.
+  build:
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.11.1'
+          host: 'mac'
+          target: 'desktop'
+          arch: 'clang_64'
+          cache: true
+
+      - name: Configure
+        run: >
+          cmake -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_OSX_ARCHITECTURES=arm64;x86_64
+          -DCMAKE_PREFIX_PATH=${{ env.QT_ROOT_DIR }}
+
+      - name: Build
+        run: cmake --build build -j8
+
+      - name: Stage install (for smoke test, separate from the dmg below)
+        run: cmake --install build --prefix "${{ github.workspace }}/stage"
+
+      # Confirms the arm64 slice actually launches, not just that it linked.
+      - name: Launch and screenshot (arm64 host)
+        run: |
+          open "${{ github.workspace }}/stage/AntScopeZ.app"
+          sleep 5
+          pgrep -x AntScopeZ || { echo "AntScopeZ did not launch"; exit 1; }
+          screencapture -x macos-arm64-screenshot.png
+          pkill -x AntScopeZ || true
+
+      - name: Upload screenshot (arm64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-arm64-screenshot
+          path: macos-arm64-screenshot.png
+
+      - name: Package dmg
+        working-directory: build
+        run: cpack -G DragNDrop
+
+      - name: Upload dmg
+        uses: actions/upload-artifact@v4
+        with:
+          name: AntScopeZ-macos
+          path: build/*.dmg
+
+  # Universal binaries compile on any host, but the x86_64 slice only ever
+  # actually *executes* on an Intel host -- this job downloads the dmg the
+  # build job already produced and launches it on a real Intel (macos-13)
+  # runner to confirm that slice works too, rather than rebuilding anything.
+  intel-smoketest:
+    needs: build
+    runs-on: macos-13
+
+    steps:
+      - name: Download dmg
+        uses: actions/download-artifact@v4
+        with:
+          name: AntScopeZ-macos
+
+      - name: Mount, launch, and screenshot (x86_64 host)
+        run: |
+          hdiutil attach ./*.dmg -mountpoint /Volumes/AntScopeZ -nobrowse
+          open /Volumes/AntScopeZ/AntScopeZ.app
+          sleep 5
+          pgrep -x AntScopeZ || { echo "AntScopeZ did not launch"; exit 1; }
+          screencapture -x macos-x86_64-screenshot.png
+          pkill -x AntScopeZ || true
+          hdiutil detach /Volumes/AntScopeZ
+
+      - name: Upload screenshot (x86_64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-x86_64-screenshot
+          path: macos-x86_64-screenshot.png

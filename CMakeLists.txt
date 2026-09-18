@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.21)
 
+# Must be set before project() -- ignored on non-Apple platforms. Matches
+# Qt 6.11's own macOS floor (see https://doc.qt.io/qt-6/macos.html).
+if(NOT DEFINED CMAKE_OSX_DEPLOYMENT_TARGET)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "13.0" CACHE STRING "Minimum macOS deployment target")
+endif()
+
 project(AntScopeZ
     VERSION 2.2.7
     DESCRIPTION "AntScopeZ Antenna Analyzer Application"
@@ -499,7 +505,10 @@ elseif(APPLE)
     target_compile_definitions(AntScopeZ PRIVATE _NO_WINDOWS_ NO_MULTITAB)
 
     find_library(COREFOUNDATION_FRAMEWORK CoreFoundation REQUIRED)
-    target_link_libraries(AntScopeZ PRIVATE ${COREFOUNDATION_FRAMEWORK})
+    # IOKit -- analyzer/usbhid/hidapi/mac/hid.c calls IOHIDManager* (IOKit/hid/...),
+    # which CoreFoundation alone doesn't provide.
+    find_library(IOKIT_FRAMEWORK IOKit REQUIRED)
+    target_link_libraries(AntScopeZ PRIVATE ${COREFOUNDATION_FRAMEWORK} ${IOKIT_FRAMEWORK})
 
     set_source_files_properties(src/resources/AntScopeZ.icns PROPERTIES
         MACOSX_PACKAGE_LOCATION Resources
@@ -507,11 +516,12 @@ elseif(APPLE)
     target_sources(AntScopeZ PRIVATE src/resources/AntScopeZ.icns)
 
     set_target_properties(AntScopeZ PROPERTIES
-        MACOSX_BUNDLE                ON
-        MACOSX_BUNDLE_INFO_PLIST     "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
-        MACOSX_BUNDLE_ICON_FILE      AntScopeZ
-        MACOSX_BUNDLE_BUNDLE_NAME    AntScopeZ
-        MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
+        MACOSX_BUNDLE                      ON
+        MACOSX_BUNDLE_INFO_PLIST           "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
+        MACOSX_BUNDLE_ICON_FILE            AntScopeZ
+        MACOSX_BUNDLE_BUNDLE_NAME          AntScopeZ
+        MACOSX_BUNDLE_BUNDLE_VERSION       "${PROJECT_VERSION}"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
     )
 
 else() # Linux and other Unix
@@ -965,7 +975,35 @@ qt_deploy_runtime_dependencies(
         install(SCRIPT ${deploy_script})
     endif()
 
-elseif(NOT APPLE) # Linux and other Unix
+elseif(APPLE)
+    # install(TARGETS ... BUNDLE DESTINATION .) above already puts the whole
+    # bundle -- binary, icns, and the runtime/translation files staged via
+    # MACOSX_PACKAGE_LOCATION above -- at the install prefix root as
+    # AntScopeZ.app. Only the Qt frameworks themselves are still missing.
+    # Passing a bundle path as EXECUTABLE makes qt_deploy_runtime_dependencies()
+    # detect it's a macOS bundle and run macdeployqt internally rather than
+    # the plain-executable codepath the Windows/Linux branches above use --
+    # confirmed via Qt's own docs (qt_deploy_runtime_dependencies): "When the
+    # application is a macOS app bundle ... deploy those dependencies ...
+    # using either macdeployqt or windeployqt." LIB_DIR/PLUGINS_DIR/BIN_DIR
+    # are meaningless here (a bundle's internal layout is fixed by Apple, not
+    # by us) and are correctly ignored by that same codepath.
+    if(COMMAND qt6_generate_deploy_script)
+        qt6_generate_deploy_script(
+            TARGET AntScopeZ
+            OUTPUT_SCRIPT deploy_script
+            CONTENT "
+qt_deploy_runtime_dependencies(
+    EXECUTABLE \"AntScopeZ.app\"
+    GENERATE_QT_CONF
+    NO_TRANSLATIONS
+)
+"
+        )
+        install(SCRIPT ${deploy_script})
+    endif()
+
+else() # Linux and other Unix
     install(FILES ${ANTSCOPE_RUNTIME_FILES} ${ANTSCOPE_QM_FILES} ${ANTSCOPE_QT_QM_FILES} ${ANTSCOPE_QTBASE_OVERRIDE_QM_FILES}
         DESTINATION ${CMAKE_INSTALL_DATADIR}/antscopez
     )
@@ -1326,6 +1364,25 @@ if(WIN32)
         RMDir /r $APPDATA\\AntScopeZ
         SetShellVarContext current"
     )
+
+    include(CPack)
+endif()
+
+#
+# Packaging (macOS disk image)
+#
+# DragNDrop just wraps whatever install(TARGETS ... BUNDLE DESTINATION .)
+# above already staged -- a single, already-Qt-bundled AntScopeZ.app (via the
+# APPLE branch of the deploy-script section above) -- into a .dmg. No
+# equivalent to the DEB/NSIS branches' own bundling logic is needed here.
+#
+if(APPLE)
+    set(CPACK_GENERATOR "DragNDrop")
+    set(CPACK_PACKAGE_NAME "AntScopeZ")
+    set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PROJECT_DESCRIPTION}")
+    set(CPACK_PACKAGE_VENDOR "k4hez")
+    set(CPACK_DMG_VOLUME_NAME "AntScopeZ ${PROJECT_VERSION}")
 
     include(CPack)
 endif()
