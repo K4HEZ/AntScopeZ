@@ -330,7 +330,7 @@ menu bar instead (File / Analyzer / View / Tools / Help).
 
 | Control | What it does |
 |---|---|
-| About AntScopeZ... | Shows the running app's version number and build timestamp |
+| About AntScopeZ... | Shows the running app's version number and build timestamp, and the latest released version (see [Updates tab](#updates-tab)) |
 
 **Frequency panel**
 
@@ -660,9 +660,14 @@ the file format and what each button does.
 
 <!-- SCREENSHOT: Settings dialog, Updates tab -->
 
-Your installed AntScopeZ version sits at the top, next to a
-**Check for Software Updates** button -- there's no update-checking
-mechanism built yet, so that button is a disabled placeholder for now.
+**Check for updates at startup** (on by default) fetches the latest
+released version number when AntScopeZ starts; **Help > About** shows it
+as *Latest Version*, under your installed version. Nothing is downloaded
+or installed -- get new releases from the link in the About box. With the
+box unticked, About shows *[disabled in settings]*, and a change takes
+effect at the next launch. The check reads one small file
+(`version.txt` on the GitHub master branch) and sends nothing about you
+or your devices; **Use TLS** below applies to it too.
 
 A notice explains that the rest of this tab talks to RigExpert's
 servers -- device serial number, OS/CPU/language, app version and, for

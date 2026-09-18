@@ -2639,82 +2639,16 @@ discards queued data -- only that AntScopeZ resyncs).</string>
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="groupBox_11">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
+        <widget class="QCheckBox" name="checkBoxCheckUpdates">
+         <property name="toolTip">
+          <string>Fetches the latest released version number from GitHub when AntScopeZ starts; shown in Help &gt; About.</string>
          </property>
-         <property name="title">
-          <string>AntScopeZ</string>
+         <property name="text">
+          <string>Check for updates at startup</string>
          </property>
-         <property name="flat">
-          <bool>false</bool>
+         <property name="checked">
+          <bool>true</bool>
          </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_15">
-          <property name="topMargin">
-           <number>20</number>
-          </property>
-          <item>
-           <layout class="QVBoxLayout" name="verticalLayout_5">
-            <item>
-             <widget class="QLabel" name="softwareUpdateUnderDevelopmentLabel">
-              <property name="text">
-               <string>This feature is currently under development.</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_14">
-              <item>
-               <widget class="QLabel" name="label_16">
-                <property name="text">
-                 <string>Version:</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="antScopeVersion">
-                <property name="text">
-                 <string notr="true">0</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer">
-                <property name="orientation">
-                 <enum>Qt::Orientation::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <widget class="QPushButton" name="checkSoftwareUpdatesBtn">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-                <property name="toolTip">
-                 <string>Not implemented yet</string>
-                </property>
-                <property name="text">
-                 <string>Check for Software Updates</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </item>
-         </layout>
         </widget>
        </item>
        <item>

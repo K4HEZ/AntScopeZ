@@ -13,6 +13,9 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Added
 
+- Update check: About shows the latest released version (from `version.txt`
+  on master); Settings > Updates has "Check for updates at startup".
+  `version.txt` is now the build's version source of truth.
 - macOS: builds and packages via GitHub Actions (universal arm64+x86_64
   `.app`/`.dmg`, Qt 6.11's own macOS 13+ floor) -- unsigned/not notarized
   (no Apple Developer account), so first launch needs right-click > Open

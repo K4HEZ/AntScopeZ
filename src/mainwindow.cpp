@@ -71,6 +71,8 @@ bool g_extendedChartZoom = false;
 // check). Default true (secure); off is an escape hatch for a vendor-side
 // cert problem, not something to leave off routinely. See issue #14.
 bool g_useTls = true;
+// "Check for updates at startup" (Settings > Updates).
+bool g_checkUpdates = true;
 // "Enable Remote API" (Settings > General) -- starts a local NDJSON-over-TCP
 // control API (remoteapi/, json-tcp-api branch), loopback-only by default.
 // Default off: opening a network port, even loopback-only, shouldn't happen
@@ -355,6 +357,7 @@ MainWindow::MainWindow(QWidget *parent) :
     g_analyzerMaxPoints = m_settings->value("analyzerMaxPoints", 1000).toInt();
     g_extendedChartZoom = m_settings->value("extendedChartZoom", false).toBool();
     g_useTls = m_settings->value("useTls", true).toBool();
+    g_checkUpdates = m_settings->value("checkUpdates", true).toBool();
     g_remoteApiEnabled = m_settings->value("remoteApiEnabled", false).toBool();
     g_remoteApiPort = m_settings->value("remoteApiPort", 7443).toInt();
     g_analyzerTimeoutSec = m_settings->value("analyzerTimeoutSec", 8).toInt();
@@ -367,6 +370,11 @@ MainWindow::MainWindow(QWidget *parent) :
     g_warnDirtyDelete = m_settings->value("warnDirtyDelete", true).toBool();
     m_activeThemeIndex = m_settings->value("activeTheme", 0).toInt();
     m_settings->endGroup();
+
+    m_updateChecker = new UpdateChecker(this);
+    if (g_checkUpdates) {
+        m_updateChecker->start();
+    }
 
     // g_pointsMax just replaced the placeholder set right after
     // ui->setupUi() above with the user's real, saved value -- apply it to
@@ -1146,6 +1154,7 @@ MainWindow::~MainWindow()
     m_settings->setValue("analyzerMaxPoints", g_analyzerMaxPoints);
     m_settings->setValue("extendedChartZoom", g_extendedChartZoom);
     m_settings->setValue("useTls", g_useTls);
+    m_settings->setValue("checkUpdates", g_checkUpdates);
     m_settings->setValue("remoteApiEnabled", g_remoteApiEnabled);
     m_settings->setValue("remoteApiPort", g_remoteApiPort);
     m_settings->setValue("analyzerTimeoutSec", g_analyzerTimeoutSec);

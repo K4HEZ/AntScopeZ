@@ -33,6 +33,7 @@ extern int g_pointsWarnThreshold; // see mainwindow.cpp
 extern int g_analyzerMaxPoints; // see mainwindow.cpp
 extern bool g_extendedChartZoom; // see mainwindow.cpp
 extern bool g_useTls; // see mainwindow.cpp
+extern bool g_checkUpdates; // see mainwindow.cpp
 extern bool g_remoteApiEnabled; // see mainwindow.cpp
 extern int g_remoteApiPort; // see mainwindow.cpp
 extern int g_analyzerTimeoutSec; // see mainwindow.cpp
@@ -143,6 +144,7 @@ Settings::Settings(QWidget *parent) :
     ui->lineEditAnalyzerMaxPoints->setText(QString::number(g_analyzerMaxPoints));
     ui->checkBoxExtendedChartZoom->setChecked(g_extendedChartZoom);
     ui->checkBoxUseTls->setChecked(g_useTls);
+    ui->checkBoxCheckUpdates->setChecked(g_checkUpdates);
     ui->checkBoxRemoteApiEnabled->setChecked(g_remoteApiEnabled);
     ui->spinBoxRemoteApiPort->setValue(g_remoteApiPort);
     ui->lineEdit_analyzerTimeout->setText(QString::number(g_analyzerTimeoutSec));
@@ -414,6 +416,7 @@ Settings::~Settings()
     g_analyzerMaxPoints = qBound(50, ui->lineEditAnalyzerMaxPoints->text().toInt(), POINTS_MAX);
     g_extendedChartZoom = ui->checkBoxExtendedChartZoom->isChecked();
     g_useTls = ui->checkBoxUseTls->isChecked();
+    g_checkUpdates = ui->checkBoxCheckUpdates->isChecked();
     g_remoteApiEnabled = ui->checkBoxRemoteApiEnabled->isChecked();
     g_remoteApiPort = ui->spinBoxRemoteApiPort->value();
     // Unlike the flags above (passively consulted elsewhere), this one
@@ -437,6 +440,7 @@ Settings::~Settings()
     m_settings->setValue("analyzerMaxPoints", g_analyzerMaxPoints);
     m_settings->setValue("extendedChartZoom", g_extendedChartZoom);
     m_settings->setValue("useTls", g_useTls);
+    m_settings->setValue("checkUpdates", g_checkUpdates);
     m_settings->setValue("remoteApiEnabled", g_remoteApiEnabled);
     m_settings->setValue("remoteApiPort", g_remoteApiPort);
     m_settings->setValue("reportDetailedErrors", DebugLog::detailedErrorsEnabled());
@@ -1421,11 +1425,6 @@ void Settings::reject()
     QDialog::reject();
 }
 
-
-void Settings::setAntScopeVersion(QString version)
-{
-    ui->antScopeVersion->setText(version);
-}
 
 QList<QPair<QString, QString>> Settings::availableLanguages()
 {

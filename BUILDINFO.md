@@ -189,13 +189,24 @@ earlier pass can also just be an untouched English copy with no visual
 indication besides that. Found repeatedly (2026-08-16) across all three
 languages this way, well after they'd otherwise seemed complete.
 
+## Version source of truth
+
+`version.txt` (repo root, one line, `x.y.z`) feeds `project(VERSION ...)`
+via `file(STRINGS)` in `CMakeLists.txt`, with a configure dependency on the
+file. The `-dev` suffix stays in `ANTSCOPEZ_VER_SUFFIX`. The same file on
+`master` is what the in-app update check fetches
+(`raw.githubusercontent.com/K4HEZ/AntScopeZ/master/version.txt`, see
+`src/updatechecker.cpp`), so bumping it on develop and ff-pushing to master
+at release publishes the new "latest" -- no extra step. Set
+`ANTSCOPEZ_VERSION_URL` to test against another file.
+
 ## Build timestamp
 
 `cmake/generate-build-timestamp.cmake`, invoked via an `add_custom_target()`
 with no tracked `OUTPUT` (so it reruns on every build, not just on
 reconfigure), regenerates `build-timestamp.h` in the build directory with
 `ANTSCOPEZ_BUILD_TIMESTAMP` (`yymmdd-hhmmss`, local time) fresh each time.
-Shown in Help → About AntScopeZ, below the version. A plain
+Shown in Help → About AntScopeZ, next to the version. A plain
 `target_compile_definitions()` value (like `ANTSCOPEZ_VER`) would only be
 recomputed at configure time, going stale across ordinary incremental
 rebuilds -- not useful for actually identifying which build you're

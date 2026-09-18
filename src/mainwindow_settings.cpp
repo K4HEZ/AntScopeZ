@@ -95,7 +95,6 @@ void MainWindow::on_actionSettings_triggered()
     m_settingsDialog->setCableFarEndMeasurement(m_farEndMeasurement);
     m_settingsDialog->setCableIndex(m_cableIndex);
     m_settingsDialog->setCableIsPreset(m_cableIsPreset);
-    m_settingsDialog->setAntScopeVersion(ANTSCOPEZ_VER);
     m_settingsDialog->setRestrictFq(m_fqRestrict);
 
     // Graph Hint/Brief-hint/Markers-hint checkboxes used to live here,
@@ -234,7 +233,7 @@ void MainWindow::on_actionExit_triggered()
 
 void MainWindow::on_actionAbout_triggered()
 {
-    AboutDialog dlg(this);
+    AboutDialog dlg(m_updateChecker, this);
     dlg.exec();
 }
 

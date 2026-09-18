@@ -73,8 +73,6 @@ public:
     // themeComboBox in favor of their View/Edit menu equivalents).
     static QList<QPair<QString, QString>> availableLanguages();
 
-    void setAntScopeVersion(QString version);
-
     void on_translate();
     LicenseAgent& licenseAgent() { return m_licenseAgent; }
     static bool m_licenseUpdateBlocked;

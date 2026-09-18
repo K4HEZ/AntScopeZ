@@ -19,6 +19,7 @@
 #include <screenshot.h>
 #include <QTimer>
 #include <settings.h>
+#include <updatechecker.h>
 #include <markers.h>
 #include <QSettings>
 //#include <QQuickItem>
@@ -196,6 +197,7 @@ private:
 
     Measurements *m_measurements = nullptr;
     Settings *m_settingsDialog = nullptr;
+    UpdateChecker *m_updateChecker = nullptr;
     UserGuideDialog *m_userGuideDialog = nullptr;
     // Non-modal, WA_DeleteOnClose "analyzer communications" QMessageBox --
     // see onAnalyzerError(). QPointer so a second error while one's still

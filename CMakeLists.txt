@@ -6,8 +6,13 @@ if(NOT DEFINED CMAKE_OSX_DEPLOYMENT_TARGET)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "13.0" CACHE STRING "Minimum macOS deployment target")
 endif()
 
+# version.txt is the single source of truth (also fetched from master by the
+# in-app update check).
+file(STRINGS version.txt ANTSCOPEZ_VERSION_TXT LIMIT_COUNT 1)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS version.txt)
+
 project(AntScopeZ
-    VERSION 2.2.7
+    VERSION ${ANTSCOPEZ_VERSION_TXT}
     DESCRIPTION "AntScopeZ Antenna Analyzer Application"
     LANGUAGES C CXX
 )
@@ -29,7 +34,7 @@ endif()
 # "2.2.7-dev" instead of silently claiming to be the exact 2.2.7 release.
 # Clear it to an empty string right when 2.2.7 actually ships (matching
 # commit + `v2.2.7` tag, same pattern as `v2.2.6`/`v2.2.5`), then bump
-# PROJECT_VERSION and set this back to "-dev" to start the next cycle.
+# version.txt and set this back to "-dev" to start the next cycle.
 set(ANTSCOPEZ_VER_SUFFIX "-dev")
 
 set(CMAKE_CXX_STANDARD 17)
@@ -126,6 +131,7 @@ set(ANTSCOPE_SOURCES
     src/glwidget.cpp
     src/inforequestdialog.cpp
     src/licenseagent.cpp
+    src/updatechecker.cpp
     src/main.cpp
     src/mainwindow.cpp
     src/mainwindow_analyzer.cpp
@@ -218,6 +224,7 @@ set(ANTSCOPE_HEADERS
     src/glwidget.h
     src/inforequestdialog.h
     src/licenseagent.h
+    src/updatechecker.h
     src/mainwindow.h
     src/markercomparisondialog.h
     src/markers.h

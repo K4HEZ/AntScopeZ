@@ -1,26 +1,29 @@
 #include "aboutdialog.h"
 #include "ui_aboutdialog.h"
 #include "build-timestamp.h"
+#include "updatechecker.h"
 #include <QResizeEvent>
 #include <QShowEvent>
 
-AboutDialog::AboutDialog(QWidget *parent) :
+extern bool g_checkUpdates; // see mainwindow.cpp
+
+AboutDialog::AboutDialog(UpdateChecker *checker, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::AboutDialog)
+    ui(new Ui::AboutDialog),
+    m_checker(checker)
 {
     ui->setupUi(this);
 
     // Same "Version:" label/value pair the Settings > Updates tab shows
     // (Settings::setAntScopeVersion()) -- kept visually consistent rather
     // than introducing a second way to display the app version.
-    ui->versionLabel->setText(ANTSCOPEZ_VER);
+    // Version and build timestamp share one label for now.
+    ui->versionLabel->setText(QString(ANTSCOPEZ_VER) + "  (" + tr("Build: ") + ANTSCOPEZ_BUILD_TIMESTAMP + ")");
 
-    // ANTSCOPEZ_BUILD_TIMESTAMP (build-timestamp.h, generated fresh every
-    // build -- see CMakeLists.txt) rather than this file's own compile
-    // time: aboutdialog.cpp only recompiles when it or something it
-    // includes changes, which would make a plain __DATE__/__TIME__ here go
-    // stale across incremental rebuilds that touch other files.
-    ui->buildLabel->setText(tr("Build: ") + ANTSCOPEZ_BUILD_TIMESTAMP);
+    updateLatestLabel();
+    if (m_checker) {
+        connect(m_checker, &UpdateChecker::finished, this, &AboutDialog::updateLatestLabel);
+    }
 
     updateFlagLabelWidths();
 }
@@ -28,6 +31,21 @@ AboutDialog::AboutDialog(QWidget *parent) :
 AboutDialog::~AboutDialog()
 {
     delete ui;
+}
+
+void AboutDialog::updateLatestLabel()
+{
+    QString text;
+    if (!g_checkUpdates) {
+        text = tr("[disabled in settings]");
+    } else if (!m_checker || m_checker->state() == UpdateChecker::State::Failed) {
+        text = tr("unavailable");
+    } else if (m_checker->state() == UpdateChecker::State::Done) {
+        text = m_checker->latest();
+    } else {
+        text = tr("checking...");
+    }
+    ui->latestLabel->setText(text);
 }
 
 void AboutDialog::resizeEvent(QResizeEvent *event)

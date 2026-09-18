@@ -3,6 +3,8 @@
 
 #include <QDialog>
 
+class UpdateChecker;
+
 namespace Ui {
 class AboutDialog;
 }
@@ -12,7 +14,7 @@ class AboutDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit AboutDialog(QWidget *parent = nullptr);
+    explicit AboutDialog(UpdateChecker *checker, QWidget *parent = nullptr);
     ~AboutDialog();
 
 protected:
@@ -25,6 +27,9 @@ private:
     // Flag-bar labels (label_2/label_3) track 80% of creditsLabel's width,
     // so they scale with it instead of a hardcoded pixel size.
     void updateFlagLabelWidths();
+    void updateLatestLabel();
+
+    UpdateChecker *m_checker;
 };
 
 #endif // ABOUTDIALOG_H
