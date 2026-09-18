@@ -21,7 +21,7 @@ jobs:
   # account. Users will need to right-click > Open, or `xattr -cr`, past
   # Gatekeeper on first launch.
   build:
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - uses: actions/checkout@v4
@@ -79,11 +79,13 @@ jobs:
 
   # Universal binaries compile on any host, but the x86_64 slice only ever
   # actually *executes* on an Intel host -- this job downloads the dmg the
-  # build job already produced and launches it on a real Intel (macos-13)
+  # build job already produced and launches it on a real Intel (macos-15-large)
   # runner to confirm that slice works too, rather than rebuilding anything.
+  # NOTE: macos-13 (the previous Intel label) was fully retired by GitHub --
+  # a run pinned to it queues forever with no error, never gets picked up.
   intel-smoketest:
     needs: build
-    runs-on: macos-13
+    runs-on: macos-15-large
 
     steps:
       - name: Download dmg
