@@ -11,6 +11,15 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+### Added
+
+- macOS: builds and packages via GitHub Actions (universal arm64+x86_64
+  `.app`/`.dmg`, Qt 6.11's own macOS 13+ floor) -- unsigned/not notarized
+  (no Apple Developer account), so first launch needs right-click > Open
+  or `xattr -cr` past Gatekeeper. Confirmed launching for real via CI
+  screenshot on arm64; Intel (x86_64) smoke test in progress. No real
+  hardware (analyzer USB/HID/BLE) testing possible in CI. See issue #57.
+
 ## [2.2.6] - 2026-09-10
 
 ### Added

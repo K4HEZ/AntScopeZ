@@ -79,13 +79,17 @@ jobs:
 
   # Universal binaries compile on any host, but the x86_64 slice only ever
   # actually *executes* on an Intel host -- this job downloads the dmg the
-  # build job already produced and launches it on a real Intel (macos-15-large)
+  # build job already produced and launches it on a real Intel (macos-15-intel)
   # runner to confirm that slice works too, rather than rebuilding anything.
   # NOTE: macos-13 (the previous Intel label) was fully retired by GitHub --
   # a run pinned to it queues forever with no error, never gets picked up.
+  # macos-15-large looks like the Intel option too but is the paid "larger
+  # runner" alias (always billed, even on public repos) -- macos-15-intel is
+  # the free standard one; confirmed via GitHub's own runner docs after
+  # macos-15-large failed instantly with a billing/spending-limit error.
   intel-smoketest:
     needs: build
-    runs-on: macos-15-large
+    runs-on: macos-15-intel
 
     steps:
       - name: Download dmg

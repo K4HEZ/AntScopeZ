@@ -75,13 +75,31 @@ build option -- uncomment locally when actually debugging Bluetooth.
 
 ## macOS packaging
 
-`build.sh` runs a release build (which compiles the translations as part of
-the normal CMake build -- see [Translations](#translations)) and produces a
-`.dmg` via `macdeployqt`:
+Two ways to get a `.dmg`, both driven by the same `CMakeLists.txt` APPLE
+branch (which bundles Qt frameworks into the `.app` via
+`qt_deploy_runtime_dependencies()` -- routes to `macdeployqt` internally
+when given a bundle path, confirmed via Qt's own docs):
 
-```sh
-./build.sh [build-dir]
-```
+- **CMake-native (what CI uses, `.github/workflows/macos-build.yml`):**
+  ```sh
+  cmake -B build -DCMAKE_BUILD_TYPE=Release \
+    "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64"
+  cmake --build build --parallel
+  cd build && cpack -G DragNDrop
+  ```
+- **`build.sh`, a quicker single-command local shortcut** (skips CPack,
+  calls `macdeployqt -dmg` directly on the build tree's own `.app` --
+  compiles translations as part of the normal CMake build, see
+  [Translations](#translations)):
+  ```sh
+  ./build.sh [build-dir]
+  ```
+
+Deployment floor is macOS 13 Ventura (`CMAKE_OSX_DEPLOYMENT_TARGET`, set
+near the top of `CMakeLists.txt` -- matches Qt 6.11's own floor, see
+https://doc.qt.io/qt-6/macos.html). Earliest Intel Mac that reaches: a
+2017 model; any Apple Silicon Mac works. Unsigned/not notarized (no Apple
+Developer account) -- see Platform notes below.
 
 ## Build performance
 
@@ -206,8 +224,21 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   Windows hardware -- device enumeration/connection (HID, FTDI), `.asd` file
   association, `WM_DEVICECHANGE` hot-plug detection, per-user settings paths.
   See `docs/windows-port-audit.md` for the full checklist and findings.
-- **macOS** — uses the `hidapi` mac backend; `build.sh` drives `macdeployqt`. 
-  This project has not been tested on macOS due to not owning the hardware.
+- **macOS** — uses the `hidapi` mac backend (needs both `CoreFoundation`
+  and `IOKit` linked -- the latter was a real missing-link bug, found and
+  fixed 2026-09-18 while first standing up CI for this platform). Builds
+  and packages via GitHub Actions (`.github/workflows/macos-build.yml`,
+  issue #57) as a universal arm64+x86_64 `.app`/`.dmg` -- no local macOS
+  hardware is owned here, so this is the only way this platform gets
+  built or tested at all. Confirmed 2026-09-18 via a real CI-captured
+  screenshot: the arm64 build compiles, links, bundles Qt, launches, and
+  renders its main window correctly. An `intel-smoketest` CI job
+  separately launches that same universal `.dmg` on a real Intel
+  (`macos-15-intel`) runner to confirm the x86_64 slice too. Unsigned and not
+  notarized (no Apple Developer account) -- Gatekeeper blocks a plain
+  double-click; right-click > Open, or `xattr -cr`, gets past it. What's
+  *not* verified at all: anything needing real analyzer hardware (USB
+  HID, BLE) -- CI has none attached, same gap as the Windows port.
 
 ## Known issues
 

@@ -121,6 +121,36 @@ cmake --install build-windows-mingw --prefix pkg-windows
 
 Then run `pkg-windows\bin\AntScopeZ.exe`.
 
+## macOS
+
+macOS support builds via GitHub Actions (see
+[BUILDINFO.md](BUILDINFO.md)'s platform notes for what has and hasn't
+been verified against real hardware yet). Not yet a published release --
+the workflow (`.github/workflows/macos-build.yml`) produces a universal
+(arm64 + x86_64) `.app`/`.dmg` as a build artifact on every push, but no
+tagged download exists yet.
+
+There's no Apple Developer account behind these builds, so the `.app` is
+unsigned and not notarized: macOS Gatekeeper will refuse a plain
+double-click on first launch. Right-click the app > Open (once), or run
+`xattr -cr AntScopeZ.app` first, to get past it.
+
+### Building from source
+
+Requires Qt 6.11 with the SerialPort and Bluetooth (Connectivity) addon
+modules -- see [BUILDINFO.md](BUILDINFO.md)'s Qt modules section. Qt 6.11
+itself sets the deployment floor at macOS 13 Ventura or newer; earliest
+supported Intel Mac is a 2017 model, any Apple Silicon Mac works.
+
+```sh
+cmake -B build -DCMAKE_BUILD_TYPE=Release \
+  "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64"
+cmake --build build --parallel
+cmake --install build --prefix stage   # produces stage/AntScopeZ.app
+```
+
+Or, for a quick local `.dmg` without CPack: `./build.sh [build-dir]`.
+
 ## License
 
 AntScopeZ, as built and distributed, is licensed under the **GNU General

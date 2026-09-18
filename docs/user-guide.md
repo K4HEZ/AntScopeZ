@@ -105,6 +105,15 @@ verification (USB/HID/FTDI device access, `.asd` file association,
 etc.) is still outstanding. See `docs/windows-port-audit.md` if you
 want to build and try it yourself.
 
+macOS now builds via GitHub Actions as a universal (arm64 + x86_64)
+`.app`/`.dmg` (Qt 6.11's own macOS 13 Ventura+ floor), confirmed
+actually launching via a CI-captured screenshot, but it's not yet a
+published release either -- and since there's no Apple Developer
+account behind it, the `.app` is unsigned and not notarized. Gatekeeper
+will refuse a plain double-click on first launch: right-click the app >
+Open (once), or run `xattr -cr AntScopeZ.app` first. See
+[README.md](../README.md#macos) if you want to build it yourself.
+
 ## Supported devices
 
 AntScopeZ's device support isn't limited to RigExpert's own antenna
