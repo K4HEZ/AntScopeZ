@@ -716,17 +716,28 @@ something this fork tests or supports beyond making sure the connection
 itself is sound -- see the disclaimer in
 [README.md](https://github.com/K4HEZ/AntScopeZ#readme).
 
-**Check for firmware updates** runs a real check against RigExpert's
-server. As of this writing that server doesn't return update
-information for any device or input tried (confirmed directly against
-the live endpoint) -- not something fixable on this end, since the
-request and what comes back are both already correct. **Browse** lets
-you pick a `.bin` file and see its embedded model/version/build info.
+**Check for firmware updates** asks RigExpert's server for the latest
+firmware for the connected analyzer and compares its version with the
+one installed on the device. The dialog reports whether you are current,
+an update is available, or the installed firmware is newer than the
+latest published, and shows the server's version history. **Download**
+saves the `.bin` file to your AntScopeZ data folder and shows the path;
+it does not flash anything. **Browse** lets you pick a `.bin` file and
+see its embedded model/version/build info.
 **Update** (actually flashing the chosen file to the connected device)
 stays disabled on purpose: it isn't reliable enough yet across the
 range of devices and OSes this needs to work on, and a bad flash can
-brick the device. Get firmware updates from RigExpert's own site/
-software instead.
+brick the device.
+
+**Getting firmware directly from RigExpert.** The check only offers the
+current release. If you want a specific release, including an older
+(downlevel) one, you can download the `.bin` file yourself from
+RigExpert's firmware area at
+`https://www.rigexpert.com/files/firmware/<model>/rev_<n>/`, where
+`latest/` holds the current release and `old/` holds earlier ones (for
+example, `.../match/rev_1/old/fw_Match_ver.1.5.bin`). You can also use
+RigExpert's own site and software. Files from either source work with
+**Browse**.
 
 ## Interpreting your data
 
@@ -1615,10 +1626,9 @@ delete.
   exactly and it's in the right folder -- see
   [Files and directories](#files-and-directories).
 - **"Check for firmware updates" says no update information is
-  available.** RigExpert's own server doesn't return update information
-  right now, for any device -- not something this fork can fix. See
-  [Settings' Updates tab](#updates-tab). Get firmware updates from
-  RigExpert's own site/software instead.
+  available.** RigExpert's server had nothing to report for this
+  device. You can still download firmware directly from RigExpert --
+  see [Settings' Updates tab](#updates-tab).
 - **"Update" (flash from file) is greyed out.** That's deliberate -- it
   isn't reliable enough yet to expose, and a bad flash can brick the
   device. See [Settings' Updates tab](#updates-tab).

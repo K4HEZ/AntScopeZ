@@ -9,6 +9,7 @@ UpdateDialog::UpdateDialog(QWidget *parent) :
 
     ui->progressBar->hide();
     ui->statusLabel->hide();
+    ui->detailsEdit->hide();
 }
 
 UpdateDialog::~UpdateDialog()
@@ -24,6 +25,13 @@ void UpdateDialog::setStatusText(QString text)
 void UpdateDialog::setMainText(QString text)
 {
     ui->label->setText(text);
+}
+
+void UpdateDialog::setDetails(QString text)
+{
+    ui->detailsEdit->setPlainText(text);
+    ui->detailsEdit->setVisible(!text.trimmed().isEmpty());
+    adjustSize();
 }
 
 void UpdateDialog::setFinished(QString statusText)

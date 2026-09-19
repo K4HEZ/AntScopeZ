@@ -1,3 +1,4 @@
+#include <QVersionNumber>
 #include "analyzerpro.h"
 #include "popupindicator.h"
 #include "customanalyzer.h"
@@ -125,30 +126,52 @@ void AnalyzerPro::on_downloadInfoComplete()
     {
         QString reason = m_downloader->error();
         // An empty reason means the request itself succeeded (HTTP 200,
-        // no network error) but RigExpert's server had nothing to report
-        // for this device -- confirmed by hand against the live endpoint
-        // with several real and made-up model/version combinations, all
-        // returning the same empty <FIRMWARE/>. That's not a transient
-        // failure worth retrying, unlike an actual network/HTTP error.
+        // no network error) but the server returned an empty <FIRMWARE/>.
+        // The server does that for a model it has no firmware for, and for
+        // a revision that isn't one of its rev_N directories (e.g. a
+        // firmware version string sent as revision), so the message names
+        // the model and revision that were sent. Not worth retrying, unlike
+        // an actual network/HTTP error.
         QString text = reason.isEmpty()
-                ? tr("No update information is available from RigExpert for this device.")
+                ? tr("No update information is available from RigExpert for this device.\n\n(model %1, revision %2)")
+                      .arg(AnalyzerParameters::getName(), getRevision())
                 : tr("Can not get the latest version.\nPlease try later.\n\n(%1)").arg(reason);
         g_showMessageBox(nullptr, QMessageBox::Information, tr("Latest version"), text);
     }else
     {
-        double internetVersion = ver.toDouble();//ver.remove(".").toInt();
         m_updateDialog = new UpdateDialog();
         m_updateDialog->setAttribute(Qt::WA_DeleteOnClose);
         m_updateDialog->setWindowTitle(tr("Firmware update"));
         connect(m_updateDialog,SIGNAL(update()),this,SLOT(on_internetUpdate()));
         connect(this, SIGNAL(updatePercentChanged(int)),m_updateDialog,SLOT(on_percentChanged(qint32)));
-        if(internetVersion > getVersion())
-        {
-            m_updateDialog->setMainText(tr("New version of firmware is available! Click Download to save it."));
-        }else
-        {
-            m_updateDialog->setMainText(tr("You have the latest version of firmware."));
-        }
+
+        // Dotted-version compare, not toDouble(): as decimals 1.12 < 1.5,
+        // so a device on 1.5 was told it had the latest when 1.12 is
+        // newer, and "1.5.0d" doesn't parse as a double at all. The server
+        // returns the same answer whatever fw= we send, so this comparison
+        // is the only thing that decides current vs. update available.
+        // QVersionNumber reads the leading numeric parts ("1.5.0d" -> 1.5.0).
+        // Only trust the device's version when it looks like a real dotted
+        // version (at least major.minor). The older info-string parse keeps
+        // just three characters, so a value like "122" or a truncated "1.1"
+        // may not be the real version; in that case don't claim "latest" or
+        // "newer", just offer the download.
+        const QVersionNumber serverVer = QVersionNumber::fromString(ver);
+        const QVersionNumber deviceVer = QVersionNumber::fromString(getVersionString());
+        const bool comparable = deviceVer.segmentCount() >= 2 && serverVer.segmentCount() >= 2;
+        QString headline;
+        if (!comparable)
+            headline = tr("Could not compare the installed firmware version with the "
+                          "latest available. Click Download to save the latest.");
+        else if (serverVer > deviceVer)
+            headline = tr("New version of firmware is available! Click Download to save it.");
+        else if (serverVer == deviceVer)
+            headline = tr("You have the latest version of firmware.");
+        else
+            headline = tr("The installed firmware is newer than the latest published version.");
+        m_updateDialog->setMainText(tr("%1\n\nInstalled: %2    Available: %3")
+                                    .arg(headline, getVersionString(), ver));
+        m_updateDialog->setDetails(m_downloader->info().trimmed());
         m_updateDialog->exec();
     }
 }
@@ -1000,7 +1023,7 @@ void AnalyzerPro::on_checkUpdatesBtn_clicked()
                 this, SLOT(on_progress(qint64,qint64)));
     }
 
-    QString url = QString("%1www.rigexpert.com/getfirmware?app=antscope2&model=").arg(g_useTls ? "https://" : "http://");
+    QString url = QString("%1www.rigexpert.com/getfirmware?app=antscopez&model=").arg(g_useTls ? "https://" : "http://");
     QString name = AnalyzerParameters::getName();
     if (name == "AA-1500 SE")
         name = "AA-1500 ZOOM SE"; // HUCK short names supprt

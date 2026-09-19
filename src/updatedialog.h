@@ -19,6 +19,9 @@ public:
     ~UpdateDialog();
     void setStatusText(QString text);
     void setMainText(QString text);
+    // Scrollable read-only box under the main text (e.g. the version
+    // history from the update server); hidden when text is empty.
+    void setDetails(QString text);
     // Ends the dialog in a "here's the result, close when ready" state
     // rather than auto-closing -- used once a firmware download finishes,
     // so the save-path message in statusText stays on screen instead of

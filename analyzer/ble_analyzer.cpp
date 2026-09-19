@@ -774,10 +774,13 @@ void BleAnalyzer::parseFullInfo(QDataStream& stream)
         // stored -- getVersion()/getRevision() (BaseAnalyzer::m_version/
         // m_revision) stayed empty for every BLE device, unlike ComAnalyzer/
         // HidAnalyzer which do set them. That's what fed the update-check
-        // URL's blank fw=/revision= fields. Best-effort format, unconfirmed
-        // against what the update server actually expects for a BLE device.
+        // URL's blank fw=/revision= fields. The version format is a
+        // best-effort guess, unconfirmed against a BLE device. The revision
+        // must be an integer (the server keys firmware directories on it and
+        // returns an empty <FIRMWARE/> otherwise), and this packet carries no
+        // hardware revision, so default to 1 like HidAnalyzer/ComAnalyzer.
         m_version = QString("%1.%2.%3").arg(major).arg(minor).arg(build);
-        m_revision = m_version;
+        m_revision = QStringLiteral("1");
         str = QString("Version: %1").arg(m_version);
         setResponse(str);
         qInfo() << "BleAnalyzer::parseFullInfo SERIAL_VER: serial" << m_serialNumber

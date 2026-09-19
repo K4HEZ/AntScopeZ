@@ -638,7 +638,13 @@ qint32 HidAnalyzer::parse (QByteArray arr)
                     QStringList parts = str.split(',');
                     if (parts.size() >= 2 && !parts.at(1).isEmpty()) {
                         m_version = parts.at(1);
-                        m_revision = m_version;
+                        // This format carries no hardware revision. The
+                        // update server keys firmware directories on an
+                        // integer revision (rev_1) and returns an empty
+                        // <FIRMWARE/> for anything else, e.g. the firmware
+                        // version string, so use the same default of 1 as
+                        // the older format below.
+                        m_revision = QStringLiteral("1");
                     }
                     qInfo() << "===== signalFullInfo" << str;
                     emit signalFullInfo(str);
