@@ -1,16 +1,9 @@
 name: Windows build
 
+# Manual only (Actions tab or `gh workflow run <file> --ref develop`):
+# develop gets many small pushes and a build isn't wanted for each.
 on:
   workflow_dispatch:
-  push:
-    branches: [develop]
-    paths:
-      - '**.c'
-      - '**.cpp'
-      - '**.h'
-      - '**.ui'
-      - 'CMakeLists.txt'
-      - '.github/workflows/windows-build.yml'
 
 jobs:
   # x86_64 only -- matches the local windows-mingw preset's kit (Qt 6.11.2

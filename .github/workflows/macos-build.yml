@@ -1,17 +1,9 @@
 name: macOS build
 
+# Manual only (Actions tab or `gh workflow run <file> --ref develop`):
+# develop gets many small pushes and a build isn't wanted for each.
 on:
   workflow_dispatch:
-  push:
-    branches: [develop]
-    paths:
-      - '**.c'
-      - '**.cpp'
-      - '**.h'
-      - '**.ui'
-      - 'CMakeLists.txt'
-      - 'Info.plist'
-      - '.github/workflows/macos-build.yml'
 
 jobs:
   # Builds a single universal (arm64 + x86_64) .app/.dmg on one Apple Silicon
