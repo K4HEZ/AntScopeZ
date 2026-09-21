@@ -1263,6 +1263,7 @@ QString Settings::localDataPath(QString _fileName)
 // Mac OS X and iOS
 #ifdef Q_OS_DARWIN
     QDir dir_ini3 = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
+    dir_ini3.mkpath("AntScopeZ"); // fresh install: saving itu-regions.txt needs it
     return dir_ini3.absoluteFilePath("AntScopeZ/" + _fileName);
 #endif
 
@@ -1373,17 +1374,12 @@ QString Settings::languageDataFolder()
 
 QString Settings::programDataPath(QString _fileName)
 {
-// Mac OS X and iOS
-#ifdef Q_OS_DARWIN
-    QDir dir0 = QCoreApplication::applicationDirPath();
-    return dir0.absoluteFilePath("Resources/" + _fileName);
-#endif
-
-// Linux -- read-only data shipped with the app (cables.txt,
+// Linux and macOS -- read-only data shipped with the app (cables.txt,
 // itu-regions-defaults.txt). itu-regions.txt is *not* one of these: it's
 // the user's own band edits, and lives in localDataPath() instead (see
-// loadItuBands()/saveItuBands() below).
-#ifdef Q_OS_LINUX
+// loadItuBands()/saveItuBands() below). On macOS CMake stages these in
+// Contents/MacOS next to the binary, which sharedDataFolder() returns.
+#if defined(Q_OS_LINUX) || defined(Q_OS_DARWIN)
     QDir dir0 = sharedDataFolder();
     return dir0.absoluteFilePath(_fileName);
 #endif

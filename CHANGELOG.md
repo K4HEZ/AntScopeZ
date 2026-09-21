@@ -11,6 +11,12 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+### Fixed
+
+- macOS: bands list, Settings cables and User Guide were empty/erroring
+  (data files looked up in `Resources/`, staged in `MacOS/`); `~/AntScopeZ`
+  now created on demand.
+
 ### Documentation
 
 - User guide/BUILDINFO: Custom Analyzer documented as live (screen size
