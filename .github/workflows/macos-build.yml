@@ -52,6 +52,14 @@ jobs:
       - name: Stage install (for smoke test, separate from the dmg below)
         run: cmake --install build --prefix "${{ github.workspace }}/stage"
 
+      # Settings::programDataPath() reads these from next to the binary
+      # (issue #60); a launch alone wouldn't notice them missing.
+      - name: Check shipped data files are in the bundle
+        run: |
+          for f in cables.txt itu-regions-defaults.txt user-guide.md; do
+            test -f "${{ github.workspace }}/stage/AntScopeZ.app/Contents/MacOS/$f" || { echo "missing $f"; exit 1; }
+          done
+
       # Confirms the arm64 slice actually launches, not just that it linked.
       - name: Launch and screenshot (arm64 host)
         run: |
