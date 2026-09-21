@@ -898,12 +898,9 @@ endif()
 # CMAKE_INSTALL_DATADIR/antscopez (ANTSCOPE_SHARED_DATA_DIR, see above) on
 # Linux/other Unix.
 if(APPLE)
-    set(ANTSCOPE_DOC_FILES docs/user-guide.md)
-    set_source_files_properties(
-        docs/user-guide.md
-        PROPERTIES MACOSX_PACKAGE_LOCATION Resources
-    )
-    target_sources(AntScopeZ PRIVATE ${ANTSCOPE_DOC_FILES})
+    # Already staged in Contents/MacOS via ANTSCOPE_RUNTIME_FILES above,
+    # where Settings::programDataPath() reads it (issue #60). Don't
+    # re-point it at Resources here: the property is per-file, last one wins.
 elseif(WIN32)
     install(FILES docs/user-guide.md
         DESTINATION ${CMAKE_INSTALL_BINDIR}
