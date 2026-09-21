@@ -11,18 +11,6 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
-### Fixed
-
-- macOS: bands list, Settings cables and User Guide were empty/erroring
-  (data files looked up in `Resources/`, staged in `MacOS/`); `~/AntScopeZ`
-  now created on demand.
-
-### Documentation
-
-- User guide/BUILDINFO: Custom Analyzer documented as live (screen size
-  works, frequency range doesn't yet); NanoVNA screenshot, S21 and stale
-  tab-name fixes.
-
 ## [2.2.7] - 2026-09-18
 
 ### Added
@@ -50,9 +38,15 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 - Spurious `qt.accessibility.atspi` warning at startup (#56).
 - Windows installer: CPack NSIS config had unescaped backslashes that
   newer CMake rejects.
+- macOS: bands list, Settings cables and User Guide were empty/erroring
+  (data files looked up in `Resources/`, staged in `MacOS/`); `~/AntScopeZ`
+  now created on demand (issue #60). macOS `.dmg` rebuilt with this fix.
 
 ### Documentation
 
+- User guide/BUILDINFO: Custom Analyzer documented as live (screen size
+  works, frequency range doesn't yet); NanoVNA screenshot, S21 and stale
+  tab-name fixes.
 - Translations: `update_translations` run, 27 new strings translated
   (uk/ja/es), 0 unfinished.
 

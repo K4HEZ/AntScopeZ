@@ -35,7 +35,7 @@ endif()
 # Clear it to an empty string right when 2.2.8 actually ships (matching
 # commit + `v2.2.8` tag, same pattern as `v2.2.7`/`v2.2.6`), then bump
 # version.txt and set this back to "-dev" to start the next cycle.
-set(ANTSCOPEZ_VER_SUFFIX "-dev")
+set(ANTSCOPEZ_VER_SUFFIX "")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
