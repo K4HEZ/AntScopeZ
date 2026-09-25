@@ -241,24 +241,11 @@ private:
     quint64 m_lastEnteredFqTo=0;
     bool m_fqRestrict = true;
 
-    bool m_measureSystemMetric;
-    double m_Z0;
     int m_maxMeasurements=5;
 
 //    QTimer *m_redrawTimer;
     QTimer *m_1secTimer;
 
-    double m_cableVelFactor;
-    double m_cableResistance;
-    double m_cableLossConductive;
-    double m_cableLossDielectric;
-    double m_cableLossFqMHz;
-    qint32 m_cableLossUnits;
-    qint32 m_cableLossAtAnyFq;
-    double m_cableLength;
-    qint32 m_farEndMeasurement;
-    qint32 m_cableIndex;
-    bool m_cableIsPreset = false; // see Settings::setCableIsPreset()
 
     bool m_isRange;
 

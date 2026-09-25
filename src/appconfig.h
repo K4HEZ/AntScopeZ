@@ -1,6 +1,8 @@
 #ifndef APPCONFIG_H
 #define APPCONFIG_H
 
+#include "rfmath.h"
+
 class QSettings;
 
 // App-wide settings, UI-free. Meant to become the single settings module;
@@ -23,12 +25,23 @@ public:
     // https + cert verification for RigExpert requests. Issue #14.
     bool useTls = true;
 
+    // Persisted, ini [MainWindow] group.
+    bool measureSystemMetric = true;
+    double systemImpedance = 50; // Z0
+
+    // Persisted, ini [Cable] group (Settings > Cable).
+    RfMath::CableParams cable;
+    double cableLossFqMHz = 1;
+    int cableIndex = 0;
+    bool cableIsPreset = false;
+    int farEndMeasurement = 0; // 0 off, 1 subtract cable, 2 add cable
+
     // Startup only, not persisted (command line / platform, main.cpp).
     bool usbOnly = false;
     bool raspbian = false;
     bool aa55NewProtocol = false;
 
-    // Read/write the persisted fields; begins/ends the group itself.
+    // Read/write the persisted fields; begins/ends the groups itself.
     void load(QSettings& settings);
     void save(QSettings& settings) const;
 

@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "appconfig.h"
 #include "ui_mainwindow.h"
 #include "popupindicator.h"
 #include "analyzer/customanalyzer.h"
@@ -775,11 +776,9 @@ MainWindow::MainWindow(QWidget *parent) :
         }
     }
     m_dotsNumber = m_settings->value("dotsNumber", 50).toInt();
-    m_measureSystemMetric = m_settings->value("measureSystemMetric", true).toBool();
-    m_Z0 = m_settings->value("systemImpedance", 50).toDouble();
-    m_calibration->setZ0(m_Z0);
-    m_measurements->setZ0(m_Z0);
-    m_measurements->on_changeMeasureSystemMetric(m_measureSystemMetric);
+    m_calibration->setZ0(AppConfig::get().systemImpedance);
+    m_measurements->setZ0(AppConfig::get().systemImpedance);
+    m_measurements->on_changeMeasureSystemMetric(AppConfig::get().measureSystemMetric);
     QCPRange range(m_settings->value("rangeLower",0).toDouble(), m_settings->value("rangeUpper",1400000).toDouble());
     m_swrWidget->xAxis->setRange(range);
     m_phaseWidget->xAxis->setRange(range);
@@ -833,29 +832,16 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_settings->endGroup();
 
-    m_settings->beginGroup("Cable");
-    m_cableVelFactor = m_settings->value("VelFactor",0.66 ).toDouble();
-    m_cableResistance = m_settings->value("R0",50 ).toDouble();
-    m_cableLossConductive = m_settings->value("ConductiveLoss",0 ).toDouble();
-    m_cableLossDielectric = m_settings->value("DielectricLoss",0 ).toDouble();
-    m_cableLossFqMHz = m_settings->value("LossFrequencyMHz",1 ).toDouble();
-    m_cableLossUnits = m_settings->value("LossUnits",0 ).toInt();
-    m_cableLossAtAnyFq = m_settings->value("LossAtAnyFrequency",0 ).toInt();
-    m_cableLength = m_settings->value("Length",0 ).toDouble();
-    m_farEndMeasurement = m_settings->value("FarEndMeasurement", 0 ).toInt();
-    m_cableIndex = m_settings->value("CableIndex",0).toInt();
-    m_cableIsPreset = m_settings->value("CableIsPreset", false).toBool();
-    m_settings->endGroup();
 
-    m_measurements->setCableVelFactor(m_cableVelFactor);
-    m_measurements->setCableResistance(m_cableResistance);
-    m_measurements->setCableLossConductive(m_cableLossConductive);
-    m_measurements->setCableLossDielectric(m_cableLossDielectric);
-    m_measurements->setCableLossFqMHz(m_cableLossFqMHz);
-    m_measurements->setCableLossUnits(m_cableLossUnits);
-    m_measurements->setCableLossAtAnyFq(m_cableLossAtAnyFq);
-    m_measurements->setCableLength(m_cableLength);
-    m_measurements->setCableFarEndMeasurement(m_farEndMeasurement);
+    m_measurements->setCableVelFactor(AppConfig::get().cable.velFactor);
+    m_measurements->setCableResistance(AppConfig::get().cable.resistance);
+    m_measurements->setCableLossConductive(AppConfig::get().cable.lossConductive);
+    m_measurements->setCableLossDielectric(AppConfig::get().cable.lossDielectric);
+    m_measurements->setCableLossFqMHz(AppConfig::get().cableLossFqMHz);
+    m_measurements->setCableLossUnits(AppConfig::get().cable.lossUnits);
+    m_measurements->setCableLossAtAnyFq(AppConfig::get().cable.lossAtAnyFq);
+    m_measurements->setCableLength(AppConfig::get().cable.lengthFeet);
+    m_measurements->setCableFarEndMeasurement(AppConfig::get().farEndMeasurement);
 
     for (int i=0; i<ui->tabWidget->count(); i++)
     {
@@ -1059,7 +1045,6 @@ MainWindow::~MainWindow()
     m_settings->setValue("fullScreen", this->isMaximized());
     m_settings->setValue("dotsNumber", this->m_dotsNumber);
 
-    m_settings->setValue("measureSystemMetric", m_measureSystemMetric);
     m_settings->setValue("isRange", m_isRange);
 
     QString str;
@@ -1088,7 +1073,6 @@ MainWindow::~MainWindow()
 #endif
 
     m_settings->setValue("currentTab",ui->tabWidget->currentIndex());
-    m_settings->setValue("systemImpedance", m_Z0);
     m_settings->setValue("rangeLower", m_swrWidget->xAxis->range().lower);
     m_settings->setValue("rangeUpper", m_swrWidget->xAxis->range().upper);
 
@@ -1128,19 +1112,6 @@ MainWindow::~MainWindow()
     m_settings->endGroup();
     AppConfig::get().save(*m_settings);
 
-    m_settings->beginGroup("Cable");
-    m_settings->setValue("VelFactor",m_cableVelFactor );
-    m_settings->setValue("R0", m_cableResistance);
-    m_settings->setValue("ConductiveLoss", m_cableLossConductive);
-    m_settings->setValue("DielectricLoss", m_cableLossDielectric);
-    m_settings->setValue("LossFrequencyMHz", m_cableLossFqMHz);
-    m_settings->setValue("LossUnits", m_cableLossUnits);
-    m_settings->setValue("LossAtAnyFrequency", m_cableLossAtAnyFq);
-    m_settings->setValue("Length", m_cableLength);
-    m_settings->setValue("FarEndMeasurement", m_farEndMeasurement);
-    m_settings->setValue("CableIndex", m_cableIndex);
-    m_settings->setValue("CableIsPreset", m_cableIsPreset);
-    m_settings->endGroup();
 
     if(m_qtLanguageTranslator)
     {

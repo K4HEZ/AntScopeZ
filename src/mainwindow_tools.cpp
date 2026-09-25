@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "appconfig.h"
 #include "ui_mainwindow.h"
 #include "analyzer/customanalyzer.h"
 
@@ -8,7 +9,7 @@
 void MainWindow::on_actionMarkerComparison_triggered()
 {
     if (m_markerComparisonDialog == nullptr) {
-        m_markerComparisonDialog = new MarkerComparisonDialog(m_markers, m_measurements, m_measureSystemMetric, this);
+        m_markerComparisonDialog = new MarkerComparisonDialog(m_markers, m_measurements, AppConfig::get().measureSystemMetric, this);
         m_markerComparisonDialog->setAttribute(Qt::WA_DeleteOnClose);
         connect(m_markerComparisonDialog, &QObject::destroyed, this, [this](){
             m_markerComparisonDialog = nullptr;
@@ -129,28 +130,28 @@ void MainWindow::on_actionTDRMeasurement_triggered()
         // honest "not modeled" default instead of a misleading borrowed one.
         connect(m_tdrScanDialog->panel(), &TdrScanPanel::applyVelocityFactorAsCustom,
                 this, [this](double vf) {
-            m_cableVelFactor = vf;
-            m_cableResistance = 50.0;
-            m_cableLossConductive = 0.0;
-            m_cableLossDielectric = 0.0;
-            m_cableLossUnits = 0;
-            m_cableLossAtAnyFq = true;
-            m_cableIsPreset = false;
+            AppConfig::get().cable.velFactor = vf;
+            AppConfig::get().cable.resistance = 50.0;
+            AppConfig::get().cable.lossConductive = 0.0;
+            AppConfig::get().cable.lossDielectric = 0.0;
+            AppConfig::get().cable.lossUnits = 0;
+            AppConfig::get().cable.lossAtAnyFq = true;
+            AppConfig::get().cableIsPreset = false;
             m_measurements->setCableVelFactor(vf);
-            m_measurements->setCableResistance(m_cableResistance);
-            m_measurements->setCableLossConductive(m_cableLossConductive);
-            m_measurements->setCableLossDielectric(m_cableLossDielectric);
-            m_measurements->setCableLossUnits(m_cableLossUnits);
-            m_measurements->setCableLossAtAnyFq(m_cableLossAtAnyFq);
+            m_measurements->setCableResistance(AppConfig::get().cable.resistance);
+            m_measurements->setCableLossConductive(AppConfig::get().cable.lossConductive);
+            m_measurements->setCableLossDielectric(AppConfig::get().cable.lossDielectric);
+            m_measurements->setCableLossUnits(AppConfig::get().cable.lossUnits);
+            m_measurements->setCableLossAtAnyFq(AppConfig::get().cable.lossAtAnyFq);
             m_measurements->redrawTDR();
 
             if (m_settingsDialog != nullptr) {
-                m_settingsDialog->setCableVelFactor(m_cableVelFactor);
-                m_settingsDialog->setCableResistance(m_cableResistance);
-                m_settingsDialog->setCableLossConductive(m_cableLossConductive);
-                m_settingsDialog->setCableLossDielectric(m_cableLossDielectric);
-                m_settingsDialog->setCableLossUnits(m_cableLossUnits);
-                m_settingsDialog->setCableLossAtAnyFq(m_cableLossAtAnyFq);
+                m_settingsDialog->setCableVelFactor(AppConfig::get().cable.velFactor);
+                m_settingsDialog->setCableResistance(AppConfig::get().cable.resistance);
+                m_settingsDialog->setCableLossConductive(AppConfig::get().cable.lossConductive);
+                m_settingsDialog->setCableLossDielectric(AppConfig::get().cable.lossDielectric);
+                m_settingsDialog->setCableLossUnits(AppConfig::get().cable.lossUnits);
+                m_settingsDialog->setCableLossAtAnyFq(AppConfig::get().cable.lossAtAnyFq);
                 // Last -- switching to Custom re-enables/unlocks the fields
                 // (see Settings::updateCableEditability()), so the values
                 // above need to already be in place first.
@@ -189,7 +190,7 @@ void MainWindow::on_actionTDRMeasurement_triggered()
     }
     m_tdrScanDialog->panel()->setFrequencyLimits(minFqKHz, maxFqKHz);
     m_tdrScanDialog->panel()->setVelocityFactor(m_measurements->cableVelFactor());
-    m_tdrScanDialog->panel()->setMeasureSystemMetric(m_measureSystemMetric);
+    m_tdrScanDialog->panel()->setMeasureSystemMetric(AppConfig::get().measureSystemMetric);
 
     if (!m_tdrScanDialog->isVisible())
         m_tdrScanDialog->show();

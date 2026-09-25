@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "appconfig.h"
 #include "ui_mainwindow.h"
 #include "popupindicator.h"
 #include "analyzer/customanalyzer.h"
@@ -79,20 +80,20 @@ void MainWindow::on_actionSettings_triggered()
         m_calibration->setSerial(m_analyzer->getSerialNumber());
     }
     m_settingsDialog->setCalibration(m_calibration);
-    m_settingsDialog->setMeasureSystemMetric(m_measureSystemMetric);
-    m_settingsDialog->setZ0(m_Z0);
-    m_settingsDialog->setCableVelFactor(m_cableVelFactor);
-    m_settingsDialog->setCableResistance(m_cableResistance);
+    m_settingsDialog->setMeasureSystemMetric(AppConfig::get().measureSystemMetric);
+    m_settingsDialog->setZ0(AppConfig::get().systemImpedance);
+    m_settingsDialog->setCableVelFactor(AppConfig::get().cable.velFactor);
+    m_settingsDialog->setCableResistance(AppConfig::get().cable.resistance);
 
-    m_settingsDialog->setCableLossConductive(m_cableLossConductive);
-    m_settingsDialog->setCableLossDielectric(m_cableLossDielectric);
-    m_settingsDialog->setCableLossFqMHz(m_cableLossFqMHz);
-    m_settingsDialog->setCableLossUnits(m_cableLossUnits);
-    m_settingsDialog->setCableLossAtAnyFq(m_cableLossAtAnyFq);
-    m_settingsDialog->setCableLength(m_cableLength);
-    m_settingsDialog->setCableFarEndMeasurement(m_farEndMeasurement);
-    m_settingsDialog->setCableIndex(m_cableIndex);
-    m_settingsDialog->setCableIsPreset(m_cableIsPreset);
+    m_settingsDialog->setCableLossConductive(AppConfig::get().cable.lossConductive);
+    m_settingsDialog->setCableLossDielectric(AppConfig::get().cable.lossDielectric);
+    m_settingsDialog->setCableLossFqMHz(AppConfig::get().cableLossFqMHz);
+    m_settingsDialog->setCableLossUnits(AppConfig::get().cable.lossUnits);
+    m_settingsDialog->setCableLossAtAnyFq(AppConfig::get().cable.lossAtAnyFq);
+    m_settingsDialog->setCableLength(AppConfig::get().cable.lengthFeet);
+    m_settingsDialog->setCableFarEndMeasurement(AppConfig::get().farEndMeasurement);
+    m_settingsDialog->setCableIndex(AppConfig::get().cableIndex);
+    m_settingsDialog->setCableIsPreset(AppConfig::get().cableIsPreset);
     m_settingsDialog->setRestrictFq(m_fqRestrict);
 
     // Graph Hint/Brief-hint/Markers-hint checkboxes used to live here,
@@ -256,16 +257,16 @@ void MainWindow::on_actionUserGuide_triggered()
 
 void MainWindow::on_changeMeasureSystemMetric (bool state)
 {
-    m_measureSystemMetric = state;
+    AppConfig::get().measureSystemMetric = state;
 }
 
 void MainWindow::on_Z0Changed(double _Z0)
 {
-    m_Z0 = _Z0;
-    m_calibration->setZ0(m_Z0);
-    m_measurements->setZ0(m_Z0);
+    AppConfig::get().systemImpedance = _Z0;
+    m_calibration->setZ0(AppConfig::get().systemImpedance);
+    m_measurements->setZ0(AppConfig::get().systemImpedance);
 
-    m_measurements->on_impedanceChanged(m_Z0);
+    m_measurements->on_impedanceChanged(AppConfig::get().systemImpedance);
 }
 
 void MainWindow::on_settingsParamsChanged()
@@ -294,29 +295,29 @@ void MainWindow::on_settingsParamsChanged()
         m_rsWidget->replot();
         m_rpWidget->replot();
 
-        m_cableVelFactor = m_settingsDialog->getCableVelFactor();
-        m_cableResistance = m_settingsDialog->getCableResistance();
-        m_cableLossConductive = m_settingsDialog->getCableLossConductive();
-        m_cableLossDielectric = m_settingsDialog->getCableLossDielectric();
-        m_cableLossFqMHz = m_settingsDialog->getCableLossFqMHz();
-        m_cableLossUnits = m_settingsDialog->getCableLossUnits();
-        m_cableLossAtAnyFq = m_settingsDialog->getCableLossAtAnyFq();
-        m_cableLength = m_settingsDialog->getCableLength();
-        m_farEndMeasurement = m_settingsDialog->getCableFarEndMeasurement();
-        m_cableIndex = m_settingsDialog->getCableIndex();
-        m_cableIsPreset = m_settingsDialog->getCableIsPreset();
+        AppConfig::get().cable.velFactor = m_settingsDialog->getCableVelFactor();
+        AppConfig::get().cable.resistance = m_settingsDialog->getCableResistance();
+        AppConfig::get().cable.lossConductive = m_settingsDialog->getCableLossConductive();
+        AppConfig::get().cable.lossDielectric = m_settingsDialog->getCableLossDielectric();
+        AppConfig::get().cableLossFqMHz = m_settingsDialog->getCableLossFqMHz();
+        AppConfig::get().cable.lossUnits = m_settingsDialog->getCableLossUnits();
+        AppConfig::get().cable.lossAtAnyFq = m_settingsDialog->getCableLossAtAnyFq();
+        AppConfig::get().cable.lengthFeet = m_settingsDialog->getCableLength();
+        AppConfig::get().farEndMeasurement = m_settingsDialog->getCableFarEndMeasurement();
+        AppConfig::get().cableIndex = m_settingsDialog->getCableIndex();
+        AppConfig::get().cableIsPreset = m_settingsDialog->getCableIsPreset();
 
         if(m_measurements != NULL)
         {
-            m_measurements->setCableVelFactor(m_cableVelFactor);
-            m_measurements->setCableResistance(m_cableResistance);
-            m_measurements->setCableLossConductive(m_cableLossConductive);
-            m_measurements->setCableLossDielectric(m_cableLossDielectric);
-            m_measurements->setCableLossFqMHz(m_cableLossFqMHz);
-            m_measurements->setCableLossUnits(m_cableLossUnits);
-            m_measurements->setCableLossAtAnyFq(m_cableLossAtAnyFq);
-            m_measurements->setCableLength(m_cableLength);
-            m_measurements->setCableFarEndMeasurement(m_farEndMeasurement);            
+            m_measurements->setCableVelFactor(AppConfig::get().cable.velFactor);
+            m_measurements->setCableResistance(AppConfig::get().cable.resistance);
+            m_measurements->setCableLossConductive(AppConfig::get().cable.lossConductive);
+            m_measurements->setCableLossDielectric(AppConfig::get().cable.lossDielectric);
+            m_measurements->setCableLossFqMHz(AppConfig::get().cableLossFqMHz);
+            m_measurements->setCableLossUnits(AppConfig::get().cable.lossUnits);
+            m_measurements->setCableLossAtAnyFq(AppConfig::get().cable.lossAtAnyFq);
+            m_measurements->setCableLength(AppConfig::get().cable.lengthFeet);
+            m_measurements->setCableFarEndMeasurement(AppConfig::get().farEndMeasurement);            
             QTimer::singleShot(1, m_measurements, SLOT(on_redrawGraphs()));
         }
     }

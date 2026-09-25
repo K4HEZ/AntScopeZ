@@ -15,6 +15,25 @@ void AppConfig::load(QSettings& settings)
     reconnectToDrain = settings.value("reconnectToDrain", reconnectToDrain).toBool();
     useTls = settings.value("useTls", useTls).toBool();
     settings.endGroup();
+
+    settings.beginGroup("MainWindow");
+    measureSystemMetric = settings.value("measureSystemMetric", measureSystemMetric).toBool();
+    systemImpedance = settings.value("systemImpedance", systemImpedance).toDouble();
+    settings.endGroup();
+
+    settings.beginGroup("Cable");
+    cable.velFactor = settings.value("VelFactor", cable.velFactor).toDouble();
+    cable.resistance = settings.value("R0", cable.resistance).toDouble();
+    cable.lossConductive = settings.value("ConductiveLoss", cable.lossConductive).toDouble();
+    cable.lossDielectric = settings.value("DielectricLoss", cable.lossDielectric).toDouble();
+    cableLossFqMHz = settings.value("LossFrequencyMHz", cableLossFqMHz).toDouble();
+    cable.lossUnits = settings.value("LossUnits", cable.lossUnits).toInt();
+    cable.lossAtAnyFq = settings.value("LossAtAnyFrequency", 0).toInt() != 0;
+    cable.lengthFeet = settings.value("Length", cable.lengthFeet).toDouble();
+    farEndMeasurement = settings.value("FarEndMeasurement", farEndMeasurement).toInt();
+    cableIndex = settings.value("CableIndex", cableIndex).toInt();
+    cableIsPreset = settings.value("CableIsPreset", cableIsPreset).toBool();
+    settings.endGroup();
 }
 
 void AppConfig::save(QSettings& settings) const
@@ -24,5 +43,24 @@ void AppConfig::save(QSettings& settings) const
     settings.setValue("analyzerTimeoutSec", analyzerTimeoutSec);
     settings.setValue("reconnectToDrain", reconnectToDrain);
     settings.setValue("useTls", useTls);
+    settings.endGroup();
+
+    settings.beginGroup("MainWindow");
+    settings.setValue("measureSystemMetric", measureSystemMetric);
+    settings.setValue("systemImpedance", systemImpedance);
+    settings.endGroup();
+
+    settings.beginGroup("Cable");
+    settings.setValue("VelFactor", cable.velFactor);
+    settings.setValue("R0", cable.resistance);
+    settings.setValue("ConductiveLoss", cable.lossConductive);
+    settings.setValue("DielectricLoss", cable.lossDielectric);
+    settings.setValue("LossFrequencyMHz", cableLossFqMHz);
+    settings.setValue("LossUnits", cable.lossUnits);
+    settings.setValue("LossAtAnyFrequency", cable.lossAtAnyFq ? 1 : 0); // int, as before
+    settings.setValue("Length", cable.lengthFeet);
+    settings.setValue("FarEndMeasurement", farEndMeasurement);
+    settings.setValue("CableIndex", cableIndex);
+    settings.setValue("CableIsPreset", cableIsPreset);
     settings.endGroup();
 }
