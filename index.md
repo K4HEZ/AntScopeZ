@@ -29,7 +29,7 @@ other brands) -- built for, and maintained by, the ham radio community.
 - USB Serial/HID, BLE/Bluetooth and NavoVNA
 - TDR Analysis 
   - Cable Length <-> Velocity Factor Calculations w/ Over 100 Cable Presets 
-  - Adjustable frequency/points with umabiguous range / resolution indication
+  - Adjustable frequency/points with unambiguous range / resolution indication
   - Selectable windows (Rectangular, Hamming, Hamm, Blackman, Kaiser)
 - Language Support: English, Ukrainian, Japanese, Spanish (AI generated)
 - ...and much more.
