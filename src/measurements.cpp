@@ -1045,16 +1045,9 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
     if (m_measurements.isEmpty()) {
         return;
     }
-    // fix popup hint bug
-    if (m_isContinuing) {
-        if (m_currentPoint < m_measurements.last().dataRX.size()) {
-            m_measurements.last().dataRX[m_currentPoint] = _rawData;
-        } else {
-            m_measurements.last().dataRX.append(_rawData);
-        }
-    } else {
-        m_measurements.last().dataRX.append(_rawData);
-    }
+    RawData calibPoint;
+    bool haveCalib = m_measurements.last().addPoint(_rawData, m_currentPoint, m_isContinuing,
+                                                    m_Z0, m_calibration, &calibPoint);
 
     updateTDRProgress(m_measurements.last().dataRX.size());
 
@@ -1308,172 +1301,103 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
 //------------------------------------------------------------------------------
 //----------------------Calc calibration if performed---------------------------
 //------------------------------------------------------------------------------
-    if(m_calibration != NULL)
+    if (haveCalib)
     {
-        if(m_calibration->getCalibrationPerformed())
+        double calR = calibPoint.r;
+        double calX = calibPoint.x;
+        double calZ = RfMath::computeZ(calR,calX);
+
+        RfMath::computeSWR(m_Z0, calR, calX,&VSWR,&RL);
+
+        data.value = VSWR;
+        if( VSWR > MAX_SWR )
         {
-            R = _rawData.r;
-            X = _rawData.x;
-
-            double Gre = (R*R-m_Z0*m_Z0+X*X)/((R+m_Z0)*(R+m_Z0)+X*X);
-            double Gim = (2*m_Z0*X)/((R+m_Z0)*(R+m_Z0)+X*X);
-
-            double GreOut;
-            double GimOut;
-
-            double SOR =  1; double SOI = 0; // Ideal model
-            double SSR = -1; double SSI = 0;
-            double SLR =  0; double SLI = 0;
-
-            double COR, COI; // CalibrationReOpen, CalibrationImOpen
-            double CSR, CSI; // CalibrationReShort, CalibrationImShort
-            double CLR, CLI; // CalibrationReLoad, CalibrationImLoad
-            bool res = m_calibration->interpolateS(_rawData.fq, COR, COI, CSR, CSI, CLR, CLI);
-//            COR = 1;
-//            COI = 0;
-//            CSR = -1;
-//            CSI = 0;
-//            CLR = 0;
-//            CLI = 0;
-
-            if (!res)
-            {
-                SOR =  1; SOI = 0; // Ideal model
-                SSR = -1; SSI = 0;
-                SLR =  0; SLI = 0;
-            }
-            m_calibration->applyCalibration(Gre,Gim,  // Measured
-                                            COR,COI,CSR,CSI,CLR,CLI, // Measured parameters of cal standards
-                                            SOR,SOI,SSR,SSI,SLR,SLI, // Actual (Ideal) parameters of cal standards
-                                            GreOut,GimOut); // Actual
-            //-----------vnn_04 _1
-            double chek_GreGim=sqrt((GreOut*GreOut)+(GimOut*GimOut));
-            //1)   ((GreOut==1)&&(GimOut==0))
-            //2)   (chek_GreGim>1)
-            if( ((GreOut==1)&&(GimOut==0))||(chek_GreGim>1)){
-                if((GreOut==1)&&(GimOut==0)){
-                    GreOut= 0.999999992;
-                }else{ 
-                    double ncosA= GreOut/chek_GreGim;
-                    double nsinA= GimOut/chek_GreGim;
-                    GreOut=0.999999992*ncosA;
-                    GimOut=0.999999992*nsinA;
-                }
-            }
-
-            double calR = (1-GreOut*GreOut-GimOut*GimOut)/((1-GreOut)*(1-GreOut)+GimOut*GimOut);
-            calR *= m_Z0;
-            double calX = (2*GimOut)/((1-GreOut)*(1-GreOut)+GimOut*GimOut);
-            calX *= m_Z0;
-            double calZ = RfMath::computeZ(calR,calX);
-
-            RawData rawDataCalib = _rawData;
-            rawDataCalib.r = calR;
-            rawDataCalib.x = calX;
-
-            //m_measurements.last().dataRXCalib.append(rawDataCalib);
-            if (m_isContinuing) {
-                if (m_currentPoint < m_measurements.last().dataRXCalib.size()) {
-                    m_measurements.last().dataRXCalib[m_currentPoint] = rawDataCalib;
-                } else {
-                    m_measurements.last().dataRXCalib.append(rawDataCalib);
-                }
-            } else {
-                m_measurements.last().dataRXCalib.append(rawDataCalib);
-            }
-
-            RfMath::computeSWR(m_Z0, calR, calX,&VSWR,&RL);
-
-            data.value = VSWR;
-            if( VSWR > MAX_SWR )
-            {
-                data.value = MAX_SWR;
-            }
-            m_measurements.last().swrGraphCalib.add(data);
-            m_viewMeasurements.last().swrGraphCalib.add(data);
-
-            data.value = regulate(calR, VALUE_LIMIT);
-            m_measurements.last().rsrGraphCalib.add(data);
-            data.value = regulate(calR, maxRs);
-            m_viewMeasurements.last().rsrGraphCalib.add(data);
-
-            data.value = regulate(calX, VALUE_LIMIT);
-            m_measurements.last().rsxGraphCalib.add(data);
-            data.value = regulate(calX, maxRs);
-            m_viewMeasurements.last().rsxGraphCalib.add(data);
-
-            data.value = regulate(calZ, VALUE_LIMIT);
-            m_measurements.last().rszGraphCalib.add(data);
-            data.value = regulate(calZ, maxRs);
-            m_viewMeasurements.last().rszGraphCalib.add(data);
-
-
-            double calRpar = calR*(1+calX*calX/calR/calR);
-            double calZpar = RfMath::computeZ(calRpar, calX);
-
-            data.value = regulate(calRpar, VALUE_LIMIT);
-            m_measurements.last().rprGraphCalib.add(data);
-            data.value = regulate(calRpar, maxRp);
-            m_viewMeasurements.last().rprGraphCalib.add(data);
-
-            data.value = regulate(calX, VALUE_LIMIT);
-            m_measurements.last().rpxGraphCalib.add(data);
-            data.value = regulate(calX, maxRp);
-            m_viewMeasurements.last().rpxGraphCalib.add(data);
-
-            data.value = regulate(calZpar, VALUE_LIMIT);
-            m_measurements.last().rpzGraphCalib.add(data);
-            data.value = regulate(calZpar, maxRp);
-            m_viewMeasurements.last().rpzGraphCalib.add(data);
-
-            data.value = RL;
-            m_measurements.last().rlGraphCalib.add(data);
-
-            //----------------------calc phase---------------------------
-            if (qIsNaN(calR) || (calR<0.001) )
-            {
-                calR = 0.01;
-            }
-            if (qIsNaN(calX))
-            {
-                calX = 0;
-            }
-            Rnorm = calR/m_Z0;
-            Xnorm = calX/m_Z0;
-
-            Denom = (Rnorm+1)*(Rnorm+1)+Xnorm*Xnorm;
-            RhoReal = ((Rnorm-1)*(Rnorm+1)+Xnorm*Xnorm)/Denom;
-            RhoImag = 2*Xnorm/Denom;
-
-            RhoPhase = atan2(RhoImag, RhoReal) / M_PI * 180.0;            
-            RhoMod = sqrt(RhoReal*RhoReal+RhoImag*RhoImag);
-
-            QString msg = QString("f=%1, r=%2, x=%3, RhoPhase=%4")
-                    .arg(_rawData.fq, 0, 'f', 4, QLatin1Char(' '))
-                    .arg(calR, 0, 'f', 4, QLatin1Char(' '))
-                    .arg(calX, 0, 'f', 4, QLatin1Char(' '))
-                    .arg(RhoPhase, 0, 'f', 4, QLatin1Char(' '));
-
-            data.value = RhoPhase;
-            m_measurements.last().phaseGraphCalib.add(data);
-            data.value = RhoMod;
-            m_measurements.last().rhoGraphCalib.add(data);
-            //----------------------calc phase end---------------------------
-            //----------------------calc smith-------------------------------
-
-            double ptX,ptY;
-            //RfMath::smithPoint(R/m_Z0, X/m_Z0, ptX, ptY);
-            RfMath::smithPoint(Rnorm, Xnorm, ptX, ptY);
-            // See the uncalibrated version above (~line 1284) for why
-            // m_currentPoint, not dataRX.length().
-            int len = m_currentPoint;
-            m_measurements.last().smithGraphCalib.add(QCPCurveData(len, ptX, ptY));
-            len = m_currentPoint*2 - 1;
-            if (len < 0)
-                len = 0;
-            m_measurements.last().smithGraphViewCalib.add(QCPCurveData(len, ptX, ptY));
-             //----------------------calc smith end---------------------------
+            data.value = MAX_SWR;
         }
+        m_measurements.last().swrGraphCalib.add(data);
+        m_viewMeasurements.last().swrGraphCalib.add(data);
+
+        data.value = regulate(calR, VALUE_LIMIT);
+        m_measurements.last().rsrGraphCalib.add(data);
+        data.value = regulate(calR, maxRs);
+        m_viewMeasurements.last().rsrGraphCalib.add(data);
+
+        data.value = regulate(calX, VALUE_LIMIT);
+        m_measurements.last().rsxGraphCalib.add(data);
+        data.value = regulate(calX, maxRs);
+        m_viewMeasurements.last().rsxGraphCalib.add(data);
+
+        data.value = regulate(calZ, VALUE_LIMIT);
+        m_measurements.last().rszGraphCalib.add(data);
+        data.value = regulate(calZ, maxRs);
+        m_viewMeasurements.last().rszGraphCalib.add(data);
+
+
+        double calRpar = calR*(1+calX*calX/calR/calR);
+        double calZpar = RfMath::computeZ(calRpar, calX);
+
+        data.value = regulate(calRpar, VALUE_LIMIT);
+        m_measurements.last().rprGraphCalib.add(data);
+        data.value = regulate(calRpar, maxRp);
+        m_viewMeasurements.last().rprGraphCalib.add(data);
+
+        data.value = regulate(calX, VALUE_LIMIT);
+        m_measurements.last().rpxGraphCalib.add(data);
+        data.value = regulate(calX, maxRp);
+        m_viewMeasurements.last().rpxGraphCalib.add(data);
+
+        data.value = regulate(calZpar, VALUE_LIMIT);
+        m_measurements.last().rpzGraphCalib.add(data);
+        data.value = regulate(calZpar, maxRp);
+        m_viewMeasurements.last().rpzGraphCalib.add(data);
+
+        data.value = RL;
+        m_measurements.last().rlGraphCalib.add(data);
+
+        //----------------------calc phase---------------------------
+        if (qIsNaN(calR) || (calR<0.001) )
+        {
+            calR = 0.01;
+        }
+        if (qIsNaN(calX))
+        {
+            calX = 0;
+        }
+        Rnorm = calR/m_Z0;
+        Xnorm = calX/m_Z0;
+
+        Denom = (Rnorm+1)*(Rnorm+1)+Xnorm*Xnorm;
+        RhoReal = ((Rnorm-1)*(Rnorm+1)+Xnorm*Xnorm)/Denom;
+        RhoImag = 2*Xnorm/Denom;
+
+        RhoPhase = atan2(RhoImag, RhoReal) / M_PI * 180.0;            
+        RhoMod = sqrt(RhoReal*RhoReal+RhoImag*RhoImag);
+
+        QString msg = QString("f=%1, r=%2, x=%3, RhoPhase=%4")
+                .arg(_rawData.fq, 0, 'f', 4, QLatin1Char(' '))
+                .arg(calR, 0, 'f', 4, QLatin1Char(' '))
+                .arg(calX, 0, 'f', 4, QLatin1Char(' '))
+                .arg(RhoPhase, 0, 'f', 4, QLatin1Char(' '));
+
+        data.value = RhoPhase;
+        m_measurements.last().phaseGraphCalib.add(data);
+        data.value = RhoMod;
+        m_measurements.last().rhoGraphCalib.add(data);
+        //----------------------calc phase end---------------------------
+        //----------------------calc smith-------------------------------
+
+        double ptX,ptY;
+        //RfMath::smithPoint(R/m_Z0, X/m_Z0, ptX, ptY);
+        RfMath::smithPoint(Rnorm, Xnorm, ptX, ptY);
+        // See the uncalibrated version above (~line 1284) for why
+        // m_currentPoint, not dataRX.length().
+        int len = m_currentPoint;
+        m_measurements.last().smithGraphCalib.add(QCPCurveData(len, ptX, ptY));
+        len = m_currentPoint*2 - 1;
+        if (len < 0)
+            len = 0;
+        m_measurements.last().smithGraphViewCalib.add(QCPCurveData(len, ptX, ptY));
+         //----------------------calc smith end---------------------------
     }
     m_currentPoint++;
     if (isTDRMode())

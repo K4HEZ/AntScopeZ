@@ -80,6 +80,61 @@ void RfMath::smithPoint(double Rnorm, double Xnorm, double &x, double &y)
     y = RhoImag*6;// 6 - radius
 }
 
+Complex RfMath::calibratedZ(double fq, double R, double X, double Z0, Calibration* calibration)
+{
+    double Gre = (R*R-Z0*Z0+X*X)/((R+Z0)*(R+Z0)+X*X);
+    double Gim = (2*Z0*X)/((R+Z0)*(R+Z0)+X*X);
+
+    double GreOut;
+    double GimOut;
+
+    double SOR =  1; double SOI = 0; // Ideal model
+    double SSR = -1; double SSI = 0;
+    double SLR =  0; double SLI = 0;
+
+    double COR, COI; // CalibrationReOpen, CalibrationImOpen
+    double CSR, CSI; // CalibrationReShort, CalibrationImShort
+    double CLR, CLI; // CalibrationReLoad, CalibrationImLoad
+    bool res = calibration->interpolateS(fq, COR, COI, CSR, CSI, CLR, CLI);
+//            COR = 1;
+//            COI = 0;
+//            CSR = -1;
+//            CSI = 0;
+//            CLR = 0;
+//            CLI = 0;
+
+    if (!res)
+    {
+        SOR =  1; SOI = 0; // Ideal model
+        SSR = -1; SSI = 0;
+        SLR =  0; SLI = 0;
+    }
+    calibration->applyCalibration(Gre,Gim,  // Measured
+                                    COR,COI,CSR,CSI,CLR,CLI, // Measured parameters of cal standards
+                                    SOR,SOI,SSR,SSI,SLR,SLI, // Actual (Ideal) parameters of cal standards
+                                    GreOut,GimOut); // Actual
+    //-----------vnn_04 _2
+    double chek_GreGim=sqrt((GreOut*GreOut)+(GimOut*GimOut));
+    //1)   ((GreOut==1)&&(GimOut==0))
+    //2)   (chek_GreGim>1)
+    if( ((GreOut==1)&&(GimOut==0))||(chek_GreGim>1)){
+        if((GreOut==1)&&(GimOut==0)){
+            GreOut= 0.999999992;
+        }else{
+            double ncosA= GreOut/chek_GreGim;
+            double nsinA= GimOut/chek_GreGim;
+            GreOut=0.999999992*ncosA;
+            GimOut=0.999999992*nsinA;
+        }
+    }
+
+    double calR = (1-GreOut*GreOut-GimOut*GimOut)/((1-GreOut)*(1-GreOut)+GimOut*GimOut);
+    calR *= Z0;
+    double calX = (2*GimOut)/((1-GreOut)*(1-GreOut)+GimOut*GimOut);
+    calX *= Z0;
+    return Complex(calR, calX);
+}
+
 void RfMath::prepareGraphs(const RawData& _rawData, double Z0, Calibration* calibration,
                            GraphData& _data, GraphData& _calibData)
 {
@@ -120,56 +175,9 @@ void RfMath::prepareGraphs(const RawData& _rawData, double Z0, Calibration* cali
             _calibData.FQ = _rawData.fq;
             R = _rawData.r;
             X = _rawData.x;
-            double Gre = (R*R-Z0*Z0+X*X)/((R+Z0)*(R+Z0)+X*X);
-            double Gim = (2*Z0*X)/((R+Z0)*(R+Z0)+X*X);
-
-            double GreOut;
-            double GimOut;
-
-            double SOR =  1; double SOI = 0; // Ideal model
-            double SSR = -1; double SSI = 0;
-            double SLR =  0; double SLI = 0;
-
-            double COR, COI; // CalibrationReOpen, CalibrationImOpen
-            double CSR, CSI; // CalibrationReShort, CalibrationImShort
-            double CLR, CLI; // CalibrationReLoad, CalibrationImLoad
-            bool res = calibration->interpolateS(_rawData.fq, COR, COI, CSR, CSI, CLR, CLI);
-//            COR = 1;
-//            COI = 0;
-//            CSR = -1;
-//            CSI = 0;
-//            CLR = 0;
-//            CLI = 0;
-
-            if (!res)
-            {
-                SOR =  1; SOI = 0; // Ideal model
-                SSR = -1; SSI = 0;
-                SLR =  0; SLI = 0;
-            }
-            calibration->applyCalibration(Gre,Gim,  // Measured
-                                            COR,COI,CSR,CSI,CLR,CLI, // Measured parameters of cal standards
-                                            SOR,SOI,SSR,SSI,SLR,SLI, // Actual (Ideal) parameters of cal standards
-                                            GreOut,GimOut); // Actual
-            //-----------vnn_04 _2
-            double chek_GreGim=sqrt((GreOut*GreOut)+(GimOut*GimOut));
-            //1)   ((GreOut==1)&&(GimOut==0))
-            //2)   (chek_GreGim>1)
-            if( ((GreOut==1)&&(GimOut==0))||(chek_GreGim>1)){
-                if((GreOut==1)&&(GimOut==0)){
-                    GreOut= 0.999999992;
-                }else{
-                    double ncosA= GreOut/chek_GreGim;
-                    double nsinA= GimOut/chek_GreGim;
-                    GreOut=0.999999992*ncosA;
-                    GimOut=0.999999992*nsinA;
-                }
-            }
-
-            double calR = (1-GreOut*GreOut-GimOut*GimOut)/((1-GreOut)*(1-GreOut)+GimOut*GimOut);
-            calR *= Z0;
-            double calX = (2*GimOut)/((1-GreOut)*(1-GreOut)+GimOut*GimOut);
-            calX *= Z0;
+            Complex cal = calibratedZ(_rawData.fq, R, X, Z0, calibration);
+            double calR = cal.real();
+            double calX = cal.imag();
             double calZ = computeZ(calR,calX);
 
             _calibData.R = calR;

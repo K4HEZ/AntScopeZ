@@ -27,6 +27,10 @@ double computeZ(double R, double X);
 // Normalized R/X -> Smith chart coordinates (radius 6).
 void smithPoint(double Rnorm, double Xnorm, double &x, double &y);
 
+// OSL-corrected impedance of one point; `calibration` must have a
+// calibration performed.
+Complex calibratedZ(double fq, double R, double X, double Z0, Calibration* calibration);
+
 // Every derived value for one raw point; calibData too if `calibration`
 // has an OSL calibration performed.
 void prepareGraphs(const RawData& raw, double Z0, Calibration* calibration,
