@@ -151,6 +151,28 @@ cmake --install build --prefix stage   # produces stage/AntScopeZ.app
 
 Or, for a quick local `.dmg` without CPack: `./build.sh [build-dir]`.
 
+## Credits
+
+The cable presets in `shared/cables.txt` (over 100 cables, inherited from
+AntScope2) come from these sources:
+
+- **Dan Maguire, AC6LA** ([ac6la.com](https://www.ac6la.com)) -- Belden and
+  Wireman loss data. Most other entries were fitted with his BestFit
+  workbook (part of his XLZIZL package).
+- **Odeskabel** ([odeskabel.com](https://www.odeskabel.com)) -- RK 50/75 series
+- **Fujikura** -- D-2V / C-2V series
+- **Messi & Paoloni** ([messi.it](https://messi.it)) -- M&P series
+- **RF Parts** ([rfparts.com](https://www.rfparts.com/coax/heliaxcoax.html)) -- HELIAX® data
+- **Times Microwave Systems** ([timesmicrowave.com](https://www.timesmicrowave.com)) -- LMR® / TCOM®
+- **SSB-Electronic** -- AIRCOM PLUS®, AIRCELL®, ECOFLEX
+
+HELIAX is a trademark of CommScope; LMR and TCOM of Times Microwave
+Systems; AIRCOM PLUS and AIRCELL of SSB-Electronic.
+
+If your work appears in AntScopeZ and we failed to give proper credit,
+please [open an issue](https://github.com/K4HEZ/AntScopeZ/issues) and
+we'll be happy to fix it.
+
 ## License
 
 AntScopeZ, as built and distributed, is licensed under the **GNU General

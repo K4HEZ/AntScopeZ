@@ -11,6 +11,15 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ## [Unreleased]
 
+### Added
+
+- README Credits section and About dialog line crediting cable data
+  sources (AC6LA and manufacturers).
+
+### Fixed
+
+- Docs: cable preset count said ~150; it's over 100.
+
 ## [2.2.7] - 2026-09-18
 
 ### Added

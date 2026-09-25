@@ -544,7 +544,7 @@ dimming -- full-contrast text on a flattened background, so they read as
 
 | Control | What it does |
 |---|---|
-| Cable dropdown | Pick a built-in ideal cable (50/75/25/37.5Ω) or one of the ~150 real-world cables from `cables.txt` (Belden part numbers, sourced from ac6la.com) -- only usable in Preset mode |
+| Cable dropdown | Pick a built-in ideal cable (50/75/25/37.5Ω) or one of the over 100 real-world cables from `cables.txt` (Belden, Wireman, LMR, HELIAX and others; see the README's [Credits](https://github.com/K4HEZ/AntScopeZ#credits) for sources) -- only usable in Preset mode |
 | Velocity factor, Cable R0 | Your feedline's velocity factor and characteristic impedance |
 | Conductive loss, Dielectric loss | Loss figures for the cable, in dB/100ft, dB/ft, dB/100m, or dB/m (pick the unit from the dropdown next to them), specified either "at" a given frequency or as "any frequency" |
 
@@ -1283,7 +1283,7 @@ afterward, split into two group boxes.
 
 | Control | What it does |
 |---|---|
-| Cable type / Velocity factor | A preset from `cables.txt` (~150 real cables), or an editable custom value. This genuinely drives the *upcoming* scan's own distance calculation -- but only for that one scan; it doesn't change Settings → Cable's own value (used for feedline-loss compensation on every other chart) unless you click "Use this velocity factor" further down |
+| Cable type / Velocity factor | A preset from `cables.txt` (over 100 real cables), or an editable custom value. This genuinely drives the *upcoming* scan's own distance calculation -- but only for that one scan; it doesn't change Settings → Cable's own value (used for feedline-loss compensation on every other chart) unless you click "Use this velocity factor" further down |
 | Top frequency | How far up to sweep -- floored at a few MHz, capped at your analyzer's real maximum. Wider bandwidth gives finer resolution (can tell two close reflections apart) but a *shorter* maximum unambiguous distance before the trace wraps on itself; narrower bandwidth is the opposite. Pick based on your cable run: long cable needing full-length coverage → narrower; short run where you need to separate two close reflections → wider |
 | Points | 200–1000. More points raise both range and resolution somewhat, though not by a simple straight-line relationship |
 | Unambiguous range / Resolution (estimate) | Computed live from Top frequency/Points/Velocity factor above, before you've scanned anything -- lets you check the numbers make sense for your cable *before* spending time on a scan |

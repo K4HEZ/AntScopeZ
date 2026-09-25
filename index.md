@@ -28,7 +28,7 @@ other brands) -- built for, and maintained by, the ham radio community.
 - Debug Logging for Analyzer Communications
 - USB Serial/HID, BLE/Bluetooth and NavoVNA
 - TDR Analysis 
-  - Cable Length <-> Velocity Factor Calculations w/ 150+ Cable Presets 
+  - Cable Length <-> Velocity Factor Calculations w/ Over 100 Cable Presets 
   - Adjustable frequency/points with umabiguous range / resolution indication
   - Selectable windows (Rectangular, Hamming, Hamm, Blackman, Kaiser)
 - Language Support: English, Ukrainian, Japanese, Spanish (AI generated)
