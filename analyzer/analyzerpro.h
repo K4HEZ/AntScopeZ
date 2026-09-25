@@ -234,7 +234,7 @@ signals:
     // animation right then instead of on its own fixed timer.
     void checkUpdatesComplete();
     // GUI hooks -- the GUI owns the dialogs/indicator these drive.
-    void userMessage(bool warning, const QString& title, const QString& text);
+    void userMessage(UserMessageLevel level, const QString& title, const QString& text);
     void indicatorVisibleChanged(bool visible);
     void firmwareInfoReady(const QString& mainText, const QString& details);
     void firmwareStatusText(const QString& text);

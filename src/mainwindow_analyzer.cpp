@@ -391,3 +391,19 @@ void MainWindow::onFirmwareInfoReady(const QString& mainText, const QString& det
     dlg->setDetails(details);
     dlg->exec();
 }
+
+void MainWindow::onUserMessage(UserMessageLevel level, const QString& title, const QString& text)
+{
+    QMessageBox::Icon icon = QMessageBox::Information;
+    if (level == UserMessageLevel::Warning)
+        icon = QMessageBox::Warning;
+    else if (level == UserMessageLevel::Critical)
+        icon = QMessageBox::Critical;
+    g_showMessageBox(nullptr, icon, title, text);
+}
+
+void MainWindow::onCalibrationPrompt(const QString& title, const QString& text)
+{
+    bool ok = g_showMessageBox(nullptr, QMessageBox::Information, title, text) == QMessageBox::Ok;
+    m_calibration->on_standardPromptAnswered(ok);
+}

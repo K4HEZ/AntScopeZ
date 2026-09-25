@@ -128,7 +128,7 @@ void AnalyzerPro::on_downloadInfoComplete()
                 ? tr("No update information is available from RigExpert for this device.\n\n(model %1, revision %2)")
                       .arg(AnalyzerParameters::getName(), getRevision())
                 : tr("Can not get the latest version.\nPlease try later.\n\n(%1)").arg(reason);
-        emit userMessage(false, tr("Latest version"), text);
+        emit userMessage(UserMessageLevel::Information, tr("Latest version"), text);
     }else
     {
         // Dotted-version compare, not toDouble(): as decimals 1.12 < 1.5,
@@ -202,7 +202,7 @@ void AnalyzerPro::readFile(QString pathToFw)
 
     if(!file.open(QIODevice::ReadOnly))
     {
-        emit userMessage(true, tr("Warning"), tr("Can not open firmware file."));
+        emit userMessage(UserMessageLevel::Warning, tr("Warning"), tr("Can not open firmware file."));
         return;
     }
 
@@ -210,7 +210,7 @@ void AnalyzerPro::readFile(QString pathToFw)
 
     if (m_pfw->isEmpty())
     {
-        emit userMessage(true, tr("Warning"), tr("Can not read firmware file."));
+        emit userMessage(UserMessageLevel::Warning, tr("Warning"), tr("Can not read firmware file."));
         state = false;
     }
 
@@ -973,7 +973,7 @@ void AnalyzerPro::on_checkUpdatesBtn_clicked()
     if (m_baseAnalyzer == nullptr || AnalyzerParameters::getName().isEmpty())
     {
         emit checkUpdatesComplete();
-        emit userMessage(false, tr("Firmware update"),
+        emit userMessage(UserMessageLevel::Information, tr("Firmware update"),
                           tr("Connect an analyzer first -- the update check needs to "
                              "know its model and serial number."));
         return;
@@ -988,7 +988,7 @@ void AnalyzerPro::on_checkUpdatesBtn_clicked()
     if (getSerialNumber().isEmpty())
     {
         emit checkUpdatesComplete();
-        emit userMessage(false, tr("Firmware update"),
+        emit userMessage(UserMessageLevel::Information, tr("Firmware update"),
                           tr("This device isn't reporting a serial number over this "
                              "connection, so an update check can't identify it. "
                              "Try connecting over USB instead of Bluetooth."));

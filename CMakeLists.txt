@@ -118,7 +118,6 @@ set(ANTSCOPE_SOURCES
     src/antscopeupdatedialog.cpp
     src/appregistrationdialog.cpp
     src/cablecatalog.cpp
-    src/calibration.cpp
     src/centralwidget.cpp
     src/customgraph.cpp
     src/CustomPlot.cpp
@@ -190,7 +189,6 @@ set(ANTSCOPE_HEADERS
     src/antscopeupdatedialog.h
     src/appregistrationdialog.h
     src/cablecatalog.h
-    src/calibration.h
     src/centralwidget.h
     src/customgraph.h
     src/CustomPlot.h
@@ -272,6 +270,7 @@ set(ANTSCOPE_FORMS
 set(ANTSCOPE_CORE_SOURCES
     src/AA55BTPacket.cpp
     src/apppaths.cpp
+    src/calibration.cpp
     src/crc32.cpp
     src/debuglog.cpp
 
@@ -296,8 +295,10 @@ set(ANTSCOPE_CORE_SOURCES
 set(ANTSCOPE_CORE_HEADERS
     src/AA55BTPacket.h
     src/apppaths.h
+    src/calibration.h
     src/crc32.h
     src/debuglog.h
+    src/usermessage.h
 
     analyzer/analyzerparameters.h
     analyzer/analyzerpro.h

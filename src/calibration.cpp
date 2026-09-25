@@ -1,12 +1,6 @@
 #include "calibration.h"
-#include "settings.h"
-#include "popupindicator.h"
-#include "mainwindow.h"
-
-extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
-                            QString title, QString text,
-                            QMessageBox::StandardButtons buttons = QMessageBox::Ok,
-                            QMessageBox::StandardButton defaultButton = QMessageBox::NoButton);
+#include "apppaths.h"
+#include <QDir>
 
 Calibration::Calibration(QObject *parent) : QObject(parent),
     m_state(CALIB_NONE),
@@ -34,10 +28,10 @@ void Calibration::init(const QString& _serial)
         return;
     }
 
-    QString iniFilePath = Settings::setIniFile();
+    QString iniFilePath = AppPaths::iniFile();
 
     //m_calibrationPath = Settings::localDataPath("Calibration");
-    m_calibrationPath = Settings::localDataPath("");
+    m_calibrationPath = AppPaths::localDataPath("");
     QDir app_dir(m_calibrationPath);
     app_dir.mkdir("Calibration");
     if (!serial.isEmpty()) {
@@ -201,7 +195,7 @@ void Calibration::on_newData(RawData _rawData)
     if(m_dotsCount > m_dotsNumber)
     {
         m_dotsCount = 0;
-        PopUpIndicator::hideIndicator();
+        emit indicatorVisibleChanged(false);
 
         emit setCalibrationMode(false);
         QDir dir = m_calibrationPath;
@@ -211,13 +205,10 @@ void Calibration::on_newData(RawData _rawData)
             m_openData.saveData(m_openCalibFilePath,m_Z0);
             if(!m_onlyOneCalib)
             {
-                PopUpIndicator::hideIndicator();
-                if (g_showMessageBox(NULL, QMessageBox::Information, tr("Short"),
-                                     tr("Please connect SHORT standard and press OK.")) == QMessageBox::Ok) {
-                    PopUpIndicator::showIndicator();
-                    m_state = CALIB_SHORT;
-                    on_startCalibration();
-                }
+                emit indicatorVisibleChanged(false);
+                m_pendingState = CALIB_SHORT;
+                emit standardPromptRequested(tr("Short"),
+                                             tr("Please connect SHORT standard and press OK."));
             }else
             {
                 cancel();            }
@@ -226,13 +217,10 @@ void Calibration::on_newData(RawData _rawData)
             m_shortData.saveData(m_shortCalibFilePath,m_Z0);
             if(!m_onlyOneCalib)
             {
-                PopUpIndicator::hideIndicator();
-                if (g_showMessageBox(NULL, QMessageBox::Information, tr("Load"),
-                                     tr("Please connect LOAD standard and press OK.")) == QMessageBox::Ok) {
-                    PopUpIndicator::showIndicator();
-                    m_state = CALIB_LOAD;
-                    on_startCalibration();
-                }
+                emit indicatorVisibleChanged(false);
+                m_pendingState = CALIB_LOAD;
+                emit standardPromptRequested(tr("Load"),
+                                             tr("Please connect LOAD standard and press OK."));
             }else
             {
                 cancel();
@@ -243,9 +231,9 @@ void Calibration::on_newData(RawData _rawData)
             if(!m_onlyOneCalib)
             {
                 m_OSLCalibrationPerformed = true;
-                PopUpIndicator::hideIndicator();
-                g_showMessageBox(NULL, QMessageBox::Information, tr("Finish"),
-                             tr("Calibration finished!"));
+                emit indicatorVisibleChanged(false);
+                emit userMessage(UserMessageLevel::Information, tr("Finish"),
+                                 tr("Calibration finished!"));
             }
             cancel();
             break;
@@ -256,9 +244,20 @@ void Calibration::on_newData(RawData _rawData)
     }
 }
 
+void Calibration::on_standardPromptAnswered(bool ok)
+{
+    int next = m_pendingState;
+    m_pendingState = CALIB_NONE;
+    if (!ok || next == CALIB_NONE)
+        return;
+    emit indicatorVisibleChanged(true);
+    m_state = next;
+    on_startCalibration();
+}
+
 void Calibration::cancel()
 {
-    PopUpIndicator::hideIndicator();
+    emit indicatorVisibleChanged(false);
     m_state = CALIB_NONE;
     m_onlyOneCalib = false;
     // Was: disconnect(m_analyzer, SIGNAL(newData(rawData)), this,
@@ -302,7 +301,7 @@ void Calibration::on_startCalibrationOpen()
     m_dotsCount = 0;
     m_onlyOneCalib = true;
     m_openData.clear();
-    PopUpIndicator::showIndicator();
+    emit indicatorVisibleChanged(true);
     if(m_analyzer != NULL)
     {
         emit setCalibrationMode(true);
@@ -321,7 +320,7 @@ void Calibration::on_startCalibrationShort()
     // before starting its capture; this one silently never did, so
     // calibrating Short alone never lit the indicator for its whole
     // capture (see todo.txt).
-    PopUpIndicator::showIndicator();
+    emit indicatorVisibleChanged(true);
     if(m_analyzer != NULL)
     {
         emit setCalibrationMode(true);
@@ -336,7 +335,7 @@ void Calibration::on_startCalibrationLoad()
     m_onlyOneCalib = true;
     m_loadData.clear();
     // Was missing -- see on_startCalibrationShort()'s comment just above.
-    PopUpIndicator::showIndicator();
+    emit indicatorVisibleChanged(true);
     if(m_analyzer != NULL)
     {
         emit setCalibrationMode(true);
@@ -466,7 +465,7 @@ void Calibration::on_crcError()
 {
     if (m_state == CALIB_NONE)
         return;
-    PopUpIndicator::hideIndicator();
+    emit indicatorVisibleChanged(false);
     m_state = CALIB_NONE;
     m_onlyOneCalib = false;
     emit setCalibrationMode(false);
@@ -476,8 +475,7 @@ void Calibration::on_crcError()
         // see issue #38.
         m_analyzer->setIsMeasuring(false);
     }
-    g_showMessageBox(NULL, QMessageBox::Critical, tr("CRC Error"),
-                          tr("Analyzer error. \nIt is recommended to perform calibration with connection via USB"),
-                          QMessageBox::Ok);
+    emit userMessage(UserMessageLevel::Critical, tr("CRC Error"),
+                     tr("Analyzer error. \nIt is recommended to perform calibration with connection via USB"));
 }
 

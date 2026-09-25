@@ -6,6 +6,8 @@
 #include <analyzer/analyzerpro.h>
 #include <QSettings>
 #include <QFile>
+#include <QTextStream>
+#include "usermessage.h"
 //#include <shlobj.h>
 
 enum {CALIB_NONE = 0, CALIB_OPEN, CALIB_SHORT, CALIB_LOAD, CALIB_NUM};
@@ -359,6 +361,8 @@ private:
     CalibData m_loadData;
 
     int m_state;
+    // Step waiting on standardPromptRequested()'s answer.
+    int m_pendingState = CALIB_NONE;
     int m_dotsCount;
 
     bool m_onlyOneCalib;
@@ -383,6 +387,11 @@ private:
 signals:
     void progress(int, int);
     void setCalibrationMode(bool);
+    void indicatorVisibleChanged(bool visible);
+    void userMessage(UserMessageLevel level, const QString& title, const QString& text);
+    // Asks the user to connect the next standard; answer via
+    // on_standardPromptAnswered().
+    void standardPromptRequested(const QString& title, const QString& text);
 
 public slots:
     void on_newData(RawData _rawData);
@@ -393,6 +402,7 @@ public slots:
 
     void on_enableOSLCalibration(bool enabled);
     void on_crcError();
+    void on_standardPromptAnswered(bool ok);
 
 };
 

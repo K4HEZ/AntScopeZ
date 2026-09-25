@@ -188,7 +188,7 @@ qint32 ComAnalyzer::parse (QByteArray arr)
                             return arr.length();
                         }
                         warn += tr("Error: ") + error;
-                        emit userMessage(true, tr("Warning"), warn);
+                        emit userMessage(UserMessageLevel::Warning, tr("Warning"), warn);
                     }else
                     {
                         return arr.length();
@@ -630,7 +630,7 @@ bool ComAnalyzer::update (QIODevice *fw)
                 break;
             }
         }
-        emit userMessage(false, tr("Finish"),tr("Successfully updated!"));
+        emit userMessage(UserMessageLevel::Information, tr("Finish"),tr("Successfully updated!"));
         m_comPort->close();
         openComPort(name,115200);
         setIsMeasuring(false);
@@ -664,7 +664,7 @@ bool ComAnalyzer::update (QIODevice *fw)
             {
                 if(!waitAnswer())
                 {
-                    emit userMessage(true, tr("Error"),tr("Error while update, please try again."));
+                    emit userMessage(UserMessageLevel::Warning, tr("Error"),tr("Error while update, please try again."));
                     emit updatePercentChanged(100);
                     emit updatePercentChanged(0);
                     setIsMeasuring(false);
@@ -707,7 +707,7 @@ bool ComAnalyzer::update (QIODevice *fw)
 
         emit updatePercentChanged(100);
 
-        emit userMessage(false, tr("Finish"),tr("Successfully updated!"));
+        emit userMessage(UserMessageLevel::Information, tr("Finish"),tr("Successfully updated!"));
         m_comPort->close();
         openComPort(name,38400);
         setIsMeasuring(false);

@@ -804,7 +804,7 @@ bool HidAnalyzer::update (QIODevice *fw)
         m_hidDevice = nullptr;
         if (!waitForBootDevice(10000))
         {
-            emit userMessage(true, tr("Warning"),tr("Can't enter to boot mode!"));
+            emit userMessage(UserMessageLevel::Warning, tr("Warning"),tr("Can't enter to boot mode!"));
             return false;
         }
     }
@@ -883,10 +883,10 @@ bool HidAnalyzer::update (QIODevice *fw)
             memset(buff, 0, sizeof(buff));
             buff[1] = BL_CMD_START;
             hid_write(m_hidDevice, buff, sizeof(buff));
-            emit userMessage(false, tr("Finish"),tr("Successfully updated!"));
+            emit userMessage(UserMessageLevel::Information, tr("Finish"),tr("Successfully updated!"));
         }else
         {
-            emit userMessage(true, tr("Warning"),tr("Update failed!"));
+            emit userMessage(UserMessageLevel::Warning, tr("Warning"),tr("Update failed!"));
         }
     }
     preUpdate();

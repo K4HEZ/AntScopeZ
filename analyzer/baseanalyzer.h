@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QTimer>
+#include "usermessage.h"
 #include <analyzer/analyzerparameters.h>
 
 class BaseAnalyzer : public QObject
@@ -111,7 +112,7 @@ signals:
     void receivedMatch_ProfileB16(QByteArray arr);
     void crcError();
     // For the GUI to show (was a direct QMessageBox call).
-    void userMessage(bool warning, const QString& title, const QString& text);
+    void userMessage(UserMessageLevel level, const QString& title, const QString& text);
 
 public slots:
     virtual void searchAnalyzer() {}

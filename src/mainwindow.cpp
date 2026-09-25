@@ -468,9 +468,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_analyzer, &AnalyzerPro::signalAnalyzerError, this, &MainWindow::onAnalyzerError);
     connect(m_analyzer, &AnalyzerPro::drainingChanged, this, &MainWindow::onAnalyzerDrainingChanged);
     connect(m_analyzer, &AnalyzerPro::statusMessageChanged, this, &MainWindow::onAnalyzerStatusMessageChanged);
-    connect(m_analyzer, &AnalyzerPro::userMessage, this, [](bool warning, const QString& title, const QString& text) {
-        g_showMessageBox(nullptr, warning ? QMessageBox::Warning : QMessageBox::Information, title, text);
-    });
+    connect(m_analyzer, &AnalyzerPro::userMessage, this, &MainWindow::onUserMessage);
     connect(m_analyzer, &AnalyzerPro::indicatorVisibleChanged, this, &PopUpIndicator::setIndicatorVisible);
     connect(m_analyzer, &AnalyzerPro::firmwareInfoReady, this, &MainWindow::onFirmwareInfoReady);
 
@@ -748,6 +746,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_calibration,SIGNAL(setCalibrationMode(bool)),
             m_measurements,SLOT(setCalibrationMode(bool)));
     connect(m_analyzer, &AnalyzerPro::crcError, m_calibration, &Calibration::on_crcError);
+    connect(m_calibration, &Calibration::indicatorVisibleChanged, this, &PopUpIndicator::setIndicatorVisible);
+    connect(m_calibration, &Calibration::userMessage, this, &MainWindow::onUserMessage);
+    connect(m_calibration, &Calibration::standardPromptRequested, this, &MainWindow::onCalibrationPrompt);
     m_measurements->setCalibration(m_calibration);
 
     ui->checkBoxCalibration->blockSignals(true);

@@ -637,6 +637,10 @@ private slots:
     void onAnalyzerStatusMessageChanged(const QString& text);
     // AnalyzerPro::firmwareInfoReady() -- shows the firmware UpdateDialog.
     void onFirmwareInfoReady(const QString& mainText, const QString& details);
+    // Core userMessage() signals (AnalyzerPro, Calibration) -> message box.
+    void onUserMessage(UserMessageLevel level, const QString& title, const QString& text);
+    // Calibration::standardPromptRequested() -- "connect the next standard".
+    void onCalibrationPrompt(const QString& title, const QString& text);
 
     // multi-tab
 #ifndef NO_MULTITAB
