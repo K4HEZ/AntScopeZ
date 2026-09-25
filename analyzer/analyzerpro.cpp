@@ -17,6 +17,7 @@
 // static member
 QList<AnalyzerParameters*> AnalyzerParameters::m_analyzers;
 AnalyzerParameters* AnalyzerParameters::m_current=nullptr;
+SelectionParameters SelectionParameters::selected;
 
 AnalyzerPro::AnalyzerPro(QObject *parent) : QObject(parent),
     m_baseAnalyzer(nullptr),

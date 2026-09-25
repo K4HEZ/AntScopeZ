@@ -452,7 +452,7 @@ void Measurements::importData(QString _name, bool /*user_format*/)
 // 2-port Touchstone export. Unlike exportData()'s S,RI/S,MA paths, this
 // needs no R/X -> Gamma conversion -- dataSParam already holds the raw
 // complex S-parameters exactly as parsed off the original file's option
-// line (sparamFromFormat()), so this is a straight passthrough. That also
+// line (RfMath::sparamFromFormat()), so this is a straight passthrough. That also
 // means there's no real reference impedance to round-trip: the original
 // file's own "R <value>" is never stored on the measurement (only used
 // transiently, at import, to derive the R/X-based graphs). "R 50" here is
@@ -516,77 +516,6 @@ void Measurements::exportSParamData(QString _name, int _type, int _number, QStri
     out.flush();
 }
 
-std::complex<double> Measurements::sparamFromFormat(int iFormat, double v1, double v2)
-{
-    switch (iFormat) {
-    case 2: // RI -- already Cartesian
-        return std::complex<double>(v1, v2);
-    case 3: // DB -- v1 is magnitude in dB, v2 is angle in degrees
-        return std::polar(pow(10.0, v1/20.0), v2/180.0*M_PI);
-    default: // MA -- v1 is linear magnitude, v2 is angle in degrees
-        return std::polar(v1, v2/180.0*M_PI);
-    }
-}
-
-SParamPoint Measurements::zToSParam(double fq, std::complex<double> z11,
-                                     std::complex<double> z21, std::complex<double> z12,
-                                     std::complex<double> z22, double z0)
-{
-    // Standard 2-port Z-to-S identity (real, positive z0 -- Touchstone's
-    // "R n" applies the same reference impedance to both ports, so there's
-    // no need for the more general unequal-port-impedance form):
-    //
-    //   dZ  = (Z11+Z0)(Z22+Z0) - Z12*Z21
-    //   S11 = ((Z11-Z0)(Z22+Z0) - Z12*Z21) / dZ
-    //   S12 = 2*Z12*Z0 / dZ
-    //   S21 = 2*Z21*Z0 / dZ
-    //   S22 = ((Z11+Z0)(Z22-Z0) - Z12*Z21) / dZ
-    std::complex<double> zRef(z0, 0.0);
-    std::complex<double> cross = z12 * z21;
-    std::complex<double> dZ = (z11 + zRef) * (z22 + zRef) - cross;
-
-    SParamPoint sp;
-    sp.fq = fq;
-    if (std::abs(dZ) > 0.0) {
-        sp.s11 = ((z11 - zRef) * (z22 + zRef) - cross) / dZ;
-        sp.s12 = (2.0 * z12 * zRef) / dZ;
-        sp.s21 = (2.0 * z21 * zRef) / dZ;
-        sp.s22 = ((z11 + zRef) * (z22 - zRef) - cross) / dZ;
-    } else {
-        // dZ == 0 is a degenerate/singular network at this frequency
-        // (division would be NaN/Inf) -- leave this point at a flat zero
-        // rather than poisoning the whole trace with a non-finite value.
-        sp.s11 = sp.s12 = sp.s21 = sp.s22 = std::complex<double>(0.0, 0.0);
-    }
-    return sp;
-}
-
-// std::arg() always wraps into (-180, 180] degrees. A real transmission
-// phase can rack up many full turns across a wide sweep, so the raw
-// wrapped value jumps unpredictably between adjacent points -- worse the
-// fewer points there are (a >360-degree change between two samples wraps
-// into something that looks like noise, not a smooth ramp). Unwrap by
-// accumulating the shortest-path delta between consecutive points
-// instead, same technique as numpy.unwrap()/MATLAB's unwrap(). This can't
-// recover the *true* phase if an actual >360-degree jump happened between
-// two real samples (that's undersampling, not fixable in the display
-// layer), but it's still a smooth, honest trace instead of misleading
-// vertical jumps, and is exact whenever points are reasonably dense.
-double Measurements::unwrapPhaseDeg(double rawDeg, bool& havePrev, double& prevRaw, double& prevUnwrapped)
-{
-    if (!havePrev) {
-        havePrev = true;
-        prevRaw = prevUnwrapped = rawDeg;
-        return rawDeg;
-    }
-    double delta = rawDeg - prevRaw;
-    while (delta > 180.0) delta -= 360.0;
-    while (delta <= -180.0) delta += 360.0;
-    prevUnwrapped += delta;
-    prevRaw = rawDeg;
-    return prevUnwrapped;
-}
-
 // Fills in a just-imported 2-port measurement's dataSParam plus the
 // derived S21/S12 magnitude(dB)/phase(degrees) graphs the S21 tab
 // actually plots. Batch, not per-point -- on_newSParamPoint() (the live-
@@ -617,12 +546,12 @@ void Measurements::populateSParamData(const QList<SParamPoint>& points)
         mag.key = phase.key = fqKey;
 
         mag.value = 20*log10(std::abs(sp.s21));
-        phase.value = unwrapPhaseDeg(std::arg(sp.s21)*180.0/M_PI, haveS21Prev, s21PrevRaw, s21PrevUnwrapped);
+        phase.value = RfMath::unwrapPhaseDeg(std::arg(sp.s21)*180.0/M_PI, haveS21Prev, s21PrevRaw, s21PrevUnwrapped);
         mm.s21MagGraph.add(mag);
         mm.s21PhaseGraph.add(phase);
 
         mag.value = 20*log10(std::abs(sp.s12));
-        phase.value = unwrapPhaseDeg(std::arg(sp.s12)*180.0/M_PI, haveS12Prev, s12PrevRaw, s12PrevUnwrapped);
+        phase.value = RfMath::unwrapPhaseDeg(std::arg(sp.s12)*180.0/M_PI, haveS12Prev, s12PrevRaw, s12PrevUnwrapped);
         mm.s12MagGraph.add(mag);
         mm.s12PhaseGraph.add(phase);
     }
@@ -786,7 +715,7 @@ void Measurements::importData(QString _name)
                 return;
             }
 
-            std::complex<double> s11c = sparamFromFormat(iFormat, param1, param2);
+            std::complex<double> s11c = RfMath::sparamFromFormat(iFormat, param1, param2);
 
             double r = 0, x = 0;
             if (iUnit == 2) // Z, RI -- direct copy, not a reflection coefficient
@@ -826,7 +755,7 @@ void Measurements::importData(QString _name)
             // same 9 columns, not S21/S12/S22 -- a different physical
             // quantity (ohms, not a unitless ratio). #7: these used to be
             // silently skipped entirely rather than converted; now run
-            // through zToSParam()'s real Z-to-S 2-port matrix conversion,
+            // through RfMath::zToSParam()'s real Z-to-S 2-port matrix conversion,
             // same as s11c already is via the iUnit==2 branch above for
             // the RawData R/X. S-parameter files (iUnit==1) need no
             // conversion -- s11c/s21/s12/s22 are already S-parameters.
@@ -835,17 +764,17 @@ void Measurements::importData(QString _name)
                 SParamPoint sp;
                 sp.fq = f*fqmul;
                 sp.s11 = s11c;
-                sp.s21 = sparamFromFormat(iFormat, s21p1, s21p2);
-                sp.s12 = sparamFromFormat(iFormat, s12p1, s12p2);
-                sp.s22 = sparamFromFormat(iFormat, s22p1, s22p2);
+                sp.s21 = RfMath::sparamFromFormat(iFormat, s21p1, s21p2);
+                sp.s12 = RfMath::sparamFromFormat(iFormat, s12p1, s12p2);
+                sp.s22 = RfMath::sparamFromFormat(iFormat, s22p1, s22p2);
                 sparamArray.append(sp);
             }
             else if (lineIs2Port && (iUnit == 2))
             {
-                std::complex<double> z21 = sparamFromFormat(iFormat, s21p1, s21p2);
-                std::complex<double> z12 = sparamFromFormat(iFormat, s12p1, s12p2);
-                std::complex<double> z22 = sparamFromFormat(iFormat, s22p1, s22p2);
-                sparamArray.append(zToSParam(f*fqmul, s11c, z21, z12, z22, Z0));
+                std::complex<double> z21 = RfMath::sparamFromFormat(iFormat, s21p1, s21p2);
+                std::complex<double> z12 = RfMath::sparamFromFormat(iFormat, s12p1, s12p2);
+                std::complex<double> z22 = RfMath::sparamFromFormat(iFormat, s22p1, s22p2);
+                sparamArray.append(RfMath::zToSParam(f*fqmul, s11c, z21, z12, z22, Z0));
             }
         }while (!line.isNull());
 

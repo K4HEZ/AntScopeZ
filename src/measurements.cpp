@@ -131,10 +131,6 @@ Measurements::Measurements(QObject *parent) : QObject(parent),
                                : OneFqDisplayStyle::Detailed;
     m_settings->endGroup();
 
-    m_pdTdrImp =  new double[TDR_MAXARRAY];
-    m_pdTdrStep =  new double[TDR_MAXARRAY];
-    m_pdTdrZ =  new double[TDR_MAXARRAY];
-
     // m_graphHintBox/m_graphHintNameLabels/m_graphHintValueLabels used to
     // be a single self-constructed PopUp (floating Qt::Tool window,
     // positioned via setName("Hint")'s persisted x/y, colored per
@@ -166,10 +162,6 @@ Measurements::~Measurements()
     m_settings->beginGroup("OneFqWidget");
     m_settings->setValue("DisplayStyle", m_oneFqDisplayStyle == OneFqDisplayStyle::BigReadout ? 1 : 0);
     m_settings->endGroup();
-
-    delete []m_pdTdrImp;
-    delete []m_pdTdrStep;
-    delete []m_pdTdrZ;
 
     // m_graphHintBox/m_graphHintNameLabels/m_graphHintValueLabels are owned
     // by mainwindow.ui (MainWindow's own ui_mainwindow.h-generated
@@ -610,7 +602,7 @@ void Measurements::resetSmithTracer()
 {
     if (m_smithTracer == NULL)
         return;
-    // (0,0) is the Smith chart's own center -- NormRXtoSmithPoint(1,0,...)
+    // (0,0) is the Smith chart's own center -- RfMath::smithPoint(1,0,...)
     // (Rnorm==1, i.e. R==m_Z0, the standard 50 ohm case) resolves to
     // RhoReal==RhoImag==0, so this is genuinely "50 ohm", not an arbitrary
     // origin pick.
@@ -1018,7 +1010,7 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
     if (m_oneFqMode) {
         GraphData _data;
         GraphData _calibData;
-        prepareGraphs(_rawData, _data, _calibData);
+        RfMath::prepareGraphs(_rawData, m_Z0, m_calibration, _data, _calibData);
         updateOneFqWidget(getCalibrationEnabled() ? _calibData : _data);
         return;
     }
@@ -1068,7 +1060,7 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
 
     double VSWR;
     double RL;
-    if(computeSWR(_rawData.fq, m_Z0,_rawData.r,_rawData.x,&VSWR,&RL) != 1)
+    if(RfMath::computeSWR(m_Z0,_rawData.r,_rawData.x,&VSWR,&RL) != 1)
     {
         if(m_measurements.last().swrGraph.size() > 0)
         {
@@ -1217,7 +1209,7 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
 //------------------------------------------------------------------------------
     double R = _rawData.r;
     double X = _rawData.x;
-    double Z = computeZ(R, X);
+    double Z = RfMath::computeZ(R, X);
 
     //qDebug() << "Measurements::on_newData" << fq << R << X;
 
@@ -1248,7 +1240,7 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
     }
     double Rpar = R*(1+X*X/R/R);
     double Xpar = X*(1+R*R/X/X);
-    double Zpar = computeZ(Rpar, Xpar);
+    double Zpar = RfMath::computeZ(Rpar, Xpar);
 
     double rr, xx, zz;
     data.value = regulate(Rpar, VALUE_LIMIT);
@@ -1298,7 +1290,7 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
 //----------------------calc smith----------------------------------------------
 //------------------------------------------------------------------------------
     double pointX,pointY;
-    NormRXtoSmithPoint(R/m_Z0, X/m_Z0, pointX, pointY);
+    RfMath::smithPoint(R/m_Z0, X/m_Z0, pointX, pointY);
     // Was dataRX.length() -- diverges from m_currentPoint across a
     // Continuous "continue" (dataRX isn't cleared, m_currentPoint resets to
     // 0), which is also what on_newCursorSmithPos()'s findedNum bounds
@@ -1373,7 +1365,7 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
             calR *= m_Z0;
             double calX = (2*GimOut)/((1-GreOut)*(1-GreOut)+GimOut*GimOut);
             calX *= m_Z0;
-            double calZ = computeZ(calR,calX);
+            double calZ = RfMath::computeZ(calR,calX);
 
             RawData rawDataCalib = _rawData;
             rawDataCalib.r = calR;
@@ -1390,7 +1382,7 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
                 m_measurements.last().dataRXCalib.append(rawDataCalib);
             }
 
-            computeSWR(_rawData.fq, m_Z0, calR, calX,&VSWR,&RL);
+            RfMath::computeSWR(m_Z0, calR, calX,&VSWR,&RL);
 
             data.value = VSWR;
             if( VSWR > MAX_SWR )
@@ -1417,7 +1409,7 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
 
 
             double calRpar = calR*(1+calX*calX/calR/calR);
-            double calZpar = computeZ(calRpar, calX);
+            double calZpar = RfMath::computeZ(calRpar, calX);
 
             data.value = regulate(calRpar, VALUE_LIMIT);
             m_measurements.last().rprGraphCalib.add(data);
@@ -1470,8 +1462,8 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
             //----------------------calc smith-------------------------------
 
             double ptX,ptY;
-            //NormRXtoSmithPoint(R/m_Z0, X/m_Z0, ptX, ptY);
-            NormRXtoSmithPoint(Rnorm, Xnorm, ptX, ptY);
+            //RfMath::smithPoint(R/m_Z0, X/m_Z0, ptX, ptY);
+            RfMath::smithPoint(Rnorm, Xnorm, ptX, ptY);
             // See the uncalibrated version above (~line 1284) for why
             // m_currentPoint, not dataRX.length().
             int len = m_currentPoint;
@@ -1491,186 +1483,6 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
     if (!_redraw)
         return;
     on_redrawGraphs(m_measuringInProgress && !m_isContinuing);
-}
-
-void Measurements::prepareGraphs(RawData _rawData, GraphData& _data, GraphData& _calibData)
-{
-    _data.FQ = _rawData.fq;
-    _data.R = _rawData.r;
-    _data.X = _rawData.x;
-
-    computeSWR(_rawData.fq, m_Z0,_data.R,_data.X,&_data.SWR,&_data.RL);
-    _data.Z = computeZ(_data.R,_data.X);
-
-    //------------------RXZ par-----------------------------------------------------
-    double R = _rawData.r;
-    double X = _rawData.x;
-    if (qIsNaN(R) || (R<0.001) )
-        R = 0.01;
-    if (qIsNaN(X))
-        X = 0;
-    _data.Rpar = R*(1+X*X/R/R);
-    _data.Xpar = X*(1+R*R/X/X);
-    _data.Zpar = computeZ(R, X);
-
-    //----------------------calc phase----------------------------------------------
-    double Rnorm = R/m_Z0;
-    double Xnorm = X/m_Z0;
-    double Denom = (Rnorm+1)*(Rnorm+1)+Xnorm*Xnorm;
-    double RhoReal = ((Rnorm-1)*(Rnorm+1)+Xnorm*Xnorm)/Denom;
-    double RhoImag = 2*Xnorm/Denom;
-    double RhoPhase = atan2(RhoImag, RhoReal) / M_PI * 180.0;
-    double RhoMod = sqrt(RhoReal*RhoReal+RhoImag*RhoImag);
-    _data.RhoPhase = RhoPhase;
-    _data.RhoMod = RhoMod;
-
-    //----------------------Calc calibration if performed---------------------------
-    if(m_calibration != NULL)
-    {
-        if(m_calibration->getCalibrationPerformed())
-        {
-            _calibData.FQ = _rawData.fq;
-            R = _rawData.r;
-            X = _rawData.x;
-            double Gre = (R*R-m_Z0*m_Z0+X*X)/((R+m_Z0)*(R+m_Z0)+X*X);
-            double Gim = (2*m_Z0*X)/((R+m_Z0)*(R+m_Z0)+X*X);
-
-            double GreOut;
-            double GimOut;
-
-            double SOR =  1; double SOI = 0; // Ideal model
-            double SSR = -1; double SSI = 0;
-            double SLR =  0; double SLI = 0;
-
-            double COR, COI; // CalibrationReOpen, CalibrationImOpen
-            double CSR, CSI; // CalibrationReShort, CalibrationImShort
-            double CLR, CLI; // CalibrationReLoad, CalibrationImLoad
-            bool res = m_calibration->interpolateS(_rawData.fq, COR, COI, CSR, CSI, CLR, CLI);
-//            COR = 1;
-//            COI = 0;
-//            CSR = -1;
-//            CSI = 0;
-//            CLR = 0;
-//            CLI = 0;
-
-            if (!res)
-            {
-                SOR =  1; SOI = 0; // Ideal model
-                SSR = -1; SSI = 0;
-                SLR =  0; SLI = 0;
-            }
-            m_calibration->applyCalibration(Gre,Gim,  // Measured
-                                            COR,COI,CSR,CSI,CLR,CLI, // Measured parameters of cal standards
-                                            SOR,SOI,SSR,SSI,SLR,SLI, // Actual (Ideal) parameters of cal standards
-                                            GreOut,GimOut); // Actual
-            //-----------vnn_04 _2
-            double chek_GreGim=sqrt((GreOut*GreOut)+(GimOut*GimOut));
-            //1)   ((GreOut==1)&&(GimOut==0))
-            //2)   (chek_GreGim>1)
-            if( ((GreOut==1)&&(GimOut==0))||(chek_GreGim>1)){
-                if((GreOut==1)&&(GimOut==0)){
-                    GreOut= 0.999999992;
-                }else{
-                    double ncosA= GreOut/chek_GreGim;
-                    double nsinA= GimOut/chek_GreGim;
-                    GreOut=0.999999992*ncosA;
-                    GimOut=0.999999992*nsinA;
-                }
-            }
-
-            double calR = (1-GreOut*GreOut-GimOut*GimOut)/((1-GreOut)*(1-GreOut)+GimOut*GimOut);
-            calR *= m_Z0;
-            double calX = (2*GimOut)/((1-GreOut)*(1-GreOut)+GimOut*GimOut);
-            calX *= m_Z0;
-            double calZ = computeZ(calR,calX);
-
-            _calibData.R = calR;
-            _calibData.X = calX;
-            _calibData.Z = calZ;
-            computeSWR(_calibData.FQ, m_Z0, calR, calX, &_calibData.SWR, &_calibData.RL);
-
-            double calRpar = calR*(1+calX*calX/calR/calR);
-            double calZpar = computeZ(calRpar, calX);
-
-            _calibData.Rpar = calRpar;
-            _calibData.Xpar = calX;
-            _calibData.Zpar = calZpar;
-
-            if (qIsNaN(calR) || (calR<0.001) )
-                calR = 0.01;
-            if (qIsNaN(calX))
-                calX = 0;
-            Rnorm = calR/m_Z0;
-            Xnorm = calX/m_Z0;
-
-            Denom = (Rnorm+1)*(Rnorm+1)+Xnorm*Xnorm;
-            RhoReal = ((Rnorm-1)*(Rnorm+1)+Xnorm*Xnorm)/Denom;
-            RhoImag = 2*Xnorm/Denom;
-
-            RhoPhase = atan2(RhoImag, RhoReal) / M_PI * 180.0;
-            RhoMod = sqrt(RhoReal*RhoReal+RhoImag*RhoImag);
-
-            _calibData.RhoPhase = RhoPhase;
-            _calibData.RhoMod = RhoMod;
-        }
-    }
-    //----------------------calc smith-------------------------------
-    double ptX,ptY;
-    NormRXtoSmithPoint(Rnorm, Xnorm, ptX, ptY);
-    _data.ptX = ptX;
-    _data.ptY = ptY;
-}
-
-
-quint32 Measurements::computeSWR(double freq, double Z0, double R, double X, double *VSWR, double *RL)
-{
-    Q_UNUSED(freq);
-
-    if (R <= 0)
-    {
-        R = 0.001;
-    }
-    double SWR, Gamma;
-    double XX = X * X;								// always >= 0
-    double denominator = (R + Z0) * (R + Z0) + XX;
-
-    if (denominator == 0)
-    {
-        return 0;
-    }
-    Gamma = sqrt(((R - Z0) * (R - Z0) + XX) / denominator);
-    if (Gamma == 1.0)
-    {
-        return 0;
-    }
-    SWR = (1 + Gamma) / (1 - Gamma);
-
-    if ((SWR > 200) || (Gamma > 0.99))
-    {
-        SWR = 200;
-    } else if (SWR < 1)
-    {
-        SWR = 1;
-    }
-
-    if (VSWR)
-    {
-        *VSWR = SWR;
-    }
-    if (RL)
-    {
-        if (Gamma == 0)
-        {
-            return 0;
-        }
-        *RL = -20 * log10(Gamma);
-    }
-    return 1;
-}
-
-double Measurements::computeZ (double R, double X)
-{
-    return sqrt((R*R) + (X*X));
 }
 
 void Measurements::on_newS21Data(S21Data _s21Data)
@@ -1716,7 +1528,7 @@ void Measurements::on_newSParamPoint(SParamPoint sp)
     QCPGraphData mag, phase;
     mag.key = phase.key = fqKey;
     mag.value = 20*log10(std::abs(sp.s21));
-    phase.value = unwrapPhaseDeg(std::arg(sp.s21)*180.0/M_PI, m_liveS21PhaseHavePrev, m_liveS21PhasePrevRaw, m_liveS21PhasePrevUnwrapped);
+    phase.value = RfMath::unwrapPhaseDeg(std::arg(sp.s21)*180.0/M_PI, m_liveS21PhaseHavePrev, m_liveS21PhasePrevRaw, m_liveS21PhasePrevUnwrapped);
     mm.s21MagGraph.add(mag);
     mm.s21PhaseGraph.add(phase);
     // S12/S22 deliberately left untouched here: NanoVNA-family hardware

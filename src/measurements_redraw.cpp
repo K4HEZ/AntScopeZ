@@ -150,35 +150,6 @@ void Measurements::replot()
     tab->repaint();
 }
 
-void Measurements::NormRXtoSmithPoint(double Rnorm, double Xnorm, double &x, double &y)
-{
-    // Unlike the calibrated path a little further down in measurements.cpp
-    // (which explicitly guards qIsNaN(calR)/qIsNaN(calX) before using them),
-    // this shared helper never validated its inputs. Defensive hardening,
-    // not itself the confirmed crash site (2026-08-20 core dump traced that
-    // to a separate pixelToCoord() misuse in measurements_onefq.cpp -- see
-    // its own comment) -- but a NaN or Inf Rnorm/Xnorm (device data gone
-    // bad upstream) or the Rnorm==-1 && Xnorm==0 degenerate case (Denom==0)
-    // would propagate the same way into QCustomPlot's
-    // coordToPixel/pixelToCoord, which Q_ASSERTs on NaN in a debug build.
-    if (qIsNaN(Rnorm) || qIsNaN(Xnorm) || qIsInf(Rnorm) || qIsInf(Xnorm)) {
-        x = 0;
-        y = 0;
-        return;
-    }
-    double Denom = (Rnorm+1)*(Rnorm+1)+Xnorm*Xnorm;
-    if (qFuzzyIsNull(Denom)) {
-        x = -6; // Rnorm==-1, Xnorm==0 -- the reflection-coefficient edge closest to this input
-        y = 0;
-        return;
-    }
-    double RhoReal = ((Rnorm-1)*(Rnorm+1)+Xnorm*Xnorm)/Denom;
-    double RhoImag = 2*Xnorm/Denom;
-
-    x = RhoReal*6;// 6 - radius
-    y = RhoImag*6;// 6 - radius
-}
-
 void Measurements::drawSmithImage (void)
 {
     QPen pen;

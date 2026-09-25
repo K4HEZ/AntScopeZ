@@ -959,10 +959,10 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
                                 str += QString::number(phase,'f',2) + "°";
                             }else if(m_currentTab == "tab_rs")
                             {
-                                //str += QString::number(computeZ(r,x),'f',2);
+                                //str += QString::number(RfMath::computeZ(r,x),'f',2);
                             }else if(m_currentTab == "tab_rp")
                             {
-                                //str += QString::number(computeZ(r,x),'f',2);
+                                //str += QString::number(RfMath::computeZ(r,x),'f',2);
                             }else if(m_currentTab == "tab_rl")
                             {
                                 str += QString::number(rl,'f',2) + " dB";

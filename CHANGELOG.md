@@ -18,9 +18,10 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Changed
 
-- Internal: analyzer layer and calibration split into a UI-free
-  `antscopez_core` library, with core settings in a new `AppConfig`
-  (groundwork for mobile front ends). No user-visible change intended.
+- Internal: analyzer layer, calibration and RF/TDR math split into a
+  UI-free `antscopez_core` library, with core settings in a new
+  `AppConfig` (groundwork for mobile front ends). No user-visible change
+  intended.
 
 ### Fixed
 

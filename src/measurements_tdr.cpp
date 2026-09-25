@@ -34,133 +34,13 @@ int Measurements::calcTdrDist(QVector<RawData> *data)
 
     double maxfq = data->at(asize-1).fq;
 
-    // See calcTdrEstimateRaw() -- this used to duplicate CalcTdr()'s FFT-size/
+    // See TdrMath::estimateRaw() -- this used to duplicate CalcTdr()'s FFT-size/
     // resolution/range math inline; both now share one implementation. Its
     // asize<2||maxfq<=minfq NaN guard is a small behavior addition here (this
     // function never had it before, unlike CalcTdr()), closing the same
     // latent single-point-measurement crash CalcTdr() was already guarded
     // against.
-    return (int)calcTdrEstimateRaw(asize, minfq, maxfq, m_cableVelFactor, m_measureSystemMetric).unambiguousRange;
-}
-
-// See the declaration in measurements.h for what unambiguousRange/resolution/
-// chartStep each mean and how they were verified.
-Measurements::TdrEstimate Measurements::calcTdrEstimateRaw(int asize, double minfqMHz, double maxfqMHz,
-                                                             double velFactor, bool metric)
-{
-    TdrEstimate est;
-
-    if (asize < 2 || maxfqMHz <= minfqMHz)
-        return est; // NaN guard -- see CalcTdr()'s original comment on why (0-width/0-length data)
-
-    int fftSize = 0;
-    for (int i=0; ; i++)
-    {
-        fftSize = (1<<i);
-        if ( (fftSize/2) >= (asize-1) )
-            break;
-
-        if (i==14)
-            return TdrEstimate(); // bug
-    }
-
-    fftSize *= 8;
-
-    if (fftSize > TDR_MAXARRAY)
-        return TdrEstimate(); // bug
-
-    double bw = maxfqMHz - minfqMHz;
-
-    double chartStep = 1.0/bw/4*299792458*velFactor / (fftSize/2) * (asize-1);
-    double range = chartStep*fftSize/1000000;
-    // c x VF / (2 x BW), BW in Hz (maxfqMHz/minfqMHz are MHz, hence *1e6) --
-    // independent of asize/fftSize, unlike chartStep/range above.
-    double resolution = (299792458.0 * velFactor) / (2.0 * bw * 1.0e6);
-
-    if (!metric)
-    {
-        range *= FEETINMETER;
-        resolution *= FEETINMETER;
-    }
-
-    est.unambiguousRange = range;
-    est.resolution = resolution;
-    est.chartStep = chartStep;
-    est.fftSize = fftSize;
-    return est;
-}
-
-Measurements::TdrEstimate Measurements::calcTdrEstimate(int dots, double topFreqMHz, double velFactor, bool metric)
-{
-    return calcTdrEstimateRaw(dots + 1, 0.0, topFreqMHz, velFactor, metric);
-}
-
-// Modified Bessel function of the first kind, order 0 -- series expansion,
-// only needed for the Kaiser window below. Accurate to well under the
-// window's own precision needs across the beta range a Kaiser window
-// picker would realistically expose (0-20ish); no external math library
-// pulled in for one function.
-static double besselI0(double x)
-{
-    double sum = 1.0;
-    double term = 1.0;
-    double xx = x*x/4.0;
-    for (int k = 1; k <= 25; k++)
-    {
-        term *= xx/((double)k*(double)k);
-        sum += term;
-        if (term < 1e-12*sum)
-            break;
-    }
-    return sum;
-}
-
-// Combined window-shape-and-normalization coefficient CalcTdr() multiplies
-// each frequency bin's reflection coefficient by before the inverse FFT.
-// i=0..n-1 maps onto the *falling half* (x=0.5..1.0) of a standard
-// full-length window -- full gain at DC (i=0), tapering toward that
-// window's minimum at the top of the measured band (i=n-1). That's
-// deliberate, not a simplification: a TDR sweep only has one truncation
-// edge to taper (the top of the measured band) -- the low edge is the
-// spectrum's real DC start, not an artifact -- unlike a typical centered
-// FFT window, which tapers both edges of data that's truncated on both
-// sides. This mapping reproduces the original hardcoded Hamming formula
-// exactly (case TdrWindow::Hamming below is algebraically identical to the
-// pre-2026-08-21 inline code).
-//
-// Normalization: each case (Kaiser aside) divides by that window's own
-// additive/DC-offset coefficient ("a0"), matching the original Hamming
-// code's own KP=1/0.53836 convention -- an approximation (not a rigorous
-// coherent-gain correction), kept for the sake of not changing today's
-// Hamming output. Kaiser's own formula already peaks at exactly 1.0 at
-// x=0.5 (i=0), so it needs no extra normalization.
-double Measurements::tdrWindowCoeff(TdrWindow type, double beta, int i, int n)
-{
-    double x = (n > 1) ? (0.5 + 0.5*(double)i/(double)(n-1)) : 0.5;
-
-    switch (type)
-    {
-    case TdrWindow::Rectangular:
-        return 1.0;
-
-    case TdrWindow::Hann:
-        return (0.5 - 0.5*cos(2*M_PI*x)) / 0.5;
-
-    case TdrWindow::Blackman:
-        return (0.42 - 0.5*cos(2*M_PI*x) + 0.08*cos(4*M_PI*x)) / 0.42;
-
-    case TdrWindow::Kaiser:
-    {
-        double arg = 1.0 - (2.0*x-1.0)*(2.0*x-1.0);
-        if (arg < 0)
-            arg = 0;
-        return besselI0(beta*sqrt(arg)) / besselI0(beta);
-    }
-
-    case TdrWindow::Hamming:
-    default:
-        return (0.53836 - 0.46146*cos(2*M_PI*x)) / 0.53836;
-    }
+    return (int)TdrMath::estimateRaw(asize, minfq, maxfq, m_cableVelFactor, m_measureSystemMetric).unambiguousRange;
 }
 
 int Measurements::CalcTdr(QVector <RawData> *data)
@@ -187,232 +67,16 @@ int Measurements::CalcTdr(QVector <RawData> *data)
         return 0;
     }
 
-    double minfq = data->at(0).fq;
-    if ( minfq > 0.1 )
-    {
-        return 0; // Wrong fq
-    }
-
-    double maxfq = data->at(asize-1).fq;
-
-    // A single data point (the norm for the first tick of a live scan, e.g.
-    // when TDR is one of the joined "Multi" views and gets redrawn after
-    // every incoming point) makes maxfq==minfq, so 1.0/(maxfq-minfq) inside
-    // calcTdrEstimateRaw() would be +-inf, multiplied by a trailing
-    // *(asize-1) that's 0 in this same case, giving inf*0 == NaN -- which
-    // would flow into the axis range and graph data and crash QCustomPlot's
-    // internal qRound() the next time it renders. calcTdrEstimateRaw() bails
-    // out (fftSize stays 0) in exactly this case; the caller (redrawTDR)
-    // already needs to tolerate a 0 return since the checks above it can do
-    // the same.
-    TdrEstimate est = calcTdrEstimateRaw(asize, minfq, maxfq, m_cableVelFactor, m_measureSystemMetric);
-    if (est.fftSize == 0)
-        return 0; // bug, or not enough/valid data yet -- see calcTdrEstimateRaw()
-
-    int m_iTdrFftSize = est.fftSize;
-    m_tdrResolution = est.chartStep;
-    m_tdrRange = est.unambiguousRange;
-
-    int i;
-
-    float *TdrReal = new float[TDR_MAXARRAY];
-    float *TdrImag = new float[TDR_MAXARRAY];
-
-#define Rdevice 50.0
-
-    for (i=0; i<=m_iTdrFftSize/2; i++)
-    {
-        double R=0;
-        double X=0;
-        double Gre=0;
-        double Gim=0;
-        double FQ=0;
-        if (i < asize)
-        {
-            FQ = data->at(i).fq;
-            R = data->at(i).r;
-            X = data->at(i).x;
-
-            Gre = (R*R-Rdevice*Rdevice+X*X)/((R+Rdevice)*(R+Rdevice)+X*X);
-            Gim = (2*Rdevice*X)/((R+Rdevice)*(R+Rdevice)+X*X);
-
-            if ( i==0)
-            {
-                double m_dFarEndImpedance = 50;
-                Gre = (m_dFarEndImpedance-Rdevice)/(m_dFarEndImpedance+Rdevice);
-                Gim = 0;
-            }
-
-            double k = tdrWindowCoeff(m_tdrWindowType, m_tdrKaiserBeta, i, asize);
-
-            TdrReal[i] = Gre*m_iTdrFftSize/asize/2.0*k;
-            TdrImag[i] = Gim*m_iTdrFftSize/asize/2.0*k;
-        }
-        else
-        {
-            TdrReal[i] = 0;
-            TdrImag[i] = 0;
-        }
-    }
-
-// Interpolate zero frequency
-
-#define BDR 1
-    for (i=0; i<BDR; i++)
-    {
-        double newreal = sqrt(TdrReal[BDR]*TdrReal[BDR]+TdrImag[BDR]*TdrImag[BDR]);
-
-        if (TdrReal[BDR] < 0)
-            TdrReal[i] = -newreal;
-        else
-            TdrReal[i] = newreal;
-
-        TdrImag[i] = 0;
-
-    }
-
-// Mirror
-    for (i=1; i<m_iTdrFftSize/2; i++)
-    {
-        TdrReal[m_iTdrFftSize-i] = TdrReal[i];
-        TdrImag[m_iTdrFftSize-i] = -TdrImag[i];
-    }
-    TdrReal[m_iTdrFftSize/2] = 0;
-    TdrImag[m_iTdrFftSize/2] = 0;
-
-    FFT(TdrReal, TdrImag, m_iTdrFftSize, 1/*Inverse*/);	// Inverse FFT
-
-    double ig = 0;
-    for (i=0; i<m_iTdrFftSize; i++)
-    {
-        double Amp = TdrReal[i];
-        if((Amp > 0.015) || (Amp < -0.015))
-        {
-            m_pdTdrImp[i] = Amp;
-            ig += Amp/2/(((double)m_iTdrFftSize)/asize/2);
-        }else
-        {
-            m_pdTdrImp[i] = 0;
-        }
-
-        m_pdTdrStep[i] = ig;
-
-        double Z = m_Z0*(1+ig)/(1-ig);
-        Z = (Z < 0) ? 0 : Z;
-        m_pdTdrZ[i] = (Z > VALUE_LIMIT) ? VALUE_LIMIT : Z;
-    }
-
-    delete[] TdrReal;
-    delete[] TdrImag;
-    return m_iTdrFftSize;
+    TdrMath::Result tdr = TdrMath::compute(*data, m_cableVelFactor, m_measureSystemMetric,
+                                           m_tdrWindowType, m_tdrKaiserBeta, m_Z0);
+    if (tdr.fftSize == 0)
+        return 0;
+    m_tdrRange = tdr.range;
+    m_tdrImp = tdr.impulse;
+    m_tdrStep = tdr.step;
+    m_tdrZ = tdr.impedance;
+    return tdr.fftSize;
 }
-
-void Measurements::FFT(float real[], float imag[], int length, int Inverse)
-{
-    double wreal, wpreal, wimag, wpimag, theta;
-    double tempreal, tempimag, tempwreal, direction;
-
-    int Addr, Position, Mask, BitRevAddr, PairAddr;
-    int m, k;
-
-    direction = -1.0;		// direction of rotating phasor for FFT
-
-    if(Inverse)
-        direction = 1.0;	// direction of rotating phasor for IFFT
-
-    //  bit-reverse the addresses of both the real and imaginary arrays
-    //  real[0..length-1] and imag[0..length-1] are the paired complex numbers
-
-    for (Addr=0; Addr<length; Addr++)
-    {
-        // Derive Bit-Reversed Address
-        BitRevAddr = 0;
-        Position = length >> 1;
-        Mask = Addr;
-        while (Mask)
-        {
-            if(Mask & 1)
-                BitRevAddr += Position;
-            Mask >>= 1;
-            Position >>= 1;
-        }
-
-        if (BitRevAddr > Addr)				// Swap
-        {
-            double s;
-            s = real[BitRevAddr];			// real part
-            real[BitRevAddr] = real[Addr];
-            real[Addr] = s;
-            s = imag[BitRevAddr];			// imaginary part
-            imag[BitRevAddr] = imag[Addr];
-            imag[Addr] = s;
-        }
-    }
-
-    // FFT, IFFT Kernel
-
-    for (k=1; k < length; k <<= 1)
-    {
-        theta = direction * M_PI / (double)k;
-        wpimag = sin(theta);
-        wpreal = cos(theta);
-        wreal = 1.0;
-        wimag = 0.0;
-
-        for (m=0; m < k; m++)
-        {
-            for (Addr = m; Addr < length; Addr += (k*2))
-            {
-                PairAddr = Addr + k;
-
-                tempreal = wreal * (double)real[PairAddr] - wimag * (double)imag[PairAddr];
-                tempimag = wreal * (double)imag[PairAddr] + wimag * (double)real[PairAddr];
-
-
-                real[PairAddr] = (double)real[Addr] - tempreal;
-                imag[PairAddr] = (double)imag[Addr] - tempimag;
-                real[Addr] += tempreal;
-                imag[Addr] += tempimag;
-            }
-            tempwreal = wreal;
-            wreal = wreal * wpreal - wimag * wpimag;
-            wimag = wimag * wpreal + tempwreal * wpimag;
-        }
-    }
-
-    if(Inverse)							// Normalize the IFFT coefficients
-        for(int i=0; i<length; i++)
-        {
-            real[i] /= (double)length;
-            imag[i] /= (double)length;
-        }
-}
-
-int Measurements::CalcTdr2(QVector <RawData> *data)
-{
-    Q_UNUSED(data);
-    // not used
-    return 0;
-}
-
-qint16 Measurements::DTF_FindRadix2Length(qint16 length, int *log2N)
-{
-    Q_UNUSED(length);
-    Q_UNUSED(log2N);
-    // not used
-    return 0;
-}
-
-void  Measurements::FFT2(double *Rdat, double *Idat, int N, int LogN, int Ft_Flag)
-{
-    Q_UNUSED(Rdat);
-    Q_UNUSED(Idat);
-    Q_UNUSED(N);
-    Q_UNUSED(LogN);
-    Q_UNUSED(Ft_Flag);
-
-}
-
 
 void Measurements::startTDRProgress(QWidget* _parent, int _dots)
 {
@@ -522,20 +186,20 @@ void Measurements::redrawTDR(int _index, bool resetRange)
             double x = i;
             QCPGraphData data;
             data.key = x*step;
-            data.value = m_pdTdrImp[i];
+            data.value = m_tdrImp[i];
             mm.tdrImpGraph.add(data);
-            data.value = m_pdTdrStep[i];
+            data.value = m_tdrStep[i];
             mm.tdrStepGraph.add(data);
-            data.value = m_pdTdrZ[i];
+            data.value = m_tdrZ[i];
             mm.tdrZGraph.add(data);
 
             QCPGraphData dataFeet;
             dataFeet.key = x*step;
-            dataFeet.value = m_pdTdrImp[i];
+            dataFeet.value = m_tdrImp[i];
             mm.tdrImpGraphFeet.add(dataFeet);
-            dataFeet.value = m_pdTdrStep[i];
+            dataFeet.value = m_tdrStep[i];
             mm.tdrStepGraphFeet.add(dataFeet);
-            dataFeet.value = m_pdTdrZ[i];
+            dataFeet.value = m_tdrZ[i];
             mm.tdrZGraphFeet.add(dataFeet);
 
             m_tdrZRange = m_measureSystemMetric ? qMax(m_tdrZRange, data.value) : qMax(m_tdrZRange, dataFeet.value);
@@ -647,7 +311,7 @@ Measurements::TdrPeak Measurements::findTdrPeak(bool metric, double localVf)
     // The stored key is a distance computed with whatever velocity factor
     // was active when redrawTDR() last ran (cableVelFactor()). Distance is
     // linear in velocity factor (see chartStep's formula in
-    // calcTdrEstimateRaw()), so rescaling to localVf is exact and doesn't
+    // TdrMath::estimateRaw()), so rescaling to localVf is exact and doesn't
     // need re-running the FFT -- only re-plotting would.
     double globalVf = cableVelFactor();
     double ratio = (globalVf > 0 && localVf > 0) ? (localVf / globalVf) : 1.0;

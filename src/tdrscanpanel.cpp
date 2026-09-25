@@ -269,8 +269,8 @@ void TdrScanPanel::updateEstimateLabels()
     // declaration in measurements.h); this panel's fields are kHz to match
     // the rest of the app's frequency-field convention.
     double topFreqMHz = (double)topFreqKHz / 1000.0;
-    Measurements::TdrEstimate est =
-        Measurements::calcTdrEstimate(dots, topFreqMHz, velocityFactor(), m_measureSystemMetric);
+    TdrMath::Estimate est =
+        TdrMath::estimate(dots, topFreqMHz, velocityFactor(), m_measureSystemMetric);
 
     if (est.fftSize == 0)
     {
@@ -340,7 +340,7 @@ void TdrScanPanel::refreshResult()
             if (!ok) dots = ui->dotsSlider->value();
             qint64 topFreqKHz = ui->topFreqEdit->text().toLongLong(&ok);
             if (!ok) topFreqKHz = ui->topFreqSlider->value();
-            Measurements::TdrEstimate est = Measurements::calcTdrEstimate(
+            TdrMath::Estimate est = TdrMath::estimate(
                 dots, (double)topFreqKHz / 1000.0, velocityFactor(), m_measureSystemMetric);
 
             if (est.fftSize != 0 && (knownLengthForFault - p.distance) > est.resolution) {

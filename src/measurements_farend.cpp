@@ -138,64 +138,9 @@ RawData Measurements::calcFarEnd(const RawData& data, int idx, bool refreshGraph
     QCPGraphData qdata;
     qdata.key = fq*1000;
 
-    double Klen = 1;
-    switch (m_cableLossUnits)
-    {
-    case 0: Klen = 1; break;
-    case 1: Klen = 1*100.0; break;
-    case 2: Klen = 1/FEETINMETER; break;
-    case 3: Klen = 1/FEETINMETER*100.0; break;
-    }
-
-    Complex Zload = Complex( R, X);
-
-    double dMatchedLossDb;  // Note that K1/K2 are in dB/100 ft
-    if(!m_cableLossAtAnyFq)
-        dMatchedLossDb = m_cableLossConductive*Klen*sqrt(fq) + m_cableLossDielectric*Klen*fq;
-    else
-        dMatchedLossDb = m_cableLossConductive*Klen + m_cableLossDielectric*Klen;
-
-
-#define NEPER 8.68588963806504        // = 20 / Ln(10)
-
-    double Alpha = dMatchedLossDb / 100.0 / NEPER; // Nepers (attenuation) per foot
-    double Beta = (2*M_PI * fq) / (SPEEDOFLIGHT*FEETINMETER/1000000.0 * m_cableVelFactor); // Radians (phase constant) per foot
-
-    double Alphal = Alpha * m_cableLength;
-    double Betal = Beta * m_cableLength;
-
-    da.r = R;
-    da.x = X;
-
-    if(m_farEndMeasurement==1) // subtract cable
-    {
-        Alphal = -Alphal;
-        Betal = -Betal;
-    }
-    // Was: an extra *FEETINMETER correction here, applied only when
-    // m_cableLossUnits==0 (dB/100feet, the default). Alpha/Beta are
-    // already correctly "per foot" for every loss-unit choice (Klen
-    // above already normalizes to that basis), and m_cableLength is
-    // *always* already in feet by the time it reaches here regardless of
-    // which unit is displayed (Settings::getCableLength() converts at
-    // the UI boundary) -- so this extra multiply threw the result off by
-    // FEETINMETER (~3.28x) specifically for the default dropdown
-    // selection, and only that one. Verified numerically: the other
-    // three loss-unit choices already agreed with each other exactly:
-    // removing this makes dB/100feet agree with them too, rather than
-    // being the odd one out. See issue #31.
-
-    Complex Sinh_gl = Complex( cos(Betal) * sinh(Alphal), sin(Betal) * cosh(Alphal) );
-    Complex Cosh_gl = Complex( cos(Betal) * cosh(Alphal), sin(Betal) * sinh(Alphal) );
-
-    Complex Zo = Complex(m_cableResistance, -m_cableResistance * (Alpha / Beta));
-
-    Complex ZIZL = Zo * ( (Zload*Cosh_gl + Zo*Sinh_gl) /  (Zo*Cosh_gl + Zload*Sinh_gl) );
-
-    R = ZIZL.real();
-    if(R<0.0001)
-        R = 0.0001;
-    X = ZIZL.imag();
+    Complex zin = RfMath::cableTransform(fq, R, X, cableParams(), m_farEndMeasurement==1);
+    R = zin.real();
+    X = zin.imag();
 
     Rpar = R*(1+X*X/R/R);
     Xpar = X*(1+R*R/X/X);
@@ -215,7 +160,7 @@ RawData Measurements::calcFarEnd(const RawData& data, int idx, bool refreshGraph
 
     double swr=1;
     double rl=0;
-    computeSWR(fq, getZ0(), R, X, &swr, &rl);
+    RfMath::computeSWR(getZ0(), R, X, &swr, &rl);
 
     da.r = R;
     da.x = X;
@@ -236,14 +181,14 @@ RawData Measurements::calcFarEnd(const RawData& data, int idx, bool refreshGraph
         _farEndMeasurements[idx].rsrGraph.add(qdata);
         qdata.value = X;
         _farEndMeasurements[idx].rsxGraph.add(qdata);
-        qdata.value = computeZ(R, X);
+        qdata.value = RfMath::computeZ(R, X);
         _farEndMeasurements[idx].rszGraph.add(qdata);
 
         qdata.value = Rpar;
         _farEndMeasurements[idx].rprGraph.add(qdata);
         qdata.value = Xpar;
         _farEndMeasurements[idx].rpxGraph.add(qdata);
-        qdata.value = computeZ(R, X);
+        qdata.value = RfMath::computeZ(R, X);
         _farEndMeasurements[idx].rpzGraph.add(qdata);
 
         qdata.value = RhoPhase;
@@ -252,7 +197,7 @@ RawData Measurements::calcFarEnd(const RawData& data, int idx, bool refreshGraph
         _farEndMeasurements[idx].rhoGraph.add(qdata);
 
         double pointX,pointY;
-        NormRXtoSmithPoint(R/m_Z0, X/m_Z0, pointX, pointY);
+        RfMath::smithPoint(R/m_Z0, X/m_Z0, pointX, pointY);
         int len = _farEndMeasurements[idx].dataRX.length();
         _farEndMeasurements[idx].smithGraph.add(QCPCurveData(len, pointX, pointY));
     }

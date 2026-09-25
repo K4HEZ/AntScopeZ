@@ -132,7 +132,7 @@ QPair<double, double> Measurements::autoCalibrate()
                         dSqrDist += Gre*Gre+Gim*Gim;
 
                         double tmpSWR;
-                        int ret = computeSWR(inData.fq*1000.0, getZ0(), R, X, &tmpSWR, nullptr);
+                        int ret = RfMath::computeSWR(getZ0(), R, X, &tmpSWR, nullptr);
                         if (ret != 0) {
 
 //                            if (i == 0) {

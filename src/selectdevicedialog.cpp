@@ -23,9 +23,6 @@ extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
 // normal machine will essentially never have this exact path in use for
 // anything else, and it's invisible the instant the emulator isn't running.
 static const QString kNanoVnaEmulatorPath = QStringLiteral("/tmp/nanovna-emulator");
-// static
-SelectionParameters SelectionParameters::selected;
-
 
 SelectDeviceDialog::SelectDeviceDialog(bool silent, QWidget *parent) :
     QDialog(parent),

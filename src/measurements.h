@@ -16,6 +16,8 @@
 #include <complex>
 #include <settings.h>
 #include <float.h>
+#include "rfmath.h"
+#include "tdrmath.h"
 
 #include "ProgressDlg.h"
 
@@ -27,39 +29,16 @@
 
 #define TDR_MINPOINTS 200
 
-#define TDR_MAXARRAY 20000
 #define TDR_MAXPOINTS 1000
-
-//#define TDR_MAXARRAY 32768
-//#define TDR_MAXPOINTS 2000
-
-//#define TDR_MAXARRAY 65536
-//#define TDR_MAXPOINTS 4000
+//#define TDR_MAXPOINTS 2000 (with TDR_MAXARRAY 32768, tdrmath.h)
+//#define TDR_MAXPOINTS 4000 (with TDR_MAXARRAY 65536)
 
 // Floor for the TDR scan-setup panel's top-frequency control (kHz, matching
 // AnalyzerParameters' own minFq()/maxFq() unit convention) -- a too-narrow
-// bandwidth makes calcTdrEstimateRaw()'s 1/(maxfq-minfq) term blow up.
+// bandwidth makes TdrMath::estimateRaw()'s 1/(maxfq-minfq) term blow up.
 // Placeholder value, not yet tuned against real hardware -- see the
 // tdr-scan-rework-plan memory.
 #define TDR_MIN_FREQUENCY 5000
-
-// One-sided taper applied to a TDR scan's frequency-domain data before the
-// inverse FFT -- full gain at DC, tapering toward the window's minimum at
-// the top of the measured band (see tdrWindowCoeff()'s comment in
-// measurements_tdr.cpp for why only one edge needs tapering here, unlike a
-// typical centered FFT window). Was hardcoded to (an unlabeled) Hamming
-// until 2026-08-21; default stays Hamming so existing behavior doesn't
-// change until a user picks something else.
-enum class TdrWindow { Rectangular, Hamming, Hann, Blackman, Kaiser };
-
-
-#ifndef SPEEDOFLIGHT
-#define SPEEDOFLIGHT 299792458.0
-#endif
-
-#ifndef FEETINMETER
-#define FEETINMETER 3.2808399
-#endif
 
 #ifndef DBL_MAX
 #define DBL_MAX 1.797693134862315e+308
@@ -76,7 +55,6 @@ extern int g_inactiveGraphPenWidth;
 #define ACTIVE_GRAPH_PEN_WIDTH g_activeGraphPenWidth
 #define INACTIVE_GRAPH_PEN_WIDTH g_inactiveGraphPenWidth
 
-typedef std::complex <double> Complex;
 
 class Measurements : public QObject
 {
@@ -183,47 +161,7 @@ public:
     void setZ0(double _Z0);
 
     int CalcTdr(QVector<RawData> *data);
-    void FFT(float real[], float imag[], int length, int Inverse = 0);
     int calcTdrDist(QVector<RawData> *data);
-
-    // Pure function of scan parameters -- no FFT execution, no side effects,
-    // no member state read besides what's passed in. Used by CalcTdr() (fed
-    // real captured asize/minfq/maxfq) and calcTdrDist() (ditto) so neither
-    // duplicates this math anymore, and by the TDR scan-setup panel's live
-    // preview via the calcTdrEstimate() overload below, fed *planned*
-    // dots/top-frequency before any scan runs -- same formula either way, so
-    // the preview and the real post-scan numbers can't drift apart. See the
-    // tdr-scan-rework-plan memory for the derivation/verification of both
-    // fields below.
-    struct TdrEstimate {
-        // Today's original TDR-range formula (behavior unchanged), hand-
-        // verified 2026-08-20 against the textbook max-unambiguous-range
-        // formula (c x VF x (N-1) / (2 x BW)) -- matches closely. Depends on
-        // dot count (asize) as well as bandwidth, via the FFT-size rounding
-        // below. Same units as the TDR chart's x-axis (m or ft, per `metric`).
-        double unambiguousRange = 0;
-        // True physical resolving power -- c x VF / (2 x BW) -- depends only
-        // on bandwidth and velocity factor, not dot count. NOT the same thing
-        // as the chart's own per-point spacing (unambiguousRange / fftSize,
-        // see chartStep below), which is ~8x finer due to zero-padding and
-        // does not represent genuine resolving power. Same units as
-        // unambiguousRange.
-        double resolution = 0;
-        // The legacy m_tdrResolution formula's raw (pre unit-conversion)
-        // value -- kept only so CalcTdr()'s m_tdrResolution member stays
-        // bit-for-bit identical to before this refactor. Not otherwise
-        // meaningful; use `resolution` above instead.
-        double chartStep = 0;
-        int fftSize = 0; // iTdrFftSize
-    };
-    static TdrEstimate calcTdrEstimateRaw(int asize, double minfqMHz, double maxfqMHz,
-                                           double velFactor, bool metric);
-    // Convenience overload for a live preview before any scan has run --
-    // asize/minfq synthesized as dots+1 / 0 (a real device returns
-    // dotsNumber+1 points per request -- see AnalyzerPro::startStitchedMeasure()'s
-    // comment -- and TDR requires minfq within 0.1MHz of DC, see CalcTdr()'s
-    // own "Wrong fq" guard).
-    static TdrEstimate calcTdrEstimate(int dots, double topFreqMHz, double velFactor, bool metric);
 
     // Not QSettings-backed (see tdr-scan-rework-plan memory -- the scan
     // panel's controls are meant to reset to sane defaults each time it
@@ -234,16 +172,6 @@ public:
     void setTdrWindowType(TdrWindow type) { m_tdrWindowType = type; }
     double tdrKaiserBeta() const { return m_tdrKaiserBeta; }
     void setTdrKaiserBeta(double beta) { m_tdrKaiserBeta = beta; }
-
-    // Pure function -- see measurements_tdr.cpp for the full comment on what
-    // this computes and why. Public (not just CalcTdr()'s internal detail)
-    // so a future window-shape preview (e.g. a small sparkline in the scan
-    // panel) can call it directly without re-running a scan.
-    static double tdrWindowCoeff(TdrWindow type, double beta, int i, int n);
-
-    int CalcTdr2(QVector <RawData> *data);
-    qint16 DTF_FindRadix2Length(qint16 length, int *log2N);
-    void FFT2(double *Rdat, double *Idat, int N, int LogN, int Ft_Flag);
 
     void setCableVelFactor(double value);
     // Current live value (Settings > Cable, propagated via
@@ -257,6 +185,17 @@ public:
     // its own comment for why that's safe without disturbing feedline-loss
     // compensation elsewhere, which reads this same value.
     double cableVelFactor() const { return m_cableVelFactor; }
+    RfMath::CableParams cableParams() const {
+        RfMath::CableParams c;
+        c.velFactor = m_cableVelFactor;
+        c.resistance = m_cableResistance;
+        c.lossConductive = m_cableLossConductive;
+        c.lossDielectric = m_cableLossDielectric;
+        c.lossUnits = m_cableLossUnits;
+        c.lossAtAnyFq = m_cableLossAtAnyFq;
+        c.lengthFeet = m_cableLength;
+        return c;
+    }
 
     struct TdrPeak {
         bool found = false;
@@ -414,11 +353,11 @@ private:
 
     double m_Z0;
 
-    double *m_pdTdrImp;
-    double *m_pdTdrStep;
-    double *m_pdTdrZ;
+    // Last CalcTdr() output, one entry per FFT bin.
+    QVector<double> m_tdrImp;
+    QVector<double> m_tdrStep;
+    QVector<double> m_tdrZ;
 
-    double m_tdrResolution;
     double m_tdrRange;
     double m_tdrZRange = 0;
     TdrWindow m_tdrWindowType = TdrWindow::Hamming; // default matches pre-2026-08-21 hardcoded behavior
@@ -485,8 +424,6 @@ private:
     int m_previousI = 0;
     int m_currentPoint = 0;
 
-    quint32 computeSWR(double freq, double Z0, double R, double X, double *VSWR, double *RL);
-    double computeZ (double R, double X);
 
     // Constructs both display widgets (called once, entering One-Fq mode)
     // and wires their signals. Doesn't show either -- see
@@ -531,10 +468,8 @@ private:
     // handling).
     void setGraphHintPlaceholder();
 
-    void NormRXtoSmithPoint(double Rnorm, double Xnorm, double &x, double &y);
     void calcFarEnd(bool _incrementally=false);
     RawData calcFarEnd(const RawData& data, int idx, bool refreshGraphs=true);
-    void prepareGraphs(RawData _rawData, GraphData& data, GraphData& calibData);
     void restrictData(qreal _min, qreal _max, QCPGraphData& _data);
     void redrawSWR(bool _incrementally);
     void redrawPhase(bool _incrementally);
@@ -543,30 +478,6 @@ private:
     void redrawRl(bool _incrementally);
     void redrawS21(bool _incrementally);
     void populateSParamData(const QList<SParamPoint>& points);
-    // Converts one Touchstone value pair (in whichever format the file's
-    // option line declared -- MA/RI/DB) into a plain complex number.
-    // Shared by all four S-parameters on a 2-port data line, and by the
-    // existing 1-port S11/Z11 pair -- format decoding is identical
-    // regardless of which parameter it's for.
-    static std::complex<double> sparamFromFormat(int iFormat, double v1, double v2);
-    // Converts one 2-port Z-parameter data line (Z11/Z21/Z12/Z22, all
-    // referenced to the same real Z0 -- Touchstone's "R n" line, one
-    // impedance for both ports) into the equivalent S-parameters, via the
-    // standard 2-port Z-to-S matrix identity. See #7 -- a Z-parameter
-    // Touchstone file's Z21/Z12/Z22 used to be silently skipped entirely
-    // (a different quantity than S21/S12/S22, ohms not a unitless ratio)
-    // rather than actually converted.
-    static SParamPoint zToSParam(double fq, std::complex<double> z11,
-                                  std::complex<double> z21, std::complex<double> z12,
-                                  std::complex<double> z22, double z0);
-    // std::arg() wraps into (-180, 180] degrees; a real transmission
-    // phase can rack up many full turns across a sweep, so this
-    // accumulates the shortest-path delta between consecutive points
-    // instead (same technique as numpy.unwrap()). Shared by
-    // populateSParamData()'s batch import and on_newSParamPoint()'s live
-    // capture -- the math is identical, only where the have/prev state
-    // lives differs (stack-local for a batch, member fields for live).
-    static double unwrapPhaseDeg(double rawDeg, bool& havePrev, double& prevRaw, double& prevUnwrapped);
     // COL_POINTS cell text -- "--" until a scan/import finishes, then the
     // point count tagged with "(s1p)"/"(s2p)" so the Measurements list
     // itself shows which rows actually have 2-port data (dataSParam),
