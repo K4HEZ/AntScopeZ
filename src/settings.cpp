@@ -1,4 +1,5 @@
 #include "settings.h"
+#include "appconfig.h"
 #include "ui_settings.h"
 #include <QPointer>
 #include "popupindicator.h"
@@ -31,14 +32,10 @@ extern int g_maxMarkers; // see markers.cpp
 extern bool g_autoMarkerAtLowestSwr; // see markers.cpp
 extern int g_pointsMax; // see mainwindow.cpp
 extern int g_pointsWarnThreshold; // see mainwindow.cpp
-extern int g_analyzerMaxPoints; // see mainwindow.cpp
 extern bool g_extendedChartZoom; // see mainwindow.cpp
-extern bool g_useTls; // see mainwindow.cpp
 extern bool g_checkUpdates; // see mainwindow.cpp
 extern bool g_remoteApiEnabled; // see mainwindow.cpp
 extern int g_remoteApiPort; // see mainwindow.cpp
-extern int g_analyzerTimeoutSec; // see mainwindow.cpp
-extern bool g_reconnectToDrain; // see mainwindow.cpp
 extern double g_phaseAxisMin; // see mainwindow.cpp
 extern double g_phaseAxisMax; // see mainwindow.cpp
 extern double g_zAxisMin; // see mainwindow.cpp
@@ -142,20 +139,20 @@ Settings::Settings(QWidget *parent) :
     ui->checkBoxAutoMarkerLowestSwr->setChecked(g_autoMarkerAtLowestSwr);
     ui->lineEditScanPointsMax->setText(QString::number(g_pointsMax));
     ui->lineEditScanWarnThreshold->setText(QString::number(g_pointsWarnThreshold));
-    ui->lineEditAnalyzerMaxPoints->setText(QString::number(g_analyzerMaxPoints));
+    ui->lineEditAnalyzerMaxPoints->setText(QString::number(AppConfig::get().analyzerMaxPoints));
     ui->checkBoxExtendedChartZoom->setChecked(g_extendedChartZoom);
-    ui->checkBoxUseTls->setChecked(g_useTls);
+    ui->checkBoxUseTls->setChecked(AppConfig::get().useTls);
     ui->checkBoxCheckUpdates->setChecked(g_checkUpdates);
     ui->checkBoxRemoteApiEnabled->setChecked(g_remoteApiEnabled);
     ui->spinBoxRemoteApiPort->setValue(g_remoteApiPort);
-    ui->lineEdit_analyzerTimeout->setText(QString::number(g_analyzerTimeoutSec));
+    ui->lineEdit_analyzerTimeout->setText(QString::number(AppConfig::get().analyzerTimeoutSec));
     // Moved here from the Developer tab 2026-09-04 -- these are ordinary
     // user-facing preferences, not debug/developer-only knobs, and now
     // persist to the ini like the rest of the General tab (read here on
     // open, written back in ~Settings() on close) instead of the
     // session-only in-memory-only behavior they had before.
     ui->checkBoxReportDetailedErrors->setChecked(DebugLog::detailedErrorsEnabled());
-    ui->checkBoxReconnectToDrain->setChecked(g_reconnectToDrain);
+    ui->checkBoxReconnectToDrain->setChecked(AppConfig::get().reconnectToDrain);
     ui->lineEditPhaseAxisMin->setText(QString::number(g_phaseAxisMin));
     ui->lineEditPhaseAxisMax->setText(QString::number(g_phaseAxisMax));
     ui->lineEditZAxisMin->setText(QString::number(g_zAxisMin));
@@ -265,7 +262,7 @@ Settings::Settings(QWidget *parent) :
     // updates" phones home to RigExpert (device serial/OS/CPU/language/our
     // own version), which is a real disclosure, but this Updates tab's own
     // notice label above covers it, so the user can decide for themselves.
-    // g_useTls (mainwindow.cpp, "Use TLS" checkbox on this tab) covers the
+    // AppConfig::useTls ("Use TLS" checkbox on this tab) covers the
     // connection itself -- see issue #14.
     //
     // updateBtn (actually flashing a chosen file) stays permanently
@@ -414,9 +411,9 @@ Settings::~Settings()
     // same reasoning as lineEdit_systemImpedance's own direct read above.
     g_pointsMax = qBound(50, ui->lineEditScanPointsMax->text().toInt(), POINTS_MAX);
     g_pointsWarnThreshold = qBound(50, ui->lineEditScanWarnThreshold->text().toInt(), POINTS_MAX);
-    g_analyzerMaxPoints = qBound(50, ui->lineEditAnalyzerMaxPoints->text().toInt(), POINTS_MAX);
+    AppConfig::get().analyzerMaxPoints = qBound(50, ui->lineEditAnalyzerMaxPoints->text().toInt(), POINTS_MAX);
     g_extendedChartZoom = ui->checkBoxExtendedChartZoom->isChecked();
-    g_useTls = ui->checkBoxUseTls->isChecked();
+    AppConfig::get().useTls = ui->checkBoxUseTls->isChecked();
     g_checkUpdates = ui->checkBoxCheckUpdates->isChecked();
     g_remoteApiEnabled = ui->checkBoxRemoteApiEnabled->isChecked();
     g_remoteApiPort = ui->spinBoxRemoteApiPort->value();
@@ -426,7 +423,7 @@ Settings::~Settings()
     // and friends already rely on elsewhere in this file.
     MainWindow::m_mainWindow->setRemoteApiEnabled(g_remoteApiEnabled, static_cast<quint16>(g_remoteApiPort));
     DebugLog::setDetailedErrorsEnabled(ui->checkBoxReportDetailedErrors->isChecked());
-    g_reconnectToDrain = ui->checkBoxReconnectToDrain->isChecked();
+    AppConfig::get().reconnectToDrain = ui->checkBoxReconnectToDrain->isChecked();
     g_warnDirtyDelete = ui->checkBoxWarnDirtyDelete->isChecked();
 
     m_settings->beginGroup("Settings");
@@ -438,22 +435,20 @@ Settings::~Settings()
     m_settings->setValue("maxMarkers", g_maxMarkers);
     m_settings->setValue("pointsMax", g_pointsMax);
     m_settings->setValue("pointsWarnThreshold", g_pointsWarnThreshold);
-    m_settings->setValue("analyzerMaxPoints", g_analyzerMaxPoints);
     m_settings->setValue("extendedChartZoom", g_extendedChartZoom);
-    m_settings->setValue("useTls", g_useTls);
     m_settings->setValue("checkUpdates", g_checkUpdates);
     m_settings->setValue("remoteApiEnabled", g_remoteApiEnabled);
     m_settings->setValue("remoteApiPort", g_remoteApiPort);
     m_settings->setValue("reportDetailedErrors", DebugLog::detailedErrorsEnabled());
-    m_settings->setValue("reconnectToDrain", g_reconnectToDrain);
-    // g_phaseAxisMin/Max and g_zAxisMin/Max, like g_analyzerTimeoutSec just
-    // above, are persisted from MainWindow's own save routine instead of
-    // here -- their on_..Finished() handlers below already keep the
-    // globals themselves current the moment the field loses focus.
+    // g_phaseAxisMin/Max and g_zAxisMin/Max are persisted from MainWindow's
+    // own save routine instead of here -- their on_..Finished() handlers
+    // below already keep the globals themselves current the moment the
+    // field loses focus.
     m_settings->setValue("warnDirtyDelete", g_warnDirtyDelete);
 
     m_settings->setValue("currentIndex",ui->tabWidget->currentIndex());
     m_settings->endGroup();
+    AppConfig::get().save(*m_settings);
 
     // auto calibration
     m_settings->beginGroup("Auto-calibration");
@@ -1225,68 +1220,14 @@ QString Settings::localDataFolder()
     return AppPaths::localDataFolder();
 }
 
-// Read-only data shipped with the app: cables.txt, itu-regions-defaults.txt,
-// the .qm translation files. A .deb (or plain `cmake --install`) ships
-// these under ANTSCOPE_SHARED_DATA_DIR -- CMAKE_INSTALL_FULL_DATADIR at
-// build time, i.e. wherever CMAKE_INSTALL_PREFIX actually resolved to
-// (/usr/share/antscopez for the packaging default of /usr, but this stays
-// correct even if someone installs to a different prefix). Prefer that if
-// it's there, otherwise fall back to sitting next to the binary, which is
-// how an un-installed dev build (build-debug/build-release) stages them.
-QString Settings::sharedDataFolder()
-{
-#ifdef ANTSCOPE_SHARED_DATA_DIR
-    if (QDir(ANTSCOPE_SHARED_DATA_DIR).exists())
-        return ANTSCOPE_SHARED_DATA_DIR;
-#endif
-    return QCoreApplication::applicationDirPath();
-}
-
 QString Settings::languageDataFolder()
 {
-#ifdef Q_OS_LINUX
-    extern bool g_raspbian;
-    if (g_raspbian)
-    {
-        return "/usr/share/AntScopeZ";
-    }
-#endif
-    // Was: return localDataFolder() on non-raspbian Linux, which resolves to
-    // *one directory above* the binary -- correct for user data (ini/
-    // calibration files), which is deliberately kept outside any specific
-    // build directory, but wrong here: the .qm translation files are staged
-    // directly next to the binary by CMake, i.e. in applicationDirPath()
-    // itself (which is what every other platform already used). This only
-    // "worked" for build layouts exactly one directory below the repo root
-    // (which also happens to hold checked-in .qm copies) -- e.g. a plain
-    // `build-debug/`. Qt Creator's default shadow-build layout
-    // (build/<kit>/AntScopeZ) sits one directory deeper, so "one directory
-    // up" landed on the empty build/ folder instead, QTranslator::load()
-    // failed silently, and the UI stayed untranslated regardless of the
-    // Language setting.
-    //
-    // Now prefers the installed /usr/share/antscopez (see
-    // sharedDataFolder()) so a .deb-installed copy finds its .qm files
-    // there instead of needing them next to /usr/bin/AntScopeZ.
-    return sharedDataFolder();
+    return AppPaths::languageDataFolder();
 }
 
 QString Settings::programDataPath(QString _fileName)
 {
-// Linux and macOS -- read-only data shipped with the app (cables.txt,
-// itu-regions-defaults.txt). itu-regions.txt is *not* one of these: it's
-// the user's own band edits, and lives in localDataPath() instead (see
-// loadItuBands()/saveItuBands() below). On macOS CMake stages these in
-// Contents/MacOS next to the binary, which sharedDataFolder() returns.
-#if defined(Q_OS_LINUX) || defined(Q_OS_DARWIN)
-    QDir dir0 = sharedDataFolder();
-    return dir0.absoluteFilePath(_fileName);
-#endif
-
-    QString configDataDirString = QStandardPaths::standardLocations(QStandardPaths::AppConfigLocation).at(1);
-    QDir dir1(configDataDirString); // "C:/ProgramData/<APPNAME>"
-    dir1.cdUp(); // cd ..
-    return dir1.absoluteFilePath("AntScopeZ/" + _fileName);
+    return AppPaths::programDataPath(_fileName);
 }
 
 void Settings::on_aa30bootFound()
@@ -1323,44 +1264,7 @@ void Settings::reject()
 
 QList<QPair<QString, QString>> Settings::availableLanguages()
 {
-    QList<QPair<QString, QString>> result;
-    // English is always offered: it's the source language every tr() call
-    // is written in, so there's no QtLanguage_en.qm to discover below.
-    result << qMakePair(QString("English"), QString("en"));
-
-    // Every other entry is discovered from whatever QtLanguage_<code>.qm
-    // files actually exist, rather than a fixed compiled-in list -- a
-    // language becomes selectable just by dropping its .qm into either
-    // folder, no rebuild needed. localDataFolder() (per-user, e.g.
-    // ~/.config/AntScopeZ) and languageDataFolder() (shared/installed
-    // copy) are both scanned so an override in the former still shows up
-    // even if the code isn't among the ones shipped in the latter;
-    // loadLanguage() (mainwindow.cpp) is what actually prefers the user
-    // copy at load time if a code exists in both.
-    QStringList codes;
-    for (const QString& folder : {localDataFolder(), languageDataFolder()}) {
-        QDir dir(folder);
-        const QStringList files = dir.entryList(QStringList() << "QtLanguage_*.qm", QDir::Files);
-        for (const QString& fileName : files) {
-            QString code = fileName.mid(QStringLiteral("QtLanguage_").length());
-            code.chop(QStringLiteral(".qm").length());
-            if (!code.isEmpty() && code != "en" && !codes.contains(code))
-                codes << code;
-        }
-    }
-    std::sort(codes.begin(), codes.end());
-
-    for (const QString& code : codes) {
-        // The .qm/.ts format has no human-readable name field of its own
-        // (QTranslator::language() just returns this same code back) --
-        // QLocale supplies the display name instead, in the language's
-        // own script (matching how "English"/"Українська"/"日本語" looked
-        // before this was discovery-based). Falls back to the bare code
-        // for one QLocale doesn't recognize, rather than dropping it.
-        QString name = QLocale(code).nativeLanguageName();
-        result << qMakePair(name.isEmpty() ? code : name, code);
-    }
-    return result;
+    return AppPaths::availableLanguages();
 }
 
 void Settings::on_translate()
@@ -1946,7 +1850,7 @@ void Settings::on_analyzerMaxPointsFinished()
     int value = ui->lineEditAnalyzerMaxPoints->text().toInt();
     value = qBound(50, value, POINTS_MAX);
     ui->lineEditAnalyzerMaxPoints->setText(QString::number(value));
-    g_analyzerMaxPoints = value;
+    AppConfig::get().analyzerMaxPoints = value;
     emit paramsChanged();
 }
 
@@ -1955,7 +1859,7 @@ void Settings::on_analyzerTimeoutFinished()
     int value = ui->lineEdit_analyzerTimeout->text().toInt();
     value = qBound(1, value, 300);
     ui->lineEdit_analyzerTimeout->setText(QString::number(value));
-    g_analyzerTimeoutSec = value;
+    AppConfig::get().analyzerTimeoutSec = value;
     emit paramsChanged();
 }
 

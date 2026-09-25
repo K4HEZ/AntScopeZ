@@ -1,4 +1,5 @@
 #include "hid_analyzer.h"
+#include "appconfig.h"
 #include "customanalyzer.h"
 #include <QtConcurrent/QtConcurrentRun>
 #include <QThread>
@@ -6,7 +7,6 @@
 #include "analyzerpro.h"
 #include "debuglog.h"
 
-extern bool g_usbOnly;
 
 HidAnalyzer::HidAnalyzer(QObject *parent) : BaseAnalyzer(parent),
       m_chartTimer(nullptr),
@@ -142,7 +142,7 @@ bool HidAnalyzer::tryConnectMatchingDevice(struct hid_device_info* devs, Analyze
 
 bool HidAnalyzer::searchAnalyzer(bool arrival)
 {
-    if (! g_usbOnly)
+    if (! AppConfig::get().usbOnly)
         return false;
 
     qDebug() << "HidAnalyzer::searchAnalyzer";
@@ -251,7 +251,7 @@ bool HidAnalyzer::disconnectHid(void)
 void HidAnalyzer::checkTimerTick ()
 {
     // TODO
-    if (g_usbOnly)
+    if (AppConfig::get().usbOnly)
         searchAnalyzer(m_analyzerModel != 0);
     // TODO
 }
@@ -795,7 +795,7 @@ bool HidAnalyzer::update (QIODevice *fw)
         // Was: an unconditional while(1) tied to m_bootMode, plus a
         // 5-second QTimer::singleShot to preUpdate() that could never
         // set it either -- searchAnalyzer() (which preUpdate() calls)
-        // is gated behind g_usbOnly, and even with that on, only ever
+        // is gated behind AppConfig::usbOnly, and even with that on, only ever
         // matches RE_VID/RE_PID (application mode), never
         // RE_BOOT_VID/RE_BOOT_PID. m_bootMode was never assigned true
         // anywhere in this file -- a guaranteed, unconditional hang,

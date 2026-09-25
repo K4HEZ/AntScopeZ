@@ -269,6 +269,7 @@ set(ANTSCOPE_FORMS
 
 set(ANTSCOPE_CORE_SOURCES
     src/AA55BTPacket.cpp
+    src/appconfig.cpp
     src/apppaths.cpp
     src/calibration.cpp
     src/crc32.cpp
@@ -294,6 +295,7 @@ set(ANTSCOPE_CORE_SOURCES
 
 set(ANTSCOPE_CORE_HEADERS
     src/AA55BTPacket.h
+    src/appconfig.h
     src/apppaths.h
     src/calibration.h
     src/crc32.h
@@ -365,6 +367,10 @@ elseif(APPLE)
     target_link_libraries(antscopez_core PRIVATE ${COREFOUNDATION_FRAMEWORK} ${IOKIT_FRAMEWORK})
 else()
     target_sources(antscopez_core PRIVATE analyzer/usbhid/hidapi/linux/hid.c)
+    # AppPaths::sharedDataFolder() -- see the matching AntScopeZ definition below.
+    target_compile_definitions(antscopez_core PRIVATE
+        ANTSCOPE_SHARED_DATA_DIR="${CMAKE_INSTALL_FULL_DATADIR}/antscopez"
+    )
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(LIBUSB REQUIRED IMPORTED_TARGET libusb-1.0)
     target_link_libraries(antscopez_core PRIVATE PkgConfig::LIBUSB)
@@ -590,7 +596,7 @@ else() # Linux and other Unix
 
     target_compile_definitions(AntScopeZ PRIVATE _NO_WINDOWS_)
 
-    # Settings::sharedDataFolder() -- see the Install rules section below and
+    # AppPaths::sharedDataFolder() -- see the Install rules section below and
     # the comment on that function for why this needs to match
     # CMAKE_INSTALL_PREFIX rather than being hardcoded to /usr.
     target_compile_definitions(AntScopeZ PRIVATE

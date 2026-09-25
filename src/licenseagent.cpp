@@ -1,4 +1,5 @@
 #include "licenseagent.h"
+#include "appconfig.h"
 #include "popup.h"
 #include "modelesspopup.h"
 #include "mainwindow.h"
@@ -55,7 +56,7 @@ void LicenseAgent::requestEmailStatus()
     request.setTransferTimeout(REPLY_TIMEOUT);
 
     m_mng.clearAccessCache();
-    if (!g_useTls) {
+    if (!AppConfig::get().useTls) {
         QSslConfiguration conf = request.sslConfiguration();
         conf.setPeerVerifyMode(QSslSocket::VerifyNone);
         request.setSslConfiguration(conf);
@@ -132,7 +133,7 @@ void LicenseAgent::requestLicense(QString key)
     request.setTransferTimeout(REPLY_TIMEOUT);
 
     m_mng.clearAccessCache();
-    if (!g_useTls) {
+    if (!AppConfig::get().useTls) {
         QSslConfiguration conf = request.sslConfiguration();
         conf.setPeerVerifyMode(QSslSocket::VerifyNone);
         request.setSslConfiguration(conf);
@@ -260,7 +261,7 @@ void LicenseAgent::requestInfo()
     request.setTransferTimeout(REPLY_TIMEOUT);
 
     m_mng.clearAccessCache();
-    if (!g_useTls) {
+    if (!AppConfig::get().useTls) {
         QSslConfiguration conf = request.sslConfiguration();
         conf.setPeerVerifyMode(QSslSocket::VerifyNone);
         request.setSslConfiguration(conf);
@@ -329,7 +330,7 @@ void LicenseAgent::requestUnit()
     request.setTransferTimeout(REPLY_TIMEOUT);
 
     m_mng.clearAccessCache();
-    if (!g_useTls) {
+    if (!AppConfig::get().useTls) {
         QSslConfiguration conf = request.sslConfiguration();
         conf.setPeerVerifyMode(QSslSocket::VerifyNone);
         request.setSslConfiguration(conf);
@@ -402,7 +403,7 @@ void LicenseAgent::requestStatus_B16(QByteArray data)
     request.setTransferTimeout(REPLY_TIMEOUT);
 
     m_mng.clearAccessCache();
-    if (!g_useTls) {
+    if (!AppConfig::get().useTls) {
         QSslConfiguration conf = request.sslConfiguration();
         conf.setPeerVerifyMode(QSslSocket::VerifyNone);
         request.setSslConfiguration(conf);
@@ -425,7 +426,7 @@ void LicenseAgent::requestInfo_B16(QByteArray data)
     request.setTransferTimeout(REPLY_TIMEOUT);
 
     m_mng.clearAccessCache();
-    if (!g_useTls) {
+    if (!AppConfig::get().useTls) {
         QSslConfiguration conf = request.sslConfiguration();
         conf.setPeerVerifyMode(QSslSocket::VerifyNone);
         request.setSslConfiguration(conf);

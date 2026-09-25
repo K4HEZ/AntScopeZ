@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "appconfig.h"
 #include "ui_mainwindow.h"
 #include "popupindicator.h"
 #include "updatedialog.h"
@@ -14,11 +15,9 @@
 #include <QWindow>
 
 extern QString appendSpaces(const QString& number);
-extern bool g_usbOnly;
 extern int g_maxMeasurements; // see measurements.cpp
 extern QMap<QString, QString> g_mapTabPlotNames; // see mainwindow.cpp
 extern void setAbsoluteFqMaximum();
-extern bool g_bAA55modeNewProtocol;
 extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
                             QString title, QString text,
                             QMessageBox::StandardButtons buttons = QMessageBox::Ok,
@@ -53,7 +52,7 @@ void MainWindow::on_analyzerNameFound(QString name)
     // through to the enabled branch below with nothing real behind either
     // action (issue #9). Explicit connectionType() switch instead: NANO
     // now has a real screenshot implementation, NANOV2 doesn't yet.
-    if (g_bAA55modeNewProtocol) {
+    if (AppConfig::get().aa55NewProtocol) {
         ui->actionAnalyzerData->setEnabled(true);
         ui->actionScreenshotAA->setEnabled(false);
     } else if (analyzer()->connectionType() == ReDeviceInfo::NANO) {
@@ -251,7 +250,7 @@ void MainWindow::on_actionScreenshotAA_triggered()
 
 void MainWindow::on_selectDeviceDialog()
 {
-    if (g_usbOnly) {
+    if (AppConfig::get().usbOnly) {
         SelectionParameters::selected.type = ReDeviceInfo::HID;
         //m_analyzer->createDevice(SelectionParameters::selected, new HidAnalyzer(this));
         return;
@@ -359,7 +358,7 @@ void MainWindow::on_refreshConnection()
             return;
          }
     }
-    if (! g_usbOnly) {
+    if (! AppConfig::get().usbOnly) {
         m_settings->beginGroup("Settings");
         bool openAtLaunch = m_settings->value("open-connect-analyzer-at-launch", true).toBool();
         m_settings->endGroup();

@@ -1,10 +1,10 @@
 #include "com_analyzer.h"
+#include "appconfig.h"
 #include "customanalyzer.h"
 #include <qserialport.h>
 #include "AA55BTPacket.h"
 #include "debuglog.h"
 
-extern bool g_bAA55modeNewProtocol;
 
 static const unsigned char crc8_table[256] = {
     0x00, 0x07, 0x0E, 0x09, 0x1C, 0x1B, 0x12, 0x15, 0x38, 0x3F,
@@ -125,7 +125,7 @@ void ComAnalyzer::closeComPort()
     }
     m_bAA55mode = false;
     m_bAA55modeNewProtocol = false;
-    g_bAA55modeNewProtocol = false;
+    AppConfig::get().aa55NewProtocol = false;
 }
 
 void ComAnalyzer::dataArrived()
@@ -336,7 +336,7 @@ qint32 ComAnalyzer::parse (QByteArray arr)
                                 int ver = m_version.toInt(&ok);
                                 if (ok && ver > 125) {
                                     m_bAA55modeNewProtocol = true;
-                                    g_bAA55modeNewProtocol = true;
+                                    AppConfig::get().aa55NewProtocol = true;
                                 }
                             }
                             emit analyzerFound (param->index());

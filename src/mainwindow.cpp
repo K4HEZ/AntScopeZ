@@ -15,12 +15,10 @@
 #include <QActionGroup>
 
 extern QString appendSpaces(const QString& number);
-extern bool g_usbOnly;
 extern int g_maxMeasurements; // see measurements.cpp
 extern int g_maxMarkers; // see markers.cpp
 extern bool g_autoMarkerAtLowestSwr; // see markers.cpp
 extern void setAbsoluteFqMaximum();
-extern bool g_bAA55modeNewProtocol;
 extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
                             QString title, QString text,
                             QMessageBox::StandardButtons buttons = QMessageBox::Ok,
@@ -42,21 +40,6 @@ int g_pointsMax = 1000;
 // no way to request more points than g_pointsMax allows). Same range and
 // default as g_pointsMax above.
 int g_pointsWarnThreshold = 1000;
-// "Analyzer maximum number of points" (Settings > General) -- how many
-// points a single sweep request will actually carry to the device
-// (AnalyzerPro::on_measure()/on_measureContinuous()/on_measureUser(),
-// analyzer/analyzerpro.cpp). A scan requesting more than this gets split
-// into multiple sequential sweeps ("stitched") and concatenated -- see
-// AnalyzerPro::buildStitchSegments(). Range 50-POINTS_MAX same as the
-// other two; defaults to 1000 (matching g_pointsMax/g_pointsWarnThreshold's
-// own default) rather than POINTS_MAX/off, so a scan above 1000 points
-// exercises stitching out of the box. No real device has confirmed
-// needing this yet (real NanoVNA hardware's ~101-point sweep ceiling is
-// the only documented case, unconfirmed -- see nanovna-two-port-work-
-// deferred in project notes); this exists to let stitching be exercised/
-// tested against any device by declaring it artificially capped, without
-// waiting on that hardware.
-int g_analyzerMaxPoints = 1000;
 // "Allow extended chart zoom" (Settings > General) -- lets the SWR/Rs/Rp/RL
 // charts' Ctrl+scroll/Ctrl+/- Y-axis zoom go past their normal preset
 // limits (mainwindow_mouse.cpp/mainwindow_shortcuts.cpp). Was previously
@@ -65,12 +48,6 @@ int g_analyzerMaxPoints = 1000;
 // developer/debug feature. Default off, matching pre-existing behavior for
 // anyone who never had -developer passed.
 bool g_extendedChartZoom = false;
-// "Use TLS" (Settings > Updates) -- gates both the scheme (https/http) and
-// certificate verification for every RigExpert network request
-// (licenseagent.cpp's registration flow, downloader.cpp's firmware-update
-// check). Default true (secure); off is an escape hatch for a vendor-side
-// cert problem, not something to leave off routinely. See issue #14.
-bool g_useTls = true;
 // "Check for updates" (Settings > Updates); the fetch runs when About opens.
 bool g_checkUpdates = true;
 // "Enable Remote API" (Settings > General) -- starts a local NDJSON-over-TCP
@@ -81,21 +58,6 @@ bool g_checkUpdates = true;
 // 8000/8080 etc.), not tied to any registered/well-known port.
 bool g_remoteApiEnabled = false;
 int g_remoteApiPort = 7443;
-// "Analyzer timeout" (Settings > General) -- seconds a scan can go without
-// receiving a single data point before AnalyzerPro's watchdog treats it as
-// failed (device gone, or busy -- already held open by another program or
-// another AntScopeZ window) and surfaces an error instead of leaving the
-// busy indicator/wait cursor stuck forever. Restarts on every point
-// actually received, not just once at scan start, so it's "no progress for
-// N seconds," not "whole scan must finish in N seconds" -- a long, healthy
-// continuous sweep won't trip it. See AnalyzerPro's watchdog timer
-// (analyzer/analyzerpro.cpp).
-int g_analyzerTimeoutSec = 8;
-// "Use reconnect to drain unwanted data" (Settings > General) -- see
-// AnalyzerPro::beginReconnectDrain()'s comment for what this changes.
-// Moved here from a Developer-tab, session-only checkbox 2026-09-04; now
-// an ordinary persisted preference like the rest of this block.
-bool g_reconnectToDrain = false;
 // Phase chart's Y-axis min/max (Settings > Graphs) -- was a fixed
 // +/-180 degrees baked into clampAxisRange()'s call for m_phaseWidget->
 // yAxis (see setWidgetsSettings()). Issue #49 originally asked to just
@@ -354,15 +316,11 @@ MainWindow::MainWindow(QWidget *parent) :
     g_autoMarkerAtLowestSwr = m_settings->value("autoMarkerAtLowestSwr", true).toBool();
     g_pointsMax = m_settings->value("pointsMax", 1000).toInt();
     g_pointsWarnThreshold = m_settings->value("pointsWarnThreshold", 1000).toInt();
-    g_analyzerMaxPoints = m_settings->value("analyzerMaxPoints", 1000).toInt();
     g_extendedChartZoom = m_settings->value("extendedChartZoom", false).toBool();
-    g_useTls = m_settings->value("useTls", true).toBool();
     g_checkUpdates = m_settings->value("checkUpdates", true).toBool();
     g_remoteApiEnabled = m_settings->value("remoteApiEnabled", false).toBool();
     g_remoteApiPort = m_settings->value("remoteApiPort", 7443).toInt();
-    g_analyzerTimeoutSec = m_settings->value("analyzerTimeoutSec", 8).toInt();
     DebugLog::setDetailedErrorsEnabled(m_settings->value("reportDetailedErrors", false).toBool());
-    g_reconnectToDrain = m_settings->value("reconnectToDrain", false).toBool();
     g_phaseAxisMin = m_settings->value("phaseAxisMin", -180).toDouble();
     g_phaseAxisMax = m_settings->value("phaseAxisMax", 180).toDouble();
     g_zAxisMin = m_settings->value("zAxisMin", -2000).toDouble();
@@ -370,6 +328,7 @@ MainWindow::MainWindow(QWidget *parent) :
     g_warnDirtyDelete = m_settings->value("warnDirtyDelete", true).toBool();
     m_activeThemeIndex = m_settings->value("activeTheme", 0).toInt();
     m_settings->endGroup();
+    AppConfig::get().load(*m_settings);
 
     m_updateChecker = new UpdateChecker(this);
 
@@ -1156,21 +1115,18 @@ MainWindow::~MainWindow()
     m_settings->setValue("autoMarkerAtLowestSwr", g_autoMarkerAtLowestSwr);
     m_settings->setValue("pointsMax", g_pointsMax);
     m_settings->setValue("pointsWarnThreshold", g_pointsWarnThreshold);
-    m_settings->setValue("analyzerMaxPoints", g_analyzerMaxPoints);
     m_settings->setValue("extendedChartZoom", g_extendedChartZoom);
-    m_settings->setValue("useTls", g_useTls);
     m_settings->setValue("checkUpdates", g_checkUpdates);
     m_settings->setValue("remoteApiEnabled", g_remoteApiEnabled);
     m_settings->setValue("remoteApiPort", g_remoteApiPort);
-    m_settings->setValue("analyzerTimeoutSec", g_analyzerTimeoutSec);
     m_settings->setValue("reportDetailedErrors", DebugLog::detailedErrorsEnabled());
-    m_settings->setValue("reconnectToDrain", g_reconnectToDrain);
     m_settings->setValue("phaseAxisMin", g_phaseAxisMin);
     m_settings->setValue("phaseAxisMax", g_phaseAxisMax);
     m_settings->setValue("zAxisMin", g_zAxisMin);
     m_settings->setValue("zAxisMax", g_zAxisMax);
     m_settings->setValue("warnDirtyDelete", g_warnDirtyDelete);
     m_settings->endGroup();
+    AppConfig::get().save(*m_settings);
 
     m_settings->beginGroup("Cable");
     m_settings->setValue("VelFactor",m_cableVelFactor );

@@ -1,4 +1,5 @@
 #include <QVersionNumber>
+#include "appconfig.h"
 #include "analyzerpro.h"
 #include "customanalyzer.h"
 #include <QDateTime>
@@ -16,9 +17,6 @@
 // static member
 QList<AnalyzerParameters*> AnalyzerParameters::m_analyzers;
 AnalyzerParameters* AnalyzerParameters::m_current=nullptr;
-extern int g_analyzerMaxPoints; // see mainwindow.cpp
-extern int g_analyzerTimeoutSec; // see mainwindow.cpp
-extern bool g_useTls; // see mainwindow.cpp
 
 AnalyzerPro::AnalyzerPro(QObject *parent) : QObject(parent),
     m_baseAnalyzer(nullptr),
@@ -259,7 +257,7 @@ QString AnalyzerPro::getMaxFq()
     return ca != nullptr ? ca->maxFq() : AnalyzerParameters::getMaxFq();
 }
 
-// Splits [fqFrom, fqTo] into however many g_analyzerMaxPoints-sized slices
+// Splits [fqFrom, fqTo] into however many AppConfig::analyzerMaxPoints-sized slices
 // totalDots needs (leaves m_stitchSegments empty, i.e. not stitching, if
 // it already fits in one request). Each slice's own frequency width is
 // proportional to its share of totalDots, not equal-width -- that keeps
@@ -278,15 +276,15 @@ void AnalyzerPro::buildStitchSegments(qint64 fqFrom, qint64 fqTo, qint32 totalDo
 {
     clearStitchState();
 
-    if (totalDots <= g_analyzerMaxPoints || g_analyzerMaxPoints <= 0)
+    if (totalDots <= AppConfig::get().analyzerMaxPoints || AppConfig::get().analyzerMaxPoints <= 0)
         return;
 
     qint64 span = fqTo - fqFrom;
-    int segCount = (totalDots + g_analyzerMaxPoints - 1) / g_analyzerMaxPoints; // ceil
+    int segCount = (totalDots + AppConfig::get().analyzerMaxPoints - 1) / AppConfig::get().analyzerMaxPoints; // ceil
     qint32 assigned = 0;
     qint64 from = fqFrom;
     for (int i = 0; i < segCount; i++) {
-        qint32 segDots = (i == segCount - 1) ? (totalDots - assigned) : g_analyzerMaxPoints;
+        qint32 segDots = (i == segCount - 1) ? (totalDots - assigned) : AppConfig::get().analyzerMaxPoints;
         assigned += segDots;
         qint64 to = (i == segCount - 1) ? fqTo : (fqFrom + (span * assigned) / totalDots);
         m_stitchSegments.append({from, to, segDots});
@@ -352,7 +350,7 @@ void AnalyzerPro::advanceStitchSegmentIfNeeded()
 
 void AnalyzerPro::kickWatchdog()
 {
-    m_watchdogTimer->start(qMax(1, g_analyzerTimeoutSec) * 1000);
+    m_watchdogTimer->start(qMax(1, AppConfig::get().analyzerTimeoutSec) * 1000);
 }
 
 void AnalyzerPro::stopWatchdog()
@@ -550,7 +548,7 @@ void AnalyzerPro::on_measureContinuous(qint64 fqFrom, qint64 fqTo, qint32 dotsNu
         // sent a single command to a classic NanoVNA, it just immediately
         // reported "done". Removed 2026-09-06 so classic NanoVNA also gets
         // real Continuous scanning, and (the original point of this fix)
-        // g_analyzerMaxPoints/stitching too -- 100/101-point-per-sweep
+        // AppConfig::analyzerMaxPoints/stitching too -- 100/101-point-per-sweep
         // hardware is common on ASCII-speaking analyzers generally, not
         // just NanoVNA.
         if (m_baseAnalyzer != nullptr)
@@ -680,8 +678,7 @@ void AnalyzerPro::on_stopMeasure()
     // all. Confirmed live 2026-09-04: a real Match device (HID) timed out
     // every time here before this check existed.
     if (wasMeasuring && m_baseAnalyzer != nullptr && !m_baseAnalyzer->stopCommandAbortsDevice()) {
-        extern bool g_reconnectToDrain; // Settings > General, see mainwindow.cpp
-        if (g_reconnectToDrain) {
+        if (AppConfig::get().reconnectToDrain) {
             beginReconnectDrain();
         } else {
             beginDraining(remainingPoints);
@@ -959,7 +956,7 @@ void AnalyzerPro::on_updatePercentChanged(int number)
 // version. That's a real disclosure -- covered by the Updates tab's own
 // notice label, so the user can decide for themselves whether to click
 // this button at all, rather than the feature being unconditionally off.
-// The connection itself now honors g_useTls (mainwindow.cpp, "Use TLS" on
+// The connection itself now honors AppConfig::useTls ("Use TLS" on
 // Settings > Updates) via Downloader/licenseServerUrl(), instead of
 // unconditionally disabling certificate verification. See issue #14.
 void AnalyzerPro::on_checkUpdatesBtn_clicked()
@@ -1006,7 +1003,7 @@ void AnalyzerPro::on_checkUpdatesBtn_clicked()
                 this, SLOT(on_progress(qint64,qint64)));
     }
 
-    QString url = QString("%1www.rigexpert.com/getfirmware?app=antscopez&model=").arg(g_useTls ? "https://" : "http://");
+    QString url = QString("%1www.rigexpert.com/getfirmware?app=antscopez&model=").arg(AppConfig::get().useTls ? "https://" : "http://");
     QString name = AnalyzerParameters::getName();
     if (name == "AA-1500 SE")
         name = "AA-1500 ZOOM SE"; // HUCK short names supprt
@@ -1257,8 +1254,7 @@ bool AnalyzerPro::createDevice(const SelectionParameters& param, BaseAnalyzer* a
     }
 
     ReDeviceInfo::InterfaceType interfaceType = param.type;
-    extern bool g_usbOnly;
-    if (g_usbOnly) {
+    if (AppConfig::get().usbOnly) {
         interfaceType = ReDeviceInfo::HID;
     }
 

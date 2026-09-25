@@ -2,6 +2,7 @@
 #define LICENSEAGENT_H
 
 #include <QObject>
+#include "appconfig.h"
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QTimer>
@@ -9,13 +10,12 @@
 #include "modelesspopup.h"
 
 // Was: a hardcoded plain-http SERVER_NAME macro (unconditionally
-// unverified, regardless of the scheme). g_useTls (mainwindow.cpp, "Use
+// unverified, regardless of the scheme). AppConfig::useTls ("Use
 // TLS" on Settings > Updates) now drives both the scheme and the
 // certificate-verify mode below. See issue #14.
-extern bool g_useTls;
 inline QString licenseServerUrl()
 {
-    return QString("%1regdev.rigexpert.com/index.php").arg(g_useTls ? "https://" : "http://");
+    return QString("%1regdev.rigexpert.com/index.php").arg(AppConfig::get().useTls ? "https://" : "http://");
 }
 
 #define EMAIL_TIMEOUT 180*1000

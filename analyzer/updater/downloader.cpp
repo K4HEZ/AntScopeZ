@@ -1,8 +1,8 @@
 #include "downloader.h"
+#include "appconfig.h"
 
 Q_LOGGING_CATEGORY(DOWNLOADER, "downloader")
 
-extern bool g_useTls; // see mainwindow.cpp
 
 Downloader::Downloader(QObject *parent) :
     QObject(parent),
@@ -23,7 +23,7 @@ Downloader::~Downloader()
 }
 
 // Fires the actual network request AnalyzerPro::on_checkUpdatesBtn_clicked()
-// builds the URL for. Re-enabled alongside that caller -- see g_useTls
+// builds the URL for. Re-enabled alongside that caller -- see AppConfig::useTls
 // (mainwindow.cpp, "Use TLS" on Settings > Updates) and issue #14: this
 // used to unconditionally disable certificate verification regardless of
 // that setting; now it only does when the user has explicitly turned TLS
@@ -37,7 +37,7 @@ Downloader::State Downloader::startDownloadInfo(QUrl url)
     QNetworkRequest request(url);
 
     m_mng.clearAccessCache();
-    if (!g_useTls) {
+    if (!AppConfig::get().useTls) {
         QSslConfiguration conf = request.sslConfiguration();
         conf.setPeerVerifyMode(QSslSocket::VerifyNone);
         request.setSslConfiguration(conf);
@@ -73,7 +73,7 @@ Downloader::State Downloader::startDownloadFw()
     QNetworkReply *reply;
 
     m_mng.clearAccessCache();
-    if (!g_useTls) {
+    if (!AppConfig::get().useTls) {
         QSslConfiguration conf = request.sslConfiguration();
         conf.setPeerVerifyMode(QSslSocket::VerifyNone);
         request.setSslConfiguration(conf);

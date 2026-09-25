@@ -13,11 +13,9 @@
 #include <QWindow>
 
 extern QString appendSpaces(const QString& number);
-extern bool g_usbOnly;
 extern int g_maxMeasurements; // see measurements.cpp
 extern QMap<QString, QString> g_mapTabPlotNames; // see mainwindow.cpp
 extern void setAbsoluteFqMaximum();
-extern bool g_bAA55modeNewProtocol;
 extern bool g_warnDirtyDelete; // see mainwindow.cpp
 extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
                             QString title, QString text,

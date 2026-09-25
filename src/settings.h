@@ -78,8 +78,6 @@ public:
     static bool m_licenseUpdateBlocked;
 
 private:
-    static QString sharedDataFolder();
-
     Ui::Settings *ui;
     AnalyzerPro * m_analyzer;
     Calibration * m_calibration;

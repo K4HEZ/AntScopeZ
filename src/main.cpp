@@ -1,5 +1,6 @@
                                                                                                                                     #include "mainwindow.h"
 #include <QApplication>
+#include "appconfig.h"
 #include <QMessageBox>
 #include <QAbstractNativeEventFilter>
 #include <QIcon>
@@ -9,9 +10,6 @@
 #include "style.h"
 #include <QSettings>
 
-bool g_usbOnly = false;
-bool g_raspbian = false;
-bool g_bAA55modeNewProtocol = false;
 MainWindow* g_mainWindow;
 
 #ifdef Q_OS_WIN
@@ -160,7 +158,7 @@ int main(int argc, char *argv[])
     // Settings > Developer regardless. See BUILDINFO.md's "Developer mode"
     // and "Known issues" for detail/remaining Custom Analyzer bugs.
     if (args.contains("-usb-only")) {
-        g_usbOnly = true;
+        AppConfig::get().usbOnly = true;
     }
 
     // -remote-api-port <n>: force the Remote API on regardless of the
@@ -184,7 +182,7 @@ int main(int argc, char *argv[])
     // with nothing visible and nothing reachable.
     bool headless = args.contains("-headless");
 
-    g_raspbian = QSysInfo::productType().contains("raspbian", Qt::CaseInsensitive);
+    AppConfig::get().raspbian = QSysInfo::productType().contains("raspbian", Qt::CaseInsensitive);
 
     // Read the persisted theme before building any stylesheet below --
     // MainWindow doesn't exist yet to do this itself, and Style::m_activeIndex

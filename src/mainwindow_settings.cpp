@@ -14,7 +14,6 @@
 #include <QWindow>
 
 extern QString appendSpaces(const QString& number);
-extern bool g_usbOnly;
 extern int g_maxMeasurements; // see measurements.cpp
 extern int g_pointsMax; // see mainwindow.cpp
 extern double g_phaseAxisMin; // see mainwindow.cpp
@@ -23,7 +22,6 @@ extern double g_zAxisMin; // see mainwindow.cpp
 extern double g_zAxisMax; // see mainwindow.cpp
 extern QMap<QString, QString> g_mapTabPlotNames; // see mainwindow.cpp
 extern void setAbsoluteFqMaximum();
-extern bool g_bAA55modeNewProtocol;
 extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
                             QString title, QString text,
                             QMessageBox::StandardButtons buttons = QMessageBox::Ok,

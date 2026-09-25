@@ -2,6 +2,7 @@
 #define ANALYZERPRO_H
 
 #include <QObject>
+#include "appconfig.h"
 #include <QDateTime>
 #include <QTimer>
 #include "baseanalyzer.h"
@@ -48,7 +49,7 @@ class AnalyzerPro : public QObject
     QString m_license;
 
     // "Stitching" -- splitting a scan that asks for more points than
-    // g_analyzerMaxPoints (Settings > General, mainwindow.cpp) into
+    // AppConfig::analyzerMaxPoints (Settings > General) into
     // several sequential sweeps, each within that ceiling, concatenated
     // into one continuous dataset. See buildStitchSegments()'s definition
     // (analyzerpro.cpp) for why each segment's own frequency slice is
@@ -95,7 +96,7 @@ class AnalyzerPro : public QObject
     // already finished (checks m_isMeasuring first).
     //
     // If it ever fires, nothing has answered for
-    // g_analyzerTimeoutSec (Settings > General) -- device gone, or busy
+    // AppConfig::analyzerTimeoutSec (Settings > General) -- device gone, or busy
     // (held open by another program or another AntScopeZ window). This is
     // the only thing that ever used to time out a scan that never got a
     // single reply; see git history / project notes for the pre-watchdog
@@ -115,7 +116,7 @@ class AnalyzerPro : public QObject
     // stitched -- no further segments get requested once stopped) and
     // quietly discards it, bounded by the same watchdog timeout used
     // everywhere else. Settings > General's "Use reconnect to drain
-    // unwanted data" checkbox (g_reconnectToDrain, mainwindow.cpp) switches to
+    // unwanted data" checkbox (AppConfig::reconnectToDrain) switches to
     // closing and reopening the connection instead -- often faster for a
     // large scan, but not guaranteed to make every device actually discard
     // what it already queued internally, only that we stop listening and

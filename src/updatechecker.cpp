@@ -1,11 +1,11 @@
 #include "updatechecker.h"
+#include "appconfig.h"
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QRegularExpression>
 #include <QUrl>
 
-extern bool g_useTls; // see mainwindow.cpp
 
 UpdateChecker::UpdateChecker(QObject *parent) :
     QObject(parent),
@@ -23,7 +23,7 @@ void UpdateChecker::start()
     if (url.isEmpty()) {
         url = QStringLiteral("https://raw.githubusercontent.com/K4HEZ/AntScopeZ/master/version.txt");
     }
-    if (!g_useTls) {
+    if (!AppConfig::get().useTls) {
         url.replace(QStringLiteral("https://"), QStringLiteral("http://"));
     }
 

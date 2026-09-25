@@ -1,6 +1,8 @@
 #ifndef APPPATHS_H
 #define APPPATHS_H
 
+#include <QList>
+#include <QPair>
 #include <QString>
 
 // UI-free home for the app's on-disk locations, so core code (analyzer/,
@@ -12,6 +14,13 @@ QString localDataFolder();
 QString localDataPath(const QString &fileName);
 // Path to AntScopeZ.ini; runs the one-time legacy-layout migration on Linux.
 QString iniFile();
+
+// Read-only data shipped with the app (cables.txt, .qm files, ...).
+QString sharedDataFolder();
+QString languageDataFolder();
+QString programDataPath(const QString &fileName);
+// (native display name, .qm code) pairs, English first.
+QList<QPair<QString, QString>> availableLanguages();
 
 // See FileDialog::userDataDir() and friends for what these mean.
 QString userDataDir();
