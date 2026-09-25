@@ -1,5 +1,5 @@
 #include "debuglog.h"
-#include "filedialog.h"
+#include "apppaths.h"
 #include <QFile>
 #include <QFileInfo>
 #include <QTextStream>
@@ -71,7 +71,7 @@ void ensureLogFileOpen()
         g_logFile.close();
 
     g_logFileDate = today;
-    g_logFile.setFileName(FileDialog::userDataDir() + "/Debug-" + today + ".log");
+    g_logFile.setFileName(AppPaths::userDataDir() + "/Debug-" + today + ".log");
     // Open failure is handled by the isOpen() check writeEntry() already
     // does right after calling this -- nothing more to do with the result
     // here, just silencing the [[nodiscard]] warning explicitly.

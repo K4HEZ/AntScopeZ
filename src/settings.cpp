@@ -10,6 +10,7 @@
 #include "style.h"
 #include "filedialog.h"
 #include "debuglog.h"
+#include "apppaths.h"
 #include <QAbstractButton>
 #include <QFile>
 #include <QFileInfo>
@@ -1211,119 +1212,17 @@ bool Settings::getCableIsPreset(void) const
 
 QString Settings::setIniFile()
 {
-    QString newPath = localDataPath("AntScopeZ.ini");
-
-#ifdef Q_OS_LINUX
-    // One-time migration of the pre-2.1.4 layout -- AntScope2.ini/
-    // Calibration/itu-regions.txt sitting next to the binary (see the
-    // comment on localDataFolder()) -- into the current AntScopeZ location.
-    // Idempotent (guarded by "does the new copy already exist"), and cheap
-    // enough to just always check since setIniFile() already runs on every
-    // Settings/Calibration construction. The 2.1.4-era org-directory layout
-    // (~/.config/<old-org-name>/AntScope2, from when
-    // QCoreApplication::setOrganizationName() was still set) had its own
-    // migration step here too, but that layout's no longer in use by anyone
-    // and was removed rather than kept around as dead code.
-    // Both "AntScope2.ini" and "antscope2.ini" are checked -- Settings and
-    // Calibration briefly used differently-cased filenames that only
-    // diverged into two separate files on case-sensitive filesystems (issue
-    // #43); by this point any surviving mismatch is rare enough that a
-    // plain first-one-found rename is fine rather than the more careful
-    // per-key fold this used to do.
-    extern bool g_raspbian;
-    if (!g_raspbian) {
-        QString newDirPath = localDataFolder();
-        QDir legacyBinaryDir(QCoreApplication::applicationDirPath() + "/..");
-        QString oldDirPath = legacyBinaryDir.canonicalPath();
-        if (!oldDirPath.isEmpty() && oldDirPath != newDirPath && QDir(oldDirPath).exists()) {
-            QDir oldDir(oldDirPath);
-            const QStringList legacyFiles = {"AntScope2.ini", "antscope2.ini", "itu-regions.txt"};
-            for (const QString& name : legacyFiles) {
-                QString oldFile = oldDir.absoluteFilePath(name);
-                QString newName = (name == "itu-regions.txt") ? name : "AntScopeZ.ini";
-                QString newFile = QDir(newDirPath).absoluteFilePath(newName);
-                if (QFile::exists(oldFile) && !QFile::exists(newFile)) {
-                    QFile::rename(oldFile, newFile);
-                }
-            }
-            QString oldCalib = oldDir.absoluteFilePath("Calibration");
-            QString newCalib = QDir(newDirPath).absoluteFilePath("Calibration");
-            if (QDir(oldCalib).exists() && !QDir(newCalib).exists()) {
-                QDir().rename(oldCalib, newCalib);
-            }
-        }
-    }
-#endif
-
-    return newPath;
+    return AppPaths::iniFile();
 }
 
 QString Settings::localDataPath(QString _fileName)
 {
-// Mac OS X and iOS
-#ifdef Q_OS_DARWIN
-    QDir dir_ini3 = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
-    dir_ini3.mkpath("AntScopeZ"); // fresh install: saving itu-regions.txt needs it
-    return dir_ini3.absoluteFilePath("AntScopeZ/" + _fileName);
-#endif
-
-// Linux
-#ifdef Q_OS_LINUX
-    extern bool g_raspbian;
-    if (g_raspbian)
-    {
-        return "/usr/share/AntScopeZ/" + _fileName;
-    }
-    QDir dir = localDataFolder();
-    return dir.absoluteFilePath(_fileName);
-#endif
-
-// Windows
-#ifdef Q_OS_WIN
-    // QDir dir_ini1 = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation);
-    // return dir_ini1.absoluteFilePath("AntScopeZ/" + _fileName);
-    QDir dir_ini1 = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
-    // return dir_ini1.absoluteFilePath("AntScopeZ/" + _fileName);
-    return dir_ini1.absoluteFilePath(_fileName);
-
-#endif
-  qDebug("TODO Settings::localDataPath");
-  return QString();
+    return AppPaths::localDataPath(_fileName);
 }
 
 QString Settings::localDataFolder()
 {
-// Mac OS X and iOS
-#ifdef Q_OS_DARWIN
-    return QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
-#endif
-// Linux
-#ifdef Q_OS_LINUX
-    extern bool g_raspbian;
-    if (g_raspbian)
-    {
-        return "/usr/share/AntScopeZ/";
-    }
-    // ~/.config/AntScopeZ (QCoreApplication::setApplicationName() in
-    // main.cpp; deliberately no organization name, so there's no extra
-    // directory level). Was "next to the binary" (applicationDirPath()/..)
-    // -- convenient for a dev build, but wrong for an installed package: no
-    // write access, and shared across every user of the machine.
-    // AppConfigLocation doesn't create the directory for you (unlike the
-    // old path, which always existed), and Calibration::init()'s
-    // QDir::mkdir("Calibration") needs its parent to already exist, so
-    // create it here. See setIniFile() for the one-time migration of older
-    // installs' data out of prior locations.
-    QString path = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
-    QDir().mkpath(path);
-    return path;
-#endif
-// Windows
-#ifdef Q_OS_WIN
-    return QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation);
-#endif
-  qDebug("TODO Settings::localDataPath");
-  return QString();
+    return AppPaths::localDataFolder();
 }
 
 // Read-only data shipped with the app: cables.txt, itu-regions-defaults.txt,

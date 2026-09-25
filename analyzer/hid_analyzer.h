@@ -4,7 +4,9 @@
 #include <QCoreApplication>
 #include <QObject>
 #include <QTimer>
-#include <QMessageBox>
+#include <QMutex>
+#include <QFuture>
+#include <QFutureWatcher>
 #include <analyzer/usbhid/hidapi/hidapi.h>
 #include <qdebug.h>
 #include <analyzer/analyzerparameters.h>

@@ -1,17 +1,6 @@
 #include "filedialog.h"
-#include "settings.h"
-#include <QSettings>
-#include <QStandardPaths>
-#include <QDir>
+#include "apppaths.h"
 #include <QFileInfo>
-
-namespace {
-// Cached after first load; kept in sync by setUserDataDir() so a Settings
-// dialog change (or a save that "follows saves") is visible to the very
-// next call without re-reading the ini every time.
-QString g_userDataDir;
-bool g_userDataDirLoaded = false;
-}
 
 FileDialog::FileDialog(QObject *parent)
     : QObject{parent}
@@ -121,35 +110,12 @@ QString FileDialog::getExistingDirectory(QWidget *parent,
 
 QString FileDialog::userDataDir()
 {
-    if (!g_userDataDirLoaded) {
-        QSettings settings(Settings::setIniFile(), QSettings::IniFormat);
-        settings.beginGroup("General");
-        g_userDataDir = settings.value("UserDataDir", "").toString();
-        settings.endGroup();
-
-        if (g_userDataDir.isEmpty()) {
-            g_userDataDir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)
-                             + "/AntScopeZ";
-        }
-        QDir().mkpath(g_userDataDir);
-        g_userDataDirLoaded = true;
-    }
-    return g_userDataDir;
+    return AppPaths::userDataDir();
 }
 
 void FileDialog::setUserDataDir(const QString &dir)
 {
-    if (dir.isEmpty() || dir == g_userDataDir)
-        return;
-
-    g_userDataDir = dir;
-    g_userDataDirLoaded = true;
-    QDir().mkpath(g_userDataDir);
-
-    QSettings settings(Settings::setIniFile(), QSettings::IniFormat);
-    settings.beginGroup("General");
-    settings.setValue("UserDataDir", g_userDataDir);
-    settings.endGroup();
+    AppPaths::setUserDataDir(dir);
 }
 
 void FileDialog::noteUserDataDirIfEnabled(const QString &savedFilePath)
@@ -162,19 +128,12 @@ void FileDialog::noteUserDataDirIfEnabled(const QString &savedFilePath)
 
 bool FileDialog::userDataDirFollowsSaves()
 {
-    QSettings settings(Settings::setIniFile(), QSettings::IniFormat);
-    settings.beginGroup("General");
-    bool follows = settings.value("UserDataDirFollowsSaves", false).toBool();
-    settings.endGroup();
-    return follows;
+    return AppPaths::userDataDirFollowsSaves();
 }
 
 void FileDialog::setUserDataDirFollowsSaves(bool follows)
 {
-    QSettings settings(Settings::setIniFile(), QSettings::IniFormat);
-    settings.beginGroup("General");
-    settings.setValue("UserDataDirFollowsSaves", follows);
-    settings.endGroup();
+    AppPaths::setUserDataDirFollowsSaves(follows);
 }
 
 QString FileDialog::withExtension(const QString &path, const QString &ext)

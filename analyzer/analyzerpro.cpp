@@ -1,28 +1,21 @@
 #include <QVersionNumber>
 #include "analyzerpro.h"
-#include "popupindicator.h"
 #include "customanalyzer.h"
 #include <QDateTime>
 #include <QDebug>
 #include <QDir>
 #include <QStandardPaths>
 #include <memory>
-#include "Notification.h"
 #include "hid_analyzer.h"
 #include "com_analyzer.h"
 #include "nanovna_analyzer.h"
 #include "nanovna_v2_analyzer.h"
 #include "ble_analyzer.h"
-#include "settings.h"
-#include "filedialog.h"
+#include "apppaths.h"
 
 // static member
 QList<AnalyzerParameters*> AnalyzerParameters::m_analyzers;
 AnalyzerParameters* AnalyzerParameters::m_current=nullptr;
-extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
-                            QString title, QString text,
-                            QMessageBox::StandardButtons buttons = QMessageBox::Ok,
-                            QMessageBox::StandardButton defaultButton = QMessageBox::NoButton);
 extern int g_analyzerMaxPoints; // see mainwindow.cpp
 extern int g_analyzerTimeoutSec; // see mainwindow.cpp
 extern bool g_useTls; // see mainwindow.cpp
@@ -35,7 +28,6 @@ AnalyzerPro::AnalyzerPro(QObject *parent) : QObject(parent),
     m_isContinuos(false),
     m_dotsNumber(100),
     m_downloader(nullptr),
-    m_updateDialog(nullptr),
     m_pfw(nullptr),
     m_INFOSIZE(512),
     m_calibrationMode(false)
@@ -136,15 +128,9 @@ void AnalyzerPro::on_downloadInfoComplete()
                 ? tr("No update information is available from RigExpert for this device.\n\n(model %1, revision %2)")
                       .arg(AnalyzerParameters::getName(), getRevision())
                 : tr("Can not get the latest version.\nPlease try later.\n\n(%1)").arg(reason);
-        g_showMessageBox(nullptr, QMessageBox::Information, tr("Latest version"), text);
+        emit userMessage(false, tr("Latest version"), text);
     }else
     {
-        m_updateDialog = new UpdateDialog();
-        m_updateDialog->setAttribute(Qt::WA_DeleteOnClose);
-        m_updateDialog->setWindowTitle(tr("Firmware update"));
-        connect(m_updateDialog,SIGNAL(update()),this,SLOT(on_internetUpdate()));
-        connect(this, SIGNAL(updatePercentChanged(int)),m_updateDialog,SLOT(on_percentChanged(qint32)));
-
         // Dotted-version compare, not toDouble(): as decimals 1.12 < 1.5,
         // so a device on 1.5 was told it had the latest when 1.12 is
         // newer, and "1.5.0d" doesn't parse as a double at all. The server
@@ -169,10 +155,9 @@ void AnalyzerPro::on_downloadInfoComplete()
             headline = tr("You have the latest version of firmware.");
         else
             headline = tr("The installed firmware is newer than the latest published version.");
-        m_updateDialog->setMainText(tr("%1\n\nInstalled: %2    Available: %3")
-                                    .arg(headline, getVersionString(), ver));
-        m_updateDialog->setDetails(m_downloader->info().trimmed());
-        m_updateDialog->exec();
+        emit firmwareInfoReady(tr("%1\n\nInstalled: %2    Available: %3")
+                                   .arg(headline, getVersionString(), ver),
+                               m_downloader->info().trimmed());
     }
 }
 
@@ -186,9 +171,9 @@ void AnalyzerPro::on_downloadFileComplete()
 {
     *m_pfw = m_downloader->file();
 
-    QString dir = FileDialog::userDataDir();
+    QString dir = AppPaths::userDataDir();
     if (dir.isEmpty())
-        dir = Settings::localDataFolder();
+        dir = AppPaths::localDataFolder();
     QDir().mkpath(dir);
 
     QString model = AnalyzerParameters::getName().toLower().remove(" ").remove("-");
@@ -198,16 +183,16 @@ void AnalyzerPro::on_downloadFileComplete()
     QFile file(fileName);
     if (file.open(QIODevice::WriteOnly) && file.write(*m_pfw) == m_pfw->size()) {
         file.close();
-        m_updateDialog->setFinished(tr("Firmware saved to:\n%1").arg(QDir::toNativeSeparators(fileName)));
+        emit firmwareFinished(tr("Firmware saved to:\n%1").arg(QDir::toNativeSeparators(fileName)));
     } else {
-        m_updateDialog->setFinished(tr("Could not save firmware file."));
+        emit firmwareFinished(tr("Could not save firmware file."));
     }
 }
 
 void AnalyzerPro::on_internetUpdate()
 {
     m_downloader->startDownloadFw();
-    m_updateDialog->setStatusText(tr("Downloading firmware..."));
+    emit firmwareStatusText(tr("Downloading firmware..."));
 }
 
 void AnalyzerPro::readFile(QString pathToFw)
@@ -217,7 +202,7 @@ void AnalyzerPro::readFile(QString pathToFw)
 
     if(!file.open(QIODevice::ReadOnly))
     {
-        g_showMessageBox(nullptr, QMessageBox::Warning, tr("Warning"), tr("Can not open firmware file."));
+        emit userMessage(true, tr("Warning"), tr("Can not open firmware file."));
         return;
     }
 
@@ -225,7 +210,7 @@ void AnalyzerPro::readFile(QString pathToFw)
 
     if (m_pfw->isEmpty())
     {
-        g_showMessageBox(nullptr, QMessageBox::Warning, tr("Warning"), tr("Can not read firmware file."));
+        emit userMessage(true, tr("Warning"), tr("Can not read firmware file."));
         state = false;
     }
 
@@ -514,7 +499,7 @@ void AnalyzerPro::on_measure (qint64 fqFrom, qint64 fqTo, qint32 dotsNumber)
         {
             m_baseAnalyzer->setIsFRXMode(true);
             startStitchedMeasure(fqFrom, fqTo, dotsNumber);
-            PopUpIndicator::setIndicatorVisible(true);
+            emit indicatorVisibleChanged(true);
             kickWatchdog();
             emit statusMessageChanged(tr("Scanning (%1 points)...").arg(dotsNumber));
             return;
@@ -539,7 +524,7 @@ void AnalyzerPro::on_measureS21 (qint64 fqFrom, qint64 fqTo, qint32 dotsNumber)
         {
             m_baseAnalyzer->setIsS21Mode(true);
             m_baseAnalyzer->startMeasure(fqFrom, fqTo, m_dotsNumber);
-            PopUpIndicator::setIndicatorVisible(true);
+            emit indicatorVisibleChanged(true);
             kickWatchdog();
             emit statusMessageChanged(tr("Scanning S21 (%1 points)...").arg(m_dotsNumber));
             return;
@@ -578,7 +563,7 @@ void AnalyzerPro::on_measureContinuous(qint64 fqFrom, qint64 fqTo, qint32 dotsNu
             // other backend (BaseAnalyzer's own default), so harmless there.
             m_baseAnalyzer->on_measurementComplete();
             startStitchedMeasure(fqFrom, fqTo, dotsNumber);
-            PopUpIndicator::setIndicatorVisible(true);
+            emit indicatorVisibleChanged(true);
             kickWatchdog();
             emit statusMessageChanged(tr("Scanning continuously (%1 points)...").arg(dotsNumber));
             return;
@@ -604,7 +589,7 @@ void AnalyzerPro::on_measureUser (qint64 fqFrom, qint64 fqTo, qint32 dotsNumber)
         {
             m_baseAnalyzer->setIsFRXMode(false);
             startStitchedMeasure(fqFrom, fqTo, dotsNumber);
-            PopUpIndicator::setIndicatorVisible(true);
+            emit indicatorVisibleChanged(true);
             kickWatchdog();
             emit statusMessageChanged(tr("Scanning (%1 points)...").arg(dotsNumber));
             return;
@@ -613,7 +598,7 @@ void AnalyzerPro::on_measureUser (qint64 fqFrom, qint64 fqTo, qint32 dotsNumber)
     on_stopMeasure();
 }
 
-void AnalyzerPro::on_measureOneFq(QWidget* /*parent*/, qint64 fqFrom, qint32 dotsNumber)
+void AnalyzerPro::on_measureOneFq(qint64 fqFrom, qint32 dotsNumber)
 {
     setIsMeasuring(true);
     // Was hardcoded to 100000 regardless of the caller's actual dotsNumber
@@ -649,7 +634,7 @@ void AnalyzerPro::on_stopMeasure()
     // second marker every time Settings was opened. Only emit it if a
     // measurement was genuinely in progress.
     bool wasMeasuring = m_isMeasuring;
-    PopUpIndicator::setIndicatorVisible(false);
+    emit indicatorVisibleChanged(false);
     // See m_measurementStopped's own comment (analyzerpro.h) -- marks any
     // completeMeasurement() that arrives after this as stale, without
     // relying on the coarser m_isMeasuring (which on_newData()'s own
@@ -779,7 +764,7 @@ void AnalyzerPro::on_newData(RawData _rawData)
         //qDebug() << "AnalyzerPro::on_newData COMPLETE";
         m_chartCounter = 0;
         setIsMeasuring(false);
-        PopUpIndicator::setIndicatorVisible(false);
+        emit indicatorVisibleChanged(false);
         clearStitchState();
         emit statusMessageChanged(tr("Ready"));
         if(!m_calibrationMode)
@@ -812,7 +797,7 @@ void AnalyzerPro::on_newS21Data(S21Data _s21Data)
         qDebug() << "AnalyzerPro::on_newS21Data COMPLETE";
         m_chartCounter = 0;
         setIsMeasuring(false);
-        PopUpIndicator::setIndicatorVisible(false);
+        emit indicatorVisibleChanged(false);
         emit statusMessageChanged(tr("Ready"));
         if(!m_calibrationMode)
         {
@@ -864,7 +849,7 @@ void AnalyzerPro::on_newUserData(RawData _rawData, UserData _userData)
         emit newUserData (_rawData, _userData);
         setIsMeasuring(false);
         m_chartCounter = 0;
-        PopUpIndicator::setIndicatorVisible(false);
+        emit indicatorVisibleChanged(false);
         clearStitchState();
         emit statusMessageChanged(tr("Ready"));
         if(!m_calibrationMode)
@@ -962,8 +947,6 @@ void AnalyzerPro::on_screenshotComplete(void)
 
 void AnalyzerPro::on_updatePercentChanged(int number)
 {
-    if (m_updateDialog != nullptr)
-        m_updateDialog->on_percentChanged(number);
     emit updatePercentChanged(number);
 }
 
@@ -990,7 +973,7 @@ void AnalyzerPro::on_checkUpdatesBtn_clicked()
     if (m_baseAnalyzer == nullptr || AnalyzerParameters::getName().isEmpty())
     {
         emit checkUpdatesComplete();
-        g_showMessageBox(nullptr, QMessageBox::Information, tr("Firmware update"),
+        emit userMessage(false, tr("Firmware update"),
                           tr("Connect an analyzer first -- the update check needs to "
                              "know its model and serial number."));
         return;
@@ -1005,7 +988,7 @@ void AnalyzerPro::on_checkUpdatesBtn_clicked()
     if (getSerialNumber().isEmpty())
     {
         emit checkUpdatesComplete();
-        g_showMessageBox(nullptr, QMessageBox::Information, tr("Firmware update"),
+        emit userMessage(false, tr("Firmware update"),
                           tr("This device isn't reporting a serial number over this "
                              "connection, so an update check can't identify it. "
                              "Try connecting over USB instead of Bluetooth."));
@@ -1046,7 +1029,7 @@ void AnalyzerPro::on_progress(qint64 downloaded,qint64 total)
     if (percent == 100)
     {
         emit updatePercentChanged(0);
-        m_updateDialog->setStatusText(tr("Saving firmware file..."));
+        emit firmwareStatusText(tr("Saving firmware file..."));
     }else
     {
         emit updatePercentChanged(percent);
@@ -1085,7 +1068,7 @@ void AnalyzerPro::setIsMeasuring (bool _isMeasuring)
     {
         m_baseAnalyzer->setIsMeasuring(_isMeasuring);
     }
-    PopUpIndicator::setIndicatorVisible(_isMeasuring);
+    emit indicatorVisibleChanged(_isMeasuring);
     // ISSUE #19: centralized here instead of at every individual
     // measurement-start/completion call site -- see the comment on
     // m_watchdogTimer (analyzerpro.h) for the full reasoning.
@@ -1196,6 +1179,7 @@ void AnalyzerPro::connectSignals()
     connect(m_baseAnalyzer,&BaseAnalyzer::analyzerScreenPaletteArrived,this, &AnalyzerPro::on_analyzerScreenPaletteArrived);
     connect(this, &AnalyzerPro::screenshotComplete, m_baseAnalyzer, &BaseAnalyzer::on_screenshotComplete);
     connect(m_baseAnalyzer, &BaseAnalyzer::signalAnalyzerError, this, &AnalyzerPro::signalAnalyzerError);
+    connect(m_baseAnalyzer, &BaseAnalyzer::userMessage, this, &AnalyzerPro::userMessage);
     connect(m_baseAnalyzer, &BaseAnalyzer::completeMeasurement, this, [=](){
         // Same leftover-data-after-stop guard as on_newData()/on_newS21Data()/
         // on_newSParamPoint() (see on_newData()'s comment for the full

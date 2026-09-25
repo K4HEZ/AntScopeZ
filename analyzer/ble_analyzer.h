@@ -117,6 +117,14 @@ public:
 
     static int supported();
 
+    // AA-650 ZOOM's own pixel-compression mode, reported by the device in
+    // its FULLINFO reply (parseFullInfo(), BLE_FULLINFO_DISPLAY) --
+    // Screenshot::on_newData() picks its AA-650 ZOOM decode branch on this.
+    // Static: set once from FULLINFO, read by whichever Screenshot dialog
+    // gets constructed afterward. Ported from RigExpert AntScope2 2.0.3,
+    // issue #10.
+    static quint8 screenCompression;
+
     explicit BleAnalyzer(QObject *parent = nullptr);
     virtual ~BleAnalyzer();
 

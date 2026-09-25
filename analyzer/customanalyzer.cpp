@@ -1,5 +1,5 @@
 #include "customanalyzer.h"
-#include "settings.h"
+#include "apppaths.h"
 #include <QStringList>
 
 QMap<QString, CustomAnalyzer> CustomAnalyzer::m_map;
@@ -31,7 +31,7 @@ void CustomAnalyzer::load(QSettings* set)
 {
     bool no_set = set == nullptr;
     if (no_set) {
-        QString path = Settings::setIniFile();
+        QString path = AppPaths::iniFile();
         set = new QSettings(path, QSettings::IniFormat);
     }
 
@@ -62,7 +62,7 @@ void CustomAnalyzer::save(QSettings* set)
 {
     bool no_set = set == nullptr;
     if (no_set) {
-        QString path = Settings::setIniFile();
+        QString path = AppPaths::iniFile();
         set = new QSettings(path, QSettings::IniFormat);
     }
 

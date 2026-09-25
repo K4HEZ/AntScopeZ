@@ -7,6 +7,8 @@
 #include "style.h"
 
 #include <QFileInfo>
+#include <QMessageBox>
+#include <QThread>
 
 extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
                             QString title, QString text,

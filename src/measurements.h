@@ -8,6 +8,7 @@
 #include <qdebug.h>
 #include <qcustomplot.h>
 #include <analyzer/analyzerparameters.h>
+#include "measurement.h"
 #include <popup.h>
 #include <QSettings>
 #include <calibration.h>

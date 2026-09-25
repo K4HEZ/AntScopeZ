@@ -16,6 +16,11 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 - README Credits section and About dialog line crediting cable data
   sources (AC6LA and manufacturers).
 
+### Changed
+
+- Internal: analyzer layer split into a UI-free `antscopez_core` library
+  (groundwork for mobile front ends). No user-visible change intended.
+
 ### Fixed
 
 - Docs: cable preset count said ~150; it's over 100.

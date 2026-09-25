@@ -5,6 +5,7 @@
 #include <QByteArray>
 #include <QJsonObject>
 #include <QVector>
+#include <analyzer/analyzerparameters.h>
 
 class QTcpSocket;
 class MainWindow;

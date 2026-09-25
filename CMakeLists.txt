@@ -113,17 +113,15 @@ set(CMAKE_AUTORCC ON)
 #
 
 set(ANTSCOPE_SOURCES
-    src/AA55BTPacket.cpp
     src/aboutdialog.cpp
+    src/analyzerdata.cpp
     src/antscopeupdatedialog.cpp
     src/appregistrationdialog.cpp
     src/cablecatalog.cpp
     src/calibration.cpp
     src/centralwidget.cpp
-    src/crc32.cpp
     src/customgraph.cpp
     src/CustomPlot.cpp
-    src/debuglog.cpp
     src/duallistwidget.cpp
     src/encodinghelpers.cpp
     src/export.cpp
@@ -182,40 +180,20 @@ set(ANTSCOPE_SOURCES
     src/updatedialog.cpp
     src/userguidedialog.cpp
 
-    analyzer/analyzerdata.cpp
-    analyzer/analyzerpro.cpp
-    analyzer/baseanalyzer.cpp
-    analyzer/ble_analyzer.cpp
-    analyzer/com_analyzer.cpp
-    analyzer/customanalyzer.cpp
-    analyzer/hid_analyzer.cpp
-    analyzer/nanovna_analyzer.cpp
-    analyzer/nanovna_v2_analyzer.cpp
-    analyzer/updater/aa230firmwareupdater.cpp
-    analyzer/updater/aa30zerofirmwareupdater.cpp
-    analyzer/updater/downloader.cpp
-    analyzer/updater/firmwareupdater.cpp
-    analyzer/updater/hidfirmwareupdater.cpp
-
-    devinfo/redeviceinfo.cpp
-    ftdi/ftdiinfo.cpp
-
     remoteapi/remoteapiconnection.cpp
     remoteapi/remoteapiserver.cpp
 )
 
 set(ANTSCOPE_HEADERS
-    src/AA55BTPacket.h
     src/aboutdialog.h
+    src/analyzerdata.h
     src/antscopeupdatedialog.h
     src/appregistrationdialog.h
     src/cablecatalog.h
     src/calibration.h
     src/centralwidget.h
-    src/crc32.h
     src/customgraph.h
     src/CustomPlot.h
-    src/debuglog.h
     src/duallistwidget.h
     src/encodinghelpers.h
     src/export.h
@@ -228,6 +206,7 @@ set(ANTSCOPE_HEADERS
     src/mainwindow.h
     src/markercomparisondialog.h
     src/markers.h
+    src/measurement.h
     src/markerspanel.h
     src/measurements.h
     src/modelesspopup.h
@@ -237,6 +216,7 @@ set(ANTSCOPE_HEADERS
     src/onefqwidget.h
     src/popup.h
     src/popupindicator.h
+    src/qcpgraphdatahelpers.h
     src/presets.h
     src/print.h
     src/printmarkers.h
@@ -254,7 +234,71 @@ set(ANTSCOPE_HEADERS
     src/updatedialog.h
     src/userguidedialog.h
 
-    analyzer/analyzerdata.h
+    remoteapi/remoteapiconnection.h
+    remoteapi/remoteapiprotocol.h
+    remoteapi/remoteapiserver.h
+)
+
+set(ANTSCOPE_FORMS
+    src/aboutdialog.ui
+    src/analyzerdata.ui
+    src/antscopeupdatedialog.ui
+    src/appregistrationdialog.ui
+    src/export.ui
+    src/inforequestdialog.ui
+    src/mainwindow.ui
+    src/markercomparisondialog.ui
+    src/modelesspopup.ui
+    src/print.ui
+    src/ProgressDlg.ui
+    src/screenshot.ui
+    src/selectdevicedialog.ui
+    src/settings.ui
+    src/tdrscanpanel.ui
+    src/unitrequestdialog.ui
+    src/updatedialog.ui
+)
+
+
+#
+# Core library
+#
+# The UI-free part of the app: analyzer transports/protocols, firmware
+# updaters, and the small helpers they use. Links no Widgets or Gui, so a
+# widget dependency creeping into any of these fails the build. Groundwork
+# for sharing this code with other front ends (e.g. mobile).
+#
+
+set(ANTSCOPE_CORE_SOURCES
+    src/AA55BTPacket.cpp
+    src/apppaths.cpp
+    src/crc32.cpp
+    src/debuglog.cpp
+
+    analyzer/analyzerpro.cpp
+    analyzer/baseanalyzer.cpp
+    analyzer/ble_analyzer.cpp
+    analyzer/com_analyzer.cpp
+    analyzer/customanalyzer.cpp
+    analyzer/hid_analyzer.cpp
+    analyzer/nanovna_analyzer.cpp
+    analyzer/nanovna_v2_analyzer.cpp
+    analyzer/updater/aa230firmwareupdater.cpp
+    analyzer/updater/aa30zerofirmwareupdater.cpp
+    analyzer/updater/downloader.cpp
+    analyzer/updater/firmwareupdater.cpp
+    analyzer/updater/hidfirmwareupdater.cpp
+
+    devinfo/redeviceinfo.cpp
+    ftdi/ftdiinfo.cpp
+)
+
+set(ANTSCOPE_CORE_HEADERS
+    src/AA55BTPacket.h
+    src/apppaths.h
+    src/crc32.h
+    src/debuglog.h
+
     analyzer/analyzerparameters.h
     analyzer/analyzerpro.h
     analyzer/baseanalyzer.h
@@ -274,32 +318,56 @@ set(ANTSCOPE_HEADERS
     devinfo/redeviceinfo.h
     ftdi/ftd2xx.h
     ftdi/ftdiinfo.h
-
-    remoteapi/remoteapiconnection.h
-    remoteapi/remoteapiprotocol.h
-    remoteapi/remoteapiserver.h
 )
 
-set(ANTSCOPE_FORMS
-    src/aboutdialog.ui
-    src/antscopeupdatedialog.ui
-    src/appregistrationdialog.ui
-    src/export.ui
-    src/inforequestdialog.ui
-    src/mainwindow.ui
-    src/markercomparisondialog.ui
-    src/modelesspopup.ui
-    src/print.ui
-    src/ProgressDlg.ui
-    src/screenshot.ui
-    src/selectdevicedialog.ui
-    src/settings.ui
-    src/tdrscanpanel.ui
-    src/unitrequestdialog.ui
-    src/updatedialog.ui
-
-    analyzer/analyzerdata.ui
+qt_add_library(antscopez_core STATIC
+    ${ANTSCOPE_CORE_SOURCES}
+    ${ANTSCOPE_CORE_HEADERS}
 )
+
+target_compile_definitions(antscopez_core PRIVATE
+    ANTSCOPEZ_VER="${PROJECT_VERSION}${ANTSCOPEZ_VER_SUFFIX}"
+    CALIBRATION_DEBUG_TOOLS=0
+    $<$<CONFIG:Debug>:_DEBUG>
+)
+if(NOT WIN32)
+    target_compile_definitions(antscopez_core PUBLIC _NO_WINDOWS_)
+endif()
+
+# Same layout as the AntScopeZ target's include dirs (see the comment there).
+target_include_directories(antscopez_core PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/analyzer
+    ${CMAKE_CURRENT_SOURCE_DIR}/analyzer/updater
+)
+
+target_link_libraries(antscopez_core PUBLIC
+    Qt6::Core
+    Qt6::SerialPort
+    Qt6::Network
+    Qt6::Xml
+    Qt6::Concurrent
+    Qt6::Bluetooth
+)
+
+if(WIN32)
+    target_sources(antscopez_core PRIVATE analyzer/usbhid/hidapi/windows/hid.c)
+    target_link_libraries(antscopez_core PRIVATE setupapi)
+    target_include_directories(antscopez_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/ftdi)
+elseif(APPLE)
+    target_sources(antscopez_core PRIVATE analyzer/usbhid/hidapi/mac/hid.c)
+    find_library(COREFOUNDATION_FRAMEWORK CoreFoundation REQUIRED)
+    # IOKit -- analyzer/usbhid/hidapi/mac/hid.c calls IOHIDManager* (IOKit/hid/...),
+    # which CoreFoundation alone doesn't provide.
+    find_library(IOKIT_FRAMEWORK IOKit REQUIRED)
+    target_link_libraries(antscopez_core PRIVATE ${COREFOUNDATION_FRAMEWORK} ${IOKIT_FRAMEWORK})
+else()
+    target_sources(antscopez_core PRIVATE analyzer/usbhid/hidapi/linux/hid.c)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(LIBUSB REQUIRED IMPORTED_TARGET libusb-1.0)
+    target_link_libraries(antscopez_core PRIVATE PkgConfig::LIBUSB)
+endif()
 
 
 #
@@ -399,6 +467,7 @@ target_include_directories(AntScopeZ PRIVATE
 #
 
 target_link_libraries(AntScopeZ PRIVATE
+    antscopez_core
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
@@ -433,6 +502,7 @@ option(ANTSCOPEZ_SANITIZE "Build with AddressSanitizer + UndefinedBehaviorSaniti
 if(ANTSCOPEZ_SANITIZE)
     target_compile_options(AntScopeZ PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer -g)
     target_link_options(AntScopeZ PRIVATE -fsanitize=address,undefined)
+    target_compile_options(antscopez_core PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer -g)
 endif()
 
 
@@ -441,12 +511,6 @@ endif()
 #
 
 if(WIN32)
-
-    target_sources(AntScopeZ PRIVATE
-        analyzer/usbhid/hidapi/windows/hid.c
-    )
-
-    target_link_libraries(AntScopeZ PRIVATE setupapi)
 
     target_include_directories(AntScopeZ PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/ftdi
@@ -505,17 +569,7 @@ if(WIN32)
 
 elseif(APPLE)
 
-    target_sources(AntScopeZ PRIVATE
-        analyzer/usbhid/hidapi/mac/hid.c
-    )
-
     target_compile_definitions(AntScopeZ PRIVATE _NO_WINDOWS_ NO_MULTITAB)
-
-    find_library(COREFOUNDATION_FRAMEWORK CoreFoundation REQUIRED)
-    # IOKit -- analyzer/usbhid/hidapi/mac/hid.c calls IOHIDManager* (IOKit/hid/...),
-    # which CoreFoundation alone doesn't provide.
-    find_library(IOKIT_FRAMEWORK IOKit REQUIRED)
-    target_link_libraries(AntScopeZ PRIVATE ${COREFOUNDATION_FRAMEWORK} ${IOKIT_FRAMEWORK})
 
     set_source_files_properties(src/resources/AntScopeZ.icns PROPERTIES
         MACOSX_PACKAGE_LOCATION Resources
@@ -533,10 +587,6 @@ elseif(APPLE)
 
 else() # Linux and other Unix
 
-    target_sources(AntScopeZ PRIVATE
-        analyzer/usbhid/hidapi/linux/hid.c
-    )
-
     target_compile_definitions(AntScopeZ PRIVATE _NO_WINDOWS_)
 
     # Settings::sharedDataFolder() -- see the Install rules section below and
@@ -545,10 +595,6 @@ else() # Linux and other Unix
     target_compile_definitions(AntScopeZ PRIVATE
         ANTSCOPE_SHARED_DATA_DIR="${CMAKE_INSTALL_FULL_DATADIR}/antscopez"
     )
-
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(LIBUSB REQUIRED IMPORTED_TARGET libusb-1.0)
-    target_link_libraries(AntScopeZ PRIVATE PkgConfig::LIBUSB)
 
     # qt_standard_project_setup() (above) points CMAKE_INSTALL_RPATH at
     # $ORIGIN/../${CMAKE_INSTALL_LIBDIR} -- the *default* Qt lib location.
@@ -604,7 +650,7 @@ set(ANTSCOPE_TS_FILES
 )
 qt_add_translations(
     TARGETS AntScopeZ
-    SOURCE_TARGETS AntScopeZ
+    SOURCE_TARGETS AntScopeZ antscopez_core
     TS_FILES ${ANTSCOPE_TS_FILES}
     QM_FILES_OUTPUT_VARIABLE ANTSCOPE_QM_FILES
     # -no-obsolete: drop entries for source strings that no longer exist

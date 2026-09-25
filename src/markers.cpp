@@ -1,7 +1,7 @@
 #include "markers.h"
 #include "mainwindow.h"
 #include "style.h"
-#include "../analyzer/qcpgraphdatahelpers.h"
+#include "qcpgraphdatahelpers.h"
 
 int g_maxMarkers = MAX_MARKERS;
 bool g_autoMarkerAtLowestSwr = true;

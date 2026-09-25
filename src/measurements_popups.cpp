@@ -6,7 +6,7 @@
 #include "customgraph.h"
 #include "glwidget.h"
 #include "style.h"
-#include "../analyzer/qcpgraphdatahelpers.h"
+#include "qcpgraphdatahelpers.h"
 
 extern QMap<QString, QString> g_mapTabPlotNames;
 extern int g_maxMeasurements; // defined in measurements.cpp

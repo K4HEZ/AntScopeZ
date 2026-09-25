@@ -461,11 +461,18 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_analyzer,SIGNAL(measurementComplete()),this,SLOT(on_measurementComplete()));//, Qt::QueuedConnection);
     connect(m_analyzer,SIGNAL(measurementCompleteNano()),this,SLOT(on_measurementCompleteNano()));//, Qt::QueuedConnection);
     connect(this,SIGNAL(stopMeasure()), m_analyzer, SLOT(on_stopMeasure()));
-    connect(this,&MainWindow::measureOneFq, m_analyzer,&AnalyzerPro::on_measureOneFq);
+    connect(this, &MainWindow::measureOneFq, m_analyzer, [this](QWidget*, qint64 fq, int dots) {
+        m_analyzer->on_measureOneFq(fq, dots);
+    });
     connect(m_analyzer, &AnalyzerPro::signalMeasurementError, this, &MainWindow::onMeasurementError);
     connect(m_analyzer, &AnalyzerPro::signalAnalyzerError, this, &MainWindow::onAnalyzerError);
     connect(m_analyzer, &AnalyzerPro::drainingChanged, this, &MainWindow::onAnalyzerDrainingChanged);
     connect(m_analyzer, &AnalyzerPro::statusMessageChanged, this, &MainWindow::onAnalyzerStatusMessageChanged);
+    connect(m_analyzer, &AnalyzerPro::userMessage, this, [](bool warning, const QString& title, const QString& text) {
+        g_showMessageBox(nullptr, warning ? QMessageBox::Warning : QMessageBox::Information, title, text);
+    });
+    connect(m_analyzer, &AnalyzerPro::indicatorVisibleChanged, this, &PopUpIndicator::setIndicatorVisible);
+    connect(m_analyzer, &AnalyzerPro::firmwareInfoReady, this, &MainWindow::onFirmwareInfoReady);
 
     // Permanent status-bar labels -- see their declaration comment
     // (mainwindow.h) for why m_statusLabel is general-purpose, not

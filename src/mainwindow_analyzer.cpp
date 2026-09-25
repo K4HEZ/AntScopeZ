@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "popupindicator.h"
+#include "updatedialog.h"
 #include "analyzer/customanalyzer.h"
 #include "analyzer/nanovna_analyzer.h"
 #include "Notification.h"
@@ -375,3 +376,18 @@ void MainWindow::on_refreshConnection()
     }
 }
 
+
+void MainWindow::onFirmwareInfoReady(const QString& mainText, const QString& details)
+{
+    // Receiver-bound connections below drop themselves when the dialog closes.
+    UpdateDialog* dlg = new UpdateDialog();
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    dlg->setWindowTitle(QCoreApplication::translate("AnalyzerPro", "Firmware update"));
+    connect(dlg, SIGNAL(update()), m_analyzer, SLOT(on_internetUpdate()));
+    connect(m_analyzer, SIGNAL(updatePercentChanged(int)), dlg, SLOT(on_percentChanged(qint32)));
+    connect(m_analyzer, &AnalyzerPro::firmwareStatusText, dlg, &UpdateDialog::setStatusText);
+    connect(m_analyzer, &AnalyzerPro::firmwareFinished, dlg, &UpdateDialog::setFinished);
+    dlg->setMainText(mainText);
+    dlg->setDetails(details);
+    dlg->exec();
+}

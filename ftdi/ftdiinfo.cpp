@@ -1,5 +1,5 @@
 #include "ftdiinfo.h"
-#include <QApplication>
+#include <QCoreApplication>
 #include <QDir>
 
 #ifdef Q_OS_WIN
@@ -43,7 +43,7 @@ QList <FtdiInfo::Info> FtdiInfo::info()
         return m_lastInfo;
     }
 
-    QDir dir = qApp->applicationDirPath();
+    QDir dir = QCoreApplication::applicationDirPath();
     QString libName = dir.absoluteFilePath("ftd2xx.dll");
     QLibrary lib(libName);
     bool ret = lib.load();

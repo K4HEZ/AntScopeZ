@@ -5,7 +5,6 @@
 #include <QDateTime>
 #include <QTimer>
 #include "baseanalyzer.h"
-#include <updatedialog.h>
 #include <crc32.h>
 #include "analyzerparameters.h"
 #include <analyzer/updater/downloader.h>
@@ -42,7 +41,6 @@ class AnalyzerPro : public QObject
     bool m_getAnalyzerData=false;
 
     Downloader *m_downloader;
-    UpdateDialog *m_updateDialog;
 
     QByteArray  *m_pfw;
     qint32 m_INFOSIZE;
@@ -235,6 +233,12 @@ signals:
     // finishes (success or failure) -- lets Settings stop its "Checking..."
     // animation right then instead of on its own fixed timer.
     void checkUpdatesComplete();
+    // GUI hooks -- the GUI owns the dialogs/indicator these drive.
+    void userMessage(bool warning, const QString& title, const QString& text);
+    void indicatorVisibleChanged(bool visible);
+    void firmwareInfoReady(const QString& mainText, const QString& details);
+    void firmwareStatusText(const QString& text);
+    void firmwareFinished(const QString& text);
 
 public slots:
     bool refreshConnection(); // use SelectionParameters::selected
@@ -246,7 +250,7 @@ public slots:
     void on_measureS21 (qint64 fqFrom_hz, qint64 fqTo_hz, qint32 dotsNumber);
     void on_measureUser (qint64 fqFrom_hz, qint64 fqTo_hz, qint32 dotsNumber);
     void on_measureContinuous(qint64 fqFrom_hz, qint64 fqTo_hz, qint32 dotsNumber);
-    void on_measureOneFq(QWidget* parent, qint64 fqFrom_hz, qint32 dotsNumber);
+    void on_measureOneFq(qint64 fqFrom_hz, qint32 dotsNumber);
     void on_stopMeasure();
     void on_newData(RawData _rawData);
     void on_newS21Data(S21Data _s21Data);

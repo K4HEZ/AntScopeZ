@@ -1,6 +1,5 @@
 #include "nanovna_analyzer.h"
 #include <qserialport.h>
-#include <QMessageBox>
 #include <cstring>
 #include "customanalyzer.h"
 #include "debuglog.h"

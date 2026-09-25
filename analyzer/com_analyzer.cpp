@@ -5,10 +5,6 @@
 #include "debuglog.h"
 
 extern bool g_bAA55modeNewProtocol;
-extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
-                            QString title, QString text,
-                            QMessageBox::StandardButtons buttons = QMessageBox::Ok,
-                            QMessageBox::StandardButton defaultButton = QMessageBox::NoButton);
 
 static const unsigned char crc8_table[256] = {
     0x00, 0x07, 0x0E, 0x09, 0x1C, 0x1B, 0x12, 0x15, 0x38, 0x3F,
@@ -185,14 +181,14 @@ qint32 ComAnalyzer::parse (QByteArray arr)
                     if(!m_updateErr)
                     {
                         m_updateErr = (qint32)arr.at(0);
-                        QString warn = qApp->applicationName() + tr(" can not update firmware.\n");
+                        QString warn = QCoreApplication::applicationName() + tr(" can not update firmware.\n");
                         QString error = textError((ReturnCode) m_updateErr);
                         if(error.isEmpty())
                         {
                             return arr.length();
                         }
                         warn += tr("Error: ") + error;
-                        g_showMessageBox(NULL, QMessageBox::Warning, tr("Warning"), warn);
+                        emit userMessage(true, tr("Warning"), warn);
                     }else
                     {
                         return arr.length();
@@ -634,7 +630,7 @@ bool ComAnalyzer::update (QIODevice *fw)
                 break;
             }
         }
-        g_showMessageBox(NULL, QMessageBox::Information,tr("Finish"),tr("Successfully updated!"));
+        emit userMessage(false, tr("Finish"),tr("Successfully updated!"));
         m_comPort->close();
         openComPort(name,115200);
         setIsMeasuring(false);
@@ -668,7 +664,7 @@ bool ComAnalyzer::update (QIODevice *fw)
             {
                 if(!waitAnswer())
                 {
-                    g_showMessageBox(NULL, QMessageBox::Warning,tr("Error"),tr("Error while update, please try again."));
+                    emit userMessage(true, tr("Error"),tr("Error while update, please try again."));
                     emit updatePercentChanged(100);
                     emit updatePercentChanged(0);
                     setIsMeasuring(false);
@@ -711,7 +707,7 @@ bool ComAnalyzer::update (QIODevice *fw)
 
         emit updatePercentChanged(100);
 
-        g_showMessageBox(NULL, QMessageBox::Information,tr("Finish"),tr("Successfully updated!"));
+        emit userMessage(false, tr("Finish"),tr("Successfully updated!"));
         m_comPort->close();
         openComPort(name,38400);
         setIsMeasuring(false);

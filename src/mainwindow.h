@@ -15,7 +15,7 @@
 #include <qcustomplot.h>
 #include <presets.h>
 #include <measurements.h>
-#include <analyzer/analyzerdata.h>
+#include "analyzerdata.h"
 #include <screenshot.h>
 #include <QTimer>
 #include <settings.h>
@@ -635,6 +635,8 @@ private slots:
     // AnalyzerPro::on_stopMeasure().
     void onAnalyzerDrainingChanged(bool draining);
     void onAnalyzerStatusMessageChanged(const QString& text);
+    // AnalyzerPro::firmwareInfoReady() -- shows the firmware UpdateDialog.
+    void onFirmwareInfoReady(const QString& mainText, const QString& details);
 
     // multi-tab
 #ifndef NO_MULTITAB

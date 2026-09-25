@@ -5,6 +5,7 @@
 #include <analyzer/analyzerparameters.h>
 #include <analyzer/analyzerpro.h>
 #include <QSettings>
+#include <QFile>
 //#include <shlobj.h>
 
 enum {CALIB_NONE = 0, CALIB_OPEN, CALIB_SHORT, CALIB_LOAD, CALIB_NUM};

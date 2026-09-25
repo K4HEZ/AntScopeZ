@@ -1,7 +1,7 @@
 #ifndef QCPGRAPHDATAHELPERS_H
 #define QCPGRAPHDATAHELPERS_H
 
-#include "../src/qcustomplot.h"
+#include "qcustomplot.h"
 
 // QCustomPlot 1.x's QCPDataMap was a QMap<double, QCPData> keyed by
 // frequency; ::value(key) did an exact-key lookup, returning a

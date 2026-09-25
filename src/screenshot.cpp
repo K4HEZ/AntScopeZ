@@ -6,8 +6,8 @@
 #include "settings.h"
 #include "analyzer/ble_analyzer.h"
 #include "style.h"
+#include <QMessageBox>
 
-quint8 Screenshot::screenCompression = 1;
 
 extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
                             QString title, QString text,
@@ -376,7 +376,7 @@ void Screenshot::on_newData(QByteArray data)
         // bytes + 1 quantity byte), same channel layout every other RGB565
         // branch here uses, with a per-model R/B swap some models need.
         // Ported from RigExpert AntScope2 2.0.3, issue #10.
-        if (screenCompression == 2) {
+        if (BleAnalyzer::screenCompression == 2) {
             while (!m_inputData.isEmpty()) {
                 auto data = m_inputData.takeFirst();
                 int quantity = ((data & 0xc0) >> 6) + 1;
