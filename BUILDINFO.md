@@ -39,6 +39,60 @@ it's missing.
 - `pkg-config` (used by `CMakeLists.txt` to locate libusb; `find_package(PkgConfig REQUIRED)` fails the configure step without it)
 - `libusb-1.0` development headers (e.g. `libusb-1.0-0-dev` on Debian/Ubuntu)
 
+## Source layout: core library and desktop app
+
+`CMakeLists.txt` builds two targets:
+
+- **`antscopez_core`** -- a static library with no user interface. It
+  links only Qt Core, Serial Port, Network, Xml, Concurrent and Bluetooth
+  (plus the platform hidapi backend: libusb on Linux, setupapi on
+  Windows, IOKit/CoreFoundation on macOS). It deliberately does **not**
+  link Qt Gui or Widgets, so a widget header included anywhere in it is a
+  compile error -- that's how the boundary is kept.
+- **`AntScopeZ`** -- the desktop app (Qt Widgets, QCustomPlot, dialogs,
+  charts), linked against the core.
+
+What's in the core (`ANTSCOPE_CORE_SOURCES`/`ANTSCOPE_CORE_HEADERS`):
+
+| Area | Files |
+|---|---|
+| Analyzer connections, protocols, firmware updaters | `analyzer/`, `analyzer/updater/`, `devinfo/`, `ftdi/` |
+| App settings and file locations | `src/appconfig.*`, `src/apppaths.*` |
+| OSL calibration | `src/calibration.*` |
+| RF, TDR, chart and marker math | `src/rfmath.*`, `src/tdrmath.*`, `src/markermath.*` |
+| Measurement data, list rules, headless scan session | `src/measurementdata.*`, `src/measurementlist.h`, `src/measurementsession.*` |
+| Measurement files (`.asd`, Touchstone, CSV, NWL) | `src/measurementfiles.*` |
+| Marker list | `src/markerlist.h` |
+| Remote API | `remoteapi/` |
+| Helpers | `src/debuglog.*`, `src/crc32.*`, `src/AA55BTPacket.*`, `src/usermessage.h` |
+
+How the two sides connect:
+
+- **Core to UI: signals only.** Messages for the user
+  (`userMessage()` with a `UserMessageLevel`), the busy indicator
+  (`indicatorVisibleChanged()`), OSL calibration's "connect the next
+  standard" prompt (`Calibration::standardPromptRequested()`, answered via
+  `on_standardPromptAnswered()`) and the firmware-update dialog
+  (`AnalyzerPro::firmwareInfoReady()` and friends) are all shown by
+  `MainWindow`.
+- **UI types extend core types.** `measurement` (plot caches) builds on
+  `MeasurementData`, `marker` (chart lines/labels) on `MarkerData`;
+  `Measurements` keeps its list in a `MeasurementList<measurement>`, so
+  the scan life-cycle rules live in the core. `MainWindow` implements
+  `RemoteApiHost`, the interface the remote API talks to.
+- **Settings.** `AppConfig` is the app-wide settings module (loads and
+  saves the ini). Some display-only settings haven't moved into it yet and
+  are still globals in `src/mainwindow.cpp` and `src/measurements.cpp`.
+
+Adding code: put anything that doesn't need a widget in the core and list
+it in `ANTSCOPE_CORE_SOURCES`/`ANTSCOPE_CORE_HEADERS`. If it won't compile
+there because of a widget include, it either belongs in the app or needs a
+signal (or an interface like `RemoteApiHost`) in between.
+
+Without the desktop GUI, `AnalyzerPro` plus a `MeasurementSession` run a
+full scan pipeline inside a plain `QCoreApplication`, and `RemoteApiServer`
+serves the remote API given any `RemoteApiHost`.
+
 ## Build options
 
 `ANTSCOPEZ_SANITIZE` (off by default) builds with AddressSanitizer +
