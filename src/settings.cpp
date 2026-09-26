@@ -567,6 +567,7 @@ void Settings::setAnalyzer(AnalyzerPro * analyzer)
     if(analyzer)
     {
         m_analyzer = analyzer;
+        m_licenseAgent.attach(analyzer, MainWindow::m_mainWindow->settings(), MainWindow::m_mainWindow);
         //if(m_analyzer->getModel() != 0)
         if (true)
         {

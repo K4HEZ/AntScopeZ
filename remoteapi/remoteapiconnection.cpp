@@ -6,19 +6,19 @@
 #include <QJsonArray>
 #include <QSerialPortInfo>
 
-#include "mainwindow.h"
+#include "remoteapihost.h"
+#include "appconfig.h"
 #include "devinfo/redeviceinfo.h"
 #include "nanovna_analyzer.h"
-#include "selectdevicedialog.h"
 #include "analyzerparameters.h"
 #include "analyzer/analyzerpro.h"
 
 using namespace RemoteApiProtocol;
 
-RemoteApiConnection::RemoteApiConnection(QTcpSocket* socket, MainWindow* mainWindow, QObject* parent)
+RemoteApiConnection::RemoteApiConnection(QTcpSocket* socket, RemoteApiHost* host, QObject* parent)
     : QObject(parent)
     , m_socket(socket)
-    , m_mainWindow(mainWindow)
+    , m_host(host)
 {
     m_socket->setParent(this);
     connect(m_socket, &QTcpSocket::readyRead, this, &RemoteApiConnection::onReadyRead);
@@ -41,8 +41,8 @@ RemoteApiConnection::RemoteApiConnection(QTcpSocket* socket, MainWindow* mainWin
     // event arrived on the wire ahead of the disconnect command's own
     // {"id":...} response). Queuing defers just the broadcast, so replies
     // always precede any event they caused.
-    connect(m_mainWindow->analyzer(), &AnalyzerPro::analyzerFound, this, &RemoteApiConnection::onAnalyzerFound, Qt::QueuedConnection);
-    connect(m_mainWindow->analyzer(), &AnalyzerPro::deviceDisconnected, this, &RemoteApiConnection::onDeviceDisconnected, Qt::QueuedConnection);
+    connect(m_host->analyzer(), &AnalyzerPro::analyzerFound, this, &RemoteApiConnection::onAnalyzerFound, Qt::QueuedConnection);
+    connect(m_host->analyzer(), &AnalyzerPro::deviceDisconnected, this, &RemoteApiConnection::onDeviceDisconnected, Qt::QueuedConnection);
 
     // Point-stream signals: connected directly to AnalyzerPro, same as
     // Measurements does (src/mainwindow.cpp) -- not queued, since these
@@ -51,14 +51,14 @@ RemoteApiConnection::RemoteApiConnection(QTcpSocket* socket, MainWindow* mainWin
     // pointless per-point latency to the live stream.
     // newMeasurement is overloaded (AnalyzerPro also has a QString-only
     // version) -- qOverload<> disambiguates which one.
-    connect(m_mainWindow->analyzer(), qOverload<QString, qint64, qint64, qint32>(&AnalyzerPro::newMeasurement),
+    connect(m_host->analyzer(), qOverload<QString, qint64, qint64, qint32>(&AnalyzerPro::newMeasurement),
             this, &RemoteApiConnection::onNewMeasurement);
-    connect(m_mainWindow->analyzer(), &AnalyzerPro::newData, this, &RemoteApiConnection::onNewData);
-    connect(m_mainWindow->analyzer(), &AnalyzerPro::newSParamPoint, this, &RemoteApiConnection::onNewSParamPoint);
+    connect(m_host->analyzer(), &AnalyzerPro::newData, this, &RemoteApiConnection::onNewData);
+    connect(m_host->analyzer(), &AnalyzerPro::newSParamPoint, this, &RemoteApiConnection::onNewSParamPoint);
     // Either signal means "sweep finished" -- which one fires depends on
     // device type (RigExpert-style vs NanoVNA); this API is device-agnostic.
-    connect(m_mainWindow->analyzer(), &AnalyzerPro::measurementComplete, this, &RemoteApiConnection::onMeasurementDone);
-    connect(m_mainWindow->analyzer(), &AnalyzerPro::measurementCompleteNano, this, &RemoteApiConnection::onMeasurementDone);
+    connect(m_host->analyzer(), &AnalyzerPro::measurementComplete, this, &RemoteApiConnection::onMeasurementDone);
+    connect(m_host->analyzer(), &AnalyzerPro::measurementCompleteNano, this, &RemoteApiConnection::onMeasurementDone);
 }
 
 void RemoteApiConnection::onReadyRead()
@@ -260,17 +260,17 @@ void RemoteApiConnection::sendEvent(const QString& eventName, const QJsonObject&
 QJsonObject RemoteApiConnection::deviceStatusObject() const
 {
     QJsonObject device;
-    device.insert("name", m_mainWindow->connectedDeviceName());
-    device.insert("serial", m_mainWindow->analyzer()->getSerialNumber());
+    device.insert("name", m_host->connectedDeviceName());
+    device.insert("serial", m_host->analyzer()->getSerialNumber());
     return device;
 }
 
 QJsonObject RemoteApiConnection::cmdStatus() const
 {
     QJsonObject result;
-    bool connected = m_mainWindow->isAnalyzerConnected();
+    bool connected = m_host->isAnalyzerConnected();
     result.insert("connected", connected);
-    result.insert("measuring", m_mainWindow->isMeasuring());
+    result.insert("measuring", m_host->isMeasuring());
     result.insert("device", connected ? QJsonValue(deviceStatusObject()) : QJsonValue());
     return result;
 }
@@ -334,7 +334,7 @@ ReDeviceInfo::InterfaceType deviceTypeFromString(const QString& type)
 
 QJsonObject RemoteApiConnection::cmdConnect(const QJsonObject& request, QString* error)
 {
-    if (m_mainWindow->isAnalyzerConnected()) {
+    if (m_host->isAnalyzerConnected()) {
         *error = QStringLiteral("already connected; disconnect first");
         return QJsonObject();
     }
@@ -347,9 +347,9 @@ QJsonObject RemoteApiConnection::cmdConnect(const QJsonObject& request, QString*
         // SelectDeviceDialog::reset()/~SelectDeviceDialog() would
         // otherwise be relied on to clean up -- but
         // AnalyzerPro::createDevice() takes ownership of a non-null
-        // passed-in analyzer without reparenting it, and this command's
-        // SelectDeviceDialog below is a short-lived stack local, not
-        // something that stays alive to own it. Left for a future phase
+        // passed-in analyzer without reparenting it, and the desktop host's
+        // SelectDeviceDialog (MainWindow::connectDevice()) is a short-lived
+        // stack local, not something that stays alive to own it. Left for a future phase
         // alongside real BLE support in devices() (see its own comment).
         *error = QStringLiteral("BLE connect is not supported by this API yet");
         return QJsonObject();
@@ -362,14 +362,9 @@ QJsonObject RemoteApiConnection::cmdConnect(const QJsonObject& request, QString*
         return QJsonObject();
     }
 
-    // Headless: constructed with silent=true and never show()n/exec()'d.
-    // connectSilent() (src/selectdevicedialog.cpp) is the same
-    // UI-independent helper this class design deliberately requires --
-    // see remoteapiconnection.h's own comment on why (must not depend on
-    // any particular dialog/widget being open, unlike the abandoned
-    // OneFqWidget UDP bridge).
-    SelectDeviceDialog dlg(true, m_mainWindow);
-    if (!dlg.connectSilent(static_cast<int>(type), name)) {
+    // No UI: the host finds and selects the device silently (the desktop
+    // uses SelectDeviceDialog::connectSilent() without showing it).
+    if (!m_host->connectDevice(static_cast<int>(type), name)) {
         *error = QStringLiteral("device not found: %1 \"%2\"").arg(request.value("type").toString(), name);
         return QJsonObject();
     }
@@ -397,18 +392,17 @@ QJsonObject RemoteApiConnection::cmdConnect(const QJsonObject& request, QString*
     // or every subscribed client gets the "connected" event twice per
     // request. Serial/NanoVNA only emit their analyzerFound asynchronously,
     // from later device replies parsed on the wire, so they still need it.
-    m_mainWindow->analyzer()->on_connectDevice(dlg.analyzer());
     if (type != ReDeviceInfo::HID)
-        emit m_mainWindow->analyzer()->analyzerFound(selected->index());
+        emit m_host->analyzer()->analyzerFound(selected->index());
 
     QJsonObject result;
-    result.insert("connected", m_mainWindow->isAnalyzerConnected());
+    result.insert("connected", m_host->isAnalyzerConnected());
     return result;
 }
 
 QJsonObject RemoteApiConnection::cmdDisconnect()
 {
-    m_mainWindow->analyzer()->on_disconnectDevice();
+    m_host->analyzer()->on_disconnectDevice();
     QJsonObject result;
     result.insert("connected", false);
     return result;
@@ -446,7 +440,7 @@ QJsonObject RemoteApiConnection::cmdSweep(const QJsonObject& request, QString* e
         return QJsonObject();
     }
 
-    if (!m_mainWindow->isAnalyzerConnected()) {
+    if (!m_host->isAnalyzerConnected()) {
         *error = QStringLiteral("not connected to a device");
         return QJsonObject();
     }
@@ -457,7 +451,7 @@ QJsonObject RemoteApiConnection::cmdSweep(const QJsonObject& request, QString* e
     // it, not assumed). The GUI only avoids this because
     // on_singleStart_clicked()/on_continuousStartBtn_clicked() check
     // isMeasuring() themselves before calling in -- this must too.
-    if (m_mainWindow->isMeasuring()) {
+    if (m_host->isMeasuring()) {
         *error = QStringLiteral("busy: a measurement is already in progress");
         return QJsonObject();
     }
@@ -469,7 +463,7 @@ QJsonObject RemoteApiConnection::cmdSweep(const QJsonObject& request, QString* e
     // silently mishandling a 420-540MHz NanoVNA scan -- needed a real
     // hardware repro to even diagnose). The device itself is the source
     // of truth for what it will accept.
-    m_mainWindow->startRemoteSweep(startHz, stopHz, points);
+    m_host->startRemoteSweep(startHz, stopHz, points);
 
     QJsonObject result;
     result.insert("started", true);
@@ -478,11 +472,11 @@ QJsonObject RemoteApiConnection::cmdSweep(const QJsonObject& request, QString* e
 
 QJsonObject RemoteApiConnection::cmdStop(QString* error)
 {
-    if (!m_mainWindow->isMeasuring()) {
+    if (!m_host->isMeasuring()) {
         *error = QStringLiteral("not measuring");
         return QJsonObject();
     }
-    m_mainWindow->stopCurrentScan();
+    m_host->stopCurrentScan();
     QJsonObject result;
     result.insert("stopped", true);
     return result;

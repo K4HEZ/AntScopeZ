@@ -2,7 +2,9 @@
 #include "appconfig.h"
 #include "popup.h"
 #include "modelesspopup.h"
-#include "mainwindow.h"
+#include "analyzer/analyzerpro.h"
+#include <QInputDialog>
+#include <QSettings>
 #include "unitrequestdialog.h"
 #include "encodinghelpers.h"
 
@@ -24,6 +26,13 @@ LicenseAgent::LicenseAgent(QObject *parent) :
 LicenseAgent::~LicenseAgent()
 {
 
+}
+
+void LicenseAgent::attach(AnalyzerPro* analyzer, QSettings* settings, QWidget* dialogParent)
+{
+    m_analyzer = analyzer;
+    m_settings = settings;
+    m_dialogParent = dialogParent;
 }
 
 void LicenseAgent::registerApllication(QString user, QString email)
@@ -119,9 +128,9 @@ void LicenseAgent::updateLicense()
 void LicenseAgent::requestLicense(QString key)
 {
     qInfo() << "LicenseAgent::requestlicense " ;
-    QString name = MainWindow::m_mainWindow->analyzer()->getModelString();
-    QString serial = MainWindow::m_mainWindow->analyzer()->getSerialNumber();
-    QString license = MainWindow::m_mainWindow->analyzer()->getLicense();
+    QString name = m_analyzer->getModelString();
+    QString serial = m_analyzer->getSerialNumber();
+    QString license = m_analyzer->getLicense();
     QString url = licenseServerUrl();
     QString strRaw = QString("dvName=%1&&&dvSN=%2&&&lcCode=%3&&&lcName=%4&&&").arg(name, serial, key, license);
     QString strData = EncodingHelpers::encodeString(strRaw);
@@ -201,7 +210,7 @@ void LicenseAgent::showModeless(QString title, QString text, QString buttonCance
         m_modelessPopup->close();
         m_modelessPopup->deleteLater();
     }
-    m_modelessPopup = new ModelessPopup(title, text, buttonCancel, buttonOk, MainWindow::m_mainWindow);
+    m_modelessPopup = new ModelessPopup(title, text, buttonCancel, buttonOk, m_dialogParent);
     connect(m_modelessPopup, &ModelessPopup::rejected, this, [=](){
         setState(Finished);
         m_canceled = true;
@@ -247,7 +256,7 @@ void LicenseAgent::requestInfo()
 //    QString strRaw = QString("dvName=%1&&&dvSN=%2&&&lcName=%3&&&")
 //                         .arg(m_infoRequest.deviceName, m_infoRequest.serialNumber,
 //                              m_infoRequest.licenseName);
-    AnalyzerPro& analyzer = *MainWindow::m_mainWindow->analyzer();
+    AnalyzerPro& analyzer = *m_analyzer;
     QString strRaw = QString("dvName=%1&&&dvSN=%2&&&lcName=%3&&&")
                        .arg(analyzer.getModelString(), analyzer.getSerialNumber(),
                             analyzer.getLicense());
@@ -320,7 +329,7 @@ void LicenseAgent::requestUnit()
     QString strRaw = QString("dvSN=%1&&&Eml=%2&&&Name=%3&&&dtPur=%4&&&dvName=%5&&&")
                          .arg(m_unitRequest.serialNumber, m_unitRequest.email,
                               m_unitRequest.userName, m_unitRequest.purchargeDate,
-                              MainWindow::m_mainWindow->analyzer()->getModelString());
+                              m_analyzer->getModelString());
     qInfo() << "LicenseAgent::requestUnit" << strRaw;
     QString strData = EncodingHelpers::encodeString(strRaw);
     url += QString("?nGet=3&nRaw=1&raw=%1").arg(strData);
@@ -495,7 +504,7 @@ void LicenseAgent::finishWaitEmailStatusWeb()
         }
         showModeless(tr("Register application"),tr("Registration was successful"), tr("Ok"));
 
-        QSettings& set = *MainWindow::m_mainWindow->settings();
+        QSettings& set = *m_settings;
         set.beginGroup("Mainwindow");
         set.setValue("eMail", m_email);
         set.setValue("remind", false);
@@ -516,7 +525,7 @@ void LicenseAgent::finishWaitEmailStatusWeb()
                     delete m_popup;
                     m_popup = nullptr;
                 }
-                QSettings& set = *MainWindow::m_mainWindow->settings();
+                QSettings& set = *m_settings;
                 set.beginGroup("Mainwindow");
                 set.setValue("remind", true);
                 set.endGroup();
@@ -542,14 +551,14 @@ void LicenseAgent::finishWaitUserInfoWeb()
     if (empty) {
         // local data
         QString text;
-        text += tr("Device name ") + MainWindow::m_mainWindow->analyzer()->getModelString();
-        text += tr("\nSerial number ") + MainWindow::m_mainWindow->analyzer()->getSerialNumber();
-        text += tr("\nLicense name ") + MainWindow::m_mainWindow->analyzer()->getLicense();
+        text += tr("Device name ") + m_analyzer->getModelString();
+        text += tr("\nSerial number ") + m_analyzer->getSerialNumber();
+        text += tr("\nLicense name ") + m_analyzer->getLicense();
         showModeless(tr("Device info"), text, tr("Cancel"), tr("User Data update"));
         connect(m_modelessPopup, &ModelessPopup::accepted, this, [=](){
             closeModeless();
             ManualInfoWeb info;
-            QSettings& set = *MainWindow::m_mainWindow->settings();
+            QSettings& set = *m_settings;
             set.beginGroup("MaiWindow");
             if (m_email.isEmpty()) {
                 m_email = set.value("eMail", "").toString();
@@ -560,9 +569,9 @@ void LicenseAgent::finishWaitUserInfoWeb()
             set.endGroup();
             info.email = m_email;
             info.userName = m_userName;
-            info.licenseName = MainWindow::m_mainWindow->analyzer()->getLicense();
+            info.licenseName = m_analyzer->getLicense();
             info.userName = m_userName;
-            info.serialNumber = MainWindow::m_mainWindow->analyzer()->getSerialNumber();
+            info.serialNumber = m_analyzer->getSerialNumber();
             info.purchargeDate = m_infoWeb.purchargeDate.isEmpty() ? QDate::currentDate().toString("dd.MM.yyyy") : m_infoWeb.purchargeDate;
             closeModeless();
             UnitRequestDialog dlg(info);
@@ -574,23 +583,23 @@ void LicenseAgent::finishWaitUserInfoWeb()
             m_unitRequest.purchargeDate = dlg.infoWeb().purchargeDate;
             m_unitRequest.serialNumber = dlg.infoWeb().serialNumber;
             m_unitRequest.userName = dlg.infoWeb().userName;
-            m_unitRequest.deviceName = MainWindow::m_mainWindow->analyzer()->getModelString();
+            m_unitRequest.deviceName = m_analyzer->getModelString();
             requestUnit();
             showModeless(tr("Register device"),tr("Registration..."), tr("Cancel"));
         });
     } else {
         // remote data
         QString text;
-        text += tr("Device name ") + MainWindow::m_mainWindow->analyzer()->getModelString();
-        text += tr("\nSerial number ") + MainWindow::m_mainWindow->analyzer()->getSerialNumber();
-        text += tr("\nLicense name ") + MainWindow::m_mainWindow->analyzer()->getLicense();
+        text += tr("Device name ") + m_analyzer->getModelString();
+        text += tr("\nSerial number ") + m_analyzer->getSerialNumber();
+        text += tr("\nLicense name ") + m_analyzer->getLicense();
         text += tr("\nPurchrge date: ") + m_infoWeb.purchargeDate;
         text += tr("\nRegistration date: ") + m_infoWeb.loginDate;
         showModeless(tr("Update user data"), text, tr("Cancel"), tr("User Data update"));
         connect(m_modelessPopup, &ModelessPopup::accepted, this, [=](){
             closeModeless();
             ManualInfoWeb manualInfo;
-            QSettings& set = *MainWindow::m_mainWindow->settings();
+            QSettings& set = *m_settings;
             set.beginGroup("MaiWindow");
             if (m_email.isEmpty()) {
                 m_email = set.value("eMail", "").toString();
@@ -601,9 +610,9 @@ void LicenseAgent::finishWaitUserInfoWeb()
             set.endGroup();
             manualInfo.email = m_email;
             manualInfo.userName = m_userName;
-            manualInfo.licenseName = MainWindow::m_mainWindow->analyzer()->getLicense();
+            manualInfo.licenseName = m_analyzer->getLicense();
             manualInfo.userName = m_userName;
-            manualInfo.serialNumber = MainWindow::m_mainWindow->analyzer()->getSerialNumber();
+            manualInfo.serialNumber = m_analyzer->getSerialNumber();
             manualInfo.purchargeDate = m_infoWeb.purchargeDate.isEmpty() ? QDate::currentDate().toString("dd.MM.yyyy") : m_infoWeb.purchargeDate;
             closeModeless();
             UnitRequestDialog dlg(manualInfo);
@@ -615,7 +624,7 @@ void LicenseAgent::finishWaitUserInfoWeb()
             m_unitRequest.purchargeDate = dlg.infoWeb().purchargeDate;
             m_unitRequest.serialNumber = dlg.infoWeb().serialNumber;
             m_unitRequest.userName = dlg.infoWeb().userName;
-            m_unitRequest.deviceName = MainWindow::m_mainWindow->analyzer()->getModelString();
+            m_unitRequest.deviceName = m_analyzer->getModelString();
             m_userName = m_unitRequest.userName;
             m_email = m_unitRequest.email;
             requestUnit();
@@ -632,7 +641,7 @@ void LicenseAgent::finishWaitInfoWeb()
     if (m_infoWeb.nRez != 1) {
         // manual
         ManualInfoWeb info;
-        QSettings& set = *MainWindow::m_mainWindow->settings();
+        QSettings& set = *m_settings;
         set.beginGroup("MaiWindow");
         if (m_email.isEmpty()) {
             m_email = set.value("eMail", "").toString();
@@ -643,9 +652,9 @@ void LicenseAgent::finishWaitInfoWeb()
         set.endGroup();
         info.email = m_email;
         info.userName = m_userName;
-        info.licenseName = MainWindow::m_mainWindow->analyzer()->getLicense();
+        info.licenseName = m_analyzer->getLicense();
         info.userName = m_userName;
-        info.serialNumber = MainWindow::m_mainWindow->analyzer()->getSerialNumber();
+        info.serialNumber = m_analyzer->getSerialNumber();
         info.purchargeDate = m_infoWeb.purchargeDate.isEmpty() ? QDate::currentDate().toString("dd.MM.yyyy") : m_infoWeb.purchargeDate;
         closeModeless();
         UnitRequestDialog dlg(info);
@@ -657,7 +666,7 @@ void LicenseAgent::finishWaitInfoWeb()
         m_unitRequest.purchargeDate = dlg.infoWeb().purchargeDate;
         m_unitRequest.serialNumber = dlg.infoWeb().serialNumber;
         m_unitRequest.userName = dlg.infoWeb().userName;
-        m_unitRequest.deviceName = MainWindow::m_mainWindow->analyzer()->getModelString();
+        m_unitRequest.deviceName = m_analyzer->getModelString();
         m_userName = m_unitRequest.userName;
         m_email = m_unitRequest.email;
         requestUnit();
@@ -685,7 +694,7 @@ void LicenseAgent::finishWaitUnitWeb()
         info += tr("Device name: ") + m_unitWeb.deviceName + "\n";
         info += tr("Serial number: ") + m_unitWeb.serialNumber + "\n";
         QString license =(m_infoWeb.licenseName.isEmpty()
-            ? MainWindow::m_mainWindow->analyzer()->getLicense()
+            ? m_analyzer->getLicense()
             : m_infoWeb.licenseName);
         info += tr("License name: ") + license + "\n";
         info += tr("Purcharge date: ") + m_unitWeb.purchargeDate + "\n";
@@ -713,7 +722,7 @@ void LicenseAgent::finishWaitUnitWeb()
                 connect(m_modelessPopup, &ModelessPopup::accepted, this, [=](){
                     //closeModeless();
                     ManualInfoWeb manualInfo;
-                    QSettings& set = *MainWindow::m_mainWindow->settings();
+                    QSettings& set = *m_settings;
                     set.beginGroup("MaiWindow");
                     if (m_email.isEmpty()) {
                         m_email = set.value("eMail", "").toString();
@@ -724,9 +733,9 @@ void LicenseAgent::finishWaitUnitWeb()
                     set.endGroup();
                     manualInfo.email = m_email;
                     manualInfo.userName = m_userName;
-                    manualInfo.licenseName = MainWindow::m_mainWindow->analyzer()->getLicense();
+                    manualInfo.licenseName = m_analyzer->getLicense();
                     manualInfo.userName = m_userName;
-                    manualInfo.serialNumber = MainWindow::m_mainWindow->analyzer()->getSerialNumber();
+                    manualInfo.serialNumber = m_analyzer->getSerialNumber();
                     manualInfo.purchargeDate = m_infoWeb.purchargeDate.isEmpty() ? QDate::currentDate().toString("dd.MM.yyyy") : m_infoWeb.purchargeDate;
                     closeModeless();
                     UnitRequestDialog dlg(manualInfo);
@@ -738,7 +747,7 @@ void LicenseAgent::finishWaitUnitWeb()
                     m_unitRequest.purchargeDate = dlg.infoWeb().purchargeDate;
                     m_unitRequest.serialNumber = dlg.infoWeb().serialNumber;
                     m_unitRequest.userName = dlg.infoWeb().userName;
-                    m_unitRequest.deviceName = MainWindow::m_mainWindow->analyzer()->getModelString();
+                    m_unitRequest.deviceName = m_analyzer->getModelString();
                     m_userName = m_unitRequest.userName;
                     m_email = m_unitRequest.email;
 
@@ -790,8 +799,8 @@ void LicenseAgent::finishWaitInfoB16()
     parseInfo_B16();
     if ( ! info_B16Failed()) {
         QString reboot = "REBOOT\r";
-        MainWindow::m_mainWindow->analyzer()->sendCommand(reboot);
-        MainWindow::m_mainWindow->analyzer()->on_disconnectDevice();
+        m_analyzer->sendCommand(reboot);
+        m_analyzer->on_disconnectDevice();
         showModeless(tr("License renewal"), tr("The license update was successful\n\nYou should reconnect analyzer."), tr("Ok"));
         emit registered();
     } else {
@@ -850,8 +859,8 @@ void LicenseAgent::sendMatch_11()
 {
     m_arr = EncodingHelpers::sendToMatch(m_licenseWeb.serialNumber);
     QByteArray arr = m_arr.right(m_arr.length() - 2);
-    MainWindow::m_mainWindow->analyzer()->setParseState(WAIT_MATCH_12);
-    MainWindow::m_mainWindow->analyzer()->sendData(arr);
+    m_analyzer->setParseState(WAIT_MATCH_12);
+    m_analyzer->sendData(arr);
 }
 
 QByteArray string2bytes(QString& str)
@@ -867,7 +876,7 @@ void LicenseAgent::sendProfile_B16(QByteArray data)
 {
     m_arr = data;
     QByteArray arr = m_arr.mid(2);
-    MainWindow::m_mainWindow->analyzer()->setParseState(WAIT_MATCH_PROFILE_B16);
-    MainWindow::m_mainWindow->analyzer()->sendData(arr);
+    m_analyzer->setParseState(WAIT_MATCH_PROFILE_B16);
+    m_analyzer->sendData(arr);
 }
 

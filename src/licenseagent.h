@@ -2,6 +2,10 @@
 #define LICENSEAGENT_H
 
 #include <QObject>
+
+class AnalyzerPro;
+class QSettings;
+class QWidget;
 #include "appconfig.h"
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
@@ -103,6 +107,8 @@ class LicenseAgent : public QObject
 public:
     explicit LicenseAgent(QObject *parent = 0);
     ~LicenseAgent();
+    // What it works on and where its dialogs go; set before use.
+    void attach(AnalyzerPro* analyzer, QSettings* settings, QWidget* dialogParent);
 
     enum State {WaitEmailStatusWeb, WaitUserInfoWeb, WaitInfoWeb, WaitUnitWeb, WaitLicense,
                  WaitProfileB16, WaitInfoB16, Finished, Error};
@@ -184,6 +190,9 @@ protected:
 
 protected:
     State m_state;
+    AnalyzerPro* m_analyzer = nullptr;
+    QSettings* m_settings = nullptr;
+    QWidget* m_dialogParent = nullptr;
     QNetworkAccessManager m_mng;
     QByteArray  m_arr;
     QNetworkReply *m_reply;

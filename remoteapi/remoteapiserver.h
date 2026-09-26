@@ -6,18 +6,18 @@
 #include <QHostAddress>
 
 class QTcpServer;
-class MainWindow;
+class RemoteApiHost;
 class RemoteApiConnection;
 
 // Owns the listening socket for the in-app NDJSON remote-control API. One
-// instance, owned by MainWindow. Loopback-only by default -- see the
+// instance, owned by its RemoteApiHost. Loopback-only by default -- see the
 // json-tcp-api plan for why (this is a local-control feature, not meant to
 // be LAN-reachable without the user explicitly reconfiguring it).
 class RemoteApiServer : public QObject
 {
     Q_OBJECT
 public:
-    explicit RemoteApiServer(MainWindow* mainWindow, QObject* parent = nullptr);
+    explicit RemoteApiServer(RemoteApiHost* host, QObject* parent = nullptr);
 
     bool start(quint16 port, QHostAddress bindAddress = QHostAddress::LocalHost);
     void stop();
@@ -28,7 +28,7 @@ private slots:
     void onConnectionClosed(RemoteApiConnection* conn);
 
 private:
-    MainWindow* m_mainWindow;
+    RemoteApiHost* m_host;
     QTcpServer* m_server = nullptr;
     QVector<RemoteApiConnection*> m_connections;
 };

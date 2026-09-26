@@ -36,20 +36,10 @@
 #include <markercomparisondialog.h>
 #include <tdrscandialog.h>
 #include <userguidedialog.h>
+#include "remoteapihost.h"
+#include "appconfig.h"
 
 
-// Absolute, non-user-facing ceiling -- how many points the app will ever
-// attempt for a single scan, full stop. Not what the Points field/slider
-// actually clamps to day-to-day; that's g_pointsMax (mainwindow.cpp), the
-// user-configurable "Scanning points maximum" (Settings > General), which
-// itself can't be set above this. Originally a single hardcoded constant
-// (POINTS_TEST_MAX) used directly by both the slider's clamp and its
-// runtime maximum while testing how many points a real device would
-// actually return (see the Measurements table's "Points" column) -- kept
-// as the outer bound once that testing turned into a real three-tier
-// feature: this ceiling, the user's practical max, and a separate warn-
-// above-this-many-points threshold (also g_-global, also General tab).
-#define POINTS_MAX 10000
 
 #define MEASUREMENTS_TABLE_COLUMNS 4
 // Order here is the on-screen column order (every table-building/-updating
@@ -107,7 +97,7 @@ public:
     }
 };
 
-class MainWindow : public QMainWindow
+class MainWindow : public QMainWindow, public RemoteApiHost
 {
     Q_OBJECT
 
@@ -120,10 +110,10 @@ public:
     ~MainWindow();
 
     void openFile(QString path);
-    AnalyzerPro* analyzer() { return m_analyzer; }
-    bool isMeasuring() { return analyzer()->isMeasuring(); }
-    bool isAnalyzerConnected() const { return m_analyzerConnected; }
-    QString connectedDeviceName() const { return m_connectedDeviceName; }
+    AnalyzerPro* analyzer() override { return m_analyzer; }
+    bool isMeasuring() override { return analyzer()->isMeasuring(); }
+    bool isAnalyzerConnected() const override { return m_analyzerConnected; }
+    QString connectedDeviceName() const override { return m_connectedDeviceName; }
     // Both delegate to m_measurements (private, no general accessor --
     // see remoteapiconnection.h's own comment on why RemoteApiConnection
     // deliberately doesn't reach into Measurements directly) so a
@@ -132,14 +122,15 @@ public:
     // (mainwindow_scan.cpp) -- setContinuous(false) resets continuing-scan
     // point-index state, and interrupt() is the same flag issue #3's fix
     // this session added a guard for (stray points leaking in after Stop).
-    void startRemoteSweep(qint64 fqFromHz, qint64 fqToHz, int points) {
+    void startRemoteSweep(qint64 fqFromHz, qint64 fqToHz, int points) override {
         m_measurements->setContinuous(false);
         emit measure(fqFromHz, fqToHz, points);
     }
-    void stopCurrentScan() {
+    void stopCurrentScan() override {
         m_measurements->interrupt();
         emit stopMeasure();
     }
+    bool connectDevice(int type, const QString& name) override; // RemoteApiHost
     // Starts/stops m_remoteApiServer live -- called from Settings' accept
     // handler (settings.cpp) so toggling the "Enable Remote API" checkbox
     // takes effect immediately, no restart needed. Also called once at

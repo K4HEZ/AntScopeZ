@@ -406,3 +406,15 @@ void MainWindow::onCalibrationPrompt(const QString& title, const QString& text)
     bool ok = g_showMessageBox(nullptr, QMessageBox::Information, title, text) == QMessageBox::Ok;
     m_calibration->on_standardPromptAnswered(ok);
 }
+
+bool MainWindow::connectDevice(int type, const QString& name)
+{
+    // Headless: constructed with silent=true and never shown.
+    SelectDeviceDialog dlg(true, this);
+    if (!dlg.connectSilent(type, name))
+        return false;
+    if (AnalyzerParameters::current() == nullptr)
+        return false;
+    m_analyzer->on_connectDevice(dlg.analyzer());
+    return true;
+}

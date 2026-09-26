@@ -5,9 +5,9 @@
 #include <QTcpSocket>
 #include <qdebug.h>
 
-RemoteApiServer::RemoteApiServer(MainWindow* mainWindow, QObject* parent)
+RemoteApiServer::RemoteApiServer(RemoteApiHost* host, QObject* parent)
     : QObject(parent)
-    , m_mainWindow(mainWindow)
+    , m_host(host)
 {
 }
 
@@ -63,7 +63,7 @@ void RemoteApiServer::onNewConnection()
 {
     while (m_server->hasPendingConnections()) {
         QTcpSocket* socket = m_server->nextPendingConnection();
-        RemoteApiConnection* conn = new RemoteApiConnection(socket, m_mainWindow, this);
+        RemoteApiConnection* conn = new RemoteApiConnection(socket, m_host, this);
         connect(conn, &RemoteApiConnection::closed, this, &RemoteApiServer::onConnectionClosed);
         m_connections.append(conn);
     }

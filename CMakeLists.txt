@@ -179,8 +179,6 @@ set(ANTSCOPE_SOURCES
     src/updatedialog.cpp
     src/userguidedialog.cpp
 
-    remoteapi/remoteapiconnection.cpp
-    remoteapi/remoteapiserver.cpp
 )
 
 set(ANTSCOPE_HEADERS
@@ -232,9 +230,6 @@ set(ANTSCOPE_HEADERS
     src/updatedialog.h
     src/userguidedialog.h
 
-    remoteapi/remoteapiconnection.h
-    remoteapi/remoteapiprotocol.h
-    remoteapi/remoteapiserver.h
 )
 
 set(ANTSCOPE_FORMS
@@ -297,6 +292,9 @@ set(ANTSCOPE_CORE_SOURCES
 
     devinfo/redeviceinfo.cpp
     ftdi/ftdiinfo.cpp
+
+    remoteapi/remoteapiconnection.cpp
+    remoteapi/remoteapiserver.cpp
 )
 
 set(ANTSCOPE_CORE_HEADERS
@@ -335,6 +333,11 @@ set(ANTSCOPE_CORE_HEADERS
     devinfo/redeviceinfo.h
     ftdi/ftd2xx.h
     ftdi/ftdiinfo.h
+
+    remoteapi/remoteapiconnection.h
+    remoteapi/remoteapihost.h
+    remoteapi/remoteapiprotocol.h
+    remoteapi/remoteapiserver.h
 )
 
 qt_add_library(antscopez_core STATIC
@@ -357,6 +360,7 @@ target_include_directories(antscopez_core PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/analyzer
     ${CMAKE_CURRENT_SOURCE_DIR}/analyzer/updater
+    ${CMAKE_CURRENT_SOURCE_DIR}/remoteapi
 )
 
 target_link_libraries(antscopez_core PUBLIC
