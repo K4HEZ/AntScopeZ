@@ -306,6 +306,7 @@ set(ANTSCOPE_CORE_HEADERS
     src/calibration.h
     src/crc32.h
     src/debuglog.h
+    src/markerlist.h
     src/markermath.h
     src/measurementdata.h
     src/measurementfiles.h

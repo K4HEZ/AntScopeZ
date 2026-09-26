@@ -9,12 +9,12 @@
 #include <analyzer/analyzerparameters.h>
 #include <settings.h>
 #include <measurements.h>
+#include "markerlist.h"
 
 #define MAX_MARKERS 5
 
-struct marker
+struct marker : MarkerData
 {
-    double frequency;
     QCPItemStraightLine *swrLine = NULL;//QCPItemTracer *swrTracer;
     QCPItemStraightLine *phaseLine = NULL;
     QCPItemStraightLine *rsLine = NULL;
@@ -75,6 +75,7 @@ public:
     bool getMarkersHintEnabled(void);
     void saveBmp(QString path);
     qint32 getMarkersCount();
+    bool canAddMarker() const;
     marker getMarker( quint32 number);
     void repaint();
     void on_translate();
@@ -89,7 +90,7 @@ public:
     // Called after a single/full scan completes (never during Continuous --
     // see the call sites in MainWindow::on_measurementComplete()/
     // on_measurementCompleteNano(), which only reach this on the
-    // non-Continuous path). If g_autoMarkerAtLowestSwr is on and a marker
+    // non-Continuous path). If AppConfig::autoMarkerAtLowestSwr is on and a marker
     // slot is free, places an ordinary marker (same create()/setFq()/add()
     // as a user-placed one -- nothing marks it as "auto") at the lowest-SWR
     // point of the trace the user is currently looking at (calibrated/
@@ -108,7 +109,7 @@ private:
     QCustomPlot *m_s21Widget;
     QCustomPlot *m_smithWidget;
 
-    QVector <marker*> m_markersList;
+    MarkerList<marker> m_markersList;
 
     MarkersPanel * m_markersHint;
 

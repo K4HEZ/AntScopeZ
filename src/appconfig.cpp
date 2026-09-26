@@ -14,6 +14,8 @@ void AppConfig::load(QSettings& settings)
     analyzerTimeoutSec = settings.value("analyzerTimeoutSec", analyzerTimeoutSec).toInt();
     reconnectToDrain = settings.value("reconnectToDrain", reconnectToDrain).toBool();
     useTls = settings.value("useTls", useTls).toBool();
+    maxMarkers = settings.value("maxMarkers", maxMarkers).toInt();
+    autoMarkerAtLowestSwr = settings.value("autoMarkerAtLowestSwr", autoMarkerAtLowestSwr).toBool();
     settings.endGroup();
 
     settings.beginGroup("MainWindow");
@@ -43,6 +45,8 @@ void AppConfig::save(QSettings& settings) const
     settings.setValue("analyzerTimeoutSec", analyzerTimeoutSec);
     settings.setValue("reconnectToDrain", reconnectToDrain);
     settings.setValue("useTls", useTls);
+    settings.setValue("maxMarkers", maxMarkers);
+    settings.setValue("autoMarkerAtLowestSwr", autoMarkerAtLowestSwr);
     settings.endGroup();
 
     settings.beginGroup("MainWindow");

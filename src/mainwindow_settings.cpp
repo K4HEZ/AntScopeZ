@@ -274,8 +274,8 @@ void MainWindow::on_settingsParamsChanged()
     if(m_settingsDialog != NULL)
     {
         // g_pointsMax itself is already updated by the time this fires
-        // (Settings writes the global directly, same as g_maxMeasurements/
-        // g_maxMarkers) -- re-apply it to the slider and re-clamp whatever's
+        // (Settings writes the global directly, same as g_maxMeasurements)
+        // -- re-apply it to the slider and re-clamp whatever's
         // currently entered immediately, so a lower practical max takes
         // effect right away instead of only on the next scan.
         ui->speedAccuracySlider->setMaximum(g_pointsMax);

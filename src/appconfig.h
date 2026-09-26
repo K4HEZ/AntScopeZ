@@ -24,6 +24,8 @@ public:
     bool reconnectToDrain = false;
     // https + cert verification for RigExpert requests. Issue #14.
     bool useTls = true;
+    int maxMarkers = 5;               // Settings > Markers
+    bool autoMarkerAtLowestSwr = true; // marker at the lowest SWR after a Single scan
 
     // Persisted, ini [MainWindow] group.
     bool measureSystemMetric = true;

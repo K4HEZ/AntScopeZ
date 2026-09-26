@@ -17,8 +17,6 @@
 
 extern QString appendSpaces(const QString& number);
 extern int g_maxMeasurements; // see measurements.cpp
-extern int g_maxMarkers; // see markers.cpp
-extern bool g_autoMarkerAtLowestSwr; // see markers.cpp
 extern void setAbsoluteFqMaximum();
 extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
                             QString title, QString text,
@@ -313,8 +311,6 @@ MainWindow::MainWindow(QWidget *parent) :
     g_maxMeasurements = m_settings->value("maxMeasurements", MAX_MEASUREMENTS).toInt();
     g_activeGraphPenWidth = m_settings->value("activeGraphPenWidth", g_activeGraphPenWidth).toInt();
     g_inactiveGraphPenWidth = m_settings->value("inactiveGraphPenWidth", g_inactiveGraphPenWidth).toInt();
-    g_maxMarkers = m_settings->value("maxMarkers", MAX_MARKERS).toInt();
-    g_autoMarkerAtLowestSwr = m_settings->value("autoMarkerAtLowestSwr", true).toBool();
     g_pointsMax = m_settings->value("pointsMax", 1000).toInt();
     g_pointsWarnThreshold = m_settings->value("pointsWarnThreshold", 1000).toInt();
     g_extendedChartZoom = m_settings->value("extendedChartZoom", false).toBool();
@@ -1095,8 +1091,6 @@ MainWindow::~MainWindow()
     m_settings->setValue("maxMeasurements", g_maxMeasurements);
     m_settings->setValue("activeGraphPenWidth", g_activeGraphPenWidth);
     m_settings->setValue("inactiveGraphPenWidth", g_inactiveGraphPenWidth);
-    m_settings->setValue("maxMarkers", g_maxMarkers);
-    m_settings->setValue("autoMarkerAtLowestSwr", g_autoMarkerAtLowestSwr);
     m_settings->setValue("pointsMax", g_pointsMax);
     m_settings->setValue("pointsWarnThreshold", g_pointsWarnThreshold);
     m_settings->setValue("extendedChartZoom", g_extendedChartZoom);

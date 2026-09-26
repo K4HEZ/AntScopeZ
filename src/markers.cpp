@@ -3,9 +3,8 @@
 #include "style.h"
 #include "qcpgraphdatahelpers.h"
 #include "markermath.h"
+#include "appconfig.h"
 
-int g_maxMarkers = MAX_MARKERS;
-bool g_autoMarkerAtLowestSwr = true;
 
 Markers::Markers(QObject *parent) : QObject(parent),
     m_swrWidget(NULL),
@@ -247,7 +246,7 @@ void Markers::add()
     }
     for(int i = 0; i < m_markersList.length(); ++i)
     {
-        QString index = QString::number(i+1);
+        QString index = QString::number(MarkerList<marker>::number(i));
         m_markersList.at(i)->swrLineText->setText(index);
         m_markersList.at(i)->phaseLineText->setText(index);
         m_markersList.at(i)->rsLineText->setText(index);
@@ -477,10 +476,8 @@ void Markers::on_measurementComplete()
 // nothing here checks that itself.
 void Markers::autoPlaceAtLowestSwr()
 {
-    if (!g_autoMarkerAtLowestSwr)
-        return;
-    if (m_markersList.length() >= g_maxMarkers)
-        return; // no free slot -- silent no-op, see markers.h
+    if (!m_markersList.wantsAutoMarker(AppConfig::get().autoMarkerAtLowestSwr, AppConfig::get().maxMarkers))
+        return; // off, or no free slot -- silent no-op, see markers.h
 
     if (m_measurements == nullptr || m_measurements->isEmpty())
         return;
@@ -523,6 +520,11 @@ void Markers::saveBmp(QString path)
         QPixmap mapScaled = map.scaled(5000,3000,Qt::KeepAspectRatio,Qt::SmoothTransformation);
         mapScaled.save(path,"BMP",100);
     }
+}
+
+bool Markers::canAddMarker() const
+{
+    return m_markersList.canAdd(AppConfig::get().maxMarkers);
 }
 
 qint32 Markers::getMarkersCount()
@@ -591,14 +593,13 @@ void Markers::on_removeMarker(int number)
         return;
     }
 
-    marker *m = m_markersList.at(number);
+    marker *m = m_markersList.take(number);
     m->clear();
-    m_markersList.remove(number,1);
     delete m;
 
     for(int i = 0; i < m_markersList.length(); ++i)
     {
-        QString index = QString::number(i+1);
+        QString index = QString::number(MarkerList<marker>::number(i));
         m_markersList.at(i)->swrLineText->setText(index);
         m_markersList.at(i)->phaseLineText->setText(index);
         m_markersList.at(i)->rsLineText->setText(index);

@@ -28,8 +28,6 @@ extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
 extern int g_maxMeasurements; // see measurements.cpp
 extern int g_activeGraphPenWidth; // see measurements.cpp
 extern int g_inactiveGraphPenWidth; // see measurements.cpp
-extern int g_maxMarkers; // see markers.cpp
-extern bool g_autoMarkerAtLowestSwr; // see markers.cpp
 extern int g_pointsMax; // see mainwindow.cpp
 extern int g_pointsWarnThreshold; // see mainwindow.cpp
 extern bool g_extendedChartZoom; // see mainwindow.cpp
@@ -135,8 +133,8 @@ Settings::Settings(QWidget *parent) :
     ui->spinBoxMeasurements->setValue(g_maxMeasurements);
     ui->spinBoxActiveLineWidth->setValue(g_activeGraphPenWidth);
     ui->spinBoxInactiveLineWidth->setValue(g_inactiveGraphPenWidth);
-    ui->spinBoxMaxMarkers->setValue(g_maxMarkers);
-    ui->checkBoxAutoMarkerLowestSwr->setChecked(g_autoMarkerAtLowestSwr);
+    ui->spinBoxMaxMarkers->setValue(AppConfig::get().maxMarkers);
+    ui->checkBoxAutoMarkerLowestSwr->setChecked(AppConfig::get().autoMarkerAtLowestSwr);
     ui->lineEditScanPointsMax->setText(QString::number(g_pointsMax));
     ui->lineEditScanWarnThreshold->setText(QString::number(g_pointsWarnThreshold));
     ui->lineEditAnalyzerMaxPoints->setText(QString::number(AppConfig::get().analyzerMaxPoints));
@@ -404,8 +402,8 @@ Settings::~Settings()
     g_maxMeasurements = ui->spinBoxMeasurements->value();
     g_activeGraphPenWidth = ui->spinBoxActiveLineWidth->value();
     g_inactiveGraphPenWidth = ui->spinBoxInactiveLineWidth->value();
-    g_maxMarkers = ui->spinBoxMaxMarkers->value();
-    g_autoMarkerAtLowestSwr = ui->checkBoxAutoMarkerLowestSwr->isChecked();
+    AppConfig::get().maxMarkers = ui->spinBoxMaxMarkers->value();
+    AppConfig::get().autoMarkerAtLowestSwr = ui->checkBoxAutoMarkerLowestSwr->isChecked();
     // Re-read (not just trust the editingFinished handlers) in case the
     // dialog's being closed with one of these still focused/unconfirmed --
     // same reasoning as lineEdit_systemImpedance's own direct read above.
@@ -431,8 +429,6 @@ Settings::~Settings()
     m_settings->setValue("maxMeasurements", g_maxMeasurements);
     m_settings->setValue("activeGraphPenWidth", g_activeGraphPenWidth);
     m_settings->setValue("inactiveGraphPenWidth", g_inactiveGraphPenWidth);
-    m_settings->setValue("autoMarkerAtLowestSwr", g_autoMarkerAtLowestSwr);
-    m_settings->setValue("maxMarkers", g_maxMarkers);
     m_settings->setValue("pointsMax", g_pointsMax);
     m_settings->setValue("pointsWarnThreshold", g_pointsWarnThreshold);
     m_settings->setValue("extendedChartZoom", g_extendedChartZoom);

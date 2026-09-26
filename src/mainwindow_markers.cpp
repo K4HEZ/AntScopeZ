@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "appconfig.h"
 #include "ui_mainwindow.h"
 #include "popupindicator.h"
 #include "analyzer/customanalyzer.h"
@@ -15,7 +16,6 @@
 
 extern QString appendSpaces(const QString& number);
 extern int g_maxMeasurements; // see measurements.cpp
-extern int g_maxMarkers; // see markers.cpp
 extern int g_pointsMax; // see mainwindow.cpp
 extern QMap<QString, QString> g_mapTabPlotNames; // see mainwindow.cpp
 extern void setAbsoluteFqMaximum();
@@ -45,10 +45,10 @@ void MainWindow::onCreateMarker(const QPoint& pos)
     QCustomPlot* plot = getCurrentPlot();
     if (plot->objectName().contains("smith") || plot->objectName().contains("tdr"))
         return;
-    if (m_markers->getMarkersCount() >= g_maxMarkers) {
+    if (!m_markers->canAddMarker()) {
         Notification::showMessage(tr("Maximum number of markers reached (%1) -- "
                                       "remove one, or raise the limit in Settings.")
-                                       .arg(g_maxMarkers),
+                                       .arg(AppConfig::get().maxMarkers),
                                    this);
         return;
     }
