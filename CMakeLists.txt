@@ -276,6 +276,7 @@ set(ANTSCOPE_CORE_SOURCES
     src/debuglog.cpp
     src/measurementdata.cpp
     src/measurementfiles.cpp
+    src/measurementsession.cpp
     src/rfmath.cpp
     src/tdrmath.cpp
 
@@ -307,6 +308,7 @@ set(ANTSCOPE_CORE_HEADERS
     src/measurementdata.h
     src/measurementfiles.h
     src/measurementlist.h
+    src/measurementsession.h
     src/rfmath.h
     src/tdrmath.h
     src/usermessage.h
