@@ -281,19 +281,3 @@ void Measurements::importData(QString _name)
     emit import_finished(r.fqMinMHz*1000, r.fqMaxMHz*1000);
     on_measurementComplete(); // stamp the real Points count -- see loadData()'s own comment on this
 }
-
-int Measurements::nextSerialNumber()
-{
-    int next = 0;
-    for (int idx=0; idx<m_measurements.size(); idx++)
-        next = qMax(next, m_measurements[idx].serialNumber);
-    next++;
-    // g_maxMeasurements caps concurrent measurements at 15 (on_newMeasurement()
-    // evicts the oldest via deleteRow(0) before ever appending past it), so by
-    // the time this wraps, every measurement that could collide with 1..N has
-    // long since been evicted (confirmed safe at that cap, Harold, 2026-09-17).
-    if (next > 99)
-        next = 1;
-    return next;
-}
-

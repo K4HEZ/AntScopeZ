@@ -9,6 +9,7 @@
 #include <qcustomplot.h>
 #include <analyzer/analyzerparameters.h>
 #include "measurement.h"
+#include "measurementlist.h"
 #include <popup.h>
 #include <QSettings>
 #include <calibration.h>
@@ -142,7 +143,6 @@ public:
     void loadData(QString path);
     // measurement::serialNumber's assigner -- max used + 1, wrap at 99.
     // Runs for every new measurement (scan or loaded file).
-    int  nextSerialNumber();
 
     void exportData(QString _name, int _type, int _number, bool _applyCable=false, QString _description=QString());
     // 2-port Touchstone (.s2p) export -- straight from dataSParam (real
@@ -243,9 +243,9 @@ public:
     void setAutoCalibration(int _mode) { m_autoCalibration=_mode; } // 0-NONE, 1-R,L(old AA-1400), 2-C,L(new AA-230 ZOOM)
     int  getAutoCalibration() { return m_autoCalibration; }
     QPair<double, double> autoCalibrate();
-    void interrupt() { m_interrupted = true; }
+    void interrupt() { m_measurements.interrupt(); }
     bool isTDRMode() { return m_tdrProgressDlg != nullptr; }
-    void setContinuous(bool _state) { m_isContinuing = _state; m_currentPoint = 0; }
+    void setContinuous(bool _state) { m_measurements.setContinuous(_state); }
     ProgressDlg* progressDlg() { return m_autoCalibrateProgressDlg; }
     // resetRange=false skips resetting the X axis's upper bound to the
     // scan's full unambiguous range -- default (true) is every existing
@@ -283,7 +283,7 @@ private:
     double m_liveS21PhasePrevUnwrapped = 0;
 
 //    measurement m_measurements[MAX_MEASUREMENTS];
-    QList <measurement> m_measurements;
+    MeasurementList<measurement> m_measurements; // lifecycle rules live here (core)
     QList <measurement> m_viewMeasurements;
     QList <measurement> m_farEndMeasurementsAdd;
     QList <measurement> m_farEndMeasurementsSub;
@@ -417,12 +417,8 @@ private:
     QPair<bool, bool> m_oneFqSavedHints{true, true};
 
     int m_autoCalibration = 0; // 1-R,L(old AA-1400), 2-C,L(new AA-230 ZOOM)
-    bool m_interrupted = false;
     bool m_RangeMode = false;
-    bool m_measuringInProgress = false;
-    bool m_isContinuing = false;
     int m_previousI = 0;
-    int m_currentPoint = 0;
 
 
     // Constructs both display widgets (called once, entering One-Fq mode)

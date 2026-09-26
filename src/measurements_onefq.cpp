@@ -140,7 +140,7 @@ void Measurements::endOneFqMode()
     if (!m_oneFqMode)
         return;
     m_oneFqMode = false;
-    m_isContinuing = false;
+    m_measurements.stopContinuing();
     m_graphHintEnabled = m_oneFqSavedHints.first;
     m_graphBriefHintEnabled = m_oneFqSavedHints.second;
     showHideHints();
@@ -206,7 +206,7 @@ void Measurements::on_mainWindowMinimized(bool minimized)
 
 void Measurements::on_newMeasurementOneFq(QWidget* parent, qint64 fq, qint32 dots)
 {
-    m_interrupted = false;
+    m_measurements.clearInterrupted();
     Q_UNUSED (fq)
     showOneFqWidget(parent, dots);
 }

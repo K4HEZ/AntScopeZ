@@ -184,17 +184,17 @@ QPair<double, double> Measurements::autoCalibrate()
                     updateAutocalibrateProgress(total, msg);
                 }
                 QApplication::processEvents();
-                if (m_interrupted)
+                if (m_measurements.isInterrupted())
                     break;
             }
 
             QApplication::processEvents();
-            if (m_interrupted)
+            if (m_measurements.isInterrupted())
                 break;
         }
 
-        if (m_interrupted) {
-            m_interrupted = false;
+        if (m_measurements.isInterrupted()) {
+            m_measurements.clearInterrupted();
             stopAutocalibrateProgress();
             return QPair<double, double>(_cableResistance, _cableLength);;
         }
@@ -206,7 +206,7 @@ QPair<double, double> Measurements::autoCalibrate()
         on_redrawGraphs();
     }
 
-    m_interrupted = false;
+    m_measurements.clearInterrupted();
     QPair<double, double> result(m_cableResistance, m_cableLength);
 
     // restore settings

@@ -238,8 +238,7 @@ void Measurements::renameMeasurement(int row)
     }
 
     if (!text.isEmpty()) {
-        mm.name = text;
-        mm.dirty = true; // see measurement::dirty's own comment
+        m_measurements.rename(row, text); // also marks it dirty
         m_tableWidget->item(row, COL_POINTS)->setText(pointsCellText(mm));
 
         m_tableWidget->setColumnWidth(COL_NAME, COL_NAME_WD);
@@ -285,8 +284,8 @@ void Measurements::clearDirty(int number)
 {
     if (number < 0 || number >= m_measurements.length())
         return;
+    m_measurements.clearDirty(number);
     measurement& mm = m_measurements[number];
-    mm.dirty = false;
     if (m_tableWidget != nullptr && number < m_tableWidget->rowCount() && m_tableWidget->item(number, COL_POINTS) != nullptr)
         m_tableWidget->item(number, COL_POINTS)->setText(pointsCellText(mm));
 }
@@ -558,7 +557,7 @@ void Measurements::on_newMeasurement(QString name, qint64 from, qint64 to, qint3
 {
     on_newMeasurement(name);
 
-    m_measurements.last().set(from, to, dots);
+    m_measurements.startSweep(from, to, dots);
     m_viewMeasurements.last().set(from, to, dots);
     m_farEndMeasurementsAdd.last().set(from, to, dots);
     m_farEndMeasurementsSub.last().set(from, to, dots);
@@ -595,7 +594,6 @@ void Measurements::on_newMeasurement(QString name, qint64 from, qint64 to, qint3
         QString str = name + tr("\nDouble-click an item to rescale the chart.\nRight-click an item for more options");
         item->setToolTip(str);
     }
-    m_measuringInProgress = true;
 }
 
 void Measurements::resetSmithTracer()
@@ -613,17 +611,14 @@ void Measurements::resetSmithTracer()
 
 void Measurements::on_newMeasurement(QString name)
 {
-    m_interrupted = false;
     resetSmithTracer(); // issue #31 -- don't carry over the last scan's/marker's cursor position
     m_liveS21PhaseHavePrev = false; // fresh phase-unwrap run for on_newSParamPoint(), see its own comment
-    while(m_measurements.length() >= g_maxMeasurements)
+    while(m_measurements.needsEviction(g_maxMeasurements))
     {
         deleteRow(0);
     }
 
-    int serialNumber = nextSerialNumber(); // computed before appending -- see its own comment
-    m_measurements.append( measurement());
-    m_measurements.last().serialNumber = serialNumber;
+    m_measurements.startNew(name);
     m_viewMeasurements.append( measurement());
     m_farEndMeasurementsAdd.append( measurement());
     m_farEndMeasurementsSub.append( measurement());
@@ -810,7 +805,6 @@ void Measurements::on_newMeasurement(QString name)
             m_graphBriefHint->show();
         }
 
-        m_measurements.last().name = name;
         m_tableWidget->setRowCount(0);
 
         const int cell_side = 24;
@@ -891,9 +885,7 @@ void Measurements::on_continueMeasurement(qint64 from, qint64 to, qint32 dots)
   //  Q_UNUSED (to);
   //  Q_UNUSED (dots);
 
-    m_isContinuing = true;
-    m_currentPoint = 0;
-    m_measurements.last().set(from, to, dots); //vnn_0327
+    m_measurements.continueSweep(from, to, dots); //vnn_0327
 
     // Captured before removePlottable() below -- it deletes the QCPCurve
     // (QCustomPlot::removePlottable() always does), so the pen has to be
@@ -969,7 +961,7 @@ void Measurements::on_newUserData(RawData _rawData, UserData _userData)
     // drops out early once interrupted, but that's a plain function call,
     // not a return from *this* function, so this needs its own guard or
     // everything past it would still run and append anyway.
-    if (m_interrupted || m_measurements.isEmpty()) {
+    if (!m_measurements.accepting()) {
         return;
     }
 
@@ -1038,16 +1030,11 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
     // instead -- the user-visible effect either way is the same (this
     // scan's data isn't going to be trusted), but this way it's immediate
     // and can't corrupt anything else.
-    if (m_interrupted) {
-        return;
-    }
-
-    if (m_measurements.isEmpty()) {
+    if (!m_measurements.accepting()) {
         return;
     }
     RawData calibPoint;
-    bool haveCalib = m_measurements.last().addPoint(_rawData, m_currentPoint, m_isContinuing,
-                                                    m_Z0, m_calibration, &calibPoint);
+    bool haveCalib = m_measurements.addPoint(_rawData, m_Z0, m_calibration, &calibPoint);
 
     updateTDRProgress(m_measurements.last().dataRX.size());
 
@@ -1284,16 +1271,16 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
 //------------------------------------------------------------------------------
     double pointX,pointY;
     RfMath::smithPoint(R/m_Z0, X/m_Z0, pointX, pointY);
-    // Was dataRX.length() -- diverges from m_currentPoint across a
-    // Continuous "continue" (dataRX isn't cleared, m_currentPoint resets to
+    // Was dataRX.length() -- diverges from m_measurements.pointIndex() across a
+    // Continuous "continue" (dataRX isn't cleared, m_measurements.pointIndex() resets to
     // 0), which is also what on_newCursorSmithPos()'s findedNum bounds
     // check guards against (see that function's own comment). Matches
     // RigExpert AntScope2 2.0.3's fix (issue #10), ported here since the
     // QCustomPlot 1.x->2.x rewrite carried the data structures forward but
     // not this index fix.
-    double len = m_currentPoint;
+    double len = m_measurements.pointIndex();
     m_measurements.last().smithGraph.add(QCPCurveData(len, pointX, pointY));
-    len = m_currentPoint*2 - 1;
+    len = m_measurements.pointIndex()*2 - 1;
     if (len < 0)
         len = 0;
     m_measurements.last().smithGraphView.add(QCPCurveData(len, pointX, pointY));
@@ -1390,29 +1377,29 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
         //RfMath::smithPoint(R/m_Z0, X/m_Z0, ptX, ptY);
         RfMath::smithPoint(Rnorm, Xnorm, ptX, ptY);
         // See the uncalibrated version above (~line 1284) for why
-        // m_currentPoint, not dataRX.length().
-        int len = m_currentPoint;
+        // m_measurements.pointIndex(), not dataRX.length().
+        int len = m_measurements.pointIndex();
         m_measurements.last().smithGraphCalib.add(QCPCurveData(len, ptX, ptY));
-        len = m_currentPoint*2 - 1;
+        len = m_measurements.pointIndex()*2 - 1;
         if (len < 0)
             len = 0;
         m_measurements.last().smithGraphViewCalib.add(QCPCurveData(len, ptX, ptY));
          //----------------------calc smith end---------------------------
     }
-    m_currentPoint++;
+    m_measurements.nextPoint();
     if (isTDRMode())
         return;
 
     //qint64 t1 = QDateTime::currentMSecsSinceEpoch();
     if (!_redraw)
         return;
-    on_redrawGraphs(m_measuringInProgress && !m_isContinuing);
+    on_redrawGraphs(m_measurements.inProgress() && !m_measurements.isContinuing());
 }
 
 void Measurements::on_newS21Data(S21Data _s21Data)
 {
     // See on_newData()'s own comment.
-    if (m_interrupted || m_measurements.isEmpty()) {
+    if (!m_measurements.accepting()) {
         return;
     }
 
@@ -1439,7 +1426,7 @@ void Measurements::on_newS21Data(S21Data _s21Data)
 void Measurements::on_newSParamPoint(SParamPoint sp)
 {
     // See on_newData()'s own comment -- same leftover-data-after-stop guard.
-    if (m_interrupted || m_measurements.isEmpty())
+    if (!m_measurements.accepting())
         return;
 
     measurement& mm = m_measurements.last();
@@ -1758,7 +1745,7 @@ void Measurements::on_impedanceChanged(double _z0)
         }
 #endif
     }
-    m_measuringInProgress = false;
+    m_measurements.setInProgress(false);
     if ( selectedRow != -1) {
         m_tableWidget->selectRow(selectedRow);
         emit selectMeasurement(selectedRow, 0);
@@ -1768,8 +1755,7 @@ void Measurements::on_impedanceChanged(double _z0)
 bool Measurements::on_measurementComplete()
 {
     m_previousI = 0;
-    m_measuringInProgress = false;
-    m_isContinuing = false;
+    bool emptyScan = m_measurements.complete();
 
     // A scan that ends with literally no points -- cancelled (Esc, the
     // analyzer-error watchdog) or errored out before a single reply came
@@ -1785,7 +1771,7 @@ bool Measurements::on_measurementComplete()
     // it accumulated across ticks. Callers use the return value to skip
     // any further action (e.g. autoPlaceAtLowestSwr()) that assumes a real,
     // just-finished row still exists.
-    if (!isEmpty() && last()->dataRX.isEmpty()) {
+    if (emptyScan) {
         deleteRow(m_measurements.length() - 1);
         return true;
     }

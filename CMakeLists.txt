@@ -306,6 +306,7 @@ set(ANTSCOPE_CORE_HEADERS
     src/debuglog.h
     src/measurementdata.h
     src/measurementfiles.h
+    src/measurementlist.h
     src/rfmath.h
     src/tdrmath.h
     src/usermessage.h
