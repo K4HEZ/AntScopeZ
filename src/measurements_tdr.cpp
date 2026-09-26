@@ -153,9 +153,9 @@ void Measurements::redrawTDR(int _index, bool resetRange)
                 ? m_farEndMeasurementsSub[index]
                 : ( (mode == 2) ? m_farEndMeasurementsAdd[index] : m_measurements[index] );
 
-        int len = CalcTdr(m_calibration->getCalibrationEnabled()
-                      ? &mm.dataRXCalib
-                      : &mm.dataRX);
+        // Cable-corrected points already include calibration (see calcFarEnd()).
+        bool calib = (mode != 1 && mode != 2) && m_calibration->getCalibrationEnabled();
+        int len = CalcTdr(calib ? &mm.dataRXCalib : &mm.dataRX);
         if (len <= 0)
         {
             // CalcTdr() returns 0 for several "not enough/valid data yet"

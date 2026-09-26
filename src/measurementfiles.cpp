@@ -17,6 +17,50 @@
 // meaningful, just extra digits). Edit and rebuild if a future device
 // actually returns more.
 #define EXPORT_PRECISION 2
+// One Touchstone comment line recording Corrections; parsed back by
+// parseCorrectionsLine(). Readers that don't know it just skip the comment.
+static QString correctionsLine(const Corrections& c)
+{
+    QString cable = (c.cableMode == 1) ? "subtract" : (c.cableMode == 2) ? "add" : "none";
+    QString line = QString("! AntScopeZ corrections: OSL calibration=%1; cable=%2")
+                       .arg(c.osl ? "yes" : "no", cable);
+    if (c.cableMode != 0)
+        line += QString(", length=%1 ft").arg(c.cableLengthFeet, 0, 'f', 2);
+    return line;
+}
+
+// `upper` is an upper-cased line; true if it was a corrections line.
+static bool parseCorrectionsLine(const QString& upper, Corrections& c)
+{
+    if (!upper.startsWith("! ANTSCOPEZ CORRECTIONS:"))
+        return false;
+    c.osl = upper.contains("OSL CALIBRATION=YES");
+    c.cableMode = upper.contains("CABLE=SUBTRACT") ? 1 : upper.contains("CABLE=ADD") ? 2 : 0;
+    int i = upper.indexOf("LENGTH=");
+    if (i >= 0)
+        c.cableLengthFeet = upper.mid(i + 7).section(' ', 0, 0).toDouble();
+    return true;
+}
+
+static QJsonObject correctionsJson(const Corrections& c)
+{
+    QJsonObject o;
+    o["OslCalibration"] = c.osl;
+    o["Cable"] = (c.cableMode == 1) ? "subtract" : (c.cableMode == 2) ? "add" : "none";
+    o["CableLengthFeet"] = c.cableLengthFeet;
+    return o;
+}
+
+static Corrections correctionsFromJson(const QJsonObject& o)
+{
+    Corrections c;
+    c.osl = o["OslCalibration"].toBool();
+    QString cable = o["Cable"].toString();
+    c.cableMode = (cable == "subtract") ? 1 : (cable == "add") ? 2 : 0;
+    c.cableLengthFeet = o["CableLengthFeet"].toDouble();
+    return c;
+}
+
 MeasurementFiles::ReadResult MeasurementFiles::readAsd(const QString& path)
 {
     ReadResult res;
@@ -34,6 +78,8 @@ MeasurementFiles::ReadResult MeasurementFiles::readAsd(const QString& path)
     QJsonObject mainObj = loadDoc.object();
 
     QJsonArray measureArray = mainObj["Measurements"].toArray();
+    if (mainObj.contains("Corrections"))
+        res.applied = correctionsFromJson(mainObj["Corrections"].toObject());
 
     int size = measureArray.size();
     if (size < 2) {
@@ -180,6 +226,9 @@ MeasurementFiles::ReadResult MeasurementFiles::readTouchstone(const QString& pat
 
             continue;
         }
+
+        if (parseCorrectionsLine(line, res.applied))
+            continue;
 
         if ( (strstr(line.toLocal8Bit(), "!") != NULL) || (strstr(line.toLocal8Bit(), ".") == NULL) ) // Comment or void line
             continue;
@@ -356,7 +405,7 @@ MeasurementFiles::ReadResult MeasurementFiles::readNwl(const QString& path)
     return res;
 }
 
-bool MeasurementFiles::writeAsd(QString path, const QVector<RawData>& data)
+bool MeasurementFiles::writeAsd(QString path, const QVector<RawData>& data, const Corrections& applied)
 {
     // Was `if (path.indexOf(".asd") >= 0) { ... }` wrapping the whole
     // function -- a path without ".asd" in it (FileDialog::getSaveFileName()
@@ -390,6 +439,7 @@ bool MeasurementFiles::writeAsd(QString path, const QVector<RawData>& data)
         measurementsArray.append(obj);
     }
     mainObj["Measurements"] = measurementsArray;
+    mainObj["Corrections"] = correctionsJson(applied);
 
     QJsonDocument saveDoc(mainObj);
 
@@ -398,7 +448,7 @@ bool MeasurementFiles::writeAsd(QString path, const QVector<RawData>& data)
 }
 
 void MeasurementFiles::writeRaw(const QString& path, int type, const QVector<RawData>& data,
-                                double z0, const QString& description)
+                                double z0, const QString& description, const Corrections& applied)
 {
     int len = data.length();
     qInfo() << "Touchstone export:"
@@ -444,6 +494,7 @@ void MeasurementFiles::writeRaw(const QString& path, int type, const QVector<Raw
             out << "! Format: Frequency S-magnitude(dB) S-angle (normalized to " << Rswr << " Ohm, angle in degrees)\n";
         }
 
+        out << correctionsLine(applied) << "\n";
         if (!description.isEmpty())
             out << description << "\n";
 

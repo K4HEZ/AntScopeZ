@@ -1,4 +1,5 @@
 #include "markercomparisondialog.h"
+#include "markermath.h"
 #include "ui_markercomparisondialog.h"
 #include <markerspanel.h>
 #include <qcustomplot.h>
@@ -170,57 +171,18 @@ double MarkerComparisonDialog::qFactorAt(double centerFq)
     if (m_measurements->isEmpty())
         return 0;
 
-    int mostRecent = 0; // getMeasurement()/Sub()/Add() index backwards from newest -- 0 is most recent, same index last() uses (see measurements.h)
-    measurement* mm;
+    // Most recent measurement, whatever trace the user is looking at.
+    int mostRecent = 0;
+    const QVector<RawData>* farEnd = nullptr;
     switch (m_measurements->getFarEndMeasurement()) {
-    case 1: mm = m_measurements->getMeasurementSub(mostRecent); break;
-    case 2: mm = m_measurements->getMeasurementAdd(mostRecent); break;
-    default: mm = m_measurements->last(); break;
+    case 1: farEnd = &m_measurements->getMeasurementSub(mostRecent)->dataRX; break;
+    case 2: farEnd = &m_measurements->getMeasurementAdd(mostRecent)->dataRX; break;
+    default: break;
     }
-    if (mm == nullptr)
-        return 0;
-
-    bool calib = m_measurements->getCalibrationEnabled();
-    QCPGraphDataContainer* swrMap = calib ? &mm->swrGraphCalib : &mm->swrGraph;
-
-    // QCustomPlot 1.x's QCPDataMap (a QMap<double,QCPData>) exposed a
-    // .keys() list for this ascending-frequency walk; 2.x's
-    // QCPGraphDataContainer has no key-indexed API at all, but is itself
-    // already a sorted-by-key sequence with native index access (.at(int),
-    // .size()), so the walk works directly off the container -- no
-    // .keys()-list intermediate needed at all (2026-08-25 QCustomPlot 2.x
-    // port).
-    if (swrMap->isEmpty())
-        return 0;
-
-    int centerIdx = 0;
-    double bestDist = qAbs(swrMap->at(0)->key - centerFq);
-    for (int i = 1; i < swrMap->size(); ++i) {
-        double dist = qAbs(swrMap->at(i)->key - centerFq);
-        if (dist < bestDist) {
-            bestDist = dist;
-            centerIdx = i;
-        }
-    }
-
-    const double threshold = 2.0;
-    int lowIdx = centerIdx;
-    while (lowIdx > 0 && swrMap->at(lowIdx)->value <= threshold)
-        lowIdx--;
-    int highIdx = centerIdx;
-    while (highIdx < swrMap->size() - 1 && swrMap->at(highIdx)->value <= threshold)
-        highIdx++;
-
-    // Ran off one (or both) edges of the sweep without crossing 2:1 --
-    // no real bandwidth to report.
-    if (lowIdx == 0 || highIdx == swrMap->size() - 1)
-        return 0;
-
-    double bandwidth = swrMap->at(highIdx)->key - swrMap->at(lowIdx)->key;
-    if (bandwidth <= 0)
-        return 0;
-
-    return centerFq / bandwidth;
+    return MarkerMath::qFactor(MarkerMath::swrSeries(*m_measurements->last(), farEnd,
+                                                     m_measurements->getCalibrationEnabled(),
+                                                     m_measurements->getZ0()),
+                               centerFq);
 }
 
 double MarkerComparisonDialog::nominalLengthConstantFeet(AntennaType type)

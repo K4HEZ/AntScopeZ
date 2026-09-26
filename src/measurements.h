@@ -481,7 +481,9 @@ private:
     static QString pointsCellText(const measurement& mm);
     void redrawSmith(bool _incrementally);
     void redrawUser(bool _incrementally);
-    void exportData(QString _name, int _type, QVector<RawData>& vector, QString _description=QString());
+    void exportData(QString _name, int _type, QVector<RawData>& vector, QString _description=QString(),
+                    const Corrections& applied = Corrections());
+    void noteLoadedCorrections(const Corrections& applied);
 
 signals:
     void calibrationChanged();

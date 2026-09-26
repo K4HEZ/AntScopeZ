@@ -2,6 +2,7 @@
 #include "mainwindow.h"
 #include "style.h"
 #include "qcpgraphdatahelpers.h"
+#include "markermath.h"
 
 int g_maxMarkers = MAX_MARKERS;
 bool g_autoMarkerAtLowestSwr = true;
@@ -333,201 +334,45 @@ QList<QVariant> Markers::computeMarkerRow(double fq0, int markerNumber, int i, c
             row << QVariant(index); // fieldSerie
             row << QVariant(fq0); // fieldFQ
 
-            double dSwr=DBL_MAX;
-            double dRl=DBL_MAX;
-            double dR=DBL_MAX;
-            double dX=DBL_MAX;
-            double dZmod=DBL_MAX;
-            double dL=DBL_MAX;
-            double dC=DBL_MAX;
-            double dPhase=DBL_MAX;
-            double dRho=DBL_MAX;
-            double dRpar=DBL_MAX;
-            double dXpar=DBL_MAX;
-            double dLpar=DBL_MAX;
-            double dCpar=DBL_MAX;
-            // Stay DBL_MAX (formatText()'s existing "no data" convention,
-            // renders blank) for a plain 1-port measurement -- s21MagGraph
-            // etc. are only ever populated by a real 2-port (.s2p) import,
-            // see populateSParamData().
-            double dS21=DBL_MAX;
-            double dS21Phase=DBL_MAX;
-            double dS12=DBL_MAX;
-            double dS12Phase=DBL_MAX;
+            // Values come from the measurement's data via the same per-point
+            // formulas the charts draw (MarkerMath::chartPoint()).
+            const QVector<RawData>* farEnd = nullptr;
+            switch (m_measurements->getFarEndMeasurement()) {
+            case 1: farEnd = &m_measurements->getMeasurementSub(i)->dataRX; break;
+            case 2: farEnd = &m_measurements->getMeasurementAdd(i)->dataRX; break;
+            default: break;
+            }
+            MarkerMath::Values v = MarkerMath::valuesAt(*m_measurements->getMeasurement(i), farEnd,
+                                                        m_measurements->getCalibrationEnabled(),
+                                                        fq0, m_measurements->getZ0());
+            double dSwr = v.swr, dRl = v.rl, dR = v.r, dX = v.x, dZmod = v.zmod;
+            double dL = v.l, dC = v.c, dPhase = v.phase, dRho = v.rho;
+            double dRpar = v.rpar, dXpar = v.xpar, dLpar = v.lpar, dCpar = v.cpar;
+            double dS21 = v.s21, dS21Phase = v.s21Phase, dS12 = v.s12, dS12Phase = v.s12Phase;
 
             QString zString;
             QString zparString;
-
-            QCPGraphDataContainer *swrMap;
-            if(m_measurements->getCalibrationEnabled())
+            if (v.found)
             {
-                swrMap = &m_measurements->getMeasurement(i)->swrGraphCalib;
-            }else
-            {
-                swrMap = &m_measurements->getMeasurement(i)->swrGraph;
-            }
-            // See MarkerComparisonDialog::qFactorAt()'s comment (2026-08-25
-            // QCustomPlot 2.x port) -- no .keys() on QCPGraphDataContainer,
-            // walk it directly via its own native index access below instead.
-            measurement* mm;
-            bool calib = m_measurements->getCalibrationEnabled();
-            switch (m_measurements->getFarEndMeasurement()) {
-            case 1:
-                mm = m_measurements->getMeasurementSub(i);
-                break;
-            case 2:
-                mm = m_measurements->getMeasurementAdd(i);
-                break;
-            default:
-                mm = m_measurements->getMeasurement(i);
-                break;
-            }
-
-            for(int ii = 0; ii < swrMap->size()-1; ++ii)
-            {
-                if((swrMap->at(ii)->key <= fq0) && (swrMap->at(ii+1)->key >= fq0))
+                zString += QString::number(dR,'f', 2);
+                if(dX >= 0)
                 {
-                    double fq1 = swrMap->at(ii)->key;
-                    double fq2 = swrMap->at(ii+1)->key;
-
-                    if(calib)
-                    {
-                        dPhase = interpolate(fq1, fq0, fq2, graphValueAt(mm->phaseGraphCalib, fq1), graphValueAt(mm->phaseGraphCalib, fq2));
-                        dR = interpolate(fq1, fq0, fq2, graphValueAt(mm->rsrGraphCalib, fq1), graphValueAt(mm->rsrGraphCalib, fq2));
-                        dX = interpolate(fq1, fq0, fq2, graphValueAt(mm->rsxGraphCalib, fq1), graphValueAt(mm->rsxGraphCalib, fq2));
-                        dRho = interpolate(fq1, fq0, fq2, graphValueAt(mm->rhoGraphCalib, fq1), graphValueAt(mm->rhoGraphCalib, fq2));
-                        dRpar = interpolate(fq1, fq0, fq2, graphValueAt(mm->rprGraphCalib, fq1), graphValueAt(mm->rprGraphCalib, fq2));
-                        dXpar = interpolate(fq1, fq0, fq2, graphValueAt(mm->rpxGraphCalib, fq1), graphValueAt(mm->rpxGraphCalib, fq2));
-//                        double m1 = m_measurements->getMeasurement(i)graphValueAt(->swrGraphCalib, fq1);
-//                        double m2 = m_measurements->getMeasurement(i)graphValueAt(->swrGraphCalib, fq2);
-//                        if(m1 > 10)
-//                            m1 = 10;
-//                        if(m2 > 10)
-//                            m2 = 10;
-//                        dSwr = interpolate(fq1, fq0, fq2, m1, m2);
-                        dSwr = interpolate(fq1, fq0, fq2, graphValueAt(mm->swrGraphCalib, fq1), graphValueAt(mm->swrGraphCalib, fq2));
-
-//                        m1 = m_measurements->getMeasurement(i)graphValueAt(->rlGraphCalib, fq1);
-//                        m2 = m_measurements->getMeasurement(i)graphValueAt(->rlGraphCalib, fq2);
-//                        dRl = interpolate(fq1, fq0, fq2, m1, m2);
-                        dRl = interpolate(fq1, fq0, fq2, graphValueAt(mm->rlGraphCalib, fq1), graphValueAt(mm->rlGraphCalib, fq2));
-                    }else
-                    {
-                        dPhase = interpolate(fq1, fq0, fq2, graphValueAt(mm->phaseGraph, fq1), graphValueAt(mm->phaseGraph, fq2));
-                        dR = interpolate(fq1, fq0, fq2, graphValueAt(mm->rsrGraph, fq1), graphValueAt(mm->rsrGraph, fq2));
-                        dX = interpolate(fq1, fq0, fq2, graphValueAt(mm->rsxGraph, fq1), graphValueAt(mm->rsxGraph, fq2));
-                        dRho = interpolate(fq1, fq0, fq2, graphValueAt(mm->rhoGraph, fq1), graphValueAt(mm->rhoGraph, fq2));
-                        dRpar = interpolate(fq1, fq0, fq2, graphValueAt(mm->rprGraph, fq1), graphValueAt(mm->rprGraph, fq2));
-                        dXpar = interpolate(fq1, fq0, fq2, graphValueAt(mm->rpxGraph, fq1), graphValueAt(mm->rpxGraph, fq2));
-//                        double m1 = m_measurements->getMeasurement(i)graphValueAt(->swrGraph, fq1);
-//                        double m2 = m_measurements->getMeasurement(i)graphValueAt(->swrGraph, fq2);
-//                        if(m1 > 10)
-//                            m1 = 10;
-//                        if(m2 > 10)
-//                            m2 = 10;
-//                        dSwr = interpolate(fq1, fq0, fq2, m1, m2);
-                        dSwr = interpolate(fq1, fq0, fq2, graphValueAt(mm->swrGraph, fq1), graphValueAt(mm->swrGraph, fq2));
-
-//                        m1 = m_measurements->getMeasurement(i)graphValueAt(->rlGraph, fq1);
-//                        m2 = m_measurements->getMeasurement(i)graphValueAt(->rlGraph, fq2);
-//                        dRl = interpolate(fq1, fq0, fq2, m1, m2);
-                        dRl = interpolate(fq1, fq0, fq2, graphValueAt(mm->rlGraph, fq1), graphValueAt(mm->rlGraph, fq2));
-                    }
-
-                    if (qIsNaN(dR) || (dR<0.001) )
-                        dR = 0.01;
-                    if (qIsNaN(dX))
-                        dX = 0;
-//                    dRpar = dR*(1+dX*dX/dR/dR);
-//                    dXpar = dX*(1+dR*dR/dX/dX);
-                    double dZpar = sqrt((dRpar*dRpar) + (dXpar*dXpar));
-
-                    const double maxRp = VALUE_LIMIT;
-                    if( dRpar > maxRp ) {
-                        dRpar = maxRp;
-                    }
-                    if( dRpar < (-maxRp)) {
-                        dRpar = -maxRp;
-                    }
-                    if( dXpar > maxRp ) {
-                        dXpar = maxRp;
-                    }
-                    if( dXpar < (-maxRp)) {
-                        dXpar = -maxRp;
-                    }
-
-//                    measurement* vmm = m_measurements->getMeasurementView(i);
-//                    dZmod =  interpolate(fq1, fq0, fq2, vgraphValueAt(mm->rszGraph, fq1), vgraphValueAt(mm->rszGraph, fq2));
-//                    dZpar =  interpolate(fq1, fq0, fq2, vgraphValueAt(mm->rpzGraph, fq1), vgraphValueAt(mm->rpzGraph, fq2));
-                    dZmod =  interpolate(fq1, fq0, fq2, graphValueAt(mm->rszGraph, fq1), graphValueAt(mm->rszGraph, fq2));
-                    dZpar =  interpolate(fq1, fq0, fq2, graphValueAt(mm->rpzGraph, fq1), graphValueAt(mm->rpzGraph, fq2));
-
-                    zString+= QString::number(dR,'f', 2);
-                    if(dX >= 0)
-                    {
-                        if (dX > maxRp)
-                            dX = maxRp; // HUCK
-                        zString+= " + j";
-                        zString+= QString::number(dX,'f', 2);
-                    }else
-                    {
-                        if (dX < -maxRp)
-                            dX = -maxRp; // HUCK
-                        zString+= " - j";
-                        zString+= QString::number((dX * (-1)),'f', 2);
-                    }
-                    zparString += QString::number(dRpar,'f', 2);
-                    if(dXpar >= 0)
-                    {
-                        if (dX > maxRp)
-                            dX = maxRp; // HUCK
-                        zparString+= " + j";
-                        zparString+= QString::number(dXpar,'f', 2);
-                    }else
-                    {
-                        if (dX < -maxRp)
-                            dX = -maxRp; // HUCK
-                        zparString+= " - j";
-                        zparString+= QString::number((dXpar * (-1)),'f', 2);
-                    }
-
-                    dL = 1E9 * dX / (2*M_PI * fq0 * 1E3);//nH
-                    dC = 1E12 / (2*M_PI * fq0 * (dX * (-1)) * 1E3);//pF
-
-                    dLpar = 1E9 * dXpar / (2*M_PI * fq0 * 1E3);
-                    dCpar = 1E12 / (2*M_PI * fq0 * (dXpar * (-1)) * 1E3);
-
-                    // Always the plain measurement's own S-parameter data,
-                    // never mm's -- Far End Sub/Add (mm, when that setting
-                    // is active) is a one-port cable-length/loss correction
-                    // applied to R/X/SWR/etc; it has no notion of 2-port
-                    // transmission data at all, so getMeasurementSub()/
-                    // getMeasurementAdd() never populate s21MagGraph/etc on
-                    // their own derived measurement structs. Without this,
-                    // S21/S12 silently went blank whenever Far End Sub/Add
-                    // was selected, even though the plain import had real
-                    // data the whole time.
-                    measurement* mmSParam = m_measurements->getMeasurement(i);
-                    if (!mmSParam->s21MagGraph.isEmpty()) {
-                        dS21 = interpolate(fq1, fq0, fq2, graphValueAt(mmSParam->s21MagGraph, fq1), graphValueAt(mmSParam->s21MagGraph, fq2));
-                        dS21Phase = interpolate(fq1, fq0, fq2, graphValueAt(mmSParam->s21PhaseGraph, fq1), graphValueAt(mmSParam->s21PhaseGraph, fq2));
-                        dS12 = interpolate(fq1, fq0, fq2, graphValueAt(mmSParam->s12MagGraph, fq1), graphValueAt(mmSParam->s12MagGraph, fq2));
-                        dS12Phase = interpolate(fq1, fq0, fq2, graphValueAt(mmSParam->s12PhaseGraph, fq1), graphValueAt(mmSParam->s12PhaseGraph, fq2));
-                    }
-
-                    // The bracket test above is inclusive on both ends
-                    // (<=/>=), so whenever fq0 exactly equals one of the
-                    // swept frequency keys -- always true for an
-                    // auto-placed marker, which picks bestFq straight from
-                    // an existing swrMap key (see autoPlaceAtLowestSwr())
-                    // -- both the interval ending at that key and the one
-                    // starting at it satisfy the test. Every plain "="
-                    // field just gets overwritten the second time through,
-                    // but zString/zparString use "+=" and silently doubled
-                    // up ("42.93-j11.1942.93-j11.19"). Only one bracketing
-                    // interval should ever match a given fq0; stop after
-                    // the first instead of letting a second match re-run.
-                    break;
+                    zString+= " + j";
+                    zString+= QString::number(dX,'f', 2);
+                }else
+                {
+                    zString+= " - j";
+                    zString+= QString::number((dX * (-1)),'f', 2);
+                }
+                zparString += QString::number(dRpar,'f', 2);
+                if(dXpar >= 0)
+                {
+                    zparString+= " + j";
+                    zparString+= QString::number(dXpar,'f', 2);
+                }else
+                {
+                    zparString+= " - j";
+                    zparString+= QString::number((dXpar * (-1)),'f', 2);
                 }
             }
             for (int j=MarkersHeaderColumn::fieldFQ+1; j<_columnTypes.size(); j++) {
@@ -612,11 +457,6 @@ QList<QVariant> Markers::valuesForMarkerNumber(int markerNumber, const QList<int
     return computeMarkerRow(fq0, markerNumber, mostRecent, columnTypes);
 }
 
-double Markers::interpolate(double fq1, double fq2, double fq3, double param1, double param2)
-{
-    return param1 + (fq2-fq1)/(fq3-fq1) *(param2-param1);
-}
-
 void Markers::on_currentTab(QString name)
 {
     m_currentTab = name;
@@ -645,38 +485,19 @@ void Markers::autoPlaceAtLowestSwr()
     if (m_measurements == nullptr || m_measurements->isEmpty())
         return;
 
-    // Same far-end/calibration measurement selection as
-    // MarkerComparisonDialog::qFactorAt() -- search whatever trace the user
-    // is actually looking at, not always the raw uncalibrated one.
-    int mostRecent = 0; // getMeasurement()/Sub()/Add() index backwards from newest -- 0 is most recent, same index last() uses (see measurements.h)
-    measurement* mm;
+    // Search whatever trace the user is looking at (far-end / calibrated).
+    int mostRecent = 0; // getMeasurement()/Sub()/Add() index backwards from newest -- 0 is most recent
+    const QVector<RawData>* farEnd = nullptr;
     switch (m_measurements->getFarEndMeasurement()) {
-    case 1: mm = m_measurements->getMeasurementSub(mostRecent); break;
-    case 2: mm = m_measurements->getMeasurementAdd(mostRecent); break;
-    default: mm = m_measurements->last(); break;
+    case 1: farEnd = &m_measurements->getMeasurementSub(mostRecent)->dataRX; break;
+    case 2: farEnd = &m_measurements->getMeasurementAdd(mostRecent)->dataRX; break;
+    default: break;
     }
-    if (mm == nullptr)
+    double bestFq;
+    if (!MarkerMath::lowestSwr(MarkerMath::swrSeries(*m_measurements->last(), farEnd,
+                                                     m_measurements->getCalibrationEnabled(),
+                                                     m_measurements->getZ0()), &bestFq))
         return;
-
-    bool calib = m_measurements->getCalibrationEnabled();
-    QCPGraphDataContainer* swrMap = calib ? &mm->swrGraphCalib : &mm->swrGraph;
-
-    // See MarkerComparisonDialog::qFactorAt()'s comment (2026-08-25
-    // QCustomPlot 2.x port) -- no .keys() on QCPGraphDataContainer, walk
-    // it directly via its own native index access instead.
-    if (swrMap->isEmpty())
-        return;
-
-    double bestFq = swrMap->at(0)->key;
-    double bestSwr = swrMap->at(0)->value;
-    for (int i = 1; i < swrMap->size(); ++i) {
-        double fq = swrMap->at(i)->key;
-        double swr = swrMap->at(i)->value;
-        if (swr < bestSwr) {
-            bestSwr = swr;
-            bestFq = fq;
-        }
-    }
 
     create(bestFq);
     setFq(bestFq);

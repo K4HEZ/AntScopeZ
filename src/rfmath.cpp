@@ -51,6 +51,16 @@ double RfMath::computeZ(double R, double X)
     return sqrt((R*R) + (X*X));
 }
 
+void RfMath::parallel(double R, double X, double& Rpar, double& Xpar)
+{
+    if (qIsNaN(R) || (R<0.001))
+        R = 0.01;
+    if (qIsNaN(X))
+        X = 0;
+    Rpar = R*(1+X*X/R/R);
+    Xpar = X*(1+R*R/X/X);
+}
+
 void RfMath::smithPoint(double Rnorm, double Xnorm, double &x, double &y)
 {
     // Unlike the calibrated path a little further down in prepareGraphs()
@@ -152,9 +162,8 @@ void RfMath::prepareGraphs(const RawData& _rawData, double Z0, Calibration* cali
         R = 0.01;
     if (qIsNaN(X))
         X = 0;
-    _data.Rpar = R*(1+X*X/R/R);
-    _data.Xpar = X*(1+R*R/X/X);
-    _data.Zpar = computeZ(R, X);
+    parallel(R, X, _data.Rpar, _data.Xpar);
+    _data.Zpar = computeZ(_data.Rpar, _data.Xpar);
 
     //----------------------calc phase----------------------------------------------
     double Rnorm = R/Z0;
@@ -185,12 +194,12 @@ void RfMath::prepareGraphs(const RawData& _rawData, double Z0, Calibration* cali
             _calibData.Z = calZ;
             computeSWR(Z0, calR, calX, &_calibData.SWR, &_calibData.RL);
 
-            double calRpar = calR*(1+calX*calX/calR/calR);
-            double calZpar = computeZ(calRpar, calX);
+            double calRpar, calXpar;
+            parallel(calR, calX, calRpar, calXpar);
 
             _calibData.Rpar = calRpar;
-            _calibData.Xpar = calX;
-            _calibData.Zpar = calZpar;
+            _calibData.Xpar = calXpar;
+            _calibData.Zpar = computeZ(calRpar, calXpar);
 
             if (qIsNaN(calR) || (calR<0.001) )
                 calR = 0.01;

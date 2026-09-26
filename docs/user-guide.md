@@ -25,7 +25,7 @@ supported analyzer models and brands.
 - [Interpreting your data](#interpreting-your-data)
 - [Scan modes: Single vs. Continuous](#scan-modes-single-vs-continuous)
 - [One Fq: live single-frequency readout](#one-fq-live-single-frequency-readout)
-- [Calibration (OSL)](#calibration-osl)
+- [Calibration and cable correction](#calibration-and-cable-correction)
 - [Presets and bands](#presets-and-bands)
 - [Markers](#markers)
 - [Multi view](#multi-view)
@@ -238,8 +238,9 @@ order to do it in.
 3. Pick your measurement units (Metric/Imperial) in
    [Settings → General](#general-tab); Light/Dark theme and language
    (if not English) are set from the **View** menu instead.
-4. *(Optional but recommended)* [Run OSL calibration](#calibration-osl)
-   -- Open/Short/Load, once per analyzer.
+4. *(Optional)* Calibrate the analyzer itself (its own menu, or the
+   NanoVNA's CAL menu); add AntScopeZ's OSL calibration only if you need
+   it -- see [Calibration and cable correction](#calibration-and-cable-correction).
 5. If you want the [band selector](#presets-and-bands) shortcut, enable
    it from the **View** menu ("Band Selector").
 6. Run [your first scan](#your-first-scan).
@@ -365,7 +366,7 @@ menu bar instead (File / Analyzer / View / Tools / Help).
 | Start, Stop (or Center, Range) | The actual sweep bounds, in kHz |
 | Points | Number of measurement points across the range |
 | Speed/Accuracy (slider) | Sets Points for you -- Fast (fewer points) end to Accurate (more points) end, 10–1000 (10,000) |
-| Calibration (checkbox) | Applies OSL calibration correction to scans -- has no effect until you've actually performed a calibration in Settings (see [Calibration](#calibration-osl)) |
+| Calibration (checkbox) | Applies OSL calibration correction to scans -- has no effect until you've actually performed a calibration in Settings (see [Calibration and cable correction](#calibration-and-cable-correction)) |
 | Full range | Resets Start/Stop to the connected analyzer's own default range |
 
 **Presets panel**
@@ -456,7 +457,7 @@ The Settings dialog has eight tabs: **General**, **Markers**,
 and **Updates**.
 
 OSL Calibration has its own section -- see
-[Calibration (OSL)](#calibration-osl).
+[Calibration and cable correction](#calibration-and-cable-correction).
 
 ### General tab
 
@@ -564,6 +565,10 @@ Both stay editable regardless of Preset/Custom.
 | Subtract cable | De-embedding: removes this cable's modeled effect from the measurement, showing the antenna's true impedance at its own terminals. Use this when you measured *through* a known feedline and want to see past it. |
 | Add cable | Embedding: the reverse -- projects a bare measurement forward through the modeled cable, showing what the radio end would actually see. |
 
+How this combines with calibration, and what it changes on screen and in
+saved files, is covered in
+[Calibration and cable correction](#calibration-and-cable-correction).
+
 The math behind Subtract/Add is a real lossy-transmission-line model
 (`Measurements::calcFarEnd()`), using velocity factor, R0, conductive/
 dielectric loss, and cable length together -- not just a cosmetic toggle,
@@ -577,7 +582,7 @@ smaller than you'd expect for your cable and length.
 
 | Control | What it does |
 |---|---|
-| Export | Exports the current/most recent measurement to a Touchstone file, with a comment block describing the active cable settings (Subtract/Add, velocity factor, length, R0, loss) embedded in it. Needs at least one scan first -- with none, it shows a notification instead of opening. |
+| Export | Exports the current/most recent measurement to a Touchstone file, with a comment block describing the active cable settings (Subtract/Add, velocity factor, length, R0, loss) embedded in it, plus a line recording which corrections are applied (see [Saving and reloading corrected data](#saving-and-reloading-corrected-data)). Needs at least one scan first -- with none, it shows a notification instead of opening. |
 | Update graphs | Applies whatever's currently in this tab immediately, without closing the dialog first |
 
 ### Themes tab
@@ -928,15 +933,60 @@ frequency in real time -- e.g. while making a small physical adjustment
 right at your operating frequency, without the visual noise of a full
 sweep redrawing around it.
 
-## Calibration (OSL)
+## Calibration and cable correction
 
 <!-- SCREENSHOT: Settings dialog, OSL Calibration tab / Calibration Wizard -->
 
-OSL (Open/Short/Load) calibration corrects for the analyzer's own
-measurement error, using three known reference standards. It's
-per-device -- calibration data is stored under the connected analyzer's
-own serial number, so switching analyzers doesn't mix up calibration
-data between them.
+Up to three corrections can sit between the raw measurement and what you
+see. They apply in this order:
+
+1. **The analyzer's own (on-board) calibration**, inside the device,
+   before any data reaches AntScopeZ.
+2. **AntScopeZ OSL calibration**, when the **Calibration** checkbox is on.
+3. **Cable add/subtract** (Settings → Cable), applied to the result of 1
+   and 2.
+
+Everything AntScopeZ shows uses the end result of that chain: every chart
+(SWR, Return Loss, Phase, R/X, Rp/Xp, Smith, TDR), markers, cursor popups
+and the One Fq readout. Two-port S21/S12 data isn't affected by either
+AntScopeZ correction.
+
+### Recommended approach
+
+**Calibrate the analyzer itself first**, and treat AntScopeZ's OSL
+calibration and cable add/subtract as extras you use only when you need
+them: OSL for something the device calibration doesn't cover (a test
+jumper or adapter), cable add/subtract to look past (or through) a
+feedline you can't take out of the measurement. Each extra correction is
+one more thing to keep consistent between sessions and files.
+
+### On-board (device) calibration
+
+AntScopeZ can't see, change, or switch off the analyzer's own
+calibration -- it only receives numbers that have already been through
+it.
+
+- **NanoVNA family:** the NanoVNA applies whichever calibration is active
+  on the device (its own CAL menu and save slots) to everything it sends.
+  Calibrate the NanoVNA itself over the frequency range you plan to scan;
+  AntScopeZ doesn't load or switch calibration slots.
+- **RigExpert:** analyzers ship factory-calibrated, and some models also
+  offer their own user calibration from the device menu -- see your
+  model's manual. *(Not something AntScopeZ checks or controls.)*
+
+**Using both.** AntScopeZ's OSL calibration is measured *through*
+whatever device calibration is active at that moment, so the two stack.
+That's valid, but only while the device's calibration stays the same --
+if you recalibrate or switch slots on the device, redo AntScopeZ's OSL
+calibration too.
+
+### AntScopeZ OSL calibration
+
+OSL (Open/Short/Load) calibration corrects for measurement error between
+the analyzer and the point where you connect the three reference
+standards. It's per-device -- calibration data is stored under the
+connected analyzer's own serial number, so switching analyzers doesn't
+mix up calibration data between them.
 
 Settings → OSL Calibration has two ways to run it:
 
@@ -960,6 +1010,65 @@ If you check that box before all three are present, AntScopeZ shows a
 checking for those three files, not tracking calibration status any
 other way. Running the wizard (or the three individual standards) is
 what creates them; once they exist, the checkbox works.
+
+Things worth knowing:
+
+- **Connect the standards where you want measurements referenced** --
+  e.g. the far end of your test jumper.
+- **The standards are assumed ideal**: a perfect open, a perfect short,
+  and a load equal to the system impedance, with no length correction.
+  Better standards give a better calibration.
+- **Frequency coverage:** the calibration sweep covers the analyzer's
+  full frequency range; scans are corrected by interpolating between
+  calibration points.
+- **Only scans taken while a calibration exists get corrected.** The
+  corrected copy is made as each point arrives, so scans taken before
+  you calibrated have no calibrated version.
+- **The checkbox resets** to off each time an analyzer connects, and
+  can't be changed while Settings is open.
+
+### Cable add/subtract
+
+See [the Cable tab reference](#cable-tab) for the settings themselves.
+How it fits with everything else:
+
+- **Order:** it's applied after calibration -- with Calibration on, it
+  works from the calibrated values.
+- **Scope:** it's one global setting, applied to every measurement on
+  screen, including files you've loaded (except files already saved with
+  a cable correction -- see below).
+- **Save (.asd)** stores the measurement without the cable correction.
+  The Cable tab's **Export** writes cable-corrected values.
+
+### Saving and reloading corrected data
+
+Save and Export write what you see, and **AntScopeZ records in the file
+which corrections were already applied**: an `.asd` file stores it in the
+file itself, and a Touchstone `.s1p` export adds a comment line such as
+
+```
+! AntScopeZ corrections: OSL calibration=yes; cable=subtract, length=12.00 ft
+```
+
+When you open one of these files, AntScopeZ shows it exactly as saved and
+won't apply those corrections a second time (a short notice says so) --
+regardless of how the Calibration checkbox or Cable setting are set.
+Corrections the file *doesn't* have still apply normally, e.g. turning on
+cable subtract for a file saved with only OSL calibration.
+
+| Calibration | Cable | Charts / markers show | Save (.asd) writes | Cable tab Export writes |
+|---|---|---|---|---|
+| off | Do nothing | as received from the analyzer | as received | as received |
+| on | Do nothing | OSL-corrected | OSL-corrected | OSL-corrected |
+| off | Subtract/Add | cable-corrected | as received | cable-corrected |
+| on | Subtract/Add | OSL + cable-corrected | OSL-corrected | OSL + cable-corrected |
+
+**Files that don't carry this record** -- CSV and NWL exports, `.asd` or
+Touchstone files from older AntScopeZ versions or AntScope2, and files
+from other programs -- are treated as uncorrected measurements, so a
+correction you already applied would be applied again. Name those so you
+can tell later, e.g. `40m-dipole_raw.csv` vs. `40m-dipole_osl.csv`, and
+leave Calibration/Cable off when reopening a corrected one.
 
 ## Presets and bands
 
@@ -1118,6 +1227,11 @@ those formats always hold). Saving in any format clears that
 measurement's dirty flag (see [Measurements panel](#controls-reference))
 -- there's no format-specific distinction there, just successfully
 saved vs. not.
+
+`.asd` files and `.s1p` exports also record which corrections (OSL
+calibration, cable add/subtract) were already applied, so reopening them
+doesn't apply those corrections twice; CSV and NWL don't. See
+[Saving and reloading corrected data](#saving-and-reloading-corrected-data).
 
 Both dialogs default to your [Data folder](#files-and-directories);
 Save suggests a filename built from the measurement's own name rather
@@ -1426,7 +1540,7 @@ whatever you like. Nothing the `.deb` installs is ever written to.
 | Path | What's there |
 |---|---|
 | `AntScopeZ.ini` | Every setting -- see [AntScopeZ.ini reference](#antscopezini-reference) below |
-| `Calibration/<analyzer serial number>/` | `cal_open.s1p`, `cal_short.s1p`, `cal_load.s1p` -- one subfolder per analyzer, see [Calibration (OSL)](#calibration-osl) |
+| `Calibration/<analyzer serial number>/` | `cal_open.s1p`, `cal_short.s1p`, `cal_load.s1p` -- one subfolder per analyzer, see [Calibration and cable correction](#calibration-and-cable-correction) |
 | `itu-regions.txt` (only if you've edited bands) | Your own edited band data, created the first time you click Save in the [band editor](#editing-band-definitions) -- overrides the shipped `itu-regions-defaults.txt` entirely, not merged with it |
 | `QtLanguage_<code>.qm` / `qtbase_<code>.qm` (optional) | Drop a `.qm` here to add a language AntScopeZ doesn't ship, or override a shipped one -- picked up automatically, no reinstall needed. See View menu → Language in [Controls reference](#controls-reference). |
 
@@ -1577,7 +1691,7 @@ Notes on specific keys:
 - **`Calibration`**'s `Performed`/`Enabled` here are just what gets
   written back out on exit -- the app's actual live check is whether the
   three `*Path` files exist on disk, not this flag (see
-  [Calibration (OSL)](#calibration-osl)).
+  [Calibration and cable correction](#calibration-and-cable-correction)).
 - **`[Markers]header`** -- the Markers table's column list and order,
   same value Settings → Markers' Available/Selected lists edit. Not
   bookkeeping -- hand-editing it works, but the Settings tab is the
@@ -1612,7 +1726,17 @@ delete.
   stay checked.** AntScopeZ can't find `cal_open.s1p`/`cal_short.s1p`/
   `cal_load.s1p` for this analyzer yet -- run the Calibration Wizard (or
   all three individually) first. See
-  [Calibration (OSL)](#calibration-osl).
+  [Calibration and cable correction](#calibration-and-cable-correction).
+- **Charts (and markers) show nothing after checking Calibration.**
+  Only scans taken while a calibration existed for this analyzer have a
+  calibrated version -- rescan with Calibration on. See
+  [AntScopeZ OSL calibration](#antscopez-osl-calibration).
+- **Values look over-corrected after reopening a file.** The file was
+  saved with a correction already applied, and it's a format that
+  doesn't record that (CSV, NWL, or a file from an older version or
+  another program). Reopen it with Calibration off and Cable set to Do
+  nothing. See
+  [Saving and reloading corrected data](#saving-and-reloading-corrected-data).
 - **Clicking Print does nothing.** Print isn't available while the
   Multi tab is active -- switch to any other chart tab first. See
   [Print and screenshots](#print-and-screenshots).

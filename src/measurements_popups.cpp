@@ -188,80 +188,38 @@ void Measurements::on_newCursorSmithPos (double x, double y, int index)
 
     frequency = findedNum < swrmap->size() ? swrmap->at(findedNum)->key : swrmap->at(swrmap->size()-1)->key;
 
-    if(m_calibration->getCalibrationEnabled())
-    {
-        if(m_farEndMeasurement == 1)
-        {
-            rho = graphValueAt(m_farEndMeasurementsSub.at(index).rhoGraph, frequency);
-            phase = graphValueAt(m_farEndMeasurementsSub.at(index).phaseGraph, frequency);
-            r = graphValueAt(m_farEndMeasurementsSub.at(index).rsrGraph, frequency);//dataRX.at(previousI).r;
-            x1 = graphValueAt(m_farEndMeasurementsSub.at(index).rsxGraph, frequency);//dataRX.at(previousI).x;
-        }else if(m_farEndMeasurement == 2)
-        {
-            rho = graphValueAt(m_farEndMeasurementsAdd.at(index).rhoGraph, frequency);
-            phase = graphValueAt(m_farEndMeasurementsAdd.at(index).phaseGraph, frequency);
-            r = graphValueAt(m_farEndMeasurementsAdd.at(index).rsrGraph, frequency);//dataRX.at(previousI).r;
-            x1 = graphValueAt(m_farEndMeasurementsAdd.at(index).rsxGraph, frequency);//dataRX.at(previousI).x;
-        }else
-        {
-            rho = graphValueAt(m_measurements.at(index).rhoGraph, frequency);
-            phase = graphValueAt(m_measurements.at(index).phaseGraphCalib, frequency);
-            // findedNum comes from a nearest-point search over smithGraph/
-            // smithGraphCalib (above), a separate container from dataRXCalib
-            // that can end up a different size (e.g. across a Continuous
-            // "continue" -- see on_newData()'s smith-point comment). Without
-            // this clamp, .at(findedNum) below throws/aborts on an
-            // out-of-range index. Matches RigExpert AntScope2 2.0.3's fix
-            // (issue #10); was already here but commented out.
-            if (findedNum >= m_measurements.at(index).dataRXCalib.count())
-                findedNum = m_measurements.at(index).dataRXCalib.count()-1;
-            if (findedNum < 0)
-                findedNum = 0;
-            r = m_measurements.at(index).dataRXCalib.at(findedNum).r;
-            x1 = m_measurements.at(index).dataRXCalib.at(findedNum).x;
-        }
-        swr = graphValueAt(m_measurements.at(index).swrGraphCalib, frequency);
-        rl = graphValueAt(m_measurements.at(index).rlGraphCalib, frequency);
-//        z = graphValueAt(m_viewMeasurements.at(index).rszGraphCalib, frequency);
-//        rpar = graphValueAt(m_viewMeasurements.at(index).rprGraphCalib, frequency);
-//        xpar = graphValueAt(m_viewMeasurements.at(index).rpxGraphCalib, frequency);
-        z = graphValueAt(m_measurements.at(index).rszGraphCalib, frequency);
-        rpar = graphValueAt(m_measurements.at(index).rprGraphCalib, frequency);
-        xpar = graphValueAt(m_measurements.at(index).rpxGraphCalib, frequency);
-    }else
-    {
-        if(m_farEndMeasurement == 1)
-        {
-            rho = graphValueAt(m_farEndMeasurementsSub.at(index).rhoGraph, frequency);
-            phase = graphValueAt(m_farEndMeasurementsSub.at(index).phaseGraph, frequency);
-            r = graphValueAt(m_farEndMeasurementsSub.at(index).rsrGraph, frequency);//dataRX.at(previousI).r;
-            x1 = graphValueAt(m_farEndMeasurementsSub.at(index).rsxGraph, frequency);//dataRX.at(previousI).x;
-        }else if(m_farEndMeasurement == 2)
-        {
-            rho = graphValueAt(m_farEndMeasurementsAdd.at(index).rhoGraph, frequency);
-            phase = graphValueAt(m_farEndMeasurementsAdd.at(index).phaseGraph, frequency);
-            r = graphValueAt(m_farEndMeasurementsAdd.at(index).rsrGraph, frequency);//dataRX.at(previousI).r;
-            x1 = graphValueAt(m_farEndMeasurementsAdd.at(index).rsxGraph, frequency);//dataRX.at(previousI).x;
-        }else
-        {
-            rho = graphValueAt(m_measurements.at(index).rhoGraph, frequency);
-            phase = graphValueAt(m_measurements.at(index).phaseGraph, frequency);
-            // See the calibrated branch above for why this clamp exists.
-            if (findedNum >= m_measurements.at(index).dataRX.count())
-                findedNum = m_measurements.at(index).dataRX.count()-1;
-            if (findedNum < 0)
-                findedNum = 0;
-            r = m_measurements.at(index).dataRX.at(findedNum).r;
-            x1 = m_measurements.at(index).dataRX.at(findedNum).x;
-        }
-        swr = graphValueAt(m_measurements.at(index).swrGraph, frequency);
-        rl = graphValueAt(m_measurements.at(index).rlGraph, frequency);
-//        z = graphValueAt(m_viewMeasurements.at(index).rszGraph, frequency);
-//        rpar = graphValueAt(m_viewMeasurements.at(index).rprGraph, frequency);
-//        xpar = graphValueAt(m_viewMeasurements.at(index).rpxGraph, frequency);
-        z = graphValueAt(m_measurements.at(index).rszGraph, frequency);
-        rpar = graphValueAt(m_measurements.at(index).rprGraph, frequency);
-        xpar = graphValueAt(m_measurements.at(index).rpxGraph, frequency);
+    // Every value from one series: cable-corrected when add/subtract is on
+    // (built from already-calibrated points), else calibrated or plain.
+    bool farEnd = (m_farEndMeasurement == 1 || m_farEndMeasurement == 2);
+    const measurement& src = (m_farEndMeasurement == 1) ? m_farEndMeasurementsSub.at(index)
+                           : (m_farEndMeasurement == 2) ? m_farEndMeasurementsAdd.at(index)
+                           : m_measurements.at(index);
+    bool calib = !farEnd && m_calibration->getCalibrationEnabled();
+    rho = graphValueAt(calib ? src.rhoGraphCalib : src.rhoGraph, frequency);
+    phase = graphValueAt(calib ? src.phaseGraphCalib : src.phaseGraph, frequency);
+    swr = graphValueAt(calib ? src.swrGraphCalib : src.swrGraph, frequency);
+    rl = graphValueAt(calib ? src.rlGraphCalib : src.rlGraph, frequency);
+    z = graphValueAt(calib ? src.rszGraphCalib : src.rszGraph, frequency);
+    rpar = graphValueAt(calib ? src.rprGraphCalib : src.rprGraph, frequency);
+    xpar = graphValueAt(calib ? src.rpxGraphCalib : src.rpxGraph, frequency);
+    if (farEnd) {
+        r = graphValueAt(src.rsrGraph, frequency);
+        x1 = graphValueAt(src.rsxGraph, frequency);
+    } else {
+        const QVector<RawData>& pts = calib ? src.dataRXCalib : src.dataRX;
+        // findedNum comes from a nearest-point search over smithGraph/
+        // smithGraphCalib (above), a separate container that can end up a
+        // different size (e.g. across a Continuous "continue" -- see
+        // on_newData()'s smith-point comment). Clamp it (RigExpert
+        // AntScope2 2.0.3's fix, issue #10).
+        if (findedNum >= pts.count())
+            findedNum = pts.count()-1;
+        if (findedNum < 0)
+            findedNum = 0;
+        if (pts.isEmpty())
+            return;
+        r = pts.at(findedNum).r;
+        x1 = pts.at(findedNum).x;
     }
 
     const double maxRp = VALUE_LIMIT;
@@ -803,86 +761,28 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
 
                         int dataSize = m_measurements.at(index).dataRX.size();
 
-                        if(m_calibration->getCalibrationEnabled())
-                        {
-                            if(m_farEndMeasurement == 1)
-                            {
-                                swr = graphValueAt(m_farEndMeasurementsSub.at(index).swrGraphCalib, frequency);
-                                rl = graphValueAt(m_farEndMeasurementsSub.at(index).rlGraphCalib, frequency);
-                                rho = graphValueAt(m_farEndMeasurementsSub.at(index).rhoGraphCalib, frequency);
-                                phase = graphValueAt(m_farEndMeasurementsSub.at(index).phaseGraphCalib, frequency);
-                                r = graphValueAt(m_farEndMeasurementsSub.at(index).rsrGraphCalib, frequency);
-                                x = graphValueAt(m_farEndMeasurementsSub.at(index).rsxGraphCalib, frequency);
-                                z = graphValueAt(m_farEndMeasurementsSub.at(index).rszGraphCalib, frequency);
-                                rpar = graphValueAt(m_farEndMeasurementsSub.at(index).rprGraphCalib, frequency);
-                                xpar = graphValueAt(m_farEndMeasurementsSub.at(index).rpxGraphCalib, frequency);
-                            }else if(m_farEndMeasurement == 2)
-                            {
-                                swr = graphValueAt(m_farEndMeasurementsAdd.at(index).swrGraphCalib, frequency);
-                                rl = graphValueAt(m_farEndMeasurementsAdd.at(index).rlGraphCalib, frequency);
-                                rho = graphValueAt(m_farEndMeasurementsAdd.at(index).rhoGraphCalib, frequency);
-                                phase = graphValueAt(m_farEndMeasurementsAdd.at(index).phaseGraphCalib, frequency);
-                                r = graphValueAt(m_farEndMeasurementsAdd.at(index).rsrGraphCalib, frequency);
-                                x = graphValueAt(m_farEndMeasurementsAdd.at(index).rsxGraphCalib, frequency);
-                                z = graphValueAt(m_farEndMeasurementsAdd.at(index).rszGraphCalib, frequency);
-                                rpar = graphValueAt(m_farEndMeasurementsAdd.at(index).rprGraphCalib, frequency);
-                                xpar = graphValueAt(m_farEndMeasurementsAdd.at(index).rpxGraphCalib, frequency);
-                            }else
-                            {
-                                swr = graphValueAt(m_measurements.at(index).swrGraphCalib, frequency);
-                                rl = graphValueAt(m_measurements.at(index).rlGraphCalib, frequency);
-                                rho = graphValueAt(m_measurements.at(index).rhoGraphCalib, frequency);
-                                phase = graphValueAt(m_measurements.at(index).phaseGraphCalib, frequency);
-                                if (m_previousI < 0 || m_previousI >=dataSize)
-                                    return;
-                                r = m_measurements.at(index).dataRXCalib.at(m_previousI).r;
-                                if (m_previousI < 0 || m_previousI >=dataSize)
-                                    return;
-                                x = m_measurements.at(index).dataRXCalib.at(m_previousI).x;
-                                z = graphValueAt(m_measurements.at(index).rszGraphCalib, frequency);
-                                rpar = graphValueAt(m_measurements.at(index).rprGraphCalib, frequency);
-                                xpar = graphValueAt(m_measurements.at(index).rpxGraphCalib, frequency);
-                            }
-                        }else
-                        {
-                            if(m_farEndMeasurement == 1)
-                            {
-                                swr = graphValueAt(m_farEndMeasurementsSub.at(index).swrGraph, frequency);
-                                rl = graphValueAt(m_farEndMeasurementsSub.at(index).rlGraph, frequency);
-                                rho = graphValueAt(m_farEndMeasurementsSub.at(index).rhoGraph, frequency);
-                                phase = graphValueAt(m_farEndMeasurementsSub.at(index).phaseGraph, frequency);
-                                r = graphValueAt(m_farEndMeasurementsSub.at(index).rsrGraph, frequency);
-                                x = graphValueAt(m_farEndMeasurementsSub.at(index).rsxGraph, frequency);
-                                z = graphValueAt(m_farEndMeasurementsSub.at(index).rszGraph, frequency);
-                                rpar = graphValueAt(m_farEndMeasurementsSub.at(index).rprGraph, frequency);
-                                xpar = graphValueAt(m_farEndMeasurementsSub.at(index).rpxGraph, frequency);
-                            }else if(m_farEndMeasurement == 2)
-                            {
-                                swr = graphValueAt(m_farEndMeasurementsAdd.at(index).swrGraph, frequency);
-                                rl = graphValueAt(m_farEndMeasurementsAdd.at(index).rlGraph, frequency);
-                                rho = graphValueAt(m_farEndMeasurementsAdd.at(index).rhoGraph, frequency);
-                                phase = graphValueAt(m_farEndMeasurementsAdd.at(index).phaseGraph, frequency);
-                                r = graphValueAt(m_farEndMeasurementsAdd.at(index).rsrGraph, frequency);
-                                x = graphValueAt(m_farEndMeasurementsAdd.at(index).rsxGraph, frequency);
-                                z = graphValueAt(m_farEndMeasurementsAdd.at(index).rszGraph, frequency);
-                                rpar = graphValueAt(m_farEndMeasurementsAdd.at(index).rprGraph, frequency);
-                                xpar = graphValueAt(m_farEndMeasurementsAdd.at(index).rpxGraph, frequency);
-                            }else
-                            {
-                                swr = graphValueAt(m_measurements.at(index).swrGraph, frequency);
-                                rl = graphValueAt(m_measurements.at(index).rlGraph, frequency);
-                                rho = graphValueAt(m_measurements.at(index).rhoGraph, frequency);
-                                phase = graphValueAt(m_measurements.at(index).phaseGraph, frequency);
-                                if (m_previousI < 0 || m_previousI >=dataSize)
-                                    return;
-                                r = m_measurements.at(index).dataRX.at(m_previousI).r;
-                                if (m_previousI < 0 || m_previousI >=dataSize)
-                                    return;
-                                x = m_measurements.at(index).dataRX.at(m_previousI).x;
-                                z = graphValueAt(m_measurements.at(index).rszGraph, frequency);
-                                rpar = graphValueAt(m_measurements.at(index).rprGraph, frequency);
-                                xpar = graphValueAt(m_measurements.at(index).rpxGraph, frequency);
-                            }
+                        // Same series rule as the Smith popup above.
+                        bool farEnd = (m_farEndMeasurement == 1 || m_farEndMeasurement == 2);
+                        const measurement& src = (m_farEndMeasurement == 1) ? m_farEndMeasurementsSub.at(index)
+                                               : (m_farEndMeasurement == 2) ? m_farEndMeasurementsAdd.at(index)
+                                               : m_measurements.at(index);
+                        bool calib = !farEnd && m_calibration->getCalibrationEnabled();
+                        swr = graphValueAt(calib ? src.swrGraphCalib : src.swrGraph, frequency);
+                        rl = graphValueAt(calib ? src.rlGraphCalib : src.rlGraph, frequency);
+                        rho = graphValueAt(calib ? src.rhoGraphCalib : src.rhoGraph, frequency);
+                        phase = graphValueAt(calib ? src.phaseGraphCalib : src.phaseGraph, frequency);
+                        z = graphValueAt(calib ? src.rszGraphCalib : src.rszGraph, frequency);
+                        rpar = graphValueAt(calib ? src.rprGraphCalib : src.rprGraph, frequency);
+                        xpar = graphValueAt(calib ? src.rpxGraphCalib : src.rpxGraph, frequency);
+                        if (farEnd) {
+                            r = graphValueAt(src.rsrGraph, frequency);
+                            x = graphValueAt(src.rsxGraph, frequency);
+                        } else {
+                            const QVector<RawData>& pts = calib ? src.dataRXCalib : src.dataRX;
+                            if (m_previousI < 0 || m_previousI >= dataSize || m_previousI >= pts.size())
+                                return;
+                            r = pts.at(m_previousI).r;
+                            x = pts.at(m_previousI).x;
                         }
 
                         const double maxRp = VALUE_LIMIT;

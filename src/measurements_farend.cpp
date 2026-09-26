@@ -1,4 +1,5 @@
 #include "measurements.h"
+#include "markermath.h"
 #include "ProgressDlg.h"
 #include "export.h"
 #include "mainwindow.h"
@@ -128,9 +129,6 @@ RawData Measurements::calcFarEnd(const RawData& data, int idx, bool refreshGraph
 {
     RawData da = data;
 
-    double Rpar;
-    double Xpar;
-
     double fq = data.fq;
     double R = data.r;
     double X = data.x;
@@ -138,29 +136,22 @@ RawData Measurements::calcFarEnd(const RawData& data, int idx, bool refreshGraph
     QCPGraphData qdata;
     qdata.key = fq*1000;
 
-    Complex zin = RfMath::cableTransform(fq, R, X, cableParams(), m_farEndMeasurement==1);
-    R = zin.real();
-    X = zin.imag();
+    // A measurement loaded with a cable correction already in it isn't
+    // corrected again.
+    bool baked = idx >= 0 && idx < m_measurements.size() && m_measurements[idx].applied.cableMode != 0;
+    if (!baked) {
+        Complex zin = RfMath::cableTransform(fq, R, X, cableParams(), m_farEndMeasurement==1);
+        R = zin.real();
+        X = zin.imag();
+    }
 
-    Rpar = R*(1+X*X/R/R);
-    Xpar = X*(1+R*R/X/X);
+    RawData transformed = data;
+    transformed.r = R;
+    transformed.x = X;
+    MarkerMath::ChartPoint cp = MarkerMath::chartPoint(transformed, m_Z0, MarkerMath::Series::FarEnd, 1, 0);
 
     if (qIsNaN(R) || (R<0.001) ) {R = 0.01;}
     if (qIsNaN(X)) {X = 0;}
-
-    double Rnorm = R/m_Z0;
-    double Xnorm = X/m_Z0;
-
-    double Denom = (Rnorm+1)*(Rnorm+1)+Xnorm*Xnorm;
-    double RhoReal = ((Rnorm-1)*(Rnorm+1)+Xnorm*Xnorm)/Denom;
-    double RhoImag = 2*Xnorm/Denom;
-
-    double RhoPhase = atan2(RhoImag, RhoReal) / M_PI * 180.0;
-    double RhoMod = sqrt(RhoReal*RhoReal+RhoImag*RhoImag);
-
-    double swr=1;
-    double rl=0;
-    RfMath::computeSWR(getZ0(), R, X, &swr, &rl);
 
     da.r = R;
     da.x = X;
@@ -171,29 +162,25 @@ RawData Measurements::calcFarEnd(const RawData& data, int idx, bool refreshGraph
     _farEndMeasurements[idx].dataRX.append(da);
 
     if (refreshGraphs) {
-        qdata.value = swr;
+        qdata.value = cp.swr;
         _farEndMeasurements[idx].swrGraph.add(qdata);
-
-        qdata.value = rl;
+        qdata.value = cp.rl;
         _farEndMeasurements[idx].rlGraph.add(qdata);
-
-        qdata.value = R;
+        qdata.value = cp.r;
         _farEndMeasurements[idx].rsrGraph.add(qdata);
-        qdata.value = X;
+        qdata.value = cp.x;
         _farEndMeasurements[idx].rsxGraph.add(qdata);
-        qdata.value = RfMath::computeZ(R, X);
+        qdata.value = cp.z;
         _farEndMeasurements[idx].rszGraph.add(qdata);
-
-        qdata.value = Rpar;
+        qdata.value = cp.rpar;
         _farEndMeasurements[idx].rprGraph.add(qdata);
-        qdata.value = Xpar;
+        qdata.value = cp.xpar;
         _farEndMeasurements[idx].rpxGraph.add(qdata);
-        qdata.value = RfMath::computeZ(R, X);
+        qdata.value = cp.zpar;
         _farEndMeasurements[idx].rpzGraph.add(qdata);
-
-        qdata.value = RhoPhase;
+        qdata.value = cp.phase;
         _farEndMeasurements[idx].phaseGraph.add(qdata);
-        qdata.value = RhoMod;
+        qdata.value = cp.rho;
         _farEndMeasurements[idx].rhoGraph.add(qdata);
 
         double pointX,pointY;

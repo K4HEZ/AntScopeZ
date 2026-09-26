@@ -120,7 +120,6 @@ private:
 
     Measurements *m_measurements;
 
-    double interpolate(double fq1, double fq2, double fq3, double param1, double param2);
     // Row body shared by updateInfo() (all markers x all measurements) and
     // valuesForMarkerNumber() (one marker, most recent measurement only).
     QList<QVariant> computeMarkerRow(double fq0, int markerNumber, int measurementIndex, const QList<int>& columnTypes);

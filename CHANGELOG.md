@@ -15,17 +15,39 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 - README Credits section and About dialog line crediting cable data
   sources (AC6LA and manufacturers).
+- `.asd` files and `.s1p` exports record which corrections (OSL
+  calibration, cable add/subtract) were applied; reopening such a file
+  shows it as saved instead of applying them again.
 
 ### Changed
 
-- Internal: analyzer layer, calibration, RF/TDR math and file formats
-  split into a UI-free `antscopez_core` library, with core settings in a new
-  `AppConfig` (groundwork for mobile front ends). No user-visible change
-  intended.
+- Internal: analyzer layer, calibration, RF/TDR/marker math and file
+  formats split into a UI-free `antscopez_core` library, with core
+  settings in a new `AppConfig` (groundwork for mobile front ends). The
+  split itself isn't meant to change anything you see.
 
 ### Fixed
 
+- Markers, auto-marker and Q-factor showed zeros/nothing when calibration
+  and cable add/subtract were both on.
+- Parallel values: with calibration on, Xp (and Lp/Cp/|Zp| from it)
+  showed plain series X; with cable add/subtract on, |Zp| showed |Z|;
+  the one-frequency readout's |Zp| showed |Z|.
+- Markers read |Z| and |Zp| from uncalibrated data even with calibration
+  on.
+- Cursor popups mixed series: with cable add/subtract on, SWR/RL/|Z|/Rp/Xp
+  came from the uncorrected scan; with calibration on, |rho| was
+  uncalibrated.
+- With calibration and cable add/subtract both on, the Cable tab's Export
+  wrote an empty file and the TDR chart was blank.
+- One Fq readout ignored cable add/subtract.
 - Docs: cable preset count said ~150; it's over 100.
+
+### Documentation
+
+- User guide: new "Calibration and cable correction" section -- device
+  vs. AntScopeZ calibration, order of corrections, what's saved and how
+  reloading works.
 
 ## [2.2.7] - 2026-09-18
 

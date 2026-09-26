@@ -15,6 +15,13 @@ bool MeasurementData::addPoint(const RawData& raw, int index, bool replace, doub
 {
     storeAt(dataRX, raw, index, replace);
 
+    if (applied.osl) {
+        storeAt(dataRXCalib, raw, index, replace);
+        if (calibrated)
+            *calibrated = raw;
+        return true;
+    }
+
     if (calibration == nullptr || !calibration->getCalibrationPerformed())
         return false;
 

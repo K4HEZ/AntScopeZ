@@ -8,6 +8,16 @@
 
 class Calibration;
 
+// Corrections already baked into a measurement's points -- set for files
+// saved that way, so they aren't applied a second time.
+struct Corrections
+{
+    bool osl = false;          // AntScopeZ OSL calibration
+    int cableMode = 0;         // 0 none, 1 cable subtracted, 2 cable added
+    double cableLengthFeet = 0;
+    bool any() const { return osl || cableMode != 0; }
+};
+
 // One measurement's real data, UI-free. The GUI's `measurement` (measurement.h)
 // adds its plot caches on top of this.
 struct MeasurementData
@@ -43,11 +53,13 @@ struct MeasurementData
     QVector <RawData> dataRXCalib; // dataRX with OSL calibration applied (when performed)
     QVector <UserData> dataUser;
     QStringList fieldsUser;
+    Corrections applied;
 
     // Stores one analyzer point at `index` (replacing it if `replace` and it
     // exists -- Continuous re-sweeps -- else appending), plus its
     // OSL-calibrated copy in dataRXCalib when `calibration` has one
-    // performed. Returns true and fills `calibrated` in that case.
+    // performed. Returns true and fills `calibrated` in that case. Points
+    // that already have OSL applied (applied.osl) are their own calibrated copy.
     bool addPoint(const RawData& raw, int index, bool replace, double Z0,
                   Calibration* calibration, RawData* calibrated = nullptr);
 };

@@ -274,6 +274,7 @@ set(ANTSCOPE_CORE_SOURCES
     src/calibration.cpp
     src/crc32.cpp
     src/debuglog.cpp
+    src/markermath.cpp
     src/measurementdata.cpp
     src/measurementfiles.cpp
     src/measurementsession.cpp
@@ -305,6 +306,7 @@ set(ANTSCOPE_CORE_HEADERS
     src/calibration.h
     src/crc32.h
     src/debuglog.h
+    src/markermath.h
     src/measurementdata.h
     src/measurementfiles.h
     src/measurementlist.h

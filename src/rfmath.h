@@ -24,6 +24,8 @@ namespace RfMath {
 // degenerate point. SWR is clamped to [1, 200].
 quint32 computeSWR(double Z0, double R, double X, double *VSWR, double *RL);
 double computeZ(double R, double X);
+// Series R+jX -> parallel Rp || jXp (R clamped to >= 0.01 ohm, NaN X -> 0).
+void parallel(double R, double X, double& Rpar, double& Xpar);
 // Normalized R/X -> Smith chart coordinates (radius 6).
 void smithPoint(double Rnorm, double Xnorm, double &x, double &y);
 

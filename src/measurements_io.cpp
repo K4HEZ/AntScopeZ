@@ -7,6 +7,7 @@
 #include "glwidget.h"
 #include "style.h"
 #include "measurementfiles.h"
+#include "Notification.h"
 
 extern QMap<QString, QString> g_mapTabPlotNames;
 extern int g_maxMeasurements; // defined in measurements.cpp
@@ -26,8 +27,11 @@ void Measurements::saveData(quint32 number, QString path)
         number = g_maxMeasurements-1;
 
     bool calibr = (m_calibration != nullptr) && m_calibration->getCalibrationEnabled();
-    MeasurementFiles::writeAsd(path, calibr ? m_measurements.at(number).dataRXCalib
-                                            : m_measurements.at(number).dataRX);
+    const measurement& mm = m_measurements.at(number);
+    Corrections applied = mm.applied; // anything already baked in stays recorded
+    if (calibr)
+        applied.osl = true;
+    MeasurementFiles::writeAsd(path, calibr ? mm.dataRXCalib : mm.dataRX, applied);
 }
 
 void Measurements::loadData(QString path)
@@ -49,6 +53,7 @@ void Measurements::loadData(QString path)
                           static_cast<qint64>(r.fqMinMHz * 1000000),
                           static_cast<qint64>(r.fqMaxMHz * 1000000), size);
         m_measurements.last().dirty = false; // loaded from a file, see measurement::dirty's own comment
+        noteLoadedCorrections(r.applied);
 
         ProgressDlg* progressDlg = new ProgressDlg();
         progressDlg->setValue(0);
@@ -95,12 +100,14 @@ void Measurements::exportData(QString _name, int _type, int _number, bool _apply
     QVector<RawData> vector;
     if (_applyCable)
     {
+        // Cable-corrected points are built from the calibrated ones when
+        // calibration is on, so they're used as-is either way.
         switch(m_farEndMeasurement) {
         case 1:
-            vector = calibr ? m_farEndMeasurementsSub.at(_number).dataRXCalib : m_farEndMeasurementsSub.at(_number).dataRX;
+            vector = m_farEndMeasurementsSub.at(_number).dataRX;
             break;
         case 2:
-            vector = calibr ? m_farEndMeasurementsAdd.at(_number).dataRXCalib : m_farEndMeasurementsAdd.at(_number).dataRX;
+            vector = m_farEndMeasurementsAdd.at(_number).dataRX;
             break;
         default:
             vector = calibr ? m_measurements.at(_number).dataRXCalib : m_measurements.at(_number).dataRX;
@@ -109,13 +116,23 @@ void Measurements::exportData(QString _name, int _type, int _number, bool _apply
     } else {
         vector = calibr ? m_measurements.at(_number).dataRXCalib : m_measurements.at(_number).dataRX;
     }
-    exportData(_name, _type, vector, _description);
+
+    const measurement& mm = m_measurements.at(_number);
+    Corrections applied = mm.applied;
+    if (calibr)
+        applied.osl = true;
+    if (_applyCable && (m_farEndMeasurement == 1 || m_farEndMeasurement == 2) && mm.applied.cableMode == 0) {
+        applied.cableMode = m_farEndMeasurement;
+        applied.cableLengthFeet = m_cableLength;
+    }
+    exportData(_name, _type, vector, _description, applied);
 }
 
-void Measurements::exportData(QString _name, int _type, QVector<RawData>& vector, QString _description)
+void Measurements::exportData(QString _name, int _type, QVector<RawData>& vector, QString _description,
+                              const Corrections& applied)
 {
     double z0 = ((m_calibration != NULL) && (m_calibration->getCalibrationEnabled())) ? m_calibration->getZ0() : 50;
-    MeasurementFiles::writeRaw(_name, _type, vector, z0, _description);
+    MeasurementFiles::writeRaw(_name, _type, vector, z0, _description, applied);
 }
 
 void Measurements::importData(QString _name, bool /*user_format*/)
@@ -271,6 +288,7 @@ void Measurements::importData(QString _name)
                       static_cast<qint64>(r.fqMinMHz*1000000), static_cast<qint64>(r.fqMaxMHz*1000000),
                       r.raw.length());
     m_measurements.last().dirty = false; // loaded from a file, see measurement::dirty's own comment
+    noteLoadedCorrections(r.applied);
     foreach (auto data, r.raw) {
         on_newData(data);
     }
@@ -280,4 +298,24 @@ void Measurements::importData(QString _name)
     }
     emit import_finished(r.fqMinMHz*1000, r.fqMaxMHz*1000);
     on_measurementComplete(); // stamp the real Points count -- see loadData()'s own comment on this
+}
+
+// A file saved with corrections already in its points is shown as saved:
+// MeasurementData::addPoint() skips OSL for it and calcFarEnd() skips the cable.
+void Measurements::noteLoadedCorrections(const Corrections& applied)
+{
+    m_measurements.last().applied = applied;
+    if (!applied.any())
+        return;
+    QStringList what;
+    if (applied.osl)
+        what << tr("OSL calibration");
+    if (applied.cableMode == 1)
+        what << tr("cable subtract");
+    else if (applied.cableMode == 2)
+        what << tr("cable add");
+    Notification::showMessage(tr("This file was saved with %1 already applied. "
+                                 "It's shown as saved; AntScopeZ won't apply it again.")
+                                  .arg(what.join(tr(" and "))),
+                              m_tableWidget);
 }

@@ -1,4 +1,5 @@
 #include "measurements.h"
+#include "markermath.h"
 #include "ProgressDlg.h"
 #include "export.h"
 #include "mainwindow.h"
@@ -1003,7 +1004,18 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
         GraphData _data;
         GraphData _calibData;
         RfMath::prepareGraphs(_rawData, m_Z0, m_calibration, _data, _calibData);
-        updateOneFqWidget(getCalibrationEnabled() ? _calibData : _data);
+        GraphData shown = getCalibrationEnabled() ? _calibData : _data;
+        // Cable add/subtract applies on top of calibration, as everywhere else.
+        if (m_farEndMeasurement == 1 || m_farEndMeasurement == 2) {
+            Complex z = RfMath::cableTransform(_rawData.fq, shown.R, shown.X, cableParams(),
+                                               m_farEndMeasurement == 1);
+            RawData p = _rawData;
+            p.r = z.real();
+            p.x = z.imag();
+            GraphData unused;
+            RfMath::prepareGraphs(p, m_Z0, nullptr, shown, unused);
+        }
+        updateOneFqWidget(shown);
         return;
     }
 
@@ -1038,24 +1050,20 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
 
     updateTDRProgress(m_measurements.last().dataRX.size());
 
-    double VSWR;
-    double RL;
-    if(RfMath::computeSWR(m_Z0,_rawData.r,_rawData.x,&VSWR,&RL) != 1)
+    // Stored chart values come from MarkerMath::chartPoint(), the same
+    // formulas the markers read. SWR/RL repeat the previous point's when
+    // they can't be computed.
+    double prevSwr = MAX_SWR;
+    double prevRl = 0;
+    if(m_measurements.last().swrGraph.size() > 0)
     {
-        if(m_measurements.last().swrGraph.size() > 0)
-        {
-            // QCPGraphDataContainer has no .last() (2026-08-25 QCustomPlot
-            // 2.x port) -- it's a sorted-by-key vector under the hood, so
-            // its own last element is the same thing .at(size()-1) gives.
-            VSWR = m_measurements.last().swrGraph.at(m_measurements.last().swrGraph.size()-1)->value;
-            RL = m_measurements.last().rlGraph.at(m_measurements.last().rlGraph.size()-1)->value;
-        }else
-        {
-            //return;
-            VSWR = MAX_SWR;
-            RL = 0;
-        }
+        // QCPGraphDataContainer has no .last() (2026-08-25 QCustomPlot
+        // 2.x port) -- it's a sorted-by-key vector under the hood, so
+        // its own last element is the same thing .at(size()-1) gives.
+        prevSwr = m_measurements.last().swrGraph.at(m_measurements.last().swrGraph.size()-1)->value;
+        prevRl = m_measurements.last().rlGraph.at(m_measurements.last().rlGraph.size()-1)->value;
     }
+    MarkerMath::ChartPoint cp = MarkerMath::chartPoint(_rawData, m_Z0, MarkerMath::Series::Raw, prevSwr, prevRl);
     double maxSwr = m_swrWidget->yAxis->range().upper;
     double maxRs = m_rsWidget->yAxis->range().upper;
     double maxRp = m_rpWidget->yAxis->range().upper;
@@ -1070,7 +1078,7 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
 
     QCPGraphData data;
     data.key = fq;
-    data.value = regulate(VSWR, MAX_SWR);
+    data.value = cp.swr;
     //----------------------------------------------
     //----2025_0326 vnn_0327
     measurement& mm = m_measurements.last();
@@ -1193,17 +1201,17 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
 
     //qDebug() << "Measurements::on_newData" << fq << R << X;
 
-    data.value = regulate(R, VALUE_LIMIT);
+    data.value = cp.r;
     m_measurements.last().rsrGraph.add(data);
     data.value = regulate(R, maxRs);
     m_viewMeasurements.last().rsrGraph.add(data);
 
-    data.value = regulate(X, VALUE_LIMIT);
+    data.value = cp.x;
     m_measurements.last().rsxGraph.add(data);
     data.value = regulate(X, maxRs);
     m_viewMeasurements.last().rsxGraph.add(data);
 
-    data.value = regulate(Z, VALUE_LIMIT);
+    data.value = cp.z;
     m_measurements.last().rszGraph.add(data);
     data.value = regulate(Z, maxRs);
     m_viewMeasurements.last().rszGraph.add(data);
@@ -1222,49 +1230,33 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
     double Xpar = X*(1+R*R/X/X);
     double Zpar = RfMath::computeZ(Rpar, Xpar);
 
-    double rr, xx, zz;
-    data.value = regulate(Rpar, VALUE_LIMIT);
+    data.value = cp.rpar;
     m_measurements.last().rprGraph.add(data);
 
     data.value = regulate(Rpar, maxRp);
     m_viewMeasurements.last().rprGraph.add(data);
 
-    data.value = regulate(Xpar, VALUE_LIMIT);
+    data.value = cp.xpar;
     m_measurements.last().rpxGraph.add(data);
 
     data.value = regulate(Xpar, maxRp);
     m_viewMeasurements.last().rpxGraph.add(data);
 
-    data.value = regulate(Zpar, VALUE_LIMIT);
+    data.value = cp.zpar;
     m_measurements.last().rpzGraph.add(data);
     data.value = regulate(Zpar, maxRp);
     m_viewMeasurements.last().rpzGraph.add(data);
 
-    data.value = RL;
+    data.value = cp.rl;
     m_measurements.last().rlGraph.add(data);
 
 //------------------------------------------------------------------------------
 //----------------------calc phase----------------------------------------------
 //------------------------------------------------------------------------------
 
-    if (qIsNaN(_rawData.r) || (_rawData.r<0.001) )
-    {
-        _rawData.r = 0.01;
-    }
-    if (qIsNaN(_rawData.x))
-    {
-        _rawData.x = 0;
-    }
-    double Rnorm = _rawData.r/m_Z0;
-    double Xnorm = _rawData.x/m_Z0;
-    double Denom = (Rnorm+1)*(Rnorm+1)+Xnorm*Xnorm;
-    double RhoReal = ((Rnorm-1)*(Rnorm+1)+Xnorm*Xnorm)/Denom;
-    double RhoImag = 2*Xnorm/Denom;
-    double RhoPhase = atan2(RhoImag, RhoReal) / M_PI * 180.0;
-    double RhoMod = sqrt(RhoReal*RhoReal+RhoImag*RhoImag);
-    data.value = RhoPhase;
+    data.value = cp.phase;
     m_measurements.last().phaseGraph.add(data);
-    data.value = RhoMod;
+    data.value = cp.rho;
     m_measurements.last().rhoGraph.add(data);
 //------------------------------------------------------------------------------
 //----------------------calc smith----------------------------------------------
@@ -1294,51 +1286,49 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
         double calX = calibPoint.x;
         double calZ = RfMath::computeZ(calR,calX);
 
-        RfMath::computeSWR(m_Z0, calR, calX,&VSWR,&RL);
+        MarkerMath::ChartPoint cpc = MarkerMath::chartPoint(calibPoint, m_Z0, MarkerMath::Series::Calibrated,
+                                                            cp.rawSwr, cp.rawRl);
 
-        data.value = VSWR;
-        if( VSWR > MAX_SWR )
-        {
-            data.value = MAX_SWR;
-        }
+        data.value = cpc.swr;
         m_measurements.last().swrGraphCalib.add(data);
         m_viewMeasurements.last().swrGraphCalib.add(data);
 
-        data.value = regulate(calR, VALUE_LIMIT);
+        data.value = cpc.r;
         m_measurements.last().rsrGraphCalib.add(data);
         data.value = regulate(calR, maxRs);
         m_viewMeasurements.last().rsrGraphCalib.add(data);
 
-        data.value = regulate(calX, VALUE_LIMIT);
+        data.value = cpc.x;
         m_measurements.last().rsxGraphCalib.add(data);
         data.value = regulate(calX, maxRs);
         m_viewMeasurements.last().rsxGraphCalib.add(data);
 
-        data.value = regulate(calZ, VALUE_LIMIT);
+        data.value = cpc.z;
         m_measurements.last().rszGraphCalib.add(data);
         data.value = regulate(calZ, maxRs);
         m_viewMeasurements.last().rszGraphCalib.add(data);
 
 
-        double calRpar = calR*(1+calX*calX/calR/calR);
-        double calZpar = RfMath::computeZ(calRpar, calX);
+        double calRpar, calXpar;
+        RfMath::parallel(calR, calX, calRpar, calXpar);
+        double calZpar = RfMath::computeZ(calRpar, calXpar);
 
-        data.value = regulate(calRpar, VALUE_LIMIT);
+        data.value = cpc.rpar;
         m_measurements.last().rprGraphCalib.add(data);
         data.value = regulate(calRpar, maxRp);
         m_viewMeasurements.last().rprGraphCalib.add(data);
 
-        data.value = regulate(calX, VALUE_LIMIT);
+        data.value = cpc.xpar;
         m_measurements.last().rpxGraphCalib.add(data);
-        data.value = regulate(calX, maxRp);
+        data.value = regulate(calXpar, maxRp);
         m_viewMeasurements.last().rpxGraphCalib.add(data);
 
-        data.value = regulate(calZpar, VALUE_LIMIT);
+        data.value = cpc.zpar;
         m_measurements.last().rpzGraphCalib.add(data);
         data.value = regulate(calZpar, maxRp);
         m_viewMeasurements.last().rpzGraphCalib.add(data);
 
-        data.value = RL;
+        data.value = cpc.rl;
         m_measurements.last().rlGraphCalib.add(data);
 
         //----------------------calc phase---------------------------
@@ -1350,32 +1340,16 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
         {
             calX = 0;
         }
-        Rnorm = calR/m_Z0;
-        Xnorm = calX/m_Z0;
-
-        Denom = (Rnorm+1)*(Rnorm+1)+Xnorm*Xnorm;
-        RhoReal = ((Rnorm-1)*(Rnorm+1)+Xnorm*Xnorm)/Denom;
-        RhoImag = 2*Xnorm/Denom;
-
-        RhoPhase = atan2(RhoImag, RhoReal) / M_PI * 180.0;            
-        RhoMod = sqrt(RhoReal*RhoReal+RhoImag*RhoImag);
-
-        QString msg = QString("f=%1, r=%2, x=%3, RhoPhase=%4")
-                .arg(_rawData.fq, 0, 'f', 4, QLatin1Char(' '))
-                .arg(calR, 0, 'f', 4, QLatin1Char(' '))
-                .arg(calX, 0, 'f', 4, QLatin1Char(' '))
-                .arg(RhoPhase, 0, 'f', 4, QLatin1Char(' '));
-
-        data.value = RhoPhase;
+        data.value = cpc.phase;
         m_measurements.last().phaseGraphCalib.add(data);
-        data.value = RhoMod;
+        data.value = cpc.rho;
         m_measurements.last().rhoGraphCalib.add(data);
         //----------------------calc phase end---------------------------
         //----------------------calc smith-------------------------------
 
         double ptX,ptY;
         //RfMath::smithPoint(R/m_Z0, X/m_Z0, ptX, ptY);
-        RfMath::smithPoint(Rnorm, Xnorm, ptX, ptY);
+        RfMath::smithPoint(calR/m_Z0, calX/m_Z0, ptX, ptY);
         // See the uncalibrated version above (~line 1284) for why
         // m_measurements.pointIndex(), not dataRX.length().
         int len = m_measurements.pointIndex();
