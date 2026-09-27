@@ -224,7 +224,6 @@ private slots:
     void on_addCableBtn_clicked(bool checked);
     void on_cableComboBox_currentIndexChanged(int index);
     void on_themeComboBox_currentIndexChanged(int index);
-    void on_updateGraphsBtn_clicked();
     void on_aa30bootFound();
     void on_aa30updateComplete();
 

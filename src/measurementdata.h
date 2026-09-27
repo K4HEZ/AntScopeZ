@@ -19,6 +19,13 @@ struct Corrections
     RfMath::CableParams cable; // the cable model, when cableMode != 0
     double cableLossFqMHz = 1; // frequency the loss figures are given at
     bool any() const { return osl || cableMode != 0; }
+
+    // "OSL · cable −12.0 ft", or "none".
+    QString summary(bool metric) const;
+    // Short tag for a list column: "OSL", "−C", "+C", "OSL −C"; empty for none.
+    QString tag() const;
+    // Longer text for a tooltip, including the cable model.
+    QString details(bool metric) const;
 };
 
 // One measurement's real data, UI-free. The GUI's `measurement` (measurement.h)
@@ -57,9 +64,31 @@ struct MeasurementData
     QVector <UserData> dataUser;
     QStringList fieldsUser;
     Corrections applied;
-    // Calibrated points restored from a file, used by addPoint() while that
-    // file is loaded instead of the current calibration.
-    QVector<RawData> presetCalib;
+    // Corrections shown on top of the points: taken from the settings when
+    // the scan ran, or changed later per measurement. `applied` + these =
+    // what the measurement shows (its tag).
+    Corrections corrections;
+    QString analyzerSerial;       // analyzer that took it, if known
+    // The analyzer's original points when dataRX isn't them (a file saved
+    // with corrections built in); empty otherwise.
+    QVector<RawData> asReceived;
+
+    // Rebuilds dataRXCalib from dataRX with `calibration` (which must have one
+    // performed). For applying OSL after the fact.
+    void recalibrate(double Z0, Calibration* calibration);
+
+    // Everything in what's shown: built in plus on top.
+    Corrections shownCorrections() const;
+    // The points as shown (with `corrections` applied).
+    QVector<RawData> shownPoints() const
+    {
+        return exportPoints(corrections.osl, corrections.cableMode, corrections.cable);
+    }
+    // The analyzer's original points, if known.
+    const QVector<RawData>& originalPoints() const
+    {
+        return asReceived.isEmpty() && !applied.any() ? dataRX : asReceived;
+    }
 
     // A calibrated version of every point exists (or is built in).
     bool hasCalibrated() const

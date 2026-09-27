@@ -620,6 +620,10 @@ void Measurements::on_newMeasurement(QString name)
     }
 
     m_measurements.startNew(name);
+    // A scan keeps the corrections switched on now; a loaded file resets
+    // this (noteLoadedCorrections()).
+    m_measurements.last().corrections = scanCorrections();
+    m_measurements.last().analyzerSerial = (m_calibration != nullptr) ? m_calibration->getSerial() : QString();
     m_viewMeasurements.append( measurement());
     m_farEndMeasurementsAdd.append( measurement());
     m_farEndMeasurementsSub.append( measurement());
@@ -817,6 +821,8 @@ void Measurements::on_newMeasurement(QString name)
         // widened to actually read it -- user-draggable now.
         m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_NAME, QHeaderView::Interactive);
         m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_POINTS, QHeaderView::Fixed);
+        m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_CORR, QHeaderView::Fixed);
+        m_tableWidget->horizontalHeader()->resizeSection(COL_CORR, 58);
         m_tableWidget->horizontalHeader()->resizeSection(COL_VISIBLE, cell_side);
         // Wide enough for two digits (serialNumber wraps at 99, see
         // nextSerialNumber()) plus a little breathing room.
@@ -854,6 +860,12 @@ void Measurements::on_newMeasurement(QString name)
             // a *new* measurement re-populates every existing row too, so already-
             // finished ones need their real count recomputed here rather than
             // resetting to "--".
+            item = new QTableWidgetItem();
+            item->setTextAlignment(Qt::AlignCenter);
+            item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+            m_tableWidget->setItem(i,COL_CORR, item);
+            refreshCorrectionsCell(i);
+
             item = new QTableWidgetItem();
             item->setTextAlignment(Qt::AlignCenter);
             item->setText(pointsCellText(mm));
@@ -1444,78 +1456,6 @@ void Measurements::setCalibrationMode(bool enabled)
     m_calibrationMode = enabled;
 }
 
-void Measurements::on_calibrationEnabled(bool enabled)
-{
-    if(m_swrWidget->graphCount() == 1)
-    {
-        return;
-    }
-
-    int graphsCount = m_swrWidget->graphCount();
-    for(int i = 1; i < graphsCount; ++i)
-    {
-        QCPGraphDataContainer swrmap;
-        QCPGraphDataContainer rszmap;
-        QCPGraphDataContainer rsxmap;
-        QCPGraphDataContainer rsrmap;
-        QCPGraphDataContainer rpzmap;
-        QCPGraphDataContainer rpxmap;
-        QCPGraphDataContainer rprmap;
-        QCPGraphDataContainer rlmap;
-        QCPGraphDataContainer phasemap;
-        QCPCurveDataContainer smithmap;
-        int j = i-1;
-        if(enabled)
-        {
-            swrmap = m_measurements.at(j).swrGraphCalib;
-            phasemap = m_measurements.at(j).phaseGraphCalib;
-
-            rszmap = m_measurements.at(j).rszGraphCalib;
-            rsxmap = m_measurements.at(j).rsxGraphCalib;
-            rsrmap = m_measurements.at(j).rsrGraphCalib;
-
-            rpzmap = m_measurements.at(j).rpzGraphCalib;
-            rpxmap = m_measurements.at(j).rpxGraphCalib;
-            rprmap = m_measurements.at(j).rprGraphCalib;
-
-            rlmap = m_measurements.at(j).rlGraphCalib;
-            smithmap = m_measurements.at(j).smithGraphCalib;
-        }else
-        {
-            swrmap = m_measurements.at(j).swrGraph;
-            phasemap = m_measurements.at(j).phaseGraph;
-
-            rszmap = m_measurements.at(j).rszGraph;
-            rsxmap = m_measurements.at(j).rsxGraph;
-            rsrmap = m_measurements.at(j).rsrGraph;
-
-            rpzmap = m_measurements.at(j).rpzGraph;
-            rpxmap = m_measurements.at(j).rpxGraph;
-            rprmap = m_measurements.at(j).rprGraph;
-
-            rlmap = m_measurements.at(j).rlGraph;
-            smithmap = m_measurements.at(j).smithGraph;
-        }
-
-        m_swrWidget->graph(i)->setData(QSharedPointer<QCPGraphDataContainer>::create(swrmap));
-        m_phaseWidget->graph(i)->setData(QSharedPointer<QCPGraphDataContainer>::create(phasemap));
-
-        m_rsWidget->graph((i*3))->setData(QSharedPointer<QCPGraphDataContainer>::create(rszmap));
-        m_rsWidget->graph((i*3)-1)->setData(QSharedPointer<QCPGraphDataContainer>::create(rsxmap));
-        m_rsWidget->graph((i*3)-2)->setData(QSharedPointer<QCPGraphDataContainer>::create(rsrmap));
-
-        m_rpWidget->graph((i*3))->setData(QSharedPointer<QCPGraphDataContainer>::create(rpzmap));
-        m_rpWidget->graph((i*3)-1)->setData(QSharedPointer<QCPGraphDataContainer>::create(rpxmap));
-        m_rpWidget->graph((i*3)-2)->setData(QSharedPointer<QCPGraphDataContainer>::create(rprmap));
-
-        m_rlWidget->graph(i)->setData(QSharedPointer<QCPGraphDataContainer>::create(rlmap));
-        //m_smithWidget->graph(i)->setData(QSharedPointer<QCPGraphDataContainer>::create(smithmap));
-        m_measurements.at(j).smithCurve->setData(QSharedPointer<QCPCurveDataContainer>::create(smithmap));
-    }
-    replot();
-    emit calibrationChanged();
-}
-
 void Measurements::on_dotsNumberChanged(int number)
 {
     m_dotsNumber = number;
@@ -1524,6 +1464,8 @@ void Measurements::on_dotsNumberChanged(int number)
 void Measurements::on_changeMeasureSystemMetric (bool state)
 {
     m_measureSystemMetric = state;
+    for (int row = 0; row < m_measurements.size(); ++row)
+        refreshCorrectionsCell(row); // tooltip lengths
     if(m_tdrWidget->graphCount()>2)
     {
         if(m_measureSystemMetric)
@@ -1615,115 +1557,32 @@ void Measurements::on_isRangeChanged(bool _range)
 void Measurements::setZ0(double _Z0)
 {
     m_Z0 = _Z0;
+    if (m_measurements.isEmpty())
+        m_graphsZ0 = _Z0; // nothing built yet
 }
 
+// Only the derived chart series (and calibrated values) depend on the
+// system impedance, so they're rebuilt in place: every measurement keeps its
+// identity, corrections, saved state and original points. Settings emits
+// this on every close, so it does nothing unless Z0 really changed.
 void Measurements::on_impedanceChanged(double _z0)
 {
     m_Z0 = _z0;
-    qint32 len = getMeasurementLength();
+    if (_z0 == m_graphsZ0)
+        return;
+    m_graphsZ0 = _z0;
 
-    m_currentIndex -= len;
-    if (m_currentIndex < 1)
-        m_currentIndex = 0;
-
-    QList<QTableWidgetItem*> selected = m_tableWidget->selectedItems();
-    int selectedRow = selected.isEmpty() ? -1 : selected.at(0)->row();
-
-    for (int idx=0; idx<len; idx++) {
-        measurement mm = m_measurements.takeFirst();
-        QString name = mm.name;
-
-        // See Measurements::deleteRow()'s comment -- raw delete leaves the
-        // QCPCurve dangling in m_smithWidget's own plottable/legend lists.
-        m_smithWidget->removePlottable(mm.smithCurve);
-        m_smithWidget->removePlottable(m_viewMeasurements.takeFirst().smithCurve);
-        m_smithWidget->removePlottable(m_farEndMeasurementsAdd.takeFirst().smithCurve);
-        m_smithWidget->removePlottable(m_farEndMeasurementsSub.takeFirst().smithCurve);
-        m_swrWidget->removeGraph(1);
-        m_phaseWidget->removeGraph(1);
-
-        m_rsWidget->removeGraph(1);
-        m_rsWidget->removeGraph(1);
-        m_rsWidget->removeGraph(1);
-
-        m_rpWidget->removeGraph(1);
-        m_rpWidget->removeGraph(1);
-        m_rpWidget->removeGraph(1);
-
-        m_s21Widget->removeGraph(1); // 4 graphs per measurement now, not 2 -- see deleteRow()'s own comment
-        m_s21Widget->removeGraph(1);
-        m_s21Widget->removeGraph(1);
-        m_s21Widget->removeGraph(1);
-
-        m_rlWidget->removeGraph(1);
-
-        m_tdrWidget->removeGraph(1);
-        m_tdrWidget->removeGraph(1);
-        m_tdrWidget->removeGraph(1);
-
-        on_newMeasurement(name, mm.qint64From, mm.qint64To, mm.qint64Dots);
-        for (int i=0; i<mm.dataRX.size(); i++) {
-            on_newData(mm.dataRX.at(i));
-        }
-        // Same restore, for 2-port data -- on_newMeasurement() just added
-        // 4 fresh, empty S21 graphs (removed above along with the old
-        // ones), and nothing else repopulates them; without this, any
-        // .s2p import's S21 tab goes blank the moment anything triggers
-        // this reconstruction (e.g. closing Settings, which
-        // unconditionally emits Z0Changed -- see Settings::~Settings())
-        // even though mm.dataSParam itself was never actually lost.
-        if (!mm.dataSParam.isEmpty()) {
-            populateSParamData(mm.dataSParam);
-        }
-
-        // on_newMeasurement() above just re-added this row with an empty
-        // dataRX, so its COL_POINTS cell was rebuilt showing "--" (same as
-        // any brand-new in-progress scan). The on_newData() loop just
-        // finished replaying every point back into it, but on_newData()
-        // itself never touches COL_POINTS (only on_measurementComplete()
-        // normally does that, and this reconstruction never calls it) --
-        // without this, a completed measurement's point count would revert
-        // to "--" every time impedance changes (e.g. closing Settings,
-        // which unconditionally emits Z0Changed in its destructor) even
-        // though the data was never actually lost.
-        int row = m_tableWidget->rowCount() - 1;
-        if (row >= 0 && m_tableWidget->item(row, COL_POINTS) != nullptr)
-            m_tableWidget->item(row, COL_POINTS)->setText(pointsCellText(mm));
-
-        // restore user data
-#if USER_DEFINED_FEATURE
-        {
-            int count = mm.userGraphs.size();
-            for (int i=0; i<count; i++)
-                m_userWidget->removeGraph(1);
-            on_newUserDataHeader(mm.fieldsUser);
-            for (int iu=0; iu<mm.dataUser.size(); iu++) {
-                UserData _userData = mm.dataUser.at(iu);
-                m_measurements.last().dataUser.append(_userData);
-                for (int idx=0; idx<_userData.values.size(); idx++) {
-                    QCPGraphData qcpData;
-                    qcpData.key = _userData.fq*1000;
-                    qcpData.value = _userData.values.at(idx);
-                    QCPGraphDataContainer* map = m_measurements.last().userGraphs.at(idx);
-                    map->add(qcpData);
-                    QCPGraphDataContainer* vmap = m_viewMeasurements.last().userGraphs.at(idx);
-                    vmap->add(qcpData);
-                }
-                QVector <double> x,y;
-                x.append(_userData.fq*1000);
-                x.append(_userData.fq*1000);
-                y.append(m_userWidget->yAxis->range().lower);
-                y.append(m_userWidget->yAxis->range().upper);
-                m_userWidget->graph(0)->setData(x,y);
-            }
-        }
-#endif
+    for (int row = 0; row < m_measurements.size(); ++row) {
+        measurement& m = m_measurements[row];
+        // Calibrated values are relative to Z0 -- redo them with the same
+        // analyzer's calibration when it's the one connected.
+        if (!m.applied.osl && m.hasCalibrated() && m_calibration != nullptr
+            && m_calibration->getCalibrationPerformed()
+            && (m.analyzerSerial.isEmpty() || m.analyzerSerial == m_calibration->getSerial()))
+            m.recalibrate(m_Z0, m_calibration);
+        rebuildRowGraphs(row);
     }
-    m_measurements.setInProgress(false);
-    if ( selectedRow != -1) {
-        m_tableWidget->selectRow(selectedRow);
-        emit selectMeasurement(selectedRow, 0);
-    }
+    on_redrawGraphs();
 }
 
 bool Measurements::on_measurementComplete()
@@ -1797,3 +1656,15 @@ void Measurements::toggleVisibility(int row, bool _state)
     replot();
 }
 
+// Corr. column: the corrections this measurement shows.
+void Measurements::refreshCorrectionsCell(int row)
+{
+    if (m_tableWidget == nullptr || row < 0 || row >= m_measurements.size()
+        || row >= m_tableWidget->rowCount() || m_tableWidget->item(row, COL_CORR) == nullptr)
+        return;
+    Corrections c = m_measurements.at(row).shownCorrections();
+    bool metric = m_measureSystemMetric;
+    QTableWidgetItem* item = m_tableWidget->item(row, COL_CORR);
+    item->setText(c.tag());
+    item->setToolTip(c.details(metric));
+}

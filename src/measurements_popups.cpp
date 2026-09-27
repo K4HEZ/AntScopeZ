@@ -111,14 +111,17 @@ void Measurements::on_newCursorFq(double x, int number, int mouseX, int mouseY)
 
 void Measurements::on_newCursorSmithPos (double x, double y, int index)
 {
+    // The series this row's Smith curve shows (see redrawSmith()).
     QCPCurveDataContainer map;
-    if((m_calibration != NULL) && (m_calibration->getCalibrationEnabled()))
-    {
+    int rowCab = rowCable(index);
+    if (rowCab == 1)
+        map = m_farEndMeasurementsSub.at(index).smithGraph;
+    else if (rowCab == 2)
+        map = m_farEndMeasurementsAdd.at(index).smithGraph;
+    else if (rowOsl(index))
         map = m_measurements.at(index).smithGraphCalib;
-    }else
-    {
+    else
         map = m_measurements.at(index).smithGraph;
-    }
     // QCPCurveDataContainer has no .values() (2026-08-25 QCustomPlot 2.x
     // port) -- it's already index-accessible directly, no QList copy needed.
     if(map.isEmpty())
@@ -159,13 +162,7 @@ void Measurements::on_newCursorSmithPos (double x, double y, int index)
 
 
     QCPGraphDataContainer *swrmap;
-    if((m_calibration != NULL) && (m_calibration->getCalibrationEnabled()))
-    {
-        swrmap = &(m_measurements[index].swrGraphCalib);
-    }else
-    {
-        swrmap = &(m_measurements[index].swrGraph);
-    }
+    swrmap = rowOsl(index) ? &(m_measurements[index].swrGraphCalib) : &(m_measurements[index].swrGraph);
     // No .keys() on QCPGraphDataContainer (2026-08-25 QCustomPlot 2.x
     // port) -- swrmap->at(n) replaces swrmap->at(n)->key directly below.
 
@@ -190,11 +187,11 @@ void Measurements::on_newCursorSmithPos (double x, double y, int index)
 
     // Every value from one series: cable-corrected when add/subtract is on
     // (built from already-calibrated points), else calibrated or plain.
-    bool farEnd = (m_farEndMeasurement == 1 || m_farEndMeasurement == 2);
-    const measurement& src = (m_farEndMeasurement == 1) ? m_farEndMeasurementsSub.at(index)
-                           : (m_farEndMeasurement == 2) ? m_farEndMeasurementsAdd.at(index)
+    bool farEnd = (rowCab != 0);
+    const measurement& src = (rowCab == 1) ? m_farEndMeasurementsSub.at(index)
+                           : (rowCab == 2) ? m_farEndMeasurementsAdd.at(index)
                            : m_measurements.at(index);
-    bool calib = !farEnd && m_calibration->getCalibrationEnabled();
+    bool calib = !farEnd && rowOsl(index);
     rho = graphValueAt(calib ? src.rhoGraphCalib : src.rhoGraph, frequency);
     phase = graphValueAt(calib ? src.phaseGraphCalib : src.phaseGraph, frequency);
     swr = graphValueAt(calib ? src.swrGraphCalib : src.swrGraph, frequency);
@@ -299,7 +296,7 @@ void Measurements::on_newCursorSmithPos (double x, double y, int index)
         fields << qMakePair(tr("Cpar"), QString::number(cpar,'f', 2) + " pF");
     }
 
-    if(!m_farEndMeasurement)
+    if(rowCable(index) == 0)
     {
         QString lenUnits;
         if(m_measureSystemMetric)
@@ -359,7 +356,7 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
             double pdTdrImp;
             double pdTdrStep;
             double pdTdrZ;
-            if(m_farEndMeasurement == 1)
+            if(rowCable(index) == 1)
             {
                 if(m_measureSystemMetric)
                 {
@@ -372,7 +369,7 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
                     tdrmapStep = &(m_farEndMeasurementsSub[index].tdrStepGraphFeet);
                     tdrmapZ = &(m_farEndMeasurementsSub[index].tdrZGraphFeet);
                 }
-            }else if(m_farEndMeasurement == 2)
+            }else if(rowCable(index) == 2)
             {
                 if(m_measureSystemMetric)
                 {
@@ -687,13 +684,7 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
             }
 
             QCPGraphDataContainer *swrmap;
-            if((m_calibration != NULL) && (m_calibration->getCalibrationEnabled()))
-            {
-                swrmap = &(m_measurements[index].swrGraphCalib);
-            }else
-            {
-                swrmap = &(m_measurements[index].swrGraph);
-            }
+            swrmap = rowOsl(index) ? &(m_measurements[index].swrGraphCalib) : &(m_measurements[index].swrGraph);
             // No .keys() on QCPGraphDataContainer (2026-08-25
             // QCustomPlot 2.x port) -- swrmap->at(n)->key replaces
             // the old swrkeys snapshot's at(n) directly below.
@@ -762,11 +753,12 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
                         int dataSize = m_measurements.at(index).dataRX.size();
 
                         // Same series rule as the Smith popup above.
-                        bool farEnd = (m_farEndMeasurement == 1 || m_farEndMeasurement == 2);
-                        const measurement& src = (m_farEndMeasurement == 1) ? m_farEndMeasurementsSub.at(index)
-                                               : (m_farEndMeasurement == 2) ? m_farEndMeasurementsAdd.at(index)
+                        int rowCab = rowCable(index);
+                        bool farEnd = (rowCab != 0);
+                        const measurement& src = (rowCab == 1) ? m_farEndMeasurementsSub.at(index)
+                                               : (rowCab == 2) ? m_farEndMeasurementsAdd.at(index)
                                                : m_measurements.at(index);
-                        bool calib = !farEnd && m_calibration->getCalibrationEnabled();
+                        bool calib = !farEnd && rowOsl(index);
                         swr = graphValueAt(calib ? src.swrGraphCalib : src.swrGraph, frequency);
                         rl = graphValueAt(calib ? src.rlGraphCalib : src.rlGraph, frequency);
                         rho = graphValueAt(calib ? src.rhoGraphCalib : src.rhoGraph, frequency);
@@ -1017,7 +1009,7 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
                 fields << qMakePair(tr("Cpar"), QString::number(cpar,'f', 2) + " pF");
             }
 
-            if(!m_farEndMeasurement)
+            if(rowCable(index) == 0)
             {
                 QString lenUnits;
                 if(m_measureSystemMetric)

@@ -98,21 +98,7 @@ Type: --</string>
       </font>
      </property>
      <property name="text">
-      <string>Apply AntScopeZ Corrections</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QCheckBox" name="oslCheckBox">
-     <property name="text">
-      <string>OSL calibration</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QCheckBox" name="cableCheckBox">
-     <property name="text">
-      <string>Cable add/subtract</string>
+      <string>AntScopeZ Corrections</string>
      </property>
     </widget>
    </item>

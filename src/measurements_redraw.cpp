@@ -30,10 +30,7 @@ void Measurements::on_redrawGraphs(bool _incrementally)
         return;
     }
 
-    if(m_farEndMeasurement)
-    {
-        calcFarEnd(_incrementally);
-    }
+    calcFarEnd(_incrementally); // rows with cable add/subtract only
 
     if( m_currentTab == "tab_swr")//SWR
     {
@@ -432,67 +429,49 @@ void Measurements::redrawSWR(bool _incrementally)
     if (m_measurements.isEmpty())
         return;
     int i = _incrementally ? (m_measurements.length()-1) : 0;
-    if (m_calibration->getCalibrationEnabled())
+    for(; i < m_measurements.length(); ++i)
     {
-        if(m_farEndMeasurement != 0)
+        int cable = rowCable(i);
+        const QCPGraphDataContainer* feSwr = (cable == 1) ? &m_farEndMeasurementsSub[i].swrGraph
+                                           : (cable == 2) ? &m_farEndMeasurementsAdd[i].swrGraph : nullptr;
+        if (rowOsl(i))
         {
-            for(; i < m_measurements.length(); ++i)
-            {
-                m_swrWidget->graph(i+1)->setData(QSharedPointer<QCPGraphDataContainer>::create(m_farEndMeasurement == 1 ? m_farEndMeasurementsSub[i].swrGraph : m_farEndMeasurementsAdd[i].swrGraph));
-            }
-        }else
-        {
-            for(; i < m_measurements.length(); ++i)
-            {
-                m_swrWidget->graph(i+1)->setData(QSharedPointer<QCPGraphDataContainer>::create(m_measurements[i].swrGraphCalib));
-            }
+            // Calibrated rows plot their series directly.
+            m_swrWidget->graph(i+1)->setData(QSharedPointer<QCPGraphDataContainer>::create(
+                feSwr != nullptr ? *feSwr : m_measurements[i].swrGraphCalib));
+            continue;
         }
-    } else {
-        for(; i < m_measurements.length(); ++i)
-        {
-            if (!_incrementally)
-                m_viewMeasurements[i].swrGraph.clear();
 
-            QCPGraphDataContainer *map;
-            switch (m_farEndMeasurement) {
-            case 1:
-                map = &m_farEndMeasurementsSub[i].swrGraph;
-                break;
-            case 2:
-                map = &m_farEndMeasurementsAdd[i].swrGraph;
-                break;
-            default:
-                map = &m_measurements[i].swrGraph;
-                break;
-            }
-            // No .keys() on QCPGraphDataContainer (2026-08-25 QCustomPlot
-            // 2.x port) -- map->at(n) replaces list.at(n)/map->value(...)
-            // directly, same self-referencing walk as the Rs/Rp blocks
-            // above.
-            if (map->isEmpty())
-                continue;
-            QCPGraphData data;
-            QCPGraphData viewData;
-            double maxSwr = MAX_SWR;//m_swrWidget->yAxis->range().upper;
-            int n = _incrementally ? (map->size()-1) : 0;
-            for(; n < map->size(); ++n)
+        if (!_incrementally)
+            m_viewMeasurements[i].swrGraph.clear();
+
+        const QCPGraphDataContainer *map = feSwr != nullptr ? feSwr : &m_measurements[i].swrGraph;
+        // No .keys() on QCPGraphDataContainer (2026-08-25 QCustomPlot
+        // 2.x port) -- map->at(n) replaces list.at(n)/map->value(...)
+        // directly, same self-referencing walk as the Rs/Rp blocks.
+        if (map->isEmpty())
+            continue;
+        QCPGraphData data;
+        QCPGraphData viewData;
+        double maxSwr = MAX_SWR;//m_swrWidget->yAxis->range().upper;
+        int n = _incrementally ? (map->size()-1) : 0;
+        for(; n < map->size(); ++n)
+        {
+            data.key = map->at(n)->key;
+            viewData = *map->at(n);
+            if( viewData.value > maxSwr || viewData.value < 1)
             {
-                data.key = map->at(n)->key;
-                viewData = *map->at(n);
-                if( viewData.value > maxSwr || viewData.value < 1)
-                {
-                    data.value = maxSwr;
-                }else
-                {
-                    data.value = viewData.value;
-                }
-                m_viewMeasurements[i].swrGraph.add(data);
+                data.value = maxSwr;
+            }else
+            {
+                data.value = viewData.value;
             }
-            if (!_incrementally) {
-                m_swrWidget->graph(i+1)->setData(QSharedPointer<QCPGraphDataContainer>::create(m_viewMeasurements[i].swrGraph));
-            } else {
-                m_swrWidget->graph(i+1)->addData(m_viewMeasurements[i].swrGraph.at(m_viewMeasurements[i].swrGraph.size()-1)->key, m_viewMeasurements[i].swrGraph.at(m_viewMeasurements[i].swrGraph.size()-1)->value);
-            }
+            m_viewMeasurements[i].swrGraph.add(data);
+        }
+        if (!_incrementally) {
+            m_swrWidget->graph(i+1)->setData(QSharedPointer<QCPGraphDataContainer>::create(m_viewMeasurements[i].swrGraph));
+        } else {
+            m_swrWidget->graph(i+1)->addData(m_viewMeasurements[i].swrGraph.at(m_viewMeasurements[i].swrGraph.size()-1)->key, m_viewMeasurements[i].swrGraph.at(m_viewMeasurements[i].swrGraph.size()-1)->value);
         }
     }
     replot();
@@ -504,21 +483,14 @@ void Measurements::redrawPhase(bool _incrementally)
 {
     if (m_measurements.isEmpty())
         return;
-    bool calibr = m_calibration->getCalibrationEnabled();
     int i = _incrementally ? (m_measurements.length()-1) : 0;
-
-    if(m_farEndMeasurement != 0)
+    for(; i < m_measurements.length(); ++i)
     {
-        for(; i < m_measurements.length(); ++i)
-        {
-            m_phaseWidget->graph(i+1)->setData(QSharedPointer<QCPGraphDataContainer>::create(m_farEndMeasurement == 1 ? m_farEndMeasurementsSub[i].phaseGraph : m_farEndMeasurementsAdd[i].phaseGraph));
-        }
-    }else
-    {
-        for(; i < m_measurements.length(); ++i)
-        {
-            m_phaseWidget->graph(i+1)->setData(QSharedPointer<QCPGraphDataContainer>::create(calibr ? m_measurements[i].phaseGraphCalib : m_measurements[i].phaseGraph));
-        }
+        int cable = rowCable(i);
+        const QCPGraphDataContainer& g = (cable == 1) ? m_farEndMeasurementsSub[i].phaseGraph
+                                       : (cable == 2) ? m_farEndMeasurementsAdd[i].phaseGraph
+                                       : (rowOsl(i) ? m_measurements[i].phaseGraphCalib : m_measurements[i].phaseGraph);
+        m_phaseWidget->graph(i+1)->setData(QSharedPointer<QCPGraphDataContainer>::create(g));
     }
     replot();
 }
@@ -527,7 +499,6 @@ void Measurements::redrawRs(bool _incrementally)
 {
     if (m_measurements.isEmpty())
         return;
-    bool calibr = m_calibration->getCalibrationEnabled();
     int i = _incrementally ? (m_measurements.length()-1) : 0;
 
     double maxVal = m_rsWidget->yAxis->range().upper;
@@ -543,21 +514,16 @@ void Measurements::redrawRs(bool _incrementally)
             m_viewMeasurements[i].rszGraph.clear();
         }
 
-        if(m_farEndMeasurement)
+        int cable = rowCable(i);
+        if (cable != 0)
         {
-            if(m_farEndMeasurement == 1)
-            {
-                rMap = m_farEndMeasurementsSub[i].rsrGraph;
-                xMap = m_farEndMeasurementsSub[i].rsxGraph;
-                zMap = m_farEndMeasurementsSub[i].rszGraph;
-            }else if (m_farEndMeasurement == 2)
-            {
-                rMap = m_farEndMeasurementsAdd[i].rsrGraph;
-                xMap = m_farEndMeasurementsAdd[i].rsxGraph;
-                zMap = m_farEndMeasurementsAdd[i].rszGraph;
-            }
+            measurement& fe = (cable == 1) ? m_farEndMeasurementsSub[i] : m_farEndMeasurementsAdd[i];
+            rMap = fe.rsrGraph;
+            xMap = fe.rsxGraph;
+            zMap = fe.rszGraph;
         }else
         {
+            bool calibr = rowOsl(i);
             rMap = calibr ? m_measurements[i].rsrGraphCalib : m_measurements[i].rsrGraph;
             xMap = calibr ? m_measurements[i].rsxGraphCalib : m_measurements[i].rsxGraph;
             zMap = calibr ? m_measurements[i].rszGraphCalib : m_measurements[i].rszGraph;
@@ -607,7 +573,6 @@ void Measurements::redrawRp(bool _incrementally)
 
     //qint64 t0 = QDateTime::currentMSecsSinceEpoch();
 
-    bool calibr = m_calibration->getCalibrationEnabled();
     int i = _incrementally ? (m_measurements.length()-1) : 0;
 
     double maxVal = m_rpWidget->yAxis->range().upper;
@@ -623,21 +588,16 @@ void Measurements::redrawRp(bool _incrementally)
             m_viewMeasurements[i].rpzGraph.clear();
         }
 
-        if(m_farEndMeasurement)
+        int cable = rowCable(i);
+        if (cable != 0)
         {
-            if(m_farEndMeasurement == 1)
-            {
-                rMap = m_farEndMeasurementsSub[i].rprGraph;
-                xMap = m_farEndMeasurementsSub[i].rpxGraph;
-                zMap = m_farEndMeasurementsSub[i].rpzGraph;
-            }else if (m_farEndMeasurement == 2)
-            {
-                rMap = m_farEndMeasurementsAdd[i].rprGraph;
-                xMap = m_farEndMeasurementsAdd[i].rpxGraph;
-                zMap = m_farEndMeasurementsAdd[i].rpzGraph;
-            }
+            measurement& fe = (cable == 1) ? m_farEndMeasurementsSub[i] : m_farEndMeasurementsAdd[i];
+            rMap = fe.rprGraph;
+            xMap = fe.rpxGraph;
+            zMap = fe.rpzGraph;
         }else
         {
+            bool calibr = rowOsl(i);
             rMap = calibr ? m_measurements[i].rprGraphCalib : m_measurements[i].rprGraph;
             xMap = calibr ? m_measurements[i].rpxGraphCalib : m_measurements[i].rpxGraph;
             zMap = calibr ? m_measurements[i].rpzGraphCalib : m_measurements[i].rpzGraph;
@@ -680,21 +640,14 @@ void Measurements::redrawRl(bool _incrementally)
 {
     if (m_measurements.isEmpty())
         return;
-    bool calibr = m_calibration->getCalibrationEnabled();
     int i = _incrementally ? (m_measurements.length()-1) : 0;
-
-    if(m_farEndMeasurement != 0)
+    for(; i < m_measurements.length(); ++i)
     {
-        for(; i < m_measurements.length(); ++i)
-        {
-            m_rlWidget->graph(i+1)->setData(QSharedPointer<QCPGraphDataContainer>::create(m_farEndMeasurement == 1 ? m_farEndMeasurementsSub[i].rlGraph : m_farEndMeasurementsAdd[i].rlGraph));
-        }
-    }else
-    {
-        for(; i < m_measurements.length(); ++i)
-        {
-            m_rlWidget->graph(i+1)->setData(QSharedPointer<QCPGraphDataContainer>::create(calibr ? m_measurements[i].rlGraphCalib : m_measurements[i].rlGraph));
-        }
+        int cable = rowCable(i);
+        const QCPGraphDataContainer& g = (cable == 1) ? m_farEndMeasurementsSub[i].rlGraph
+                                       : (cable == 2) ? m_farEndMeasurementsAdd[i].rlGraph
+                                       : (rowOsl(i) ? m_measurements[i].rlGraphCalib : m_measurements[i].rlGraph);
+        m_rlWidget->graph(i+1)->setData(QSharedPointer<QCPGraphDataContainer>::create(g));
     }
     replot();
 }
@@ -740,37 +693,17 @@ void Measurements::redrawSmith(bool _incrementally)
 {
     if (m_measurements.isEmpty())
         return;
-    bool calibr = m_calibration->getCalibrationEnabled();
     int i = _incrementally ? (m_measurements.length()-1) : 0;
-
-    if(m_farEndMeasurement)
+    for(; i < m_measurements.length(); ++i)
     {
-        if(m_farEndMeasurement == 1)
-        {
-            for(; i < m_measurements.length(); ++i)
-            {
-                if (m_measurements[i].visible) {
-                    m_measurements[i].smithCurve->setData(QSharedPointer<QCPCurveDataContainer>::create(calibr ? m_farEndMeasurementsSub[i].smithGraphCalib : m_farEndMeasurementsSub[i].smithGraph));
-                }
-            }
-        }else if(m_farEndMeasurement == 2)
-        {
-            for(; i < m_measurements.length(); ++i)
-            {
-                if (m_measurements[i].visible) {
-                    m_measurements[i].smithCurve->setData(QSharedPointer<QCPCurveDataContainer>::create(calibr ? m_farEndMeasurementsAdd[i].smithGraphCalib : m_farEndMeasurementsAdd[i].smithGraph));
-                }
-            }
-        }
-    }else
-    {
-        for(; i < m_measurements.length(); ++i)
-        {
-            if (m_measurements[i].visible) {
-                m_measurements[i].smithCurve->setData(QSharedPointer<QCPCurveDataContainer>::create(m_measurements[i].smithGraphViewCalib));
-                m_measurements[i].smithCurve->setData(QSharedPointer<QCPCurveDataContainer>::create(calibr ? m_measurements[i].smithGraphViewCalib : m_measurements[i].smithGraphView));
-            }
-        }
+        if (!m_measurements[i].visible)
+            continue;
+        // Cable-corrected series are built from calibrated points already.
+        int cable = rowCable(i);
+        const QCPCurveDataContainer& c = (cable == 1) ? m_farEndMeasurementsSub[i].smithGraph
+                                       : (cable == 2) ? m_farEndMeasurementsAdd[i].smithGraph
+                                       : (rowOsl(i) ? m_measurements[i].smithGraphViewCalib : m_measurements[i].smithGraphView);
+        m_measurements[i].smithCurve->setData(QSharedPointer<QCPCurveDataContainer>::create(c));
     }
     replot();
 }

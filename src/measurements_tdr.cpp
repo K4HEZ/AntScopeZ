@@ -145,16 +145,16 @@ void Measurements::updateTDRProgress(int dots)
 void Measurements::redrawTDR(int _index, bool resetRange)
 {
     m_tdrZRange = 0;
-    int mode = m_farEndMeasurement;
     int begin = _index < 0 ? 0 : _index;
     int end = _index < 0 ? m_measurements.length() : (_index+1);
     for (int index=begin; index<end; index++) {
+        int mode = rowCable(index);
         measurement& mm = (mode == 1)
                 ? m_farEndMeasurementsSub[index]
                 : ( (mode == 2) ? m_farEndMeasurementsAdd[index] : m_measurements[index] );
 
         // Cable-corrected points already include calibration (see calcFarEnd()).
-        bool calib = (mode != 1 && mode != 2) && m_calibration->getCalibrationEnabled();
+        bool calib = (mode == 0) && rowOsl(index);
         int len = CalcTdr(calib ? &mm.dataRXCalib : &mm.dataRX);
         if (len <= 0)
         {
@@ -248,7 +248,7 @@ Measurements::TdrPeak Measurements::findTdrPeak(bool metric, double localVf)
     // getMeasurementLength()-1.
     int mostRecent = 0;
     measurement* mm;
-    switch (getFarEndMeasurement()) {
+    switch (rowCable(m_measurements.length()-1)) {
     case 1: mm = getMeasurementSub(mostRecent); break;
     case 2: mm = getMeasurementAdd(mostRecent); break;
     default: mm = last(); break;

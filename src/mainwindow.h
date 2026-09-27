@@ -41,7 +41,7 @@
 
 
 
-#define MEASUREMENTS_TABLE_COLUMNS 4
+#define MEASUREMENTS_TABLE_COLUMNS 5
 // Order here is the on-screen column order (every table-building/-updating
 // site uses these symbolic names, not hardcoded indices, so reordering the
 // enum alone reorders the columns). COL_MENU (the rename pencil) removed
@@ -61,6 +61,9 @@ enum {
     // both show marker "#"=1).
     COL_SERIAL,
     COL_NAME,
+    // AntScopeZ corrections this measurement shows (Corrections::tag()),
+    // details in the tooltip.
+    COL_CORR,
     // Actual points received for that scan (Measurements::on_measurementComplete()) --
     // "--" until the scan finishes. Added to make a device silently returning
     // fewer points than requested (see analyzer/nanovna_analyzer.cpp,
@@ -224,7 +227,12 @@ private:
     // of for other fields planned to live here later.
     QLabel *m_connectionStatusLabel = nullptr;
     QLabel *m_statusLabel = nullptr;
+    // Middle field: the corrections new scans will get.
+    QLabel *m_correctionsStatusLabel = nullptr;
     void updateConnectionStatusLabel();
+public:
+    void updateCorrectionsStatusLabel();
+private:
 
     bool m_isContinuos = false;
     int m_dotsNumber = 50;
@@ -391,6 +399,7 @@ private:
     // toggleVisibility() directly so the existing itemChanged handler
     // (mainwindow.cpp) stays the single place that reacts to it.
     void toggleMeasurementVisibility(int row);
+    void openCorrectionsDialog(int row);
     // Populates menuEdit with QMenu::addSection() group headers -- called
     // once from the constructor. See m_editSectionPresets's comment.
     void buildEditMenu();

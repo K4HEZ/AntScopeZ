@@ -63,41 +63,9 @@ void Export::updateDetails()
 
     // The 2-port formats are only listed for a measurement with 2-port
     // data; the 1-port ones always are (its S11 is still valid 1-port data).
-    updateCorrections(mm);
+    m_corrections = (mm != nullptr) ? mm->shownCorrections() : Corrections();
     buildFormats(isTwoPort);
     adjustSize();
-}
-
-// Each box starts checked when that correction is switched on; greyed out
-// when it isn't available for this measurement; checked and locked when the
-// measurement already has it built in (a file saved that way).
-void Export::updateCorrections(const measurement* mm)
-{
-    Corrections cur = m_measurements != nullptr ? m_measurements->currentCorrections() : Corrections();
-
-    bool oslBuiltIn = mm != nullptr && mm->applied.osl;
-    bool oslAvail = mm != nullptr && mm->hasCalibrated();
-    ui->oslCheckBox->setChecked(oslBuiltIn || (oslAvail && cur.osl));
-    ui->oslCheckBox->setEnabled(oslAvail && !oslBuiltIn);
-    ui->oslCheckBox->setText(oslBuiltIn ? tr("OSL calibration (already applied)")
-                             : oslAvail ? tr("OSL calibration")
-                             : tr("OSL calibration (not available for this measurement)"));
-
-    int builtInCable = mm != nullptr ? mm->applied.cableMode : 0;
-    QString mode = [](int m) {
-        return m == 1 ? tr("Cable subtract") : m == 2 ? tr("Cable add") : tr("Cable add/subtract");
-    }(builtInCable != 0 ? builtInCable : cur.cableMode);
-    ui->cableCheckBox->setChecked(builtInCable != 0 || cur.cableMode != 0);
-    ui->cableCheckBox->setEnabled(builtInCable == 0 && cur.cableMode != 0);
-    if (builtInCable != 0) {
-        ui->cableCheckBox->setText(tr("%1 (already applied)").arg(mode));
-    } else if (cur.cableMode != 0) {
-        bool metric = AppConfig::get().measureSystemMetric;
-        double len = metric ? cur.cable.lengthFeet / FEETINMETER : cur.cable.lengthFeet;
-        ui->cableCheckBox->setText(tr("%1 (%2 %3)").arg(mode).arg(len, 0, 'f', 2).arg(metric ? tr("m") : tr("ft")));
-    } else {
-        ui->cableCheckBox->setText(tr("Cable add/subtract (off in Settings > Cable)"));
-    }
 }
 
 QString Export::suggestedPath(const QString &ext) const
@@ -197,16 +165,24 @@ void Export::onFormatChanged()
         return;
     ui->formatDescription->setText(f->description);
 
-    bool corrections = (f->kind == Kind::OnePort);
-    ui->oslCheckBox->setVisible(corrections);
-    ui->cableCheckBox->setVisible(corrections);
-    if (f->kind == Kind::Asd)
-        ui->correctionsNote->setText(tr("Not needed: AntScopeZ files keep the complete measurement, "
-                                        "corrected and uncorrected."));
-    else if (f->kind == Kind::TwoPort)
-        ui->correctionsNote->setText(tr("2-port data isn't affected by AntScopeZ corrections."));
-    else
-        ui->correctionsNote->setText(tr("The analyzer's own calibration, if any, is always included."));
+    // Every format saves the measurement as shown.
+    QString summary = m_corrections.summary(AppConfig::get().measureSystemMetric);
+    QString note;
+    switch (f->kind) {
+    case Kind::Asd:
+        note = tr("Saved as shown: %1. The analyzer's original points are kept too.").arg(summary);
+        break;
+    case Kind::TwoPort:
+        note = tr("2-port data isn't affected by AntScopeZ corrections.");
+        break;
+    case Kind::OnePort:
+        note = tr("Saved as shown: %1.").arg(summary);
+        if (m_corrections.any() && f->ext != "s1p")
+            note += " " + tr("This format can't record that -- consider noting it in the file name.");
+        break;
+    }
+    note += "\n" + tr("The analyzer's own calibration, if any, is always included.");
+    ui->correctionsNote->setText(note);
     adjustSize();
 }
 
@@ -228,8 +204,7 @@ void Export::onSave()
         m_measurements->saveData(m_measureNumber, path);
         break;
     case Kind::OnePort:
-        m_measurements->exportData(path, f->type, m_measureNumber,
-                                   ui->oslCheckBox->isChecked(), ui->cableCheckBox->isChecked());
+        m_measurements->exportData(path, f->type, m_measureNumber);
         break;
     case Kind::TwoPort:
         m_measurements->exportSParamData(path, f->type, m_measureNumber);

@@ -144,10 +144,18 @@ public:
     // measurement::serialNumber's assigner -- max used + 1, wrap at 99.
     // Runs for every new measurement (scan or loaded file).
 
-    // Writes .s1p/.csv/.nwl with the chosen AntScopeZ corrections applied.
-    void exportData(QString _name, int _type, int _number, bool _applyOsl, bool _applyCable);
+    // Writes .s1p/.csv/.nwl: the measurement as shown (with its corrections).
+    void exportData(QString _name, int _type, int _number);
     // Corrections currently switched on (Calibration checkbox, Settings > Cable).
     Corrections currentCorrections() const;
+    // What a scan started now gets (OSL only if a calibration exists).
+    Corrections scanCorrections() const;
+    // Per-measurement corrections. `row` is a plain m_measurements index.
+    bool rowOsl(int row) const;   // shows its calibrated series
+    int rowCable(int row) const;  // 0 none, 1 subtracted, 2 added
+    // Same, indexed like getMeasurement() (0 = newest).
+    bool shownOsl(int number);
+    const QVector<RawData>* shownFarEnd(int number); // cable-corrected points, or nullptr
     // 2-port Touchstone (.s2p) export -- straight from dataSParam (real
     // S11/S21/S12/S22, already Z0-normalized at import time), not derived
     // from dataRX like exportData() above. Silently does nothing if the
@@ -355,6 +363,7 @@ private:
     volatile bool m_calibrationMode;
 
     double m_Z0;
+    double m_graphsZ0 = 50; // Z0 the stored chart series were built with
 
     // Last CalcTdr() output, one entry per FFT bin.
     QVector<double> m_tdrImp;
@@ -469,6 +478,7 @@ private:
 
     void calcFarEnd(bool _incrementally=false);
     RawData calcFarEnd(const RawData& data, int idx, bool refreshGraphs=true);
+    RawData calcFarEnd(const RawData& data, int idx, bool refreshGraphs, int mode, const RfMath::CableParams& cable);
     void restrictData(qreal _min, qreal _max, QCPGraphData& _data);
     void redrawSWR(bool _incrementally);
     void redrawPhase(bool _incrementally);
@@ -485,6 +495,19 @@ private:
     void redrawSmith(bool _incrementally);
     void redrawUser(bool _incrementally);
     void noteLoadedCorrections(const Corrections& applied);
+public:
+    void refreshCorrectionsCell(int row);
+
+    // Per-measurement "Corrections..." (MainWindow's Measurements menu).
+    // What `row` can have applied; `why` explains anything that can't.
+    bool canApplyOsl(int row, QString* why) const;
+    bool canRemoveBuiltIn(int row) const; // original points are available
+    // Applies `c` to `row` from its original points, or to a new copy of it.
+    void applyCorrections(int row, const Corrections& c, bool asCopy);
+private:
+    // Rebuilds a row's stored chart series from its points (raw and
+    // calibrated), the same way on_newData() builds them one by one.
+    void rebuildRowGraphs(int row);
 
 signals:
     void calibrationChanged();
@@ -529,7 +552,6 @@ public slots:
     void setGraphHintEnabled(bool enabled);
     void setGraphBriefHintEnabled(bool enabled);
     void setCalibrationMode(bool enabled);
-    void on_calibrationEnabled(bool enabled);
     void on_dotsNumberChanged(int number);
     void on_redrawGraphs(bool _incrementally=false);
     void on_changeMeasureSystemMetric (bool state);

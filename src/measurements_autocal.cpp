@@ -122,7 +122,7 @@ QPair<double, double> Measurements::autoCalibrate()
                     const RawData& inData = data.at(i);
                     if (inData.fq*1000 > 10000)
                     {
-                        RawData outData = calcFarEnd(inData, count-1, true);
+                        RawData outData = calcFarEnd(inData, count-1, true, m_farEndMeasurement, cableParams());
                         double R = outData.r;
                         double X = outData.x;
 

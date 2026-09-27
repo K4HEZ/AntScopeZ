@@ -439,6 +439,8 @@ MainWindow::MainWindow(QWidget *parent) :
     statusBar()->addPermanentWidget(m_statusLabel);
     m_connectionStatusLabel = new QLabel(tr("Not connected"), this);
     statusBar()->insertPermanentWidget(0, m_connectionStatusLabel);
+    m_correctionsStatusLabel = new QLabel(this);
+    statusBar()->insertPermanentWidget(1, m_correctionsStatusLabel);
 
     // g_remoteApiEnabled/g_remoteApiPort were already read from QSettings
     // above (the earlier "Settings" group block) by the time this runs.
@@ -838,6 +840,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_measurements->setCableLossAtAnyFq(AppConfig::get().cable.lossAtAnyFq);
     m_measurements->setCableLength(AppConfig::get().cable.lengthFeet);
     m_measurements->setCableFarEndMeasurement(AppConfig::get().farEndMeasurement);
+    updateCorrectionsStatusLabel();
 
     for (int i=0; i<ui->tabWidget->count(); i++)
     {

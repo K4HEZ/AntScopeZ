@@ -129,8 +129,6 @@ void MainWindow::on_actionSettings_triggered()
 
     connect(m_settingsDialog,SIGNAL(calibrationEnabled(bool)),
             m_calibration,SLOT(on_enableOSLCalibration(bool)));
-    connect(m_settingsDialog,SIGNAL(calibrationEnabled(bool)),
-            m_measurements,SLOT(on_calibrationEnabled(bool)));
 
     connect(m_calibration,SIGNAL(progress(int, int)),
             m_settingsDialog,SLOT(on_percentCalibrationChanged(qint32,qint32)));
@@ -256,6 +254,7 @@ void MainWindow::on_actionUserGuide_triggered()
 void MainWindow::on_changeMeasureSystemMetric (bool state)
 {
     AppConfig::get().measureSystemMetric = state;
+    updateCorrectionsStatusLabel();
 }
 
 void MainWindow::on_Z0Changed(double _Z0)
@@ -318,6 +317,7 @@ void MainWindow::on_settingsParamsChanged()
             m_measurements->setCableFarEndMeasurement(AppConfig::get().farEndMeasurement);            
             QTimer::singleShot(1, m_measurements, SLOT(on_redrawGraphs()));
         }
+        updateCorrectionsStatusLabel();
     }
 }
 
@@ -492,6 +492,7 @@ void MainWindow::calibrationToggled(bool checked)
         ui->checkBoxCalibration->blockSignals(true);
         ui->checkBoxCalibration->setCheckState(Qt::Unchecked);
         ui->checkBoxCalibration->blockSignals(false);
+        updateCorrectionsStatusLabel();
         return;
     }
     if(!m_calibration->getCalibrationPerformed())
@@ -509,8 +510,9 @@ void MainWindow::calibrationToggled(bool checked)
     }
     else
     {
+        // Applies to scans from now on; existing measurements keep theirs.
         m_calibration->on_enableOSLCalibration(checked);
-        m_measurements->on_calibrationEnabled(checked);
+        updateCorrectionsStatusLabel();
     }
 }
 

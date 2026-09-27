@@ -110,8 +110,6 @@ MeasurementFiles::ReadResult MeasurementFiles::readAsd(const QString& path)
     QJsonArray measureArray = mainObj["Measurements"].toArray();
     if (mainObj.contains("Corrections"))
         res.applied = correctionsFromJson(mainObj["Corrections"].toObject());
-    if (mainObj.contains("CorrectionsInEffect"))
-        res.inEffect = correctionsFromJson(mainObj["CorrectionsInEffect"].toObject());
 
     int size = measureArray.size();
     if (size < 2) {
@@ -127,12 +125,12 @@ MeasurementFiles::ReadResult MeasurementFiles::readAsd(const QString& path)
         res.raw.append(data);
     }
     // Only used if it matches the points one for one.
-    QJsonArray calArray = mainObj["CalibratedMeasurements"].toArray();
-    if (calArray.size() == size) {
+    QJsonArray origArray = mainObj["AsReceived"].toArray();
+    if (origArray.size() == size) {
         for (int i = 0; i < size; ++i) {
             RawData data;
-            data.read(calArray[i].toObject());
-            res.calibrated.append(data);
+            data.read(origArray[i].toObject());
+            res.asReceived.append(data);
         }
     }
     // First/last point, not min/max -- as the loader always did.
@@ -446,8 +444,8 @@ MeasurementFiles::ReadResult MeasurementFiles::readNwl(const QString& path)
     return res;
 }
 
-bool MeasurementFiles::writeAsd(QString path, const QVector<RawData>& data, const QVector<RawData>& calibrated,
-                                const Corrections& applied, const Corrections& inEffect)
+bool MeasurementFiles::writeAsd(QString path, const QVector<RawData>& data, const Corrections& applied,
+                                const QVector<RawData>& asReceived)
 {
     // Was `if (path.indexOf(".asd") >= 0) { ... }` wrapping the whole
     // function -- a path without ".asd" in it (FileDialog::getSaveFileName()
@@ -480,22 +478,21 @@ bool MeasurementFiles::writeAsd(QString path, const QVector<RawData>& data, cons
         obj["x"] = data.at(i).x;
         measurementsArray.append(obj);
     }
-    // As-received points (with `applied` built in) -- what older readers use.
+    // Points as shown -- what older readers use.
     mainObj["Measurements"] = measurementsArray;
     mainObj["Corrections"] = correctionsJson(applied);
 
-    if (calibrated.size() == data.size()) {
-        QJsonArray calArray;
-        for (const RawData& p : calibrated) {
+    if (applied.any() && asReceived.size() == data.size()) {
+        QJsonArray origArray;
+        for (const RawData& p : asReceived) {
             QJsonObject obj;
             obj["fq"] = p.fq;
             obj["r"] = p.r;
             obj["x"] = p.x;
-            calArray.append(obj);
+            origArray.append(obj);
         }
-        mainObj["CalibratedMeasurements"] = calArray;
+        mainObj["AsReceived"] = origArray;
     }
-    mainObj["CorrectionsInEffect"] = correctionsJson(inEffect);
 
     QJsonDocument saveDoc(mainObj);
 

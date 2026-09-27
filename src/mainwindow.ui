@@ -643,7 +643,7 @@ process in the settings menu!</string>
               <number>0</number>
              </property>
              <property name="columnCount">
-              <number>4</number>
+              <number>5</number>
              </property>
              <attribute name="horizontalHeaderCascadingSectionResizes">
               <bool>true</bool>
@@ -676,6 +676,11 @@ process in the settings menu!</string>
              <column>
               <property name="text">
                <string>Name</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Corr.</string>
               </property>
              </column>
              <column>

@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "correctionsdialog.h"
 #include "ui_mainwindow.h"
 #include "popupindicator.h"
 #include "analyzer/customanalyzer.h"
@@ -695,6 +696,10 @@ void MainWindow::on_tableWidgetMeasurmentsContextMenu(const QPoint& pos)
             selectRow();
             exportMeasurementRow(row);
         });
+        menu.addAction(tr("Corrections..."), this, [this, row, selectRow]() {
+            selectRow();
+            openCorrectionsDialog(row);
+        });
         menu.addAction(tr("Toggle Visibility"), this, [this, row]() {
             toggleMeasurementVisibility(row);
         });
@@ -735,3 +740,26 @@ void MainWindow::changeMeasurmentsColor(int _row, QColor& _color)
     }
 }
 
+// Measurements list > "Corrections...": change what one measurement shows.
+void MainWindow::openCorrectionsDialog(int row)
+{
+    int count = m_measurements->getMeasurementLength();
+    if (row < 0 || row >= count)
+        return;
+    const measurement* mm = m_measurements->getMeasurement(count - 1 - row);
+    Corrections shown = mm->shownCorrections();
+    RfMath::CableParams model = mm->corrections.cableMode != 0 ? mm->corrections.cable
+                              : mm->applied.cableMode != 0 ? mm->applied.cable
+                              : m_measurements->cableParams();
+    QString why;
+    bool oslAllowed = m_measurements->canApplyOsl(row, &why);
+    CorrectionsDialog dlg(mm->name, shown, mm->applied, model, oslAllowed, why,
+                          m_measurements->canRemoveBuiltIn(row), AppConfig::get().measureSystemMetric, this);
+    if (dlg.exec() != QDialog::Accepted)
+        return;
+    m_measurements->applyCorrections(row, dlg.corrections(), dlg.asCopy());
+    if (m_markers != nullptr) {
+        m_markers->repaint();
+        m_markers->redraw();
+    }
+}

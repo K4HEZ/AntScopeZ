@@ -1135,10 +1135,6 @@ void Settings::on_cableComboBox_currentIndexChanged(int index)
     }
 }
 
-void Settings::on_updateGraphsBtn_clicked()
-{
-    emit paramsChanged();
-}
 
 // Preset locks velocity factor/R0/conductive+dielectric loss/loss units/
 // frequency to whatever cableComboBox has selected (the same 7 fields

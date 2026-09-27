@@ -366,7 +366,7 @@ menu bar instead (File / Analyzer / View / Tools / Help).
 | Start, Stop (or Center, Range) | The actual sweep bounds, in kHz |
 | Points | Number of measurement points across the range |
 | Speed/Accuracy (slider) | Sets Points for you -- Fast (fewer points) end to Accurate (more points) end, 10–1000 (10,000) |
-| Calibration (checkbox) | Applies OSL calibration correction to scans -- has no effect until you've actually performed a calibration in Settings (see [Calibration and cable correction](#calibration-and-cable-correction)) |
+| Calibration (checkbox) | Applies OSL calibration to new scans (existing measurements keep theirs) -- has no effect until you've performed a calibration in Settings. The status bar shows what new scans get. See [Calibration and cable correction](#calibration-and-cable-correction) |
 | Full range | Resets Start/Stop to the connected analyzer's own default range |
 
 **Presets panel**
@@ -397,6 +397,7 @@ on the row you want to act on:
 | Select Color... | Opens a color picker for that measurement's traces |
 | Rename... | Prompts for a new name |
 | Save as... | Opens the Save dialog for just that measurement (see *File* above) |
+| Corrections... | Changes the OSL/cable corrections that measurement shows -- see [Changing a measurement's corrections](#changing-a-measurements-corrections) |
 | Delete | Removes that measurement -- warns first if it's dirty (see Points column below) and Settings > General's warning checkbox is on |
 | Clear All | Removes every measurement in the list -- same dirty warning, covering however many rows are dirty in one combined prompt |
 
@@ -408,6 +409,7 @@ on top, both follow whatever you just acted on.
 | Control | What it does |
 |---|---|
 | Row checkbox | Shows/hides that measurement's trace on the charts |
+| Corr. column | AntScopeZ corrections that measurement shows: `OSL`, `−C` (cable subtracted), `+C` (cable added), or blank; hover for details. See [Calibration and cable correction](#calibration-and-cable-correction) |
 | Points column | Point count, tagged `(s1p)` or `(s2p)` so you can tell a plain 1-port measurement from an imported 2-port one at a glance -- see [Two-port measurement](#two-port-measurement-s21s12). A trailing `*` (e.g. `401 (s2p) *`) marks it *dirty* -- scanned or renamed since it was last saved; saving (any format) or loading from a file clears it |
 | Delete key | Same as right-clicking the selected row and choosing Delete |
 
@@ -580,13 +582,10 @@ numbers as a reasonable estimate rather than something to trust for a
 precision antenna trim -- especially if the correction looks larger or
 smaller than you'd expect for your cable and length.
 
-| Control | What it does |
-|---|---|
-| Update graphs | Applies whatever's currently in this tab immediately, without closing the dialog first |
-
-To save cable-corrected data, use File → Save... and tick the cable box
-under **Apply AntScopeZ Corrections** (see
-[Saving and reloading corrected data](#saving-and-reloading-corrected-data)).
+Subtract/Add applies to **new scans**; measurements you already have
+keep their own cable correction (change one with its right-click
+**Corrections...**). See
+[How AntScopeZ corrections work](#how-antscopez-corrections-work).
 
 ### Themes tab
 
@@ -945,14 +944,10 @@ see. They apply in this order:
 
 1. **The analyzer's own (on-board) calibration**, inside the device,
    before any data reaches AntScopeZ.
-2. **AntScopeZ OSL calibration**, when the **Calibration** checkbox is on.
-3. **Cable add/subtract** (Settings → Cable), applied to the result of 1
-   and 2.
+2. **AntScopeZ OSL calibration**.
+3. **AntScopeZ cable add/subtract**, applied to the result of 1 and 2.
 
-Everything AntScopeZ shows uses the end result of that chain: every chart
-(SWR, Return Loss, Phase, R/X, Rp/Xp, Smith, TDR), markers, cursor popups
-and the One Fq readout. Two-port S21/S12 data isn't affected by either
-AntScopeZ correction.
+Two-port S21/S12 data isn't affected by either AntScopeZ correction.
 
 ### Recommended approach
 
@@ -983,6 +978,46 @@ That's valid, but only while the device's calibration stays the same --
 if you recalibrate or switch slots on the device, redo AntScopeZ's OSL
 calibration too.
 
+### How AntScopeZ corrections work
+
+- **They're settings for new scans.** The **Calibration** checkbox (main
+  window) and the Subtract/Add setting in Settings → Cable stay on until
+  you turn them off, and every scan taken while they're on gets them.
+  The middle of the status bar always shows what the next scan will get,
+  e.g. `Corrections: OSL · cable −12.0 ft` or `Corrections: none`.
+- **Each measurement keeps the corrections it was taken with.** The
+  Measurements list's **Corr.** column shows them (`OSL`, `−C` for cable
+  subtracted, `+C` for cable added); hover over it for the details.
+  Changing the checkbox or the cable settings never changes measurements
+  you already have.
+- **Everything about a measurement follows its own corrections** --
+  charts, markers, cursor popups, TDR, and saving. The One Fq live
+  readout follows the current settings.
+- **The Calibration checkbox turns off whenever an analyzer connects**,
+  since an OSL calibration belongs to one analyzer; the status bar shows
+  it.
+
+### Changing a measurement's corrections
+
+Right-click a measurement → **Corrections...** to change what it shows,
+after the fact -- e.g. you forgot to switch on cable subtract, or you've
+since measured the feedline's real length:
+
+- **OSL calibration** on/off.
+- **Cable**: None / Subtract / Add, with the length and velocity factor
+  editable (R0 and the loss figures come from the cable model).
+- **Keep the original and add a corrected copy** -- to compare the two
+  side by side.
+
+It's recomputed from the measurement's original points. Some limits,
+which the dialog explains when they apply:
+
+- OSL needs a calibration for the analyzer that took the measurement (or
+  the measurement was taken with one), and is only right if the test
+  setup hasn't changed since.
+- A file whose original points weren't saved (a corrected `.s1p`, CSV or
+  NWL) can't have a correction that's built into it removed.
+
 ### AntScopeZ OSL calibration
 
 OSL (Open/Short/Load) calibration corrects for measurement error between
@@ -1006,7 +1041,7 @@ Performing a calibration and applying it are two separate steps. Each
 standard writes its own file (`cal_open.s1p`, `cal_short.s1p`,
 `cal_load.s1p`) under that analyzer's calibration folder; the
 **Calibration** checkbox in the main Frequency panel applies that
-correction to your scans, but only once all three files actually exist.
+correction to new scans, but only once all three files actually exist.
 
 If you check that box before all three are present, AntScopeZ shows a
 "Calibration Required" prompt and unchecks it again -- it's literally
@@ -1024,76 +1059,35 @@ Things worth knowing:
 - **Frequency coverage:** the calibration sweep covers the analyzer's
   full frequency range; scans are corrected by interpolating between
   calibration points.
-- **Only scans taken while a calibration exists get corrected.** The
-  corrected copy is made as each point arrives, so scans taken before
-  you calibrated have no calibrated version.
-- **The checkbox resets** to off each time an analyzer connects, and
-  can't be changed while Settings is open.
 
 ### Cable add/subtract
 
-See [the Cable tab reference](#cable-tab) for the settings themselves.
-How it fits with everything else:
-
-- **Order:** it's applied after calibration -- with Calibration on, it
-  works from the calibrated values.
-- **Scope:** it's one global setting, applied to every measurement on
-  screen, including files you've loaded (except files already saved with
-  a cable correction -- see below).
-- **Saving:** an `.asd` file keeps the measurement without the cable
-  correction (plus a note of the cable settings in effect); the Save
-  dialog's **Apply AntScopeZ Corrections** box writes cable-corrected
-  `.s1p`, CSV or NWL files.
+The cable itself -- length, velocity factor, R0, losses -- is set in
+[the Cable tab](#cable-tab). It's applied after OSL, so a measurement
+with both gets the cable correction on top of its calibrated values.
 
 ### Saving and reloading corrected data
 
-**AntScopeZ files (`.asd`) keep everything.** Saving a measurement as
-`.asd` stores the points as received from the analyzer, plus their
-OSL-calibrated version if one exists, plus a note of which corrections
-were switched on. Reopening it gives you the complete measurement back:
-the Calibration checkbox and Cable setting work on it just as they did
-before it was saved -- using the calibration saved in the file, not
-whatever calibration is current. Older AntScopeZ and AntScope2 versions
-can still open these files; they read the as-received points.
+Every format saves the measurement **as shown**, with its corrections,
+and nothing is applied when a file is opened -- it comes back as saved.
 
-**Exports (`.s1p`, CSV, NWL) hold one version of the data.** The Save
-dialog's **Apply AntScopeZ Corrections** box picks which:
+| Format | Records its corrections | When you reopen it |
+|---|---|---|
+| `.asd` | Yes, and keeps the analyzer's original points too | Shown as saved, with its Corr. tag; **Corrections...** can still change it |
+| `.s1p` | Yes, in a comment line (see below) | Shown as saved, with its Corr. tag; built-in corrections can't be removed |
+| CSV, NWL | No | Treated as uncorrected -- see below |
 
-- **OSL calibration** -- starts checked when Calibration is on; greyed
-  out if the measurement has no calibrated version.
-- **Cable subtract/add** -- starts checked when Settings → Cable is set
-  to Subtract or Add (the cable length is shown next to it); greyed out
-  when it's Do nothing.
-
-The analyzer's own calibration, if any, is always included. S2P exports
-aren't affected by either box.
-
-A Touchstone `.s1p` export records what was applied, in comment lines
-such as
+A Touchstone `.s1p` records them like this:
 
 ```
 ! AntScopeZ corrections: OSL calibration=yes; cable=subtract, length=12.00 ft
 ! AntScopeZ cable model: velocity factor 0.6600, R0 50.00 ohm, conductive loss 0.5 dB/100ft, dielectric loss 0.1 dB/100ft, at any frequency
 ```
 
-When you reopen one, AntScopeZ shows it as saved and won't apply those
-corrections again (a short notice says so), whatever the Calibration
-checkbox and Cable setting are; corrections it doesn't have still apply
-normally. In the Save dialog, a correction that's already built into a
-measurement shows as checked and "already applied".
-
-| Format | What's saved | When you reopen it |
-|---|---|---|
-| `.asd` | As received, plus the calibrated version, plus a note of the settings | Complete -- Calibration and Cable work on it as before |
-| `.s1p` | The corrections you ticked, recorded in the file | Shown as saved; recorded corrections aren't applied again |
-| CSV, NWL | The corrections you ticked, *not* recorded | Treated as uncorrected -- see below |
-
-**Files that don't record corrections** -- CSV and NWL, files from
-older AntScopeZ versions or AntScope2, and files from other programs --
-are treated as uncorrected, so a correction already in them would be
-applied again. Name those so you can tell later (e.g.
-`40m-dipole_osl.csv`), and leave Calibration/Cable off when reopening a
-corrected one.
+**Files that don't record corrections** -- CSV and NWL, and files from
+older AntScopeZ versions, AntScope2 or other programs -- open with no
+Corr. tag, even if they were saved corrected. Name those so you can tell
+later (e.g. `40m-dipole_osl.csv`).
 
 ## Presets and bands
 
@@ -1244,9 +1238,8 @@ description of it appears underneath:
   (S11, S21, S12, S22) -- only listed for a measurement that actually
   has 2-port data; see [Two-port measurement](#two-port-measurement-s21s12)
 
-For `.s1p`, CSV and NWL, **Apply AntScopeZ Corrections** below the format
-chooses whether OSL calibration and/or cable add/subtract are applied;
-`.asd` always keeps the complete measurement instead. See
+Every format saves the measurement as shown, with its AntScopeZ
+corrections (listed under **AntScopeZ Corrections** in the dialog); see
 [Saving and reloading corrected data](#saving-and-reloading-corrected-data).
 Click **Save**, choose where, and the dialog closes. It remembers the
 format you used last.
@@ -1751,15 +1744,10 @@ delete.
   `cal_load.s1p` for this analyzer yet -- run the Calibration Wizard (or
   all three individually) first. See
   [Calibration and cable correction](#calibration-and-cable-correction).
-- **Charts (and markers) show nothing after checking Calibration.**
-  Only scans taken while a calibration existed for this analyzer have a
-  calibrated version -- rescan with Calibration on. See
-  [AntScopeZ OSL calibration](#antscopez-osl-calibration).
-- **Values look over-corrected after reopening a file.** The file was
-  saved with a correction already applied, and it's a format that
-  doesn't record that (CSV, NWL, or a file from an older version or
-  another program). Reopen it with Calibration off and Cable set to Do
-  nothing. See
+- **A reopened file looks corrected twice.** It was saved corrected in a
+  format that doesn't record that (CSV, NWL, or a file from an older
+  version or another program), then corrected again. Right-click it →
+  **Corrections...** and turn the extra correction off. See
   [Saving and reloading corrected data](#saving-and-reloading-corrected-data).
 - **Clicking Print does nothing.** Print isn't available while the
   Multi tab is active -- switch to any other chart tab first. See

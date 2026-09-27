@@ -119,6 +119,7 @@ set(ANTSCOPE_SOURCES
     src/appregistrationdialog.cpp
     src/cablecatalog.cpp
     src/centralwidget.cpp
+    src/correctionsdialog.cpp
     src/customgraph.cpp
     src/CustomPlot.cpp
     src/duallistwidget.cpp
@@ -188,6 +189,7 @@ set(ANTSCOPE_HEADERS
     src/appregistrationdialog.h
     src/cablecatalog.h
     src/centralwidget.h
+    src/correctionsdialog.h
     src/customgraph.h
     src/CustomPlot.h
     src/duallistwidget.h

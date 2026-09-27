@@ -40,6 +40,7 @@ void MainWindow::on_analyzerNameFound(QString name)
     refreshWindowTitle();
 
     ui->checkBoxCalibration->setCheckState(Qt::Unchecked);
+    updateCorrectionsStatusLabel(); // calibration is per analyzer
     bool zeroII = name.contains("Zero II");
     ui->singleStart->setEnabled(true);
     ui->continuousStartBtn->setEnabled(true);
@@ -113,6 +114,17 @@ void MainWindow::on_analyzerNameFound(QString name)
 // insertPermanentWidget(0, ...)) -- model/connection type/protocol,
 // updated on every connect/disconnect. Separate from m_statusLabel (scan
 // progress), which AnalyzerPro's own signals drive directly.
+// Middle of the status bar: what the next scan gets (Calibration checkbox,
+// Settings > Cable). Existing measurements show theirs in the Corr. column.
+void MainWindow::updateCorrectionsStatusLabel()
+{
+    if (m_correctionsStatusLabel == nullptr || m_measurements == nullptr)
+        return;
+    Corrections next = m_measurements->scanCorrections();
+    m_correctionsStatusLabel->setText(tr("Corrections: %1").arg(next.summary(AppConfig::get().measureSystemMetric)));
+    m_correctionsStatusLabel->setToolTip(tr("Applied to new scans:") + "\n" + next.details(AppConfig::get().measureSystemMetric));
+}
+
 void MainWindow::updateConnectionStatusLabel()
 {
     if (m_connectionStatusLabel == nullptr)

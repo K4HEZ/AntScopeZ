@@ -173,14 +173,9 @@ double MarkerComparisonDialog::qFactorAt(double centerFq)
 
     // Most recent measurement, whatever trace the user is looking at.
     int mostRecent = 0;
-    const QVector<RawData>* farEnd = nullptr;
-    switch (m_measurements->getFarEndMeasurement()) {
-    case 1: farEnd = &m_measurements->getMeasurementSub(mostRecent)->dataRX; break;
-    case 2: farEnd = &m_measurements->getMeasurementAdd(mostRecent)->dataRX; break;
-    default: break;
-    }
-    return MarkerMath::qFactor(MarkerMath::swrSeries(*m_measurements->last(), farEnd,
-                                                     m_measurements->getCalibrationEnabled(),
+    return MarkerMath::qFactor(MarkerMath::swrSeries(*m_measurements->last(),
+                                                     m_measurements->shownFarEnd(mostRecent),
+                                                     m_measurements->shownOsl(mostRecent),
                                                      m_measurements->getZ0()),
                                centerFq);
 }

@@ -26,13 +26,9 @@ void Measurements::saveData(quint32 number, QString path)
     if (number >= (quint32)g_maxMeasurements)
         number = g_maxMeasurements-1;
 
-    // Lossless: as-received points, their calibrated copy if there is one,
-    // and a note of what was switched on -- independent of what's on screen.
+    // As shown, with a record of its corrections and the original points.
     const measurement& mm = m_measurements.at(number);
-    QVector<RawData> calibrated;
-    if (!mm.applied.osl && mm.hasCalibrated())
-        calibrated = mm.dataRXCalib;
-    MeasurementFiles::writeAsd(path, mm.dataRX, calibrated, mm.applied, currentCorrections());
+    MeasurementFiles::writeAsd(path, mm.shownPoints(), mm.shownCorrections(), mm.originalPoints());
 }
 
 Corrections Measurements::currentCorrections() const
@@ -65,7 +61,7 @@ void Measurements::loadData(QString path)
                           static_cast<qint64>(r.fqMaxMHz * 1000000), size);
         m_measurements.last().dirty = false; // loaded from a file, see measurement::dirty's own comment
         noteLoadedCorrections(r.applied);
-        m_measurements.last().presetCalib = r.calibrated;
+        m_measurements.last().asReceived = r.asReceived;
 
         ProgressDlg* progressDlg = new ProgressDlg();
         progressDlg->setValue(0);
@@ -86,7 +82,6 @@ void Measurements::loadData(QString path)
         }
         progressDlg->hide();
         delete progressDlg;
-        m_measurements.last().presetCalib.clear();
 
         emit import_finished(r.fqMinMHz*1000, r.fqMaxMHz*1000);
         // Points column stays "--" (the on_newMeasurement() table rebuild's
@@ -104,27 +99,16 @@ void Measurements::loadData(QString path)
     on_redrawGraphs();
 }
 
-void Measurements::exportData(QString _name, int _type, int _number, bool _applyOsl, bool _applyCable)
+void Measurements::exportData(QString _name, int _type, int _number)
 {
     if (_number < 0 || m_measurements.isEmpty() || (_number >= m_measurements.size()))
         return;
 
+    // The measurement as shown, with its corrections recorded (.s1p).
     const measurement& mm = m_measurements.at(_number);
-    Corrections cur = currentCorrections();
-    int cableMode = _applyCable ? cur.cableMode : 0;
-    QVector<RawData> points = mm.exportPoints(_applyOsl, cableMode, cur.cable);
-
-    // What the exported points have in them, built-in corrections included.
-    Corrections rec = mm.applied;
-    if (_applyOsl && mm.hasCalibrated())
-        rec.osl = true;
-    if (cableMode != 0 && mm.applied.cableMode == 0) {
-        rec.cableMode = cableMode;
-        rec.cable = cur.cable;
-        rec.cableLossFqMHz = cur.cableLossFqMHz;
-    }
+    Corrections rec = mm.shownCorrections();
     double z0 = (rec.osl && m_calibration != nullptr) ? m_calibration->getZ0() : 50;
-    MeasurementFiles::writeRaw(_name, _type, points, z0, QString(), rec);
+    MeasurementFiles::writeRaw(_name, _type, mm.shownPoints(), z0, QString(), rec);
 }
 
 void Measurements::importData(QString _name, bool /*user_format*/)
@@ -292,22 +276,11 @@ void Measurements::importData(QString _name)
     on_measurementComplete(); // stamp the real Points count -- see loadData()'s own comment on this
 }
 
-// A file saved with corrections already in its points is shown as saved:
-// MeasurementData::addPoint() skips OSL for it and calcFarEnd() skips the cable.
 void Measurements::noteLoadedCorrections(const Corrections& applied)
 {
+    // Shown as saved; the Corr. column says what's in it.
     m_measurements.last().applied = applied;
-    if (!applied.any())
-        return;
-    QStringList what;
-    if (applied.osl)
-        what << tr("OSL calibration");
-    if (applied.cableMode == 1)
-        what << tr("cable subtract");
-    else if (applied.cableMode == 2)
-        what << tr("cable add");
-    Notification::showMessage(tr("This file was saved with %1 already applied. "
-                                 "It's shown as saved; AntScopeZ won't apply it again.")
-                                  .arg(what.join(tr(" and "))),
-                              m_tableWidget);
+    m_measurements.last().corrections = Corrections();
+    m_measurements.last().analyzerSerial.clear();
+    refreshCorrectionsCell(m_measurements.length() - 1);
 }

@@ -15,16 +15,21 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 - README Credits section and About dialog line crediting cable data
   sources (AC6LA and manufacturers).
-- `.asd` files are lossless: they keep the as-received points, the
-  OSL-calibrated version (if any) and a note of the corrections in
-  effect, so reopening restores the complete measurement.
-- Save dialog: "Apply AntScopeZ Corrections" chooses whether `.s1p`, CSV
-  and NWL exports get OSL calibration and/or cable add/subtract. `.s1p`
-  records what was applied (including the cable model); reopening shows
-  it as saved instead of applying it again.
+- Measurements list "Corr." column showing each measurement's AntScopeZ
+  corrections (OSL, cable subtract/add); status bar shows what new scans
+  will get.
+- Right-click a measurement → "Corrections..." to change its OSL/cable
+  corrections after the fact, in place or as a corrected copy.
+- `.asd` and `.s1p` record the corrections a measurement was saved with
+  (`.s1p` including the cable model); `.asd` also keeps the analyzer's
+  original points.
 
 ### Changed
 
+- OSL calibration and cable add/subtract now belong to each measurement:
+  the Calibration checkbox and Settings → Cable apply to new scans, and
+  changing them no longer changes measurements you already have. Opened
+  files show as saved -- nothing is applied at load.
 - Save dialog: one Format chooser with a description, instead of ten
   buttons; it closes after saving and remembers the last format.
 - Internal: analyzer layer, calibration, RF/TDR/marker math, file
@@ -47,18 +52,22 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 - With calibration and cable add/subtract both on, the Cable tab's Export
   wrote an empty file and the TDR chart was blank.
 - One Fq readout ignored cable add/subtract.
+- Closing Settings rebuilt every measurement from scratch, which could
+  renumber them and mark saved ones as unsaved. Only the chart values are
+  recomputed now, and only when the system impedance actually changes.
 - Docs: cable preset count said ~150; it's over 100.
 
 ### Removed
 
-- Settings → Cable "Export" button -- the Save dialog's corrections box
-  replaces it.
+- Settings → Cable "Export" and "Update graphs" buttons -- saving now
+  writes each measurement with its own corrections, and Cable settings
+  apply to new scans.
 
 ### Documentation
 
 - User guide: new "Calibration and cable correction" section -- device
-  vs. AntScopeZ calibration, order of corrections, what's saved and how
-  reloading works.
+  vs. AntScopeZ calibration, how corrections work per measurement, what's
+  saved and how reloading works.
 
 ## [2.2.7] - 2026-09-18
 

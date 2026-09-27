@@ -335,14 +335,9 @@ QList<QVariant> Markers::computeMarkerRow(double fq0, int markerNumber, int i, c
 
             // Values come from the measurement's data via the same per-point
             // formulas the charts draw (MarkerMath::chartPoint()).
-            const QVector<RawData>* farEnd = nullptr;
-            switch (m_measurements->getFarEndMeasurement()) {
-            case 1: farEnd = &m_measurements->getMeasurementSub(i)->dataRX; break;
-            case 2: farEnd = &m_measurements->getMeasurementAdd(i)->dataRX; break;
-            default: break;
-            }
-            MarkerMath::Values v = MarkerMath::valuesAt(*m_measurements->getMeasurement(i), farEnd,
-                                                        m_measurements->getCalibrationEnabled(),
+            MarkerMath::Values v = MarkerMath::valuesAt(*m_measurements->getMeasurement(i),
+                                                        m_measurements->shownFarEnd(i),
+                                                        m_measurements->shownOsl(i),
                                                         fq0, m_measurements->getZ0());
             double dSwr = v.swr, dRl = v.rl, dR = v.r, dX = v.x, dZmod = v.zmod;
             double dL = v.l, dC = v.c, dPhase = v.phase, dRho = v.rho;
@@ -484,15 +479,10 @@ void Markers::autoPlaceAtLowestSwr()
 
     // Search whatever trace the user is looking at (far-end / calibrated).
     int mostRecent = 0; // getMeasurement()/Sub()/Add() index backwards from newest -- 0 is most recent
-    const QVector<RawData>* farEnd = nullptr;
-    switch (m_measurements->getFarEndMeasurement()) {
-    case 1: farEnd = &m_measurements->getMeasurementSub(mostRecent)->dataRX; break;
-    case 2: farEnd = &m_measurements->getMeasurementAdd(mostRecent)->dataRX; break;
-    default: break;
-    }
     double bestFq;
-    if (!MarkerMath::lowestSwr(MarkerMath::swrSeries(*m_measurements->last(), farEnd,
-                                                     m_measurements->getCalibrationEnabled(),
+    if (!MarkerMath::lowestSwr(MarkerMath::swrSeries(*m_measurements->last(),
+                                                     m_measurements->shownFarEnd(mostRecent),
+                                                     m_measurements->shownOsl(mostRecent),
                                                      m_measurements->getZ0()), &bestFq))
         return;
 

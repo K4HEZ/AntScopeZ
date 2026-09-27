@@ -21,9 +21,8 @@ enum class ReadError {
 
 struct ReadResult {
     ReadError error = ReadError::Silent;
-    Corrections applied; // built into `raw`, as recorded in the file; none if not recorded
-    QVector<RawData> calibrated; // .asd only: saved OSL-calibrated copy of `raw`
-    Corrections inEffect;        // .asd only: corrections switched on when saved (informational)
+    Corrections applied;         // built into `raw`, as recorded in the file; none if not recorded
+    QVector<RawData> asReceived; // .asd only: the analyzer's original points, if saved
     bool ok() const { return error == ReadError::None; }
     QVector<RawData> raw;
     QList<SParamPoint> sparams; // 2-port Touchstone only
@@ -36,12 +35,11 @@ ReadResult readTouchstone(const QString& path); // .s1p and .s2p
 ReadResult readCsv(const QString& path);
 ReadResult readNwl(const QString& path);
 
-// Lossless AntScopeZ file. Appends ".asd" if missing; false if it can't be
-// opened. `raw` is the as-received points (with `applied` built in, if
-// any); `calibrated` their OSL-calibrated copy (may be empty); `inEffect`
-// what was switched on when saved, for the record.
-bool writeAsd(QString path, const QVector<RawData>& raw, const QVector<RawData>& calibrated = QVector<RawData>(),
-              const Corrections& applied = Corrections(), const Corrections& inEffect = Corrections());
+// AntScopeZ file: `points` as shown, `applied` = the corrections in them,
+// and (when that's any) `asReceived`, the analyzer's original points.
+// Appends ".asd" if missing; false if it can't be opened.
+bool writeAsd(QString path, const QVector<RawData>& points, const Corrections& applied = Corrections(),
+              const QVector<RawData>& asReceived = QVector<RawData>());
 // Picks the format from the extension (.s1p/.csv/.nwl); other names are
 // ignored. type (.s1p only): 0 Z RI, 1 S RI, 2 S MA, 3 S DB. `applied` is
 // recorded in .s1p comments (CSV/NWL stay plain for other tools).

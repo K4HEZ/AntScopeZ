@@ -52,8 +52,7 @@ private:
     // newest" way suggestedPath() already does, so the details shown
     // always describe the same measurement a click would actually export.
     void updateDetails();
-    // Sets up the "Apply AntScopeZ Corrections" checkboxes for mm.
-    void updateCorrections(const measurement* mm);
+    Corrections m_corrections; // the measurement's, for the notes
 
     // One entry per format in formatCombo.
     enum class Kind { Asd, OnePort, TwoPort };
