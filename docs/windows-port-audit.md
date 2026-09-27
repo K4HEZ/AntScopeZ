@@ -14,8 +14,8 @@ is about breaking or fixing Linux.
 Re-scan periodically as the port progresses, instead of re-deriving
 findings from scratch. For each category below, search first-party code
 only — skip vendored/third-party trees
-(`analyzer/usbhid/hidapi/{linux,mac,windows}/`, `ftdi/*.dll|*.lib|*.h`,
-`src/qcustomplot.*`):
+(`core/analyzer/usbhid/hidapi/{linux,mac,windows}/`, `core/ftdi/*.dll|*.lib|*.h`,
+`desktop/qcustomplot.*`):
 
 1. POSIX headers/APIs: `pthread_*`, `<unistd.h>`, `<sys/*.h>`, `dlopen`/
    `dlsym`, `fork`/`exec*`, `mmap`, `<termios.h>`, raw BSD sockets.
@@ -119,11 +119,11 @@ on Windows."*
   that the old `.pro` file's `win64`-scope OpenSSL link flags were
   deliberately not carried over, "add them only once it is confirmed
   Windows needs them." Findings:
-  - `analyzer/updater/downloader.cpp`'s `QSslConfiguration`/HTTPS code is
+  - `core/analyzer/updater/downloader.cpp`'s `QSslConfiguration`/HTTPS code is
     entirely `#if 0`'d out (see that file's own comment: disabled because
     it phones home to RigExpert with device/OS telemetry, and its only
     caller is also disabled) — not a live network path.
-  - `src/licenseagent.cpp` **does** make live HTTPS requests via
+  - `desktop/licenseagent.cpp` **does** make live HTTPS requests via
     `QNetworkAccessManager`/`QSslConfiguration` (license verification) —
     a real, active TLS consumer, unlike `downloader.cpp`.
   - Per Qt's own docs (`ssl.html`, verified against the Qt 6.11
@@ -197,13 +197,13 @@ on Windows."*
 
 ### Native library linkage
 
-- `ftdi/ftdiinfo.cpp` loads `ftd2xx.dll` **dynamically via `QLibrary`**
+- `core/ftdi/ftdiinfo.cpp` loads `ftd2xx.dll` **dynamically via `QLibrary`**
   and resolves `FT_*` entry points at runtime — it does not link against
-  `ftdi/windows/win32|win64/ftd2xx.lib`. No MinGW/MSVC import-library ABI
-  concern for this path. `ftdi/windows/*/ftd2xx.lib` appear unused;
+  `core/ftdi/windows/win32|win64/ftd2xx.lib`. No MinGW/MSVC import-library ABI
+  concern for this path. `core/ftdi/windows/*/ftd2xx.lib` appear unused;
   worth confirming nothing else references them before considering
   removal (out of scope for this pass).
-- `hidapi` Windows backend (`analyzer/usbhid/hidapi/windows/hid.c`) is
+- `hidapi` Windows backend (`core/analyzer/usbhid/hidapi/windows/hid.c`) is
   already selected by `CMakeLists.txt`'s `if(WIN32)` block and links
   `setupapi` directly — no dynamic-load path here, so this one does need
   its MinGW build actually verified (see verification checklist below).
@@ -216,22 +216,22 @@ port. Each needs a real run, not just a clean compile:
 - [ ] `.ico` resource / `WIN32_EXECUTABLE` — icon shows correctly on the
       built `.exe`.
 - [ ] `.asd` file-association registration via the Windows registry
-      (`src/mainwindow.cpp:606`, `QSettings::NativeFormat` +
+      (`desktop/mainwindow.cpp:606`, `QSettings::NativeFormat` +
       `"HKEY_CLASSES_ROOT"`) — actually registers and double-clicking a
       `.asd` file opens AntScopeZ.
-- [ ] `WM_DEVICECHANGE` device-change notifications (`src/main.cpp`,
+- [ ] `WM_DEVICECHANGE` device-change notifications (`desktop/main.cpp`,
       `<dbt.h>`) — connecting/disconnecting a real analyzer is detected.
 - [ ] hidapi Windows backend + `setupapi` — a real RigExpert unit is
       enumerated and communicates correctly over HID.
 - [ ] FTDI dynamic load via `QLibrary` against the bundled
-      `ftdi/amd64/ftd2xx.dll` — resolves and works for FTDI-based units.
+      `core/ftdi/amd64/ftd2xx.dll` — resolves and works for FTDI-based units.
 - [ ] Config/data path resolution via `QStandardPaths` on Windows
-      (`src/settings.cpp`, six `Q_OS_WIN`/`Q_OS_LINUX` pairs) — settings
+      (`desktop/settings.cpp`, six `Q_OS_WIN`/`Q_OS_LINUX` pairs) — settings
       persist to the expected per-user location.
 
 ### Out of scope / noted only
 
-- `ftdi/ftdiinfo.cpp`'s `#else` (non-Windows/non-Mac) branch is a stub
+- `core/ftdi/ftdiinfo.cpp`'s `#else` (non-Windows/non-Mac) branch is a stub
   that returns an empty device list — i.e. Linux-side FTDI detection
   isn't implemented. This is the **opposite** of what you'd expect from
   an app "originally" targeting Linux, but it's explicitly the other
@@ -244,7 +244,7 @@ First `windows-mingw` configure+build attempt (2026-08-30, Debug config,
 after installing the missing Qt Serial Port/Bluetooth components above):
 **succeeded cleanly, zero compiler warnings**, all 93 translation units.
 `AntScopeZ.exe` linked successfully; the `if(WIN32)` post-build step
-correctly copied `ftdi/amd64/ftd2xx.dll` next to it.
+correctly copied `core/ftdi/amd64/ftd2xx.dll` next to it.
 
 **Update 2026-08-30:** with the `windeployqt`-equivalent deploy step now
 added (see the packaging-gap entry above), a `cmake --install` into a

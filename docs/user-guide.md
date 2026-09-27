@@ -138,7 +138,7 @@ whatever per-user config folder it wrote to (see
 
 AntScopeZ's device support isn't limited to RigExpert's own antenna
 analyzers. This list is generated from the app's actual model table --
-`AnalyzerParameters::fill()` in `analyzer/analyzerparameters.h` -- which
+`AnalyzerParameters::fill()` in `core/analyzer/analyzerparameters.h` -- which
 is the single source of truth for what's recognized by name/serial-number
 prefix. If this section and that function ever disagree, the code wins.
 
@@ -178,7 +178,7 @@ current catalog before relying on them.
 
 The open-source/DIY VNA project, and its clones -- entirely separate
 connection/protocol handling from the RigExpert-oriented analyzer classes
-above (`analyzer/nanovna_analyzer.cpp`, `analyzer/nanovna_v2_analyzer.cpp`).
+above (`core/analyzer/nanovna_analyzer.cpp`, `core/analyzer/nanovna_v2_analyzer.cpp`).
 Two independent protocol families, both supported:
 
 - **Classic ASCII shell** (`info`/`sweep`/`frequencies`/`data` over what's
@@ -673,7 +673,7 @@ Two group boxes:
 | Control | What it does |
 |---|---|
 | Allow extended chart zoom | Off by default. Lets Ctrl+scroll/Ctrl+`+`/`-` zoom the SWR, Z=R+jX, Z=R‖jX, and RL charts' Y-axis past their normal preset limits (e.g. SWR down to a 0.1-wide window instead of 0.4, RL out to unlimited dB instead of capping at 50), and lets plain scroll zoom the TDR chart's distance axis out past 1000m -- see [Keyboard and mouse shortcuts](#keyboard-and-mouse-shortcuts-in-the-plot-area) |
-| Enable Remote API | Off by default. Starts a local NDJSON-over-TCP control API (loopback only) that lets an external tool observe/control the connected analyzer -- status/devices/connect/disconnect/sweep/stop/subscribe/last commands, plus live point streaming while a scan runs. See `remoteapi/README.md` for the wire protocol if you're writing a client. Known gaps: BLE devices aren't supported over this API yet, and if more than one device of the same type is attached there's no way to target a specific one by port |
+| Enable Remote API | Off by default. Starts a local NDJSON-over-TCP control API (loopback only) that lets an external tool observe/control the connected analyzer -- status/devices/connect/disconnect/sweep/stop/subscribe/last commands, plus live point streaming while a scan runs. See `core/remoteapi/README.md` for the wire protocol if you're writing a client. Known gaps: BLE devices aren't supported over this API yet, and if more than one device of the same type is attached there's no way to target a specific one by port |
 | Remote API port | TCP port it listens on (loopback only), 1024–65535, default 7443 |
 
 **Chart Y-Axis Ranges**

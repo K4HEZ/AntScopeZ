@@ -15,5 +15,5 @@ Checks: >
   cppcoreguidelines-slicing,
 
 WarningsAsErrors: ''
-HeaderFilterRegex: '(analyzer|src|remoteapi|devinfo|ftdi)/.*'
+HeaderFilterRegex: '(core|desktop)/.*'
 FormatStyle: none

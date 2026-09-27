@@ -113,145 +113,145 @@ set(CMAKE_AUTORCC ON)
 #
 
 set(ANTSCOPE_SOURCES
-    src/aboutdialog.cpp
-    src/analyzerdata.cpp
-    src/antscopeupdatedialog.cpp
-    src/appregistrationdialog.cpp
-    src/cablecatalog.cpp
-    src/centralwidget.cpp
-    src/correctionsdialog.cpp
-    src/customgraph.cpp
-    src/CustomPlot.cpp
-    src/duallistwidget.cpp
-    src/encodinghelpers.cpp
-    src/export.cpp
-    src/filedialog.cpp
-    src/glwidget.cpp
-    src/inforequestdialog.cpp
-    src/licenseagent.cpp
-    src/updatechecker.cpp
-    src/main.cpp
-    src/mainwindow.cpp
-    src/mainwindow_analyzer.cpp
-    src/mainwindow_editmenu.cpp
-    src/mainwindow_frequency.cpp
-    src/mainwindow_markers.cpp
-    src/mainwindow_measurements_io.cpp
-    src/mainwindow_mouse.cpp
-    src/mainwindow_multitab.cpp
-    src/mainwindow_presets_bands.cpp
-    src/mainwindow_scan.cpp
-    src/mainwindow_settings.cpp
-    src/mainwindow_shortcuts.cpp
-    src/mainwindow_tabs.cpp
-    src/mainwindow_tools.cpp
-    src/markercomparisondialog.cpp
-    src/markers.cpp
-    src/markerspanel.cpp
-    src/measurements.cpp
-    src/measurements_autocal.cpp
-    src/measurements_farend.cpp
-    src/measurements_io.cpp
-    src/measurements_onefq.cpp
-    src/measurements_popups.cpp
-    src/measurements_redraw.cpp
-    src/measurements_tdr.cpp
-    src/modelesspopup.cpp
-    src/noscrollwidgets.cpp
-    src/Notification.cpp
-    src/onefqbigreadout.cpp
-    src/onefqwidget.cpp
-    src/popup.cpp
-    src/popupindicator.cpp
-    src/presets.cpp
-    src/print.cpp
-    src/printmarkers.cpp
-    src/printmulti.cpp
-    src/printutils.cpp
-    src/ProgressDlg.cpp
-    src/qcustomplot.cpp
-    src/screenshot.cpp
-    src/selectdevicedialog.cpp
-    src/settings.cpp
-    src/style.cpp
-    src/tdrscandialog.cpp
-    src/tdrscanpanel.cpp
-    src/unitrequestdialog.cpp
-    src/updatedialog.cpp
-    src/userguidedialog.cpp
+    desktop/aboutdialog.cpp
+    desktop/analyzerdata.cpp
+    desktop/antscopeupdatedialog.cpp
+    desktop/appregistrationdialog.cpp
+    desktop/cablecatalog.cpp
+    desktop/centralwidget.cpp
+    desktop/correctionsdialog.cpp
+    desktop/customgraph.cpp
+    desktop/CustomPlot.cpp
+    desktop/duallistwidget.cpp
+    desktop/encodinghelpers.cpp
+    desktop/export.cpp
+    desktop/filedialog.cpp
+    desktop/glwidget.cpp
+    desktop/inforequestdialog.cpp
+    desktop/licenseagent.cpp
+    desktop/updatechecker.cpp
+    desktop/main.cpp
+    desktop/mainwindow.cpp
+    desktop/mainwindow_analyzer.cpp
+    desktop/mainwindow_editmenu.cpp
+    desktop/mainwindow_frequency.cpp
+    desktop/mainwindow_markers.cpp
+    desktop/mainwindow_measurements_io.cpp
+    desktop/mainwindow_mouse.cpp
+    desktop/mainwindow_multitab.cpp
+    desktop/mainwindow_presets_bands.cpp
+    desktop/mainwindow_scan.cpp
+    desktop/mainwindow_settings.cpp
+    desktop/mainwindow_shortcuts.cpp
+    desktop/mainwindow_tabs.cpp
+    desktop/mainwindow_tools.cpp
+    desktop/markercomparisondialog.cpp
+    desktop/markers.cpp
+    desktop/markerspanel.cpp
+    desktop/measurements.cpp
+    desktop/measurements_autocal.cpp
+    desktop/measurements_farend.cpp
+    desktop/measurements_io.cpp
+    desktop/measurements_onefq.cpp
+    desktop/measurements_popups.cpp
+    desktop/measurements_redraw.cpp
+    desktop/measurements_tdr.cpp
+    desktop/modelesspopup.cpp
+    desktop/noscrollwidgets.cpp
+    desktop/Notification.cpp
+    desktop/onefqbigreadout.cpp
+    desktop/onefqwidget.cpp
+    desktop/popup.cpp
+    desktop/popupindicator.cpp
+    desktop/presets.cpp
+    desktop/print.cpp
+    desktop/printmarkers.cpp
+    desktop/printmulti.cpp
+    desktop/printutils.cpp
+    desktop/ProgressDlg.cpp
+    desktop/qcustomplot.cpp
+    desktop/screenshot.cpp
+    desktop/selectdevicedialog.cpp
+    desktop/settings.cpp
+    desktop/style.cpp
+    desktop/tdrscandialog.cpp
+    desktop/tdrscanpanel.cpp
+    desktop/unitrequestdialog.cpp
+    desktop/updatedialog.cpp
+    desktop/userguidedialog.cpp
 
 )
 
 set(ANTSCOPE_HEADERS
-    src/aboutdialog.h
-    src/analyzerdata.h
-    src/antscopeupdatedialog.h
-    src/appregistrationdialog.h
-    src/cablecatalog.h
-    src/centralwidget.h
-    src/correctionsdialog.h
-    src/customgraph.h
-    src/CustomPlot.h
-    src/duallistwidget.h
-    src/encodinghelpers.h
-    src/export.h
-    src/filedialog.h
-    src/fqinputvalidator.h
-    src/glwidget.h
-    src/inforequestdialog.h
-    src/licenseagent.h
-    src/updatechecker.h
-    src/mainwindow.h
-    src/markercomparisondialog.h
-    src/markers.h
-    src/measurement.h
-    src/markerspanel.h
-    src/measurements.h
-    src/modelesspopup.h
-    src/noscrollwidgets.h
-    src/Notification.h
-    src/onefqbigreadout.h
-    src/onefqwidget.h
-    src/popup.h
-    src/popupindicator.h
-    src/qcpgraphdatahelpers.h
-    src/presets.h
-    src/print.h
-    src/printmarkers.h
-    src/printmulti.h
-    src/printutils.h
-    src/ProgressDlg.h
-    src/qcustomplot.h
-    src/screenshot.h
-    src/selectdevicedialog.h
-    src/settings.h
-    src/style.h
-    src/tdrscandialog.h
-    src/tdrscanpanel.h
-    src/unitrequestdialog.h
-    src/updatedialog.h
-    src/userguidedialog.h
+    desktop/aboutdialog.h
+    desktop/analyzerdata.h
+    desktop/antscopeupdatedialog.h
+    desktop/appregistrationdialog.h
+    desktop/cablecatalog.h
+    desktop/centralwidget.h
+    desktop/correctionsdialog.h
+    desktop/customgraph.h
+    desktop/CustomPlot.h
+    desktop/duallistwidget.h
+    desktop/encodinghelpers.h
+    desktop/export.h
+    desktop/filedialog.h
+    desktop/fqinputvalidator.h
+    desktop/glwidget.h
+    desktop/inforequestdialog.h
+    desktop/licenseagent.h
+    desktop/updatechecker.h
+    desktop/mainwindow.h
+    desktop/markercomparisondialog.h
+    desktop/markers.h
+    desktop/measurement.h
+    desktop/markerspanel.h
+    desktop/measurements.h
+    desktop/modelesspopup.h
+    desktop/noscrollwidgets.h
+    desktop/Notification.h
+    desktop/onefqbigreadout.h
+    desktop/onefqwidget.h
+    desktop/popup.h
+    desktop/popupindicator.h
+    desktop/qcpgraphdatahelpers.h
+    desktop/presets.h
+    desktop/print.h
+    desktop/printmarkers.h
+    desktop/printmulti.h
+    desktop/printutils.h
+    desktop/ProgressDlg.h
+    desktop/qcustomplot.h
+    desktop/screenshot.h
+    desktop/selectdevicedialog.h
+    desktop/settings.h
+    desktop/style.h
+    desktop/tdrscandialog.h
+    desktop/tdrscanpanel.h
+    desktop/unitrequestdialog.h
+    desktop/updatedialog.h
+    desktop/userguidedialog.h
 
 )
 
 set(ANTSCOPE_FORMS
-    src/aboutdialog.ui
-    src/analyzerdata.ui
-    src/antscopeupdatedialog.ui
-    src/appregistrationdialog.ui
-    src/export.ui
-    src/inforequestdialog.ui
-    src/mainwindow.ui
-    src/markercomparisondialog.ui
-    src/modelesspopup.ui
-    src/print.ui
-    src/ProgressDlg.ui
-    src/screenshot.ui
-    src/selectdevicedialog.ui
-    src/settings.ui
-    src/tdrscanpanel.ui
-    src/unitrequestdialog.ui
-    src/updatedialog.ui
+    desktop/aboutdialog.ui
+    desktop/analyzerdata.ui
+    desktop/antscopeupdatedialog.ui
+    desktop/appregistrationdialog.ui
+    desktop/export.ui
+    desktop/inforequestdialog.ui
+    desktop/mainwindow.ui
+    desktop/markercomparisondialog.ui
+    desktop/modelesspopup.ui
+    desktop/print.ui
+    desktop/ProgressDlg.ui
+    desktop/screenshot.ui
+    desktop/selectdevicedialog.ui
+    desktop/settings.ui
+    desktop/tdrscanpanel.ui
+    desktop/unitrequestdialog.ui
+    desktop/updatedialog.ui
 )
 
 
@@ -265,81 +265,81 @@ set(ANTSCOPE_FORMS
 #
 
 set(ANTSCOPE_CORE_SOURCES
-    src/AA55BTPacket.cpp
-    src/appconfig.cpp
-    src/apppaths.cpp
-    src/calibration.cpp
-    src/crc32.cpp
-    src/debuglog.cpp
-    src/markermath.cpp
-    src/measurementdata.cpp
-    src/measurementfiles.cpp
-    src/measurementsession.cpp
-    src/rfmath.cpp
-    src/tdrmath.cpp
+    core/AA55BTPacket.cpp
+    core/appconfig.cpp
+    core/apppaths.cpp
+    core/calibration.cpp
+    core/crc32.cpp
+    core/debuglog.cpp
+    core/markermath.cpp
+    core/measurementdata.cpp
+    core/measurementfiles.cpp
+    core/measurementsession.cpp
+    core/rfmath.cpp
+    core/tdrmath.cpp
 
-    analyzer/analyzerpro.cpp
-    analyzer/baseanalyzer.cpp
-    analyzer/ble_analyzer.cpp
-    analyzer/com_analyzer.cpp
-    analyzer/customanalyzer.cpp
-    analyzer/hid_analyzer.cpp
-    analyzer/nanovna_analyzer.cpp
-    analyzer/nanovna_v2_analyzer.cpp
-    analyzer/updater/aa230firmwareupdater.cpp
-    analyzer/updater/aa30zerofirmwareupdater.cpp
-    analyzer/updater/downloader.cpp
-    analyzer/updater/firmwareupdater.cpp
-    analyzer/updater/hidfirmwareupdater.cpp
+    core/analyzer/analyzerpro.cpp
+    core/analyzer/baseanalyzer.cpp
+    core/analyzer/ble_analyzer.cpp
+    core/analyzer/com_analyzer.cpp
+    core/analyzer/customanalyzer.cpp
+    core/analyzer/hid_analyzer.cpp
+    core/analyzer/nanovna_analyzer.cpp
+    core/analyzer/nanovna_v2_analyzer.cpp
+    core/analyzer/updater/aa230firmwareupdater.cpp
+    core/analyzer/updater/aa30zerofirmwareupdater.cpp
+    core/analyzer/updater/downloader.cpp
+    core/analyzer/updater/firmwareupdater.cpp
+    core/analyzer/updater/hidfirmwareupdater.cpp
 
-    devinfo/redeviceinfo.cpp
-    ftdi/ftdiinfo.cpp
+    core/devinfo/redeviceinfo.cpp
+    core/ftdi/ftdiinfo.cpp
 
-    remoteapi/remoteapiconnection.cpp
-    remoteapi/remoteapiserver.cpp
+    core/remoteapi/remoteapiconnection.cpp
+    core/remoteapi/remoteapiserver.cpp
 )
 
 set(ANTSCOPE_CORE_HEADERS
-    src/AA55BTPacket.h
-    src/appconfig.h
-    src/apppaths.h
-    src/calibration.h
-    src/crc32.h
-    src/debuglog.h
-    src/markerlist.h
-    src/markermath.h
-    src/measurementdata.h
-    src/measurementfiles.h
-    src/measurementlist.h
-    src/measurementsession.h
-    src/rfmath.h
-    src/tdrmath.h
-    src/usermessage.h
+    core/AA55BTPacket.h
+    core/appconfig.h
+    core/apppaths.h
+    core/calibration.h
+    core/crc32.h
+    core/debuglog.h
+    core/markerlist.h
+    core/markermath.h
+    core/measurementdata.h
+    core/measurementfiles.h
+    core/measurementlist.h
+    core/measurementsession.h
+    core/rfmath.h
+    core/tdrmath.h
+    core/usermessage.h
 
-    analyzer/analyzerparameters.h
-    analyzer/analyzerpro.h
-    analyzer/baseanalyzer.h
-    analyzer/ble_analyzer.h
-    analyzer/com_analyzer.h
-    analyzer/customanalyzer.h
-    analyzer/hid_analyzer.h
-    analyzer/nanovna_analyzer.h
-    analyzer/nanovna_v2_analyzer.h
-    analyzer/usbhid/hidapi/hidapi.h
-    analyzer/updater/aa230firmwareupdater.h
-    analyzer/updater/aa30zerofirmwareupdater.h
-    analyzer/updater/downloader.h
-    analyzer/updater/firmwareupdater.h
-    analyzer/updater/hidfirmwareupdater.h
+    core/analyzer/analyzerparameters.h
+    core/analyzer/analyzerpro.h
+    core/analyzer/baseanalyzer.h
+    core/analyzer/ble_analyzer.h
+    core/analyzer/com_analyzer.h
+    core/analyzer/customanalyzer.h
+    core/analyzer/hid_analyzer.h
+    core/analyzer/nanovna_analyzer.h
+    core/analyzer/nanovna_v2_analyzer.h
+    core/analyzer/usbhid/hidapi/hidapi.h
+    core/analyzer/updater/aa230firmwareupdater.h
+    core/analyzer/updater/aa30zerofirmwareupdater.h
+    core/analyzer/updater/downloader.h
+    core/analyzer/updater/firmwareupdater.h
+    core/analyzer/updater/hidfirmwareupdater.h
 
-    devinfo/redeviceinfo.h
-    ftdi/ftd2xx.h
-    ftdi/ftdiinfo.h
+    core/devinfo/redeviceinfo.h
+    core/ftdi/ftd2xx.h
+    core/ftdi/ftdiinfo.h
 
-    remoteapi/remoteapiconnection.h
-    remoteapi/remoteapihost.h
-    remoteapi/remoteapiprotocol.h
-    remoteapi/remoteapiserver.h
+    core/remoteapi/remoteapiconnection.h
+    core/remoteapi/remoteapihost.h
+    core/remoteapi/remoteapiprotocol.h
+    core/remoteapi/remoteapiserver.h
 )
 
 qt_add_library(antscopez_core STATIC
@@ -357,12 +357,13 @@ if(NOT WIN32)
 endif()
 
 # Same layout as the AntScopeZ target's include dirs (see the comment there).
+# core/ is the include root, so <analyzer/...>, "devinfo/..." etc. resolve.
+# Only core paths: the core can't reach desktop headers.
 target_include_directories(antscopez_core PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/analyzer
-    ${CMAKE_CURRENT_SOURCE_DIR}/analyzer/updater
-    ${CMAKE_CURRENT_SOURCE_DIR}/remoteapi
+    ${CMAKE_CURRENT_SOURCE_DIR}/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/analyzer
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/analyzer/updater
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/remoteapi
 )
 
 target_link_libraries(antscopez_core PUBLIC
@@ -375,18 +376,18 @@ target_link_libraries(antscopez_core PUBLIC
 )
 
 if(WIN32)
-    target_sources(antscopez_core PRIVATE analyzer/usbhid/hidapi/windows/hid.c)
+    target_sources(antscopez_core PRIVATE core/analyzer/usbhid/hidapi/windows/hid.c)
     target_link_libraries(antscopez_core PRIVATE setupapi)
-    target_include_directories(antscopez_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/ftdi)
+    target_include_directories(antscopez_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/core/ftdi)
 elseif(APPLE)
-    target_sources(antscopez_core PRIVATE analyzer/usbhid/hidapi/mac/hid.c)
+    target_sources(antscopez_core PRIVATE core/analyzer/usbhid/hidapi/mac/hid.c)
     find_library(COREFOUNDATION_FRAMEWORK CoreFoundation REQUIRED)
-    # IOKit -- analyzer/usbhid/hidapi/mac/hid.c calls IOHIDManager* (IOKit/hid/...),
+    # IOKit -- core/analyzer/usbhid/hidapi/mac/hid.c calls IOHIDManager* (IOKit/hid/...),
     # which CoreFoundation alone doesn't provide.
     find_library(IOKIT_FRAMEWORK IOKit REQUIRED)
     target_link_libraries(antscopez_core PRIVATE ${COREFOUNDATION_FRAMEWORK} ${IOKIT_FRAMEWORK})
 else()
-    target_sources(antscopez_core PRIVATE analyzer/usbhid/hidapi/linux/hid.c)
+    target_sources(antscopez_core PRIVATE core/analyzer/usbhid/hidapi/linux/hid.c)
     # AppPaths::sharedDataFolder() -- see the matching AntScopeZ definition below.
     target_compile_definitions(antscopez_core PRIVATE
         ANTSCOPE_SHARED_DATA_DIR="${CMAKE_INSTALL_FULL_DATADIR}/antscopez"
@@ -405,8 +406,8 @@ qt_add_executable(AntScopeZ
     ${ANTSCOPE_SOURCES}
     ${ANTSCOPE_HEADERS}
     ${ANTSCOPE_FORMS}
-    src/resources/res.qrc
-#    src/res.qrc
+    desktop/resources/res.qrc
+#    desktop/res.qrc
 )
 
 
@@ -471,20 +472,12 @@ target_compile_definitions(AntScopeZ PRIVATE $<$<CONFIG:Debug>:_DEBUG>)
 #
 # Include directories
 #
-# The project root is required because several headers are included as
-# <analyzer/usbhid/hidapi/hidapi.h> and <devinfo/redeviceinfo.h>.
-#
-# src/ is required because analyzer/*.cpp (which stayed in analyzer/ when
-# the rest of the first-party sources moved into src/) reach headers like
-# debuglog.h/crc32.h/settings.h/mainwindow.h -- now living in src/ -- by
-# bare quoted #include, resolved via this same include-path fallback.
+# desktop/ for the app's own headers; the core's include roots (core/,
+# core/analyzer, ...) come with antscopez_core.
 #
 
 target_include_directories(AntScopeZ PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/analyzer
-    ${CMAKE_CURRENT_SOURCE_DIR}/analyzer/updater
+    ${CMAKE_CURRENT_SOURCE_DIR}/desktop
     ${CMAKE_BINARY_DIR}
 )
 
@@ -540,7 +533,7 @@ endif()
 if(WIN32)
 
     target_include_directories(AntScopeZ PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/ftdi
+        ${CMAKE_CURRENT_SOURCE_DIR}/core/ftdi
     )
 
     # Equivalent of qmake's RC_ICONS. A checked-in AntScope2_resource.rc used
@@ -565,12 +558,12 @@ if(WIN32)
     # under build-windows-mingw/ before this fix.
     #
     # Fixed by generating our own minimal .rc file instead (still no
-    # third-party/vendor edits -- src/resources/AntScopeZ.rc.in is first-party)
+    # third-party/vendor edits -- desktop/resources/AntScopeZ.rc.in is first-party)
     # and handing it to CMake directly via target_sources(), which every CMake
     # version/generator supports regardless of what Qt's finalizers do.
-    set(ANTSCOPEZ_ICON_PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/resources/AntScopeZ.ico")
+    set(ANTSCOPEZ_ICON_PATH "${CMAKE_CURRENT_SOURCE_DIR}/desktop/resources/AntScopeZ.ico")
     configure_file(
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/resources/AntScopeZ.rc.in"
+        "${CMAKE_CURRENT_SOURCE_DIR}/desktop/resources/AntScopeZ.rc.in"
         "${CMAKE_CURRENT_BINARY_DIR}/AntScopeZ.rc"
         @ONLY
     )
@@ -583,7 +576,7 @@ if(WIN32)
     # Ship the FTDI driver DLL next to the executable.
     add_custom_command(TARGET AntScopeZ POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${CMAKE_CURRENT_SOURCE_DIR}/ftdi/amd64/ftd2xx.dll"
+            "${CMAKE_CURRENT_SOURCE_DIR}/core/ftdi/amd64/ftd2xx.dll"
             "$<TARGET_FILE_DIR:AntScopeZ>"
         COMMENT "Copying ftd2xx.dll next to AntScopeZ"
         VERBATIM
@@ -598,10 +591,10 @@ elseif(APPLE)
 
     target_compile_definitions(AntScopeZ PRIVATE _NO_WINDOWS_ NO_MULTITAB)
 
-    set_source_files_properties(src/resources/AntScopeZ.icns PROPERTIES
+    set_source_files_properties(desktop/resources/AntScopeZ.icns PROPERTIES
         MACOSX_PACKAGE_LOCATION Resources
     )
-    target_sources(AntScopeZ PRIVATE src/resources/AntScopeZ.icns)
+    target_sources(AntScopeZ PRIVATE desktop/resources/AntScopeZ.icns)
 
     set_target_properties(AntScopeZ PROPERTIES
         MACOSX_BUNDLE                      ON
@@ -989,7 +982,7 @@ if(WIN32)
         DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
 
-    # Settings::programDataPath() (src/settings.cpp) -- the actual runtime
+    # Settings::programDataPath() (desktop/settings.cpp) -- the actual runtime
     # source of truth for cables.txt/itu-regions-defaults.txt/user-guide.md
     # -- unconditionally resolves to C:\ProgramData\AntScopeZ on Windows
     # (unlike its Linux/macOS branches, which fall back to sitting next to
@@ -1019,7 +1012,7 @@ if(WIN32)
     # install, so FTDI-based device support was silently missing from every
     # packaged build until this rule was added. Found while building the
     # first packaged release (2026-08-30).
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ftdi/amd64/ftd2xx.dll
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/core/ftdi/amd64/ftd2xx.dll
         DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
 
@@ -1089,7 +1082,7 @@ else() # Linux and other Unix
         DESTINATION ${CMAKE_INSTALL_DATADIR}/applications
     )
 
-    install(FILES src/resources/AntScopeZ.png
+    install(FILES desktop/resources/AntScopeZ.png
         DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/64x64/apps
         RENAME antscopez.png
     )
@@ -1383,7 +1376,7 @@ if(WIN32)
     # Same .ico already used for WIN32_EXECUTABLE's taskbar/window icon
     # (see QT_TARGET_RC_ICONS above) -- reused here for the installer UI
     # and the Programs & Features entry, not a separate asset.
-    set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/src/resources/AntScopeZ.ico")
+    set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/desktop/resources/AntScopeZ.ico")
     set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\AntScopeZ.exe")
     # Registers the Start Menu shortcut CPack's NSIS template creates.
     set(CPACK_PACKAGE_EXECUTABLES "AntScopeZ" "AntScopeZ")
@@ -1391,7 +1384,7 @@ if(WIN32)
     set(CPACK_NSIS_MODIFY_PATH OFF)
     # cables.txt/itu-regions-defaults.txt/user-guide.md need to land in
     # C:\ProgramData\AntScopeZ -- the one place Settings::programDataPath()
-    # (src/settings.cpp) actually looks on Windows (see the comment on the
+    # (desktop/settings.cpp) actually looks on Windows (see the comment on the
     # WIN32 install(FILES) block above for the full "why", including why
     # this can't just be a second install(FILES DESTINATION <absolute>)
     # rule: CPack hard-fails on absolute install destinations). Doing the

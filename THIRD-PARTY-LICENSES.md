@@ -91,10 +91,10 @@ must travel with that build.
   choice need to be revisited.
 
 ### HIDAPI
-- **Files:** `analyzer/usbhid/hidapi/hidapi.h`,
-  `analyzer/usbhid/hidapi/linux/hid.c`,
-  `analyzer/usbhid/hidapi/mac/hid.c`,
-  `analyzer/usbhid/hidapi/windows/hid.c`
+- **Files:** `core/analyzer/usbhid/hidapi/hidapi.h`,
+  `core/analyzer/usbhid/hidapi/linux/hid.c`,
+  `core/analyzer/usbhid/hidapi/mac/hid.c`,
+  `core/analyzer/usbhid/hidapi/windows/hid.c`
 - **Copyright:** 2009-2010 Alan Ott, Signal 11 Software
 - **License:** Triple-licensed, at the licensee's discretion: GPLv3, a
   BSD-style license, or the original HIDAPI license (see
@@ -111,11 +111,11 @@ must travel with that build.
 ## Windows-only
 
 ### FTDI D2XX driver package
-- **Files:** `ftdi/ftd2xx.h`, `ftdi/amd64/ftd2xx.dll` (shipped next to the
+- **Files:** `core/ftdi/ftd2xx.h`, `core/ftdi/amd64/ftd2xx.dll` (shipped next to the
   executable by the build), plus the rest of the FTDI CDM driver package
-  bundled alongside it: `ftdi/amd64/ftser2k.sys`, `ftdi/amd64/ftdibus.sys`,
-  `ftdi/amd64/ftbusui.dll`, `ftdi/amd64/ftserui2.dll`,
-  `ftdi/amd64/ftcserco.dll`, `ftdi/amd64/ftlang.dll`
+  bundled alongside it: `core/ftdi/amd64/ftser2k.sys`, `core/ftdi/amd64/ftdibus.sys`,
+  `core/ftdi/amd64/ftbusui.dll`, `core/ftdi/amd64/ftserui2.dll`,
+  `core/ftdi/amd64/ftcserco.dll`, `core/ftdi/amd64/ftlang.dll`
 - **Copyright:** 2001-2011 Future Technology Devices International Limited
   (FTDI)
 - **License:** FTDI's own proprietary redistribution terms, embedded in
@@ -137,10 +137,10 @@ must travel with that build.
   FTDI's USB-serial chips, so RigExpert bundles FTDI's redistributable
   driver package. Do not modify these files or their embedded license
   notices when redistributing.
-- **Housekeeping note (not a licensing issue):** `ftdi/windows/win32/` and
-  `ftdi/windows/win64/` also contain `ftd2xx.dll`/`ftd2xx.lib` copies that
+- **Housekeeping note (not a licensing issue):** `core/ftdi/windows/win32/` and
+  `core/ftdi/windows/win64/` also contain `ftd2xx.dll`/`ftd2xx.lib` copies that
   are not referenced anywhere in `CMakeLists.txt` -- only
-  `ftdi/amd64/ftd2xx.dll` is actually shipped. These look like unused
+  `core/ftdi/amd64/ftd2xx.dll` is actually shipped. These look like unused
   leftovers and are candidates for removal, independent of licensing.
 
 ---
@@ -163,7 +163,7 @@ must travel with that build.
   Linux kernel itself) exposing standard `/dev/ttyUSB*` devices, read via
   Qt's `QSerialPortInfo`/`QSerialPort`. AntScopeZ ships no FTDI code on
   Linux; the `#ifdef Q_OS_WIN` guard around the FTDI-specific logic in
-  `ftdi/ftdiinfo.cpp` confirms this.
+  `core/ftdi/ftdiinfo.cpp` confirms this.
 
 ---
 

@@ -72,7 +72,7 @@ to `127.0.0.1` only -- not reachable from other machines -- unless you reconfigu
 yourself. `-headless` runs AntScopeZ without showing its window (still a full GUI process
 under the hood, just not displayed), useful when driving it purely through this API.
 
-See [`remoteapi/`](remoteapi/) for the implementation and protocol details.
+See [`core/remoteapi/`](core/remoteapi/) for the implementation and protocol details.
 
 ## Windows
 

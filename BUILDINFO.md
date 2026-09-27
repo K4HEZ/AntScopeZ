@@ -52,19 +52,32 @@ it's missing.
 - **`AntScopeZ`** -- the desktop app (Qt Widgets, QCustomPlot, dialogs,
   charts), linked against the core.
 
+Directories:
+
+```
+core/       antscopez_core -- no UI
+desktop/    AntScopeZ desktop app (widgets, charts, dialogs, .ui files)
+desktop/resources/   icons and res.qrc
+shared/     data files installed with the app (cable list, ITU defaults, sample scans)
+```
+
+`core/` is the core's include root, so `#include "analyzer/..."`,
+`"appconfig.h"` etc. resolve from either side; the core's include path has
+no `desktop/` entry, so it can't include app headers.
+
 What's in the core (`ANTSCOPE_CORE_SOURCES`/`ANTSCOPE_CORE_HEADERS`):
 
 | Area | Files |
 |---|---|
-| Analyzer connections, protocols, firmware updaters | `analyzer/`, `analyzer/updater/`, `devinfo/`, `ftdi/` |
-| App settings and file locations | `src/appconfig.*`, `src/apppaths.*` |
-| OSL calibration | `src/calibration.*` |
-| RF, TDR, chart and marker math | `src/rfmath.*`, `src/tdrmath.*`, `src/markermath.*` |
-| Measurement data, list rules, headless scan session | `src/measurementdata.*`, `src/measurementlist.h`, `src/measurementsession.*` |
-| Measurement files (`.asd`, Touchstone, CSV, NWL) | `src/measurementfiles.*` |
-| Marker list | `src/markerlist.h` |
-| Remote API | `remoteapi/` |
-| Helpers | `src/debuglog.*`, `src/crc32.*`, `src/AA55BTPacket.*`, `src/usermessage.h` |
+| Analyzer connections, protocols, firmware updaters | `core/analyzer/`, `core/analyzer/updater/`, `core/devinfo/`, `core/ftdi/` |
+| App settings and file locations | `core/appconfig.*`, `core/apppaths.*` |
+| OSL calibration | `core/calibration.*` |
+| RF, TDR, chart and marker math | `core/rfmath.*`, `core/tdrmath.*`, `core/markermath.*` |
+| Measurement data, list rules, headless scan session | `core/measurementdata.*`, `core/measurementlist.h`, `core/measurementsession.*` |
+| Measurement files (`.asd`, Touchstone, CSV, NWL) | `core/measurementfiles.*` |
+| Marker list | `core/markerlist.h` |
+| Remote API | `core/remoteapi/` |
+| Helpers | `core/debuglog.*`, `core/crc32.*`, `core/AA55BTPacket.*`, `core/usermessage.h` |
 
 How the two sides connect:
 
@@ -82,7 +95,7 @@ How the two sides connect:
   `RemoteApiHost`, the interface the remote API talks to.
 - **Settings.** `AppConfig` is the app-wide settings module (loads and
   saves the ini). Some display-only settings haven't moved into it yet and
-  are still globals in `src/mainwindow.cpp` and `src/measurements.cpp`.
+  are still globals in `desktop/mainwindow.cpp` and `desktop/measurements.cpp`.
 
 Adding code: put anything that doesn't need a widget in the core and list
 it in `ANTSCOPE_CORE_SOURCES`/`ANTSCOPE_CORE_HEADERS`. If it won't compile
@@ -124,7 +137,7 @@ Otherwise none currently -- `ANTSCOPE_NEW_CONNECTION`, `ANTSCOPE_NEW_ANALYZER`,
 and `ANTSCOPE_OLD_TDR` used to gate old code paths they replaced; all
 three were always `ON`, and the flags and their dead OFF-path code are
 gone. `ANTSCOPE_DEBUG_BLE`'s raw TX/RX `qDebug()` calls are commented
-out at their call sites in `analyzer/ble_analyzer.cpp` instead of a
+out at their call sites in `core/analyzer/ble_analyzer.cpp` instead of a
 build option -- uncomment locally when actually debugging Bluetooth.
 
 ## macOS packaging
@@ -250,7 +263,7 @@ via `file(STRINGS)` in `CMakeLists.txt`, with a configure dependency on the
 file. The `-dev` suffix stays in `ANTSCOPEZ_VER_SUFFIX`. The same file on
 `master` is what the in-app update check fetches
 (`raw.githubusercontent.com/K4HEZ/AntScopeZ/master/version.txt`, see
-`src/updatechecker.cpp`), so bumping it on develop and ff-pushing to master
+`desktop/updatechecker.cpp`), so bumping it on develop and ff-pushing to master
 at release publishes the new "latest" -- no extra step. Set
 `ANTSCOPEZ_VERSION_URL` to test against another file.
 
@@ -273,11 +286,11 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
 - **Linux** — builds and runs. Uses the `hidapi` Linux backend and `libusb-1.0`.
   Bluetooth works on Linux.
 - **Windows** — uses the `hidapi` Windows backend, `setupapi`, and the bundled
-  FTDI DLLs in `ftdi/`. OpenSSL link flags are currently *not* applied; see the
+  FTDI DLLs in `core/ftdi/`. OpenSSL link flags are currently *not* applied; see the
   note in `CMakeLists.txt` -- confirmed 2026-08-30 this is correct as-is, not
   an oversight: Qt's prebuilt Windows kit ships a Schannel TLS backend by
   default and has no OpenSSL 3.x runtime to fall back to, so the one live
-  HTTPS caller (`src/licenseagent.cpp`) works with no extra linkage. `CMakePresets.json`
+  HTTPS caller (`desktop/licenseagent.cpp`) works with no extra linkage. `CMakePresets.json`
   has a `windows-mingw`/`windows-mingw-release` pair (Qt Online Installer's
   Qt 6.11.2 MinGW kit under `C:/Qt`) and `CMakeLists.txt` has an NSIS
   packaging block (`cpack -G NSIS`); `.github/workflows/windows-build.yml`
@@ -336,7 +349,7 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   `libqt6core6t64`) instead of treating them as private -- extra, unneeded
   `Depends:` entries rather than a missing/broken one, since the app still
   loads the bundled Qt 6.11 at runtime via RPATH regardless. Not fixed here.
-- `analyzer/updater/downloader.cpp` uses `QDomDocument::ParseResult`, which is
+- `core/analyzer/updater/downloader.cpp` uses `QDomDocument::ParseResult`, which is
   Qt 6.5+. A version guard keeps it building on 6.2–6.4.
 - ~~`mainwindow.cpp` (~234 KB) and `measurements.cpp` (~192 KB) are very
   large and are the main candidates for being split up.~~ **Done
@@ -463,7 +476,7 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
     handler already branches correctly on the active tab: `if
     (currentTab == "tab_s21") emit measureS21(...)`.
   - What's actually missing: **no capability gating exists anywhere.**
-    `AnalyzerParameters` (the model table, `analyzer/analyzerparameters.h`)
+    `AnalyzerParameters` (the model table, `core/analyzer/analyzerparameters.h`)
     has no "supports S21 / two-port" flag, and nothing checks the
     connected device's model before offering live S21 capture -- there's
     no UI path to it at all right now (the tab's visibility is driven
@@ -498,7 +511,7 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   `onefqwidget.cpp` -- already gone from that file by then, actually
   (removed by commit `d27827e`, "Remove OneFqWidget's dead UDP
   remote-control stub, superseded by json-tcp-api" -- see the
-  `remoteapi/`-module note further down; this paragraph's older wording
+  `core/remoteapi/`-module note further down; this paragraph's older wording
   didn't know that yet). By 2026-09-07, `CustomAnalyzer::load()` had been
   unhooked from the flag too (Custom Analyzer is meant to be a live,
   user-facing feature, not something needing `-developer`), leaving
@@ -576,7 +589,7 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
     - **No commentary anywhere in this codebase, or in the user guide's
       Supported Devices section, identifies which RigExpert model or
       firmware, if any, actually accepts `EFRX` or `FDB`.**
-      `AnalyzerParameters` (`analyzer/analyzerparameters.h`) has no
+      `AnalyzerParameters` (`core/analyzer/analyzerparameters.h`) has no
       per-model capability flags for either command -- nothing gates
       which devices offer these features because nothing in this
       codebase distinguishes them. Both may be vestigial from AntScope2's
@@ -645,7 +658,7 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
     dead UDP remote-control stub, superseded by json-tcp-api") rather than
     left dormant -- `onefqwidget.cpp`/`.h` have no socket code left at all.
     The
-    `remoteapi/` module (TCP JSON API, `json-tcp-api` branch) is the
+    `core/remoteapi/` module (TCP JSON API, `json-tcp-api` branch) is the
     real, current remote-control mechanism.
 
 - **Custom Analyzer (Settings > Analyzer) -- live, user-facing.** Not
@@ -663,7 +676,7 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
     classic NanoVNA VID:PID) but whose real frequency range or screen
     differs from what AntScopeZ assumes for that model. Picking a "prototype" only seeds sensible defaults; it
     never changes which protocol/commands are used to talk to the device.
-  - **Architecture:** `CustomAnalyzer` (`analyzer/customanalyzer.h/.cpp`)
+  - **Architecture:** `CustomAnalyzer` (`core/analyzer/customanalyzer.h/.cpp`)
     holds the persisted presets (`m_map` of alias -> preset,
     `m_currentAlias`, `m_useCustomized`) and saves/loads them under the
     `AntScopeZ.ini` `[CustomAnalyzers]` group. `Settings::initCustomizeTab()`
@@ -672,7 +685,7 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
     (`analyzerpro.cpp`) -- are the actual integration points: each checks
     `CustomAnalyzer::customized()` and substitutes the custom value in place
     of the real device's `AnalyzerParameters` entry (the fixed table of
-    ~35 real RigExpert models, `analyzer/analyzerparameters.h`).
+    ~35 real RigExpert models, `core/analyzer/analyzerparameters.h`).
   - **FIXED:** `AnalyzerPro::slotFullInfo()` (`analyzerpro.cpp`) null-derefed
     `AnalyzerParameters::byName(getModelString())` -- `getModelString()`
     returns `CustomAnalyzer::currentPrototype()` while customized, which is
@@ -731,7 +744,7 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
     `Screenshot` (`screenshot.cpp`) uses whatever it's given throughout
     buffer allocation, pixel decoding, and preview scaling. For RigExpert
     devices, `HidAnalyzer::makeScreenshot()`/`ComAnalyzer::makeScreenshot()`
-    (`analyzer/hid_analyzer.cpp`, `analyzer/com_analyzer.cpp`) send the
+    (`core/analyzer/hid_analyzer.cpp`, `core/analyzer/com_analyzer.cpp`) send the
     bare `screenshot\r` command with no width/height in it -- the device
     streams its own native, fixed-resolution pixel data, so a custom
     profile's width/height only decode correctly if set to match the real
@@ -743,7 +756,7 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
     to the 480x320 default otherwise.
   - **NanoVNA screen size (#54) -- this is what Custom Analyzer is for
     today.** The classic `NanoVNA` model entry
-    (`analyzer/analyzerparameters.h`, `NanovnaAnalyzer::CAPTURE_WIDTH`/
+    (`core/analyzer/analyzerparameters.h`, `NanovnaAnalyzer::CAPTURE_WIDTH`/
     `CAPTURE_HEIGHT`) defaults to 480x320 (RGB565, 307200-byte `capture`
     payload, confirmed from a raw debug log on a real H4-class unit); it
     was 320x240 (NanoVNASaver's documented classic size) until #54.
@@ -786,7 +799,7 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   - **`CALIBRATION_DEBUG_TOOLS`** -- both Ctrl+Alt+Shift+M/N shortcuts
     (`mainwindow_scan.cpp`) and the `WAIT_CALFIVEKOHM`/
     `WAIT_CALFIVEKOHM_START` response parsing they depend on
-    (`analyzer/hid_analyzer.cpp`). Never meant to be end-user-reachable at
+    (`core/analyzer/hid_analyzer.cpp`). Never meant to be end-user-reachable at
     all, regardless of what happened to `g_developerMode` (removed
     entirely 2026-09-07, see above) -- see `CMakeLists.txt`'s own warning
     comment for the full reasoning (short version: these alter the
