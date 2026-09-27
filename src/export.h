@@ -46,7 +46,7 @@ private:
     QString suggestedPath(const QString &ext) const;
 
     // Fills detailsLabel (name/points/type) from the selected measurement
-    // and shows/hides s2pBtn+its description to match -- called once from
+    // and the format list (2-port formats only for 2-port data) -- called once from
     // setMeasurements(), since that's the only place m_measureNumber is
     // ever set. Resolves the measurement the same "count back from the
     // newest" way suggestedPath() already does, so the details shown
@@ -55,17 +55,24 @@ private:
     // Sets up the "Apply AntScopeZ Corrections" checkboxes for mm.
     void updateCorrections(const measurement* mm);
 
+    // One entry per format in formatCombo.
+    enum class Kind { Asd, OnePort, TwoPort };
+    struct Format {
+        QString id;          // persisted in the ini
+        QString label;
+        QString ext;         // no leading dot
+        QString filter;      // file dialog filter
+        QString description;
+        Kind kind;
+        int type;            // exportData()/exportSParamData() type
+    };
+    QList<Format> m_formats;
+    void buildFormats(bool twoPort);
+    const Format* currentFormat() const;
+
 private slots:
-    void on_asdBtn_clicked();
-    void on_csvBtn_clicked();
-    void on_zRiBtn_clicked();
-    void on_sRiBtn_clicked();
-    void on_sMaBtn_clicked();
-    void on_nwlBtn_clicked();
-    void on_sDbBtn_clicked();
-    void on_s2pRiBtn_clicked();
-    void on_s2pMaBtn_clicked();
-    void on_s2pDbBtn_clicked();
+    void onFormatChanged();
+    void onSave();
 };
 
 #endif // EXPORT_H

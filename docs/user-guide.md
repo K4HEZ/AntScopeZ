@@ -1229,35 +1229,33 @@ picker defaults to showing every supported format at once ("All
 supported files"); narrow it to one via the dropdown if you'd rather.
 
 **File → Save...** (or the Measurements panel's right-click **Save
-as...**, see [Measurements panel](#controls-reference)) opens a Save
+as...**, see [Measurements panel](#controls-reference)) opens the Save
 dialog for one measurement -- select a row in Measurements first if
-you're using the File menu version. It offers:
+you're using the File menu version. Pick a **Format**; a short
+description of it appears underneath:
 
-- **AntScopeZ** -- the app's own `.asd` format
-- **CSV** -- comma-separated values
-- **NWL** -- APAK-EL format
-- **Z, RI** / **S, RI** / **S, MA** -- Touchstone (`.s1p`), as
-  impedance or S-parameters, in rectangular (real/imaginary) or polar
+- **AntScopeZ (.asd)** -- the app's own format; keeps the complete
+  measurement (see below)
+- **Touchstone Z, RI / S, RI / S, MA / S, dB (.s1p)** -- one-port
+  impedance or reflection, in rectangular (real/imaginary) or polar
   (magnitude/angle) form
-- **S2P, RI** / **S2P, MA** / **S2P, DB** -- Touchstone (`.s2p`), all
-  four S-parameters (S11, S21, S12, S22) -- only shown for a
-  measurement that actually has 2-port data; see
-  [Two-port measurement](#two-port-measurement-s21s12)
+- **CSV (.csv)** and **NWL (.nwl)** -- frequency, R and X as text
+- **Touchstone 2-port RI / MA / dB (.s2p)** -- all four S-parameters
+  (S11, S21, S12, S22) -- only listed for a measurement that actually
+  has 2-port data; see [Two-port measurement](#two-port-measurement-s21s12)
 
-None of these formats except `.asd` store a name (a re-opened Touchstone/
-CSV/NWL file is named after the file itself, same as `.asd`) or 2-port
-data (only S2P captures S21/S12/S22 -- saving a 2-port measurement as
-`.asd`, CSV, NWL, or a plain `.s1p` keeps only its R/X, the same data
-those formats always hold). Saving in any format clears that
-measurement's dirty flag (see [Measurements panel](#controls-reference))
--- there's no format-specific distinction there, just successfully
-saved vs. not.
-
-Above the format buttons, **Apply AntScopeZ Corrections** chooses
-whether `.s1p`, CSV and NWL files get OSL calibration and/or cable
-add/subtract applied; `.asd` always keeps the complete measurement
-instead. See
+For `.s1p`, CSV and NWL, **Apply AntScopeZ Corrections** below the format
+chooses whether OSL calibration and/or cable add/subtract are applied;
+`.asd` always keeps the complete measurement instead. See
 [Saving and reloading corrected data](#saving-and-reloading-corrected-data).
+Click **Save**, choose where, and the dialog closes. It remembers the
+format you used last.
+
+Only `.asd` and `.s2p` go beyond R/X: `.asd` keeps the calibrated
+version too, and S2P keeps S21/S12/S22 -- saving a 2-port measurement
+in any other format keeps only its R/X. A re-opened file is named after
+the file itself. Saving in any format clears that measurement's dirty
+flag (see [Measurements panel](#controls-reference)).
 
 Both dialogs default to your [Data folder](#files-and-directories);
 Save suggests a filename built from the measurement's own name rather

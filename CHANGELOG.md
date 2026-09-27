@@ -25,6 +25,8 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Changed
 
+- Save dialog: one Format chooser with a description, instead of ten
+  buttons; it closes after saving and remembers the last format.
 - Internal: analyzer layer, calibration, RF/TDR/marker math, file
   formats and the remote API split into a UI-free `antscopez_core`
   library, with core settings in a new `AppConfig` (groundwork for mobile

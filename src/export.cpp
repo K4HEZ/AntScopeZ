@@ -3,12 +3,17 @@
 #include "filedialog.h"
 #include "appconfig.h"
 #include <QRegularExpression>
+#include <QPushButton>
+#include <QSignalBlocker>
 
 Export::Export(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::Export)
 {
     ui->setupUi(this);
+    ui->buttonBox->button(QDialogButtonBox::Save)->setDefault(true);
+    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &Export::onSave);
+    connect(ui->formatCombo, &QComboBox::currentIndexChanged, this, &Export::onFormatChanged);
     adjustSize();
 
     QString path = Settings::setIniFile();
@@ -56,19 +61,10 @@ void Export::updateDetails()
 
     ui->detailsLabel->setText(tr("Name: %1\nPoints: %2\nType: %3").arg(name, points, type));
 
-    // S2P export only makes sense -- and only appears -- for a measurement
-    // that actually has 2-port data. The other 5 buttons stay available
-    // either way: a 2-port measurement's S11 slice is still legitimate
-    // 1-port data, so those aren't disabled just because S2P is now also
-    // an option.
+    // The 2-port formats are only listed for a measurement with 2-port
+    // data; the 1-port ones always are (its S11 is still valid 1-port data).
     updateCorrections(mm);
-
-    ui->s2pRiBtn->setVisible(isTwoPort);
-    ui->label_6->setVisible(isTwoPort);
-    ui->s2pMaBtn->setVisible(isTwoPort);
-    ui->label_7->setVisible(isTwoPort);
-    ui->s2pDbBtn->setVisible(isTwoPort);
-    ui->label_9->setVisible(isTwoPort);
+    buildFormats(isTwoPort);
     adjustSize();
 }
 
@@ -139,172 +135,110 @@ QString Export::suggestedPath(const QString &ext) const
 // here: a different Measurements method (JSON, not Touchstone/CSV/NWL),
 // but m_measureNumber means the same plain row to all of them regardless
 // (see Measurements::clearDirty()'s own comment).
-void Export::on_asdBtn_clicked()
+void Export::buildFormats(bool twoPort)
 {
-    if(m_measurements != NULL)
-    {
-        QString path = FileDialog::getSaveFileName(this, tr("Save"), suggestedPath("asd"), "AntScopeZ (*.asd)");
-        if(!path.isEmpty())
-        {
-            FileDialog::noteUserDataDirIfEnabled(path);
-            m_measurements->saveData(m_measureNumber, path);
-            m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
-        }
+    const QString s1p = "Touchstone (*.s1p)";
+    const QString s2p = "Touchstone 2-port (*.s2p)";
+    m_formats = {
+        {"asd", tr("AntScopeZ (.asd)"), "asd", "AntScopeZ (*.asd)",
+         tr("AntScopeZ's own format. Keeps the complete measurement: the points as "
+            "received, the OSL-calibrated version if there is one, and a note of the "
+            "corrections in effect. Doesn't hold 2-port (S21/S12) data."),
+         Kind::Asd, 0},
+        {"s1p-z-ri", tr("Touchstone Z, RI (.s1p)"), "s1p", s1p,
+         tr("One-port impedance (Z), real/imaginary."), Kind::OnePort, 0},
+        {"s1p-s-ri", tr("Touchstone S, RI (.s1p)"), "s1p", s1p,
+         tr("One-port reflection (S11), real/imaginary."), Kind::OnePort, 1},
+        {"s1p-s-ma", tr("Touchstone S, MA (.s1p)"), "s1p", s1p,
+         tr("One-port reflection (S11), magnitude/angle."), Kind::OnePort, 2},
+        {"s1p-s-db", tr("Touchstone S, dB (.s1p)"), "s1p", s1p,
+         tr("One-port reflection (S11), magnitude in dB/angle."), Kind::OnePort, 3},
+        {"csv", tr("CSV (.csv)"), "csv", "Comma Separated Values (*.csv)",
+         tr("Frequency, R and X as comma-separated values."), Kind::OnePort, 0},
+        {"nwl", tr("NWL (.nwl)"), "nwl", "APAK-EL (*.nwl)",
+         tr("Frequency, series R and X, APAK-EL NWL format."), Kind::OnePort, 0},
+    };
+    if (twoPort) {
+        m_formats << Format{"s2p-ri", tr("Touchstone 2-port, RI (.s2p)"), "s2p", s2p,
+                            tr("All four S-parameters (S11, S21, S12, S22), real/imaginary."), Kind::TwoPort, 0}
+                  << Format{"s2p-ma", tr("Touchstone 2-port, MA (.s2p)"), "s2p", s2p,
+                            tr("All four S-parameters (S11, S21, S12, S22), magnitude/angle."), Kind::TwoPort, 1}
+                  << Format{"s2p-db", tr("Touchstone 2-port, dB (.s2p)"), "s2p", s2p,
+                            tr("All four S-parameters (S11, S21, S12, S22), magnitude in dB/angle."), Kind::TwoPort, 2};
     }
+
+    // Last format used, if this measurement can be saved that way.
+    m_settings->beginGroup("Export");
+    QString last = m_settings->value("format", "asd").toString();
+    m_settings->endGroup();
+
+    QSignalBlocker block(ui->formatCombo);
+    ui->formatCombo->clear();
+    int select = 0;
+    for (int i = 0; i < m_formats.size(); ++i) {
+        ui->formatCombo->addItem(m_formats[i].label);
+        if (m_formats[i].id == last)
+            select = i;
+    }
+    ui->formatCombo->setCurrentIndex(select);
+    onFormatChanged();
 }
 
-void Export::on_csvBtn_clicked()
+const Export::Format* Export::currentFormat() const
 {
-    if(m_measurements != NULL)
-    {
-        QString path = FileDialog::getSaveFileName(this, tr("Export"), suggestedPath("csv"), "Comma Separated Values (*.csv)");
-        if(!path.isEmpty())
-        {
-            FileDialog::noteUserDataDirIfEnabled(path);
-            m_measurements->exportData(path, 0, m_measureNumber, ui->oslCheckBox->isChecked(), ui->cableCheckBox->isChecked());
-            m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
-        }
-    }
+    int i = ui->formatCombo->currentIndex();
+    return (i >= 0 && i < m_formats.size()) ? &m_formats[i] : nullptr;
 }
 
-void Export::on_nwlBtn_clicked()
+void Export::onFormatChanged()
 {
-    if(m_measurements != NULL)
-    {
-        QString path = FileDialog::getSaveFileName(this, tr("Export"), suggestedPath("nwl"), "APAK-EL (*.nwl)");
+    const Format* f = currentFormat();
+    if (f == nullptr)
+        return;
+    ui->formatDescription->setText(f->description);
 
-        if(!path.isEmpty())
-        {
-            FileDialog::noteUserDataDirIfEnabled(path);
-            m_measurements->exportData(path, 0, m_measureNumber, ui->oslCheckBox->isChecked(), ui->cableCheckBox->isChecked());
-            m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
-        }
-    }
+    bool corrections = (f->kind == Kind::OnePort);
+    ui->oslCheckBox->setVisible(corrections);
+    ui->cableCheckBox->setVisible(corrections);
+    if (f->kind == Kind::Asd)
+        ui->correctionsNote->setText(tr("Not needed: AntScopeZ files keep the complete measurement, "
+                                        "corrected and uncorrected."));
+    else if (f->kind == Kind::TwoPort)
+        ui->correctionsNote->setText(tr("2-port data isn't affected by AntScopeZ corrections."));
+    else
+        ui->correctionsNote->setText(tr("The analyzer's own calibration, if any, is always included."));
+    adjustSize();
 }
 
-void Export::on_zRiBtn_clicked()
+void Export::onSave()
 {
-        qInfo() << "Touchstone button clicked";
-    if(m_measurements != NULL)
-    {
-        QString path = FileDialog::getSaveFileName(this, tr("Export"), suggestedPath("s1p"), "Touchstone (*.s1p)");
+    const Format* f = currentFormat();
+    if (m_measurements == nullptr || f == nullptr)
+        return;
 
-        if(!path.isEmpty())
-        {
-            if (!path.endsWith(".s1p", Qt::CaseInsensitive))
-                path += ".s1p";
+    QString path = FileDialog::getSaveFileName(this, tr("Save"), suggestedPath(f->ext), f->filter);
+    if (path.isEmpty())
+        return;
+    if (!path.endsWith("." + f->ext, Qt::CaseInsensitive))
+        path += "." + f->ext;
 
-            FileDialog::noteUserDataDirIfEnabled(path);
-            m_measurements->exportData(path, 0, m_measureNumber, ui->oslCheckBox->isChecked(), ui->cableCheckBox->isChecked());
-            m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
-        }
+    FileDialog::noteUserDataDirIfEnabled(path);
+    switch (f->kind) {
+    case Kind::Asd:
+        m_measurements->saveData(m_measureNumber, path);
+        break;
+    case Kind::OnePort:
+        m_measurements->exportData(path, f->type, m_measureNumber,
+                                   ui->oslCheckBox->isChecked(), ui->cableCheckBox->isChecked());
+        break;
+    case Kind::TwoPort:
+        m_measurements->exportSParamData(path, f->type, m_measureNumber);
+        break;
     }
-}
+    m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
 
-void Export::on_sRiBtn_clicked()
-{
-    if(m_measurements != NULL)
-    {
-        QString path = FileDialog::getSaveFileName(this, tr("Export"), suggestedPath("s1p"), "Touchstone (*.s1p)");
-
-        if(!path.isEmpty())
-        {
-            if (!path.endsWith(".s1p", Qt::CaseInsensitive))
-                path += ".s1p";
-
-            FileDialog::noteUserDataDirIfEnabled(path);
-            m_measurements->exportData(path, 1, m_measureNumber, ui->oslCheckBox->isChecked(), ui->cableCheckBox->isChecked());
-            m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
-        }
-    }
-}
-
-void Export::on_sMaBtn_clicked()
-{
-    if(m_measurements != NULL)
-    {
-        QString path = FileDialog::getSaveFileName(this, tr("Export"), suggestedPath("s1p"), "Touchstone (*.s1p)");
-
-        if(!path.isEmpty())
-        {
-            if (!path.endsWith(".s1p", Qt::CaseInsensitive))
-                path += ".s1p";
-
-            FileDialog::noteUserDataDirIfEnabled(path);
-            m_measurements->exportData(path, 2, m_measureNumber, ui->oslCheckBox->isChecked(), ui->cableCheckBox->isChecked());
-            m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
-        }
-    }
-}
-
-void Export::on_sDbBtn_clicked()
-{
-    if(m_measurements != NULL)
-    {
-        QString path = FileDialog::getSaveFileName(this, tr("Export"), suggestedPath("s1p"), "Touchstone (*.s1p)");
-
-        if(!path.isEmpty())
-        {
-            if (!path.endsWith(".s1p", Qt::CaseInsensitive))
-                path += ".s1p";
-
-            FileDialog::noteUserDataDirIfEnabled(path);
-            m_measurements->exportData(path, 3, m_measureNumber, ui->oslCheckBox->isChecked(), ui->cableCheckBox->isChecked());
-            m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
-        }
-    }
-}
-
-void Export::on_s2pRiBtn_clicked()
-{
-    if(m_measurements != NULL)
-    {
-        QString path = FileDialog::getSaveFileName(this, tr("Export"), suggestedPath("s2p"), "Touchstone 2-port (*.s2p)");
-
-        if(!path.isEmpty())
-        {
-            if (!path.endsWith(".s2p", Qt::CaseInsensitive))
-                path += ".s2p";
-
-            FileDialog::noteUserDataDirIfEnabled(path);
-            m_measurements->exportSParamData(path, 0, m_measureNumber);
-            m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
-        }
-    }
-}
-
-void Export::on_s2pMaBtn_clicked()
-{
-    if(m_measurements != NULL)
-    {
-        QString path = FileDialog::getSaveFileName(this, tr("Export"), suggestedPath("s2p"), "Touchstone 2-port (*.s2p)");
-
-        if(!path.isEmpty())
-        {
-            if (!path.endsWith(".s2p", Qt::CaseInsensitive))
-                path += ".s2p";
-
-            FileDialog::noteUserDataDirIfEnabled(path);
-            m_measurements->exportSParamData(path, 1, m_measureNumber);
-            m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
-        }
-    }
-}
-
-void Export::on_s2pDbBtn_clicked()
-{
-    if(m_measurements != NULL)
-    {
-        QString path = FileDialog::getSaveFileName(this, tr("Export"), suggestedPath("s2p"), "Touchstone 2-port (*.s2p)");
-
-        if(!path.isEmpty())
-        {
-            if (!path.endsWith(".s2p", Qt::CaseInsensitive))
-                path += ".s2p";
-
-            FileDialog::noteUserDataDirIfEnabled(path);
-            m_measurements->exportSParamData(path, 2, m_measureNumber);
-            m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
-        }
-    }
+    m_settings->beginGroup("Export");
+    m_settings->setValue("format", f->id);
+    m_settings->endGroup();
+    accept();
 }
