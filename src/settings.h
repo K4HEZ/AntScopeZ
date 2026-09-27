@@ -173,7 +173,6 @@ signals:
 
     void cableActionChanged(int);
 
-    void exportCableSettings(QString _description);
 //    void connectNanoVNA(QString port);
 //    void disconnectNanoVNA();
 //    void connectSerial(QString port);
@@ -247,7 +246,6 @@ private slots:
     void on_phaseAxisMaxFinished();
     void on_zAxisMinFinished();
     void on_zAxisMaxFinished();
-    void on_exportCableSettings();
 //    void on_connectNanovna();
 //    void on_connectSerial();
 //    void on_connectBluetooth();

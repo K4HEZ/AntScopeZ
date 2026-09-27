@@ -5,16 +5,19 @@
 #include <QStringList>
 #include <QVector>
 #include <analyzer/analyzerparameters.h>
+#include "rfmath.h"
 
 class Calibration;
 
-// Corrections already baked into a measurement's points -- set for files
-// saved that way, so they aren't applied a second time.
+// AntScopeZ corrections applied to a set of points. On MeasurementData
+// (`applied`) it means already baked into its points (a file saved that way),
+// so they aren't applied a second time.
 struct Corrections
 {
     bool osl = false;          // AntScopeZ OSL calibration
     int cableMode = 0;         // 0 none, 1 cable subtracted, 2 cable added
-    double cableLengthFeet = 0;
+    RfMath::CableParams cable; // the cable model, when cableMode != 0
+    double cableLossFqMHz = 1; // frequency the loss figures are given at
     bool any() const { return osl || cableMode != 0; }
 };
 
@@ -54,6 +57,18 @@ struct MeasurementData
     QVector <UserData> dataUser;
     QStringList fieldsUser;
     Corrections applied;
+    // Calibrated points restored from a file, used by addPoint() while that
+    // file is loaded instead of the current calibration.
+    QVector<RawData> presetCalib;
+
+    // A calibrated version of every point exists (or is built in).
+    bool hasCalibrated() const
+    {
+        return applied.osl || (!dataRX.isEmpty() && dataRXCalib.size() == dataRX.size());
+    }
+    // The points with the requested corrections applied, skipping any
+    // already built in. cableMode as in Corrections.
+    QVector<RawData> exportPoints(bool osl, int cableMode, const RfMath::CableParams& cable) const;
 
     // Stores one analyzer point at `index` (replacing it if `replace` and it
     // exists -- Continuous re-sweeps -- else appending), plus its

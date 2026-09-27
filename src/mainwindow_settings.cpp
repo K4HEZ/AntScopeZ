@@ -103,8 +103,6 @@ void MainWindow::on_actionSettings_triggered()
     // Settings now.
     if(m_measurements)
     {
-        connect(m_settingsDialog, &Settings::exportCableSettings,
-                m_measurements, &Measurements::on_exportCableSettings);
     }
 
     // TODO

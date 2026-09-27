@@ -24,8 +24,20 @@ static QString correctionsLine(const Corrections& c)
     QString cable = (c.cableMode == 1) ? "subtract" : (c.cableMode == 2) ? "add" : "none";
     QString line = QString("! AntScopeZ corrections: OSL calibration=%1; cable=%2")
                        .arg(c.osl ? "yes" : "no", cable);
-    if (c.cableMode != 0)
-        line += QString(", length=%1 ft").arg(c.cableLengthFeet, 0, 'f', 2);
+    if (c.cableMode != 0) {
+        static const char* units[] = {"dB/100ft", "dB/ft", "dB/100m", "dB/m"};
+        const char* unit = units[qBound(0, c.cable.lossUnits, 3)];
+        QString at = c.cable.lossAtAnyFq ? QString("any frequency")
+                                         : QString("%1 MHz").arg(c.cableLossFqMHz);
+        line += QString(", length=%1 ft\n! AntScopeZ cable model: velocity factor %2, R0 %3 ohm, "
+                        "conductive loss %4 %6, dielectric loss %5 %6, at %7")
+                    .arg(c.cable.lengthFeet, 0, 'f', 2)
+                    .arg(c.cable.velFactor, 0, 'f', 4)
+                    .arg(c.cable.resistance, 0, 'f', 2)
+                    .arg(c.cable.lossConductive)
+                    .arg(c.cable.lossDielectric)
+                    .arg(unit, at);
+    }
     return line;
 }
 
@@ -38,7 +50,7 @@ static bool parseCorrectionsLine(const QString& upper, Corrections& c)
     c.cableMode = upper.contains("CABLE=SUBTRACT") ? 1 : upper.contains("CABLE=ADD") ? 2 : 0;
     int i = upper.indexOf("LENGTH=");
     if (i >= 0)
-        c.cableLengthFeet = upper.mid(i + 7).section(' ', 0, 0).toDouble();
+        c.cable.lengthFeet = upper.mid(i + 7).section(' ', 0, 0).toDouble();
     return true;
 }
 
@@ -47,7 +59,16 @@ static QJsonObject correctionsJson(const Corrections& c)
     QJsonObject o;
     o["OslCalibration"] = c.osl;
     o["Cable"] = (c.cableMode == 1) ? "subtract" : (c.cableMode == 2) ? "add" : "none";
-    o["CableLengthFeet"] = c.cableLengthFeet;
+    o["CableLengthFeet"] = c.cable.lengthFeet;
+    if (c.cableMode != 0) {
+        o["CableVelocityFactor"] = c.cable.velFactor;
+        o["CableR0"] = c.cable.resistance;
+        o["CableLossConductive"] = c.cable.lossConductive;
+        o["CableLossDielectric"] = c.cable.lossDielectric;
+        o["CableLossUnits"] = c.cable.lossUnits;
+        o["CableLossAtAnyFrequency"] = c.cable.lossAtAnyFq;
+        o["CableLossFrequencyMHz"] = c.cableLossFqMHz;
+    }
     return o;
 }
 
@@ -57,7 +78,16 @@ static Corrections correctionsFromJson(const QJsonObject& o)
     c.osl = o["OslCalibration"].toBool();
     QString cable = o["Cable"].toString();
     c.cableMode = (cable == "subtract") ? 1 : (cable == "add") ? 2 : 0;
-    c.cableLengthFeet = o["CableLengthFeet"].toDouble();
+    c.cable.lengthFeet = o["CableLengthFeet"].toDouble();
+    if (o.contains("CableVelocityFactor")) {
+        c.cable.velFactor = o["CableVelocityFactor"].toDouble();
+        c.cable.resistance = o["CableR0"].toDouble();
+        c.cable.lossConductive = o["CableLossConductive"].toDouble();
+        c.cable.lossDielectric = o["CableLossDielectric"].toDouble();
+        c.cable.lossUnits = o["CableLossUnits"].toInt();
+        c.cable.lossAtAnyFq = o["CableLossAtAnyFrequency"].toBool();
+        c.cableLossFqMHz = o["CableLossFrequencyMHz"].toDouble();
+    }
     return c;
 }
 
@@ -80,6 +110,8 @@ MeasurementFiles::ReadResult MeasurementFiles::readAsd(const QString& path)
     QJsonArray measureArray = mainObj["Measurements"].toArray();
     if (mainObj.contains("Corrections"))
         res.applied = correctionsFromJson(mainObj["Corrections"].toObject());
+    if (mainObj.contains("CorrectionsInEffect"))
+        res.inEffect = correctionsFromJson(mainObj["CorrectionsInEffect"].toObject());
 
     int size = measureArray.size();
     if (size < 2) {
@@ -93,6 +125,15 @@ MeasurementFiles::ReadResult MeasurementFiles::readAsd(const QString& path)
         RawData data;
         data.read(measureArray[i].toObject());
         res.raw.append(data);
+    }
+    // Only used if it matches the points one for one.
+    QJsonArray calArray = mainObj["CalibratedMeasurements"].toArray();
+    if (calArray.size() == size) {
+        for (int i = 0; i < size; ++i) {
+            RawData data;
+            data.read(calArray[i].toObject());
+            res.calibrated.append(data);
+        }
     }
     // First/last point, not min/max -- as the loader always did.
     res.fqMinMHz = res.raw.first().fq;
@@ -405,7 +446,8 @@ MeasurementFiles::ReadResult MeasurementFiles::readNwl(const QString& path)
     return res;
 }
 
-bool MeasurementFiles::writeAsd(QString path, const QVector<RawData>& data, const Corrections& applied)
+bool MeasurementFiles::writeAsd(QString path, const QVector<RawData>& data, const QVector<RawData>& calibrated,
+                                const Corrections& applied, const Corrections& inEffect)
 {
     // Was `if (path.indexOf(".asd") >= 0) { ... }` wrapping the whole
     // function -- a path without ".asd" in it (FileDialog::getSaveFileName()
@@ -438,8 +480,22 @@ bool MeasurementFiles::writeAsd(QString path, const QVector<RawData>& data, cons
         obj["x"] = data.at(i).x;
         measurementsArray.append(obj);
     }
+    // As-received points (with `applied` built in) -- what older readers use.
     mainObj["Measurements"] = measurementsArray;
     mainObj["Corrections"] = correctionsJson(applied);
+
+    if (calibrated.size() == data.size()) {
+        QJsonArray calArray;
+        for (const RawData& p : calibrated) {
+            QJsonObject obj;
+            obj["fq"] = p.fq;
+            obj["r"] = p.r;
+            obj["x"] = p.x;
+            calArray.append(obj);
+        }
+        mainObj["CalibratedMeasurements"] = calArray;
+    }
+    mainObj["CorrectionsInEffect"] = correctionsJson(inEffect);
 
     QJsonDocument saveDoc(mainObj);
 

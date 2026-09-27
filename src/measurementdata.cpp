@@ -22,6 +22,13 @@ bool MeasurementData::addPoint(const RawData& raw, int index, bool replace, doub
         return true;
     }
 
+    if (index < presetCalib.size()) {
+        storeAt(dataRXCalib, presetCalib.at(index), index, replace);
+        if (calibrated)
+            *calibrated = presetCalib.at(index);
+        return true;
+    }
+
     if (calibration == nullptr || !calibration->getCalibrationPerformed())
         return false;
 
@@ -37,4 +44,22 @@ bool MeasurementData::addPoint(const RawData& raw, int index, bool replace, doub
     if (calibrated)
         *calibrated = c;
     return true;
+}
+
+QVector<RawData> MeasurementData::exportPoints(bool osl, int cableMode, const RfMath::CableParams& cable) const
+{
+    QVector<RawData> out = (osl && !applied.osl && hasCalibrated()) ? dataRXCalib : dataRX;
+    if (cableMode != 0 && applied.cableMode == 0) {
+        for (RawData& p : out) {
+            // Same transform and clamps as the cable-corrected charts.
+            Complex z = RfMath::cableTransform(p.fq, p.r, p.x, cable, cableMode == 1);
+            p.r = z.real();
+            p.x = z.imag();
+            if (qIsNaN(p.r) || (p.r < 0.001))
+                p.r = 0.01;
+            if (qIsNaN(p.x))
+                p.x = 0;
+        }
+    }
+    return out;
 }

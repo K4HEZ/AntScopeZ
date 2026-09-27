@@ -254,7 +254,6 @@ Settings::Settings(QWidget *parent) :
 
     ui->lineEditPoints->setText("500");
     connect(ui->lineEditPoints, &QLineEdit::editingFinished, this, &Settings::on_PointsFinished);
-    connect(ui->exportBtn, &QPushButton::clicked, this, &Settings::on_exportCableSettings);
 
     // Bug #2247 / firmware-update concerns -- resolved: "Check for firmware
     // updates" phones home to RigExpert (device serial/OS/CPU/language/our
@@ -1914,36 +1913,6 @@ void Settings::on_systemImpedance()
     {
         emit Z0Changed(Z0);
     }
-}
-
-void Settings::on_exportCableSettings()
-{
-    QString desc;
-    if (m_farEndMeasurement != 0) {
-        QString units="dB/100ft";
-        int index = ui->cableLossComboBox->currentIndex();//(paramsList.at(5).toInt());//6. Loss units (0=dB/100ft, 1=dB/ft, 2=dB/100m, 3=dB/m)
-        switch(index) {
-            case 1: units="dB/ft"; break;
-            case 2: units="dB/100m"; break;
-            case 3: units="dB/m"; break;
-        }
-        QString fq = ui->anyFq->isChecked() ? "any frequency" : (ui->atMHz->text() + " MHz");
-
-        desc += QString("! %1 cable:\n")
-                .arg(m_farEndMeasurement==1?"Subtract":"Add");
-        desc += QString("! Velocity factor %1\n")
-                .arg(ui->velocityFactor->text().toDouble(), 0, 'f', 6, QChar(' '));
-        desc += QString("! Length %1, R0 %2\n")
-                .arg(ui->cableLen->text().toDouble(), 0, 'f', 6, QChar(' '))
-                .arg(ui->cableR0->text().toDouble(), 0, 'f', 2, QChar(' '));
-        QString conductiveLoss = QString("%1").arg(ui->conductiveLoss->text().toDouble(), 0, 'f', 6, QChar(' '));
-        desc += QString("! Conductive loss %1 %2 at %3\n").arg(conductiveLoss, units, fq);
-        QString dielectricLoss = QString("%1").arg(ui->dielectricLoss->text().toDouble(), 0, 'f', 6, QChar(' '));
-        desc += QString("! Dielectric loss %1 %2 at %3").arg(dielectricLoss, units, fq);
-    } else {
-        desc = "! Ignore cable";
-    }
-    emit exportCableSettings(desc);
 }
 
 void Settings::setRestrictFq(bool value)

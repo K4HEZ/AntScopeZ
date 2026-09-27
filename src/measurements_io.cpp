@@ -26,12 +26,23 @@ void Measurements::saveData(quint32 number, QString path)
     if (number >= (quint32)g_maxMeasurements)
         number = g_maxMeasurements-1;
 
-    bool calibr = (m_calibration != nullptr) && m_calibration->getCalibrationEnabled();
+    // Lossless: as-received points, their calibrated copy if there is one,
+    // and a note of what was switched on -- independent of what's on screen.
     const measurement& mm = m_measurements.at(number);
-    Corrections applied = mm.applied; // anything already baked in stays recorded
-    if (calibr)
-        applied.osl = true;
-    MeasurementFiles::writeAsd(path, calibr ? mm.dataRXCalib : mm.dataRX, applied);
+    QVector<RawData> calibrated;
+    if (!mm.applied.osl && mm.hasCalibrated())
+        calibrated = mm.dataRXCalib;
+    MeasurementFiles::writeAsd(path, mm.dataRX, calibrated, mm.applied, currentCorrections());
+}
+
+Corrections Measurements::currentCorrections() const
+{
+    Corrections c;
+    c.osl = (m_calibration != nullptr) && m_calibration->getCalibrationEnabled();
+    c.cableMode = (m_farEndMeasurement == 1 || m_farEndMeasurement == 2) ? m_farEndMeasurement : 0;
+    c.cable = cableParams();
+    c.cableLossFqMHz = m_cableLossFqMHz;
+    return c;
 }
 
 void Measurements::loadData(QString path)
@@ -54,6 +65,7 @@ void Measurements::loadData(QString path)
                           static_cast<qint64>(r.fqMaxMHz * 1000000), size);
         m_measurements.last().dirty = false; // loaded from a file, see measurement::dirty's own comment
         noteLoadedCorrections(r.applied);
+        m_measurements.last().presetCalib = r.calibrated;
 
         ProgressDlg* progressDlg = new ProgressDlg();
         progressDlg->setValue(0);
@@ -74,6 +86,7 @@ void Measurements::loadData(QString path)
         }
         progressDlg->hide();
         delete progressDlg;
+        m_measurements.last().presetCalib.clear();
 
         emit import_finished(r.fqMinMHz*1000, r.fqMaxMHz*1000);
         // Points column stays "--" (the on_newMeasurement() table rebuild's
@@ -91,48 +104,27 @@ void Measurements::loadData(QString path)
     on_redrawGraphs();
 }
 
-void Measurements::exportData(QString _name, int _type, int _number, bool _applyCable, QString _description)
+void Measurements::exportData(QString _name, int _type, int _number, bool _applyOsl, bool _applyCable)
 {
     if (_number < 0 || m_measurements.isEmpty() || (_number >= m_measurements.size()))
         return;
 
-    bool calibr = (m_calibration != nullptr) && (m_calibration->getCalibrationEnabled());
-    QVector<RawData> vector;
-    if (_applyCable)
-    {
-        // Cable-corrected points are built from the calibrated ones when
-        // calibration is on, so they're used as-is either way.
-        switch(m_farEndMeasurement) {
-        case 1:
-            vector = m_farEndMeasurementsSub.at(_number).dataRX;
-            break;
-        case 2:
-            vector = m_farEndMeasurementsAdd.at(_number).dataRX;
-            break;
-        default:
-            vector = calibr ? m_measurements.at(_number).dataRXCalib : m_measurements.at(_number).dataRX;
-            break;
-        }
-    } else {
-        vector = calibr ? m_measurements.at(_number).dataRXCalib : m_measurements.at(_number).dataRX;
-    }
-
     const measurement& mm = m_measurements.at(_number);
-    Corrections applied = mm.applied;
-    if (calibr)
-        applied.osl = true;
-    if (_applyCable && (m_farEndMeasurement == 1 || m_farEndMeasurement == 2) && mm.applied.cableMode == 0) {
-        applied.cableMode = m_farEndMeasurement;
-        applied.cableLengthFeet = m_cableLength;
-    }
-    exportData(_name, _type, vector, _description, applied);
-}
+    Corrections cur = currentCorrections();
+    int cableMode = _applyCable ? cur.cableMode : 0;
+    QVector<RawData> points = mm.exportPoints(_applyOsl, cableMode, cur.cable);
 
-void Measurements::exportData(QString _name, int _type, QVector<RawData>& vector, QString _description,
-                              const Corrections& applied)
-{
-    double z0 = ((m_calibration != NULL) && (m_calibration->getCalibrationEnabled())) ? m_calibration->getZ0() : 50;
-    MeasurementFiles::writeRaw(_name, _type, vector, z0, _description, applied);
+    // What the exported points have in them, built-in corrections included.
+    Corrections rec = mm.applied;
+    if (_applyOsl && mm.hasCalibrated())
+        rec.osl = true;
+    if (cableMode != 0 && mm.applied.cableMode == 0) {
+        rec.cableMode = cableMode;
+        rec.cable = cur.cable;
+        rec.cableLossFqMHz = cur.cableLossFqMHz;
+    }
+    double z0 = (rec.osl && m_calibration != nullptr) ? m_calibration->getZ0() : 50;
+    MeasurementFiles::writeRaw(_name, _type, points, z0, QString(), rec);
 }
 
 void Measurements::importData(QString _name, bool /*user_format*/)

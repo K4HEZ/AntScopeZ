@@ -144,7 +144,10 @@ public:
     // measurement::serialNumber's assigner -- max used + 1, wrap at 99.
     // Runs for every new measurement (scan or loaded file).
 
-    void exportData(QString _name, int _type, int _number, bool _applyCable=false, QString _description=QString());
+    // Writes .s1p/.csv/.nwl with the chosen AntScopeZ corrections applied.
+    void exportData(QString _name, int _type, int _number, bool _applyOsl, bool _applyCable);
+    // Corrections currently switched on (Calibration checkbox, Settings > Cable).
+    Corrections currentCorrections() const;
     // 2-port Touchstone (.s2p) export -- straight from dataSParam (real
     // S11/S21/S12/S22, already Z0-normalized at import time), not derived
     // from dataRX like exportData() above. Silently does nothing if the
@@ -481,8 +484,6 @@ private:
     static QString pointsCellText(const measurement& mm);
     void redrawSmith(bool _incrementally);
     void redrawUser(bool _incrementally);
-    void exportData(QString _name, int _type, QVector<RawData>& vector, QString _description=QString(),
-                    const Corrections& applied = Corrections());
     void noteLoadedCorrections(const Corrections& applied);
 
 signals:
@@ -547,7 +548,6 @@ public slots:
     void on_mainWindowMinimized(bool minimized);
     void on_isRangeChanged(bool);
     void on_impedanceChanged(double _z0);
-    void on_exportCableSettings(QString _description);
 
     bool on_measurementComplete(); // returns true if the just-finished (empty) row was deleted
     void toggleVisibility(int row, bool _state);

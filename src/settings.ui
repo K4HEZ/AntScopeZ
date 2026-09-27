@@ -1684,13 +1684,6 @@ Was computed from Window Background, now directly-editable.</string>
           </spacer>
          </item>
          <item>
-          <widget class="QPushButton" name="exportBtn">
-           <property name="text">
-            <string>Export</string>
-           </property>
-          </widget>
-         </item>
-         <item>
           <widget class="QPushButton" name="updateGraphsBtn">
            <property name="text">
             <string>Update graphs</string>
@@ -2975,7 +2968,6 @@ discards queued data -- only that AntScopeZ resyncs).</string>
   <tabstop>subtractCableBtn</tabstop>
   <tabstop>addCableBtn</tabstop>
   <tabstop>cableComboBox</tabstop>
-  <tabstop>exportBtn</tabstop>
   <tabstop>updateGraphsBtn</tabstop>
   <tabstop>customizeCheckBox</tabstop>
   <tabstop>fqRestrictCheckBox</tabstop>

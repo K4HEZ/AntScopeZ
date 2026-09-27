@@ -582,8 +582,11 @@ smaller than you'd expect for your cable and length.
 
 | Control | What it does |
 |---|---|
-| Export | Exports the current/most recent measurement to a Touchstone file, with a comment block describing the active cable settings (Subtract/Add, velocity factor, length, R0, loss) embedded in it, plus a line recording which corrections are applied (see [Saving and reloading corrected data](#saving-and-reloading-corrected-data)). Needs at least one scan first -- with none, it shows a notification instead of opening. |
 | Update graphs | Applies whatever's currently in this tab immediately, without closing the dialog first |
+
+To save cable-corrected data, use File → Save... and tick the cable box
+under **Apply AntScopeZ Corrections** (see
+[Saving and reloading corrected data](#saving-and-reloading-corrected-data)).
 
 ### Themes tab
 
@@ -1037,38 +1040,60 @@ How it fits with everything else:
 - **Scope:** it's one global setting, applied to every measurement on
   screen, including files you've loaded (except files already saved with
   a cable correction -- see below).
-- **Save (.asd)** stores the measurement without the cable correction.
-  The Cable tab's **Export** writes cable-corrected values.
+- **Saving:** an `.asd` file keeps the measurement without the cable
+  correction (plus a note of the cable settings in effect); the Save
+  dialog's **Apply AntScopeZ Corrections** box writes cable-corrected
+  `.s1p`, CSV or NWL files.
 
 ### Saving and reloading corrected data
 
-Save and Export write what you see, and **AntScopeZ records in the file
-which corrections were already applied**: an `.asd` file stores it in the
-file itself, and a Touchstone `.s1p` export adds a comment line such as
+**AntScopeZ files (`.asd`) keep everything.** Saving a measurement as
+`.asd` stores the points as received from the analyzer, plus their
+OSL-calibrated version if one exists, plus a note of which corrections
+were switched on. Reopening it gives you the complete measurement back:
+the Calibration checkbox and Cable setting work on it just as they did
+before it was saved -- using the calibration saved in the file, not
+whatever calibration is current. Older AntScopeZ and AntScope2 versions
+can still open these files; they read the as-received points.
+
+**Exports (`.s1p`, CSV, NWL) hold one version of the data.** The Save
+dialog's **Apply AntScopeZ Corrections** box picks which:
+
+- **OSL calibration** -- starts checked when Calibration is on; greyed
+  out if the measurement has no calibrated version.
+- **Cable subtract/add** -- starts checked when Settings → Cable is set
+  to Subtract or Add (the cable length is shown next to it); greyed out
+  when it's Do nothing.
+
+The analyzer's own calibration, if any, is always included. S2P exports
+aren't affected by either box.
+
+A Touchstone `.s1p` export records what was applied, in comment lines
+such as
 
 ```
 ! AntScopeZ corrections: OSL calibration=yes; cable=subtract, length=12.00 ft
+! AntScopeZ cable model: velocity factor 0.6600, R0 50.00 ohm, conductive loss 0.5 dB/100ft, dielectric loss 0.1 dB/100ft, at any frequency
 ```
 
-When you open one of these files, AntScopeZ shows it exactly as saved and
-won't apply those corrections a second time (a short notice says so) --
-regardless of how the Calibration checkbox or Cable setting are set.
-Corrections the file *doesn't* have still apply normally, e.g. turning on
-cable subtract for a file saved with only OSL calibration.
+When you reopen one, AntScopeZ shows it as saved and won't apply those
+corrections again (a short notice says so), whatever the Calibration
+checkbox and Cable setting are; corrections it doesn't have still apply
+normally. In the Save dialog, a correction that's already built into a
+measurement shows as checked and "already applied".
 
-| Calibration | Cable | Charts / markers show | Save (.asd) writes | Cable tab Export writes |
-|---|---|---|---|---|
-| off | Do nothing | as received from the analyzer | as received | as received |
-| on | Do nothing | OSL-corrected | OSL-corrected | OSL-corrected |
-| off | Subtract/Add | cable-corrected | as received | cable-corrected |
-| on | Subtract/Add | OSL + cable-corrected | OSL-corrected | OSL + cable-corrected |
+| Format | What's saved | When you reopen it |
+|---|---|---|
+| `.asd` | As received, plus the calibrated version, plus a note of the settings | Complete -- Calibration and Cable work on it as before |
+| `.s1p` | The corrections you ticked, recorded in the file | Shown as saved; recorded corrections aren't applied again |
+| CSV, NWL | The corrections you ticked, *not* recorded | Treated as uncorrected -- see below |
 
-**Files that don't carry this record** -- CSV and NWL exports, `.asd` or
-Touchstone files from older AntScopeZ versions or AntScope2, and files
-from other programs -- are treated as uncorrected measurements, so a
-correction you already applied would be applied again. Name those so you
-can tell later, e.g. `40m-dipole_raw.csv` vs. `40m-dipole_osl.csv`, and
-leave Calibration/Cable off when reopening a corrected one.
+**Files that don't record corrections** -- CSV and NWL, files from
+older AntScopeZ versions or AntScope2, and files from other programs --
+are treated as uncorrected, so a correction already in them would be
+applied again. Name those so you can tell later (e.g.
+`40m-dipole_osl.csv`), and leave Calibration/Cable off when reopening a
+corrected one.
 
 ## Presets and bands
 
@@ -1228,9 +1253,10 @@ measurement's dirty flag (see [Measurements panel](#controls-reference))
 -- there's no format-specific distinction there, just successfully
 saved vs. not.
 
-`.asd` files and `.s1p` exports also record which corrections (OSL
-calibration, cable add/subtract) were already applied, so reopening them
-doesn't apply those corrections twice; CSV and NWL don't. See
+Above the format buttons, **Apply AntScopeZ Corrections** chooses
+whether `.s1p`, CSV and NWL files get OSL calibration and/or cable
+add/subtract applied; `.asd` always keeps the complete measurement
+instead. See
 [Saving and reloading corrected data](#saving-and-reloading-corrected-data).
 
 Both dialogs default to your [Data folder](#files-and-directories);

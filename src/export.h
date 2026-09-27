@@ -19,8 +19,7 @@ public:
     explicit Export(QWidget *parent = 0);
     ~Export();
 
-    void setMeasurements(Measurements * _measurements, quint32 number,
-                         bool _applyCable=false, QString _description=QString());
+    void setMeasurements(Measurements * _measurements, quint32 number);
 
 private:
     Ui::Export *ui;
@@ -28,8 +27,6 @@ private:
     QSettings * m_settings;
 
     quint32 m_measureNumber;
-    bool m_bApplyCable = false;
-    QString m_description;
 
     // Suggested save path for the selected measurement with the given
     // extension (no leading dot) -- FileDialog::userDataDir() plus a
@@ -55,6 +52,8 @@ private:
     // newest" way suggestedPath() already does, so the details shown
     // always describe the same measurement a click would actually export.
     void updateDetails();
+    // Sets up the "Apply AntScopeZ Corrections" checkboxes for mm.
+    void updateCorrections(const measurement* mm);
 
 private slots:
     void on_asdBtn_clicked();

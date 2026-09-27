@@ -15,9 +15,13 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 - README Credits section and About dialog line crediting cable data
   sources (AC6LA and manufacturers).
-- `.asd` files and `.s1p` exports record which corrections (OSL
-  calibration, cable add/subtract) were applied; reopening such a file
-  shows it as saved instead of applying them again.
+- `.asd` files are lossless: they keep the as-received points, the
+  OSL-calibrated version (if any) and a note of the corrections in
+  effect, so reopening restores the complete measurement.
+- Save dialog: "Apply AntScopeZ Corrections" chooses whether `.s1p`, CSV
+  and NWL exports get OSL calibration and/or cable add/subtract. `.s1p`
+  records what was applied (including the cable model); reopening shows
+  it as saved instead of applying it again.
 
 ### Changed
 
@@ -42,6 +46,11 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   wrote an empty file and the TDR chart was blank.
 - One Fq readout ignored cable add/subtract.
 - Docs: cable preset count said ~150; it's over 100.
+
+### Removed
+
+- Settings → Cable "Export" button -- the Save dialog's corrections box
+  replaces it.
 
 ### Documentation
 
@@ -79,6 +88,11 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 - macOS: bands list, Settings cables and User Guide were empty/erroring
   (data files looked up in `Resources/`, staged in `MacOS/`); `~/AntScopeZ`
   now created on demand (issue #60). macOS `.dmg` rebuilt with this fix.
+
+### Removed
+
+- Settings → Cable "Export" button -- the Save dialog's corrections box
+  replaces it.
 
 ### Documentation
 
@@ -177,6 +191,11 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   endpoint that it currently returns an empty result for every input,
   real or fake, so that's not a transient condition worth retrying. Now
   says so plainly instead.
+
+### Removed
+
+- Settings → Cable "Export" button -- the Save dialog's corrections box
+  replaces it.
 
 ### Documentation
 
@@ -293,6 +312,11 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   BUILDINFO.md was trimmed to match.
 - The standalone "Edit ITU Bands..." dialog (`EditBandsDialog`) -- its
   functionality now lives on Settings' new ITU Bands tab instead.
+
+### Removed
+
+- Settings → Cable "Export" button -- the Save dialog's corrections box
+  replaces it.
 
 ### Documentation
 
@@ -442,6 +466,11 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   visibility checkbox is turned on.
 - Settings > General: line-width spinboxes for the selected measurement
   vs. every other loaded one (S21 tab and elsewhere), 1-10px.
+
+### Removed
+
+- Settings → Cable "Export" button -- the Save dialog's corrections box
+  replaces it.
 
 ### Documentation
 

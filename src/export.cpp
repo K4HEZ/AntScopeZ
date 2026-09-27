@@ -1,6 +1,7 @@
 #include "export.h"
 #include "ui_export.h"
 #include "filedialog.h"
+#include "appconfig.h"
 #include <QRegularExpression>
 
 Export::Export(QWidget *parent) :
@@ -13,9 +14,11 @@ Export::Export(QWidget *parent) :
     QString path = Settings::setIniFile();
     m_settings = new QSettings(path, QSettings::IniFormat);
     m_settings->beginGroup("Export");
+    // Position only -- the size comes from the layout, so an old, smaller
+    // saved size can't squeeze the text.
     QRect rect = m_settings->value("geometry", 0).toRect();
     if(rect.x() != 0) {
-        this->setGeometry(rect);
+        this->move(rect.topLeft());
     }
     m_settings->endGroup();
 }
@@ -29,12 +32,10 @@ Export::~Export()
     delete ui;
 }
 
-void Export::setMeasurements(Measurements * _measurements, quint32 number, bool _applyCable, QString _description)
+void Export::setMeasurements(Measurements * _measurements, quint32 number)
 {
     m_measurements = _measurements;
     m_measureNumber = number;
-    m_bApplyCable = _applyCable;
-    m_description = _description;
     updateDetails();
 }
 
@@ -60,12 +61,47 @@ void Export::updateDetails()
     // either way: a 2-port measurement's S11 slice is still legitimate
     // 1-port data, so those aren't disabled just because S2P is now also
     // an option.
+    updateCorrections(mm);
+
     ui->s2pRiBtn->setVisible(isTwoPort);
     ui->label_6->setVisible(isTwoPort);
     ui->s2pMaBtn->setVisible(isTwoPort);
     ui->label_7->setVisible(isTwoPort);
     ui->s2pDbBtn->setVisible(isTwoPort);
     ui->label_9->setVisible(isTwoPort);
+    adjustSize();
+}
+
+// Each box starts checked when that correction is switched on; greyed out
+// when it isn't available for this measurement; checked and locked when the
+// measurement already has it built in (a file saved that way).
+void Export::updateCorrections(const measurement* mm)
+{
+    Corrections cur = m_measurements != nullptr ? m_measurements->currentCorrections() : Corrections();
+
+    bool oslBuiltIn = mm != nullptr && mm->applied.osl;
+    bool oslAvail = mm != nullptr && mm->hasCalibrated();
+    ui->oslCheckBox->setChecked(oslBuiltIn || (oslAvail && cur.osl));
+    ui->oslCheckBox->setEnabled(oslAvail && !oslBuiltIn);
+    ui->oslCheckBox->setText(oslBuiltIn ? tr("OSL calibration (already applied)")
+                             : oslAvail ? tr("OSL calibration")
+                             : tr("OSL calibration (not available for this measurement)"));
+
+    int builtInCable = mm != nullptr ? mm->applied.cableMode : 0;
+    QString mode = [](int m) {
+        return m == 1 ? tr("Cable subtract") : m == 2 ? tr("Cable add") : tr("Cable add/subtract");
+    }(builtInCable != 0 ? builtInCable : cur.cableMode);
+    ui->cableCheckBox->setChecked(builtInCable != 0 || cur.cableMode != 0);
+    ui->cableCheckBox->setEnabled(builtInCable == 0 && cur.cableMode != 0);
+    if (builtInCable != 0) {
+        ui->cableCheckBox->setText(tr("%1 (already applied)").arg(mode));
+    } else if (cur.cableMode != 0) {
+        bool metric = AppConfig::get().measureSystemMetric;
+        double len = metric ? cur.cable.lengthFeet / FEETINMETER : cur.cable.lengthFeet;
+        ui->cableCheckBox->setText(tr("%1 (%2 %3)").arg(mode).arg(len, 0, 'f', 2).arg(metric ? tr("m") : tr("ft")));
+    } else {
+        ui->cableCheckBox->setText(tr("Cable add/subtract (off in Settings > Cable)"));
+    }
 }
 
 QString Export::suggestedPath(const QString &ext) const
@@ -125,7 +161,7 @@ void Export::on_csvBtn_clicked()
         if(!path.isEmpty())
         {
             FileDialog::noteUserDataDirIfEnabled(path);
-            m_measurements->exportData(path, 0, m_measureNumber, m_bApplyCable);
+            m_measurements->exportData(path, 0, m_measureNumber, ui->oslCheckBox->isChecked(), ui->cableCheckBox->isChecked());
             m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
         }
     }
@@ -140,7 +176,7 @@ void Export::on_nwlBtn_clicked()
         if(!path.isEmpty())
         {
             FileDialog::noteUserDataDirIfEnabled(path);
-            m_measurements->exportData(path, 0, m_measureNumber, m_bApplyCable);
+            m_measurements->exportData(path, 0, m_measureNumber, ui->oslCheckBox->isChecked(), ui->cableCheckBox->isChecked());
             m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
         }
     }
@@ -159,8 +195,7 @@ void Export::on_zRiBtn_clicked()
                 path += ".s1p";
 
             FileDialog::noteUserDataDirIfEnabled(path);
-            m_measurements->exportData(path, 0, m_measureNumber,
-                                       m_bApplyCable, m_description);
+            m_measurements->exportData(path, 0, m_measureNumber, ui->oslCheckBox->isChecked(), ui->cableCheckBox->isChecked());
             m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
         }
     }
@@ -178,7 +213,7 @@ void Export::on_sRiBtn_clicked()
                 path += ".s1p";
 
             FileDialog::noteUserDataDirIfEnabled(path);
-            m_measurements->exportData(path, 1, m_measureNumber, m_bApplyCable, m_description);
+            m_measurements->exportData(path, 1, m_measureNumber, ui->oslCheckBox->isChecked(), ui->cableCheckBox->isChecked());
             m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
         }
     }
@@ -196,7 +231,7 @@ void Export::on_sMaBtn_clicked()
                 path += ".s1p";
 
             FileDialog::noteUserDataDirIfEnabled(path);
-            m_measurements->exportData(path, 2, m_measureNumber, m_bApplyCable, m_description);
+            m_measurements->exportData(path, 2, m_measureNumber, ui->oslCheckBox->isChecked(), ui->cableCheckBox->isChecked());
             m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
         }
     }
@@ -214,7 +249,7 @@ void Export::on_sDbBtn_clicked()
                 path += ".s1p";
 
             FileDialog::noteUserDataDirIfEnabled(path);
-            m_measurements->exportData(path, 3, m_measureNumber, m_bApplyCable, m_description);
+            m_measurements->exportData(path, 3, m_measureNumber, ui->oslCheckBox->isChecked(), ui->cableCheckBox->isChecked());
             m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
         }
     }
@@ -232,7 +267,7 @@ void Export::on_s2pRiBtn_clicked()
                 path += ".s2p";
 
             FileDialog::noteUserDataDirIfEnabled(path);
-            m_measurements->exportSParamData(path, 0, m_measureNumber, m_description);
+            m_measurements->exportSParamData(path, 0, m_measureNumber);
             m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
         }
     }
@@ -250,7 +285,7 @@ void Export::on_s2pMaBtn_clicked()
                 path += ".s2p";
 
             FileDialog::noteUserDataDirIfEnabled(path);
-            m_measurements->exportSParamData(path, 1, m_measureNumber, m_description);
+            m_measurements->exportSParamData(path, 1, m_measureNumber);
             m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
         }
     }
@@ -268,7 +303,7 @@ void Export::on_s2pDbBtn_clicked()
                 path += ".s2p";
 
             FileDialog::noteUserDataDirIfEnabled(path);
-            m_measurements->exportSParamData(path, 2, m_measureNumber, m_description);
+            m_measurements->exportSParamData(path, 2, m_measureNumber);
             m_measurements->clearDirty(m_measureNumber); // see measurement::dirty's own comment
         }
     }
