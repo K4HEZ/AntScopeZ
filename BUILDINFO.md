@@ -58,6 +58,7 @@ Directories:
 core/       antscopez_core -- no UI
 desktop/    AntScopeZ desktop app (widgets, charts, dialogs, .ui files)
 desktop/resources/   icons and res.qrc
+mobile/     phone app (Qt Quick) -- its own CMake project, see below
 shared/     data files installed with the app (cable list, ITU defaults, sample scans)
 ```
 
