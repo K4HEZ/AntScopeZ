@@ -38,6 +38,7 @@ qt_add_qml_module(AntScopeZMobile
         Main.qml
         ConnectionPage.qml
         ScanPage.qml
+        SettingsPage.qml
 )
 
 target_compile_definitions(AntScopeZMobile PRIVATE

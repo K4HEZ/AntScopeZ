@@ -28,6 +28,12 @@ class AnalyzerController : public QObject
     Q_PROPERTY(QVariantList points READ points NOTIFY pointsChanged)
     Q_PROPERTY(int minSwrIndex READ minSwrIndex NOTIFY pointsChanged)
 
+    // Scan settings, set from SettingsPage and used by scan().
+    Q_PROPERTY(double fromKHz READ fromKHz WRITE setFromKHz NOTIFY fromKHzChanged)
+    Q_PROPERTY(double toKHz READ toKHz WRITE setToKHz NOTIFY toKHzChanged)
+    Q_PROPERTY(int sweepPoints READ sweepPoints WRITE setSweepPoints NOTIFY sweepPointsChanged)
+    Q_PROPERTY(double z0 READ z0 WRITE setZ0 NOTIFY z0Changed)
+
 public:
     explicit AnalyzerController(QObject* parent = nullptr);
 
@@ -40,10 +46,19 @@ public:
     QVariantList points() const { return m_points; }
     int minSwrIndex() const { return m_minSwrIndex; }
 
+    double fromKHz() const { return m_fromKHz; }
+    double toKHz() const { return m_toKHz; }
+    int sweepPoints() const { return m_sweepPoints; }
+    double z0() const { return m_z0; }
+    void setFromKHz(double v);
+    void setToKHz(double v);
+    void setSweepPoints(int v);
+    void setZ0(double v);
+
     Q_INVOKABLE void search();
     Q_INVOKABLE void connectTo(int index);
     Q_INVOKABLE void disconnectAnalyzer();
-    Q_INVOKABLE void scan(double fromKHz, double toKHz, int points);
+    Q_INVOKABLE void scan();
     Q_INVOKABLE void stop();
 
 signals:
@@ -53,6 +68,10 @@ signals:
     void measuringChanged();
     void statusChanged();
     void pointsChanged();
+    void fromKHzChanged();
+    void toKHzChanged();
+    void sweepPointsChanged();
+    void z0Changed();
 
 private:
     void startSearch();
@@ -75,6 +94,10 @@ private:
     QString m_status;
     QVariantList m_points;
     int m_minSwrIndex = -1;
+
+    double m_fromKHz = 14000;
+    double m_toKHz = 14350;
+    int m_sweepPoints = 50;
     double m_z0 = 50;
 };
 

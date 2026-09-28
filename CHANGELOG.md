@@ -23,8 +23,9 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 - `.asd` and `.s1p` record the corrections a measurement was saved with
   (`.s1p` including the cable model); `.asd` also keeps the analyzer's
   original points.
-- Early mobile app (`mobile/`, Qt Quick): Bluetooth connect and scan.
-  Builds for Android and, for testing, the desktop.
+- Early mobile app (`mobile/`, Qt Quick): Bluetooth connect and scan, an
+  SWR chart, and range/points/Z0 settings. Builds for Android and, for
+  testing, the desktop.
 
 ### Changed
 

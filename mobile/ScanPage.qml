@@ -14,33 +14,10 @@ Page {
         anchors.margins: 16
         spacing: 10
 
-        GridLayout {
-            columns: 3
-            columnSpacing: 10
-            Layout.fillWidth: true
-
-            Label { text: qsTr("Start, kHz") }
-            Label { text: qsTr("Stop, kHz") }
-            Label { text: qsTr("Points") }
-
-            TextField {
-                id: fromField
-                text: "14000"
-                inputMethodHints: Qt.ImhDigitsOnly
-                Layout.fillWidth: true
-            }
-            TextField {
-                id: toField
-                text: "14350"
-                inputMethodHints: Qt.ImhDigitsOnly
-                Layout.fillWidth: true
-            }
-            TextField {
-                id: pointsField
-                text: "50"
-                inputMethodHints: Qt.ImhDigitsOnly
-                Layout.preferredWidth: 70
-            }
+        Label {
+            text: qsTr("%1 – %2 kHz, %3 points")
+                  .arg(AnalyzerController.fromKHz).arg(AnalyzerController.toKHz).arg(AnalyzerController.sweepPoints)
+            opacity: 0.7
         }
 
         Button {
@@ -48,10 +25,7 @@ Page {
             text: AnalyzerController.measuring ? qsTr("Stop") : qsTr("Scan")
             enabled: AnalyzerController.connected
             highlighted: true
-            onClicked: AnalyzerController.measuring
-                       ? AnalyzerController.stop()
-                       : AnalyzerController.scan(Number(fromField.text), Number(toField.text),
-                                                 parseInt(pointsField.text))
+            onClicked: AnalyzerController.measuring ? AnalyzerController.stop() : AnalyzerController.scan()
         }
 
         Label {

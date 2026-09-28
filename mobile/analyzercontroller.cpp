@@ -139,16 +139,48 @@ void AnalyzerController::disconnectAnalyzer()
     m_analyzer->on_disconnectDevice();
 }
 
-void AnalyzerController::scan(double fromKHz, double toKHz, int points)
+void AnalyzerController::scan()
 {
     if (!m_connected || m_measuring)
         return;
-    if (fromKHz >= toKHz || points < 2) {
+    if (m_fromKHz >= m_toKHz || m_sweepPoints < 2) {
         setStatus(tr("Check the frequency range and points"));
         return;
     }
     setStatus(tr("Scanning..."));
-    m_analyzer->on_measure(qint64(fromKHz * 1000), qint64(toKHz * 1000), points);
+    m_analyzer->on_measure(qint64(m_fromKHz * 1000), qint64(m_toKHz * 1000), m_sweepPoints);
+}
+
+void AnalyzerController::setFromKHz(double v)
+{
+    if (qFuzzyCompare(m_fromKHz, v))
+        return;
+    m_fromKHz = v;
+    emit fromKHzChanged();
+}
+
+void AnalyzerController::setToKHz(double v)
+{
+    if (qFuzzyCompare(m_toKHz, v))
+        return;
+    m_toKHz = v;
+    emit toKHzChanged();
+}
+
+void AnalyzerController::setSweepPoints(int v)
+{
+    if (m_sweepPoints == v)
+        return;
+    m_sweepPoints = v;
+    emit sweepPointsChanged();
+}
+
+void AnalyzerController::setZ0(double v)
+{
+    if (qFuzzyCompare(m_z0, v))
+        return;
+    m_z0 = v;
+    emit z0Changed();
 }
 
 void AnalyzerController::stop()
