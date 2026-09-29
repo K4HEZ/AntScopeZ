@@ -10,6 +10,8 @@ namespace {
 // Normalized resistance/reactance rings drawn on every Smith chart.
 const double kResistanceRings[] = {0.2, 0.5, 1.0, 2.0, 5.0};
 const double kReactanceRings[] = {0.2, 0.5, 1.0, 2.0, 5.0};
+// Constant-SWR circles, centered at the origin, |Gamma| = (SWR-1)/(SWR+1).
+const double kSwrRings[] = {1.5, 2.0, 3.0, 5.0};
 }
 
 SmithChart::SmithChart(QQuickItem* parent)
@@ -78,6 +80,26 @@ void SmithChart::paint(QPainter* painter)
     painter->drawLine(toScreen(-1, 0), toScreen(1, 0));
     painter->setPen(QPen(Qt::black, 1.5));
     painter->drawEllipse(center, radius, radius);
+
+    QPen swrPen(QColor(210, 210, 210));
+    for (double swr : kSwrRings) {
+        const double gr = (swr - 1.0) / (swr + 1.0);
+        painter->setPen(swrPen);
+        painter->drawEllipse(center, gr * radius, gr * radius);
+    }
+
+    painter->setClipping(false);
+    QFont labelFont = painter->font();
+    labelFont.setPointSize(8);
+    painter->setFont(labelFont);
+    painter->setPen(Qt::black);
+    for (double swr : kSwrRings) {
+        const double gr = (swr - 1.0) / (swr + 1.0);
+        const QPointF top = toScreen(0, gr);
+        painter->drawText(QRectF(top.x() - 25, top.y() - 16, 50, 14),
+                           Qt::AlignHCenter | Qt::AlignBottom, QString("%1:1").arg(swr));
+    }
+    painter->setClipPath(clip);
 
     if (m_points.size() < 2 || m_z0 <= 0) {
         painter->setClipping(false);
