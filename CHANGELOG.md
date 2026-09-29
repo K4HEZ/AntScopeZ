@@ -60,6 +60,8 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   renumber them and mark saved ones as unsaved. Only the chart values are
   recomputed now, and only when the system impedance actually changes.
 - Docs: cable preset count said ~150; it's over 100.
+- ITU Region 2's 60m band listed as 5 separate channelized entries
+  instead of one 5330.5-5406.4kHz band.
 
 ### Removed
 
