@@ -14,6 +14,7 @@ set(ANTSCOPE_CORE_SOURCES
     calibration.cpp
     crc32.cpp
     debuglog.cpp
+    itubands.cpp
     markermath.cpp
     measurementdata.cpp
     measurementfiles.cpp
@@ -49,6 +50,7 @@ set(ANTSCOPE_CORE_HEADERS
     calibration.h
     crc32.h
     debuglog.h
+    itubands.h
     markerlist.h
     markermath.h
     measurementdata.h

@@ -31,6 +31,8 @@ qt_add_executable(AntScopeZMobile
     swrchart.h
     smithchart.cpp
     smithchart.h
+    bandpresets.cpp
+    bandpresets.h
     mobilesettings.h
 )
 
@@ -44,6 +46,16 @@ qt_add_qml_module(AntScopeZMobile
         SmithPage.qml
         AllParametersPage.qml
         SettingsPage.qml
+)
+
+# The desktop ships shared/itu-regions-defaults.txt next to its binary via
+# AppPaths::sharedDataFolder() (Linux/macOS install layout); mobile has no
+# such install step (and Android has no filesystem access to it at all), so
+# bundle the same file as a Qt resource instead -- one source file, no copy.
+qt_add_resources(AntScopeZMobile "itu_bands"
+    PREFIX "/"
+    BASE ${CMAKE_CURRENT_SOURCE_DIR}/../shared
+    FILES ${CMAKE_CURRENT_SOURCE_DIR}/../shared/itu-regions-defaults.txt
 )
 
 target_compile_definitions(AntScopeZMobile PRIVATE

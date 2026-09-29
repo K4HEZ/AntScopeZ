@@ -13,6 +13,10 @@ class SwrChart : public QQuickPaintedItem
     QML_ELEMENT
 
     Q_PROPERTY(QVariantList points READ points WRITE setPoints)
+    // {"fromKHz","toKHz","label"} per band (e.g. BandPresets.bands); each
+    // overlapping the plotted sweep is drawn as a translucent highlight,
+    // matching the desktop's Band Highlighting (MainWindow::addBand()).
+    Q_PROPERTY(QVariantList bands READ bands WRITE setBands)
 
 public:
     explicit SwrChart(QQuickItem* parent = nullptr);
@@ -20,9 +24,12 @@ public:
     void paint(QPainter* painter) override;
     QVariantList points() const { return m_points; }
     void setPoints(const QVariantList& points);
+    QVariantList bands() const { return m_bands; }
+    void setBands(const QVariantList& bands);
 
 private:
     QVariantList m_points;
+    QVariantList m_bands;
 };
 
 #endif // SWRCHART_H

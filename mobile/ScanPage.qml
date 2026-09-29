@@ -39,6 +39,7 @@ Page {
             Layout.fillWidth: true
             Layout.preferredHeight: 220
             points: AnalyzerController.points
+            bands: BandPresets.bands
         }
 
         ListView {

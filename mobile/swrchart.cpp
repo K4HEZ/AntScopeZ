@@ -15,6 +15,12 @@ void SwrChart::setPoints(const QVariantList& points)
     update();
 }
 
+void SwrChart::setBands(const QVariantList& bands)
+{
+    m_bands = bands;
+    update();
+}
+
 void SwrChart::paint(QPainter* painter)
 {
     const QRectF rect(0, 0, width(), height());
@@ -61,12 +67,38 @@ void SwrChart::paint(QPainter* painter)
     painter->drawText(QRectF(plot.right() - 70, plot.bottom() + 2, 90, 16),
                        Qt::AlignRight, fqLabel(maxFq));
 
+    auto toX = [&](double fq) { return plot.left() + (fq - minFq) / (maxFq - minFq) * plot.width(); };
     auto toPoint = [&](double fq, double swr) {
-        const qreal x = plot.left() + (fq - minFq) / (maxFq - minFq) * plot.width();
+        const qreal x = toX(fq);
         const double clamped = qBound(1.0, swr, 10.0);
         const qreal y = plot.bottom() - (clamped - 1.0) / 9.0 * plot.height();
         return QPointF(x, y);
     };
+
+    // Band highlighting -- same translucent-rectangle idea as the desktop's
+    // MainWindow::addBand(), drawn for every band that overlaps the plotted
+    // sweep, clipped to it. Bands are in kHz; points' fq is in MHz.
+    QFont bandFont = painter->font();
+    bandFont.setPointSize(7);
+    painter->setFont(bandFont);
+    for (const QVariant& v : m_bands) {
+        const QVariantMap b = v.toMap();
+        const double bandFromMHz = b.value("fromKHz").toDouble() / 1000.0;
+        const double bandToMHz = b.value("toKHz").toDouble() / 1000.0;
+        if (bandToMHz < minFq || bandFromMHz > maxFq)
+            continue;
+        const qreal x1 = qBound(plot.left(), toX(qMax(bandFromMHz, minFq)), plot.right());
+        const qreal x2 = qBound(plot.left(), toX(qMin(bandToMHz, maxFq)), plot.right());
+        const QRectF bandRect(QPointF(x1, plot.top()), QPointF(x2, plot.bottom()));
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(QColor(50, 50, 150, 50));
+        painter->drawRect(bandRect);
+        painter->setPen(QColor(50, 50, 150, 150));
+        painter->drawText(bandRect.adjusted(1, 1, -1, -1), Qt::AlignHCenter | Qt::AlignTop,
+                           b.value("label").toString());
+    }
+    f.setPointSize(9);
+    painter->setFont(f);
 
     QPolygonF polyline;
     int minIdx = -1;

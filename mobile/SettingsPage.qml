@@ -38,6 +38,52 @@ Page {
         anchors.margins: 16
         spacing: 16
 
+        Label { text: qsTr("Band"); font.bold: true }
+
+        GridLayout {
+            columns: 2
+            columnSpacing: 10
+            rowSpacing: 6
+            Layout.fillWidth: true
+
+            Label { text: qsTr("ITU Region") }
+            Label { text: qsTr("Band") }
+            ComboBox {
+                id: regionCombo
+                Layout.fillWidth: true
+                model: BandPresets.regions
+                currentIndex: model.indexOf(BandPresets.region)
+                onActivated: BandPresets.region = model[currentIndex]
+            }
+            ComboBox {
+                id: bandCombo
+                Layout.fillWidth: true
+                model: BandPresets.bandLabels
+                onActivated: {
+                    const r = BandPresets.widenedRange(currentIndex)
+                    if (r.fromKHz !== undefined) {
+                        AnalyzerController.fromKHz = r.fromKHz
+                        AnalyzerController.toKHz = r.toKHz
+                        page.refreshFields()
+                    }
+                }
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 10
+            Label { text: qsTr("Widen range, %") }
+            SpinBox {
+                id: widenSpin
+                from: 0
+                to: 100
+                value: BandPresets.widenPercent
+                onValueModified: BandPresets.widenPercent = value
+                Layout.fillWidth: true
+            }
+        }
+
         Label { text: qsTr("Frequency Range"); font.bold: true }
 
         RowLayout {
