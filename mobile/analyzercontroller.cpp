@@ -9,6 +9,8 @@
 #include <measurementsession.h>
 #include <rfmath.h>
 
+#include "mobilesettings.h"
+
 AnalyzerController::AnalyzerController(QObject* parent)
     : QObject(parent)
     , m_analyzer(new AnalyzerPro(this))
@@ -16,6 +18,14 @@ AnalyzerController::AnalyzerController(QObject* parent)
 {
     m_session->setMaxMeasurements(1);
     m_session->attach(m_analyzer);
+
+    {
+        QSettings settings = mobileSettings();
+        m_fromKHz = settings.value("scan/fromKHz", m_fromKHz).toDouble();
+        m_toKHz = settings.value("scan/toKHz", m_toKHz).toDouble();
+        m_sweepPoints = settings.value("scan/sweepPoints", m_sweepPoints).toInt();
+        m_z0 = settings.value("scan/z0", m_z0).toDouble();
+    }
 
     connect(m_analyzer, &AnalyzerPro::analyzerFound, this, [this](int) {
         m_deviceName = SelectionParameters::selected.name;
@@ -45,6 +55,11 @@ AnalyzerController::AnalyzerController(QObject* parent)
     connect(m_session, &MeasurementSession::pointAdded, this,
             [this](int, const RawData& raw) { addPoint(raw); });
     connect(m_session, &MeasurementSession::measurementFinished, this, [this](int) {
+        if (m_liveMode) {
+            if (m_connected)
+                requestLivePoint();
+            return;
+        }
         setMeasuring(false);
         setStatus(tr("Scan complete: %n point(s)", nullptr, m_points.size()));
     });
@@ -156,6 +171,7 @@ void AnalyzerController::setFromKHz(double v)
     if (qFuzzyCompare(m_fromKHz, v))
         return;
     m_fromKHz = v;
+    mobileSettings().setValue("scan/fromKHz", v);
     emit fromKHzChanged();
 }
 
@@ -164,6 +180,7 @@ void AnalyzerController::setToKHz(double v)
     if (qFuzzyCompare(m_toKHz, v))
         return;
     m_toKHz = v;
+    mobileSettings().setValue("scan/toKHz", v);
     emit toKHzChanged();
 }
 
@@ -172,6 +189,7 @@ void AnalyzerController::setSweepPoints(int v)
     if (m_sweepPoints == v)
         return;
     m_sweepPoints = v;
+    mobileSettings().setValue("scan/sweepPoints", v);
     emit sweepPointsChanged();
 }
 
@@ -180,11 +198,42 @@ void AnalyzerController::setZ0(double v)
     if (qFuzzyCompare(m_z0, v))
         return;
     m_z0 = v;
+    mobileSettings().setValue("scan/z0", v);
     emit z0Changed();
+}
+
+void AnalyzerController::startLive(double fqKHz)
+{
+    if (!m_connected || m_measuring)
+        return;
+    m_liveMode = true;
+    emit liveModeChanged();
+    m_liveFqKHz = fqKHz;
+    setStatus(tr("Live"));
+    setMeasuring(true);
+    requestLivePoint();
+}
+
+// The Match rejects a zero-span (start==stop) request outright and never
+// responds -- on_measureOneFq() (and BaseAnalyzer::startMeasureOneFq(),
+// which it wraps) always sends exactly that, so it's unusable here despite
+// being the desktop's one-fq API. Ask for a narrow span instead; with
+// sweepPoints=2 the device returns 3 points (both endpoints inclusive,
+// evenly spaced) and the middle one lands exactly on fqKHz.
+void AnalyzerController::requestLivePoint()
+{
+    constexpr qint64 halfSpanHz = 1000; // 1 kHz either side
+    const qint64 centerHz = qint64(m_liveFqKHz * 1000);
+    m_analyzer->on_measure(centerHz - halfSpanHz, centerHz + halfSpanHz, 2);
 }
 
 void AnalyzerController::stop()
 {
+    if (m_liveMode) {
+        m_liveMode = false;
+        emit liveModeChanged();
+        setMeasuring(false);
+    }
     m_analyzer->on_stopMeasure();
 }
 
@@ -200,6 +249,10 @@ void AnalyzerController::addPoint(const RawData& raw)
     p["r"] = raw.r;
     p["x"] = raw.x;
     p["z"] = g.Z;
+    p["rpar"] = g.Rpar;
+    p["xpar"] = g.Xpar;
+    p["zpar"] = g.Zpar;
+    p["rhoPhase"] = g.RhoPhase;
     m_points.append(p);
 
     const int last = m_points.size() - 1;

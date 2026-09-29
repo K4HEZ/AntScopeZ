@@ -31,6 +31,7 @@ qt_add_executable(AntScopeZMobile
     swrchart.h
     smithchart.cpp
     smithchart.h
+    mobilesettings.h
 )
 
 qt_add_qml_module(AntScopeZMobile
@@ -41,6 +42,7 @@ qt_add_qml_module(AntScopeZMobile
         ConnectionPage.qml
         ScanPage.qml
         SmithPage.qml
+        AllParametersPage.qml
         SettingsPage.qml
 )
 

@@ -24,9 +24,11 @@ class AnalyzerController : public QObject
     Q_PROPERTY(QString deviceName READ deviceName NOTIFY connectedChanged)
     Q_PROPERTY(bool measuring READ measuring NOTIFY measuringChanged)
     Q_PROPERTY(QString status READ status NOTIFY statusChanged)
-    // One map per point: fq (MHz), swr, rl, r, x, z.
+    // One map per point: fq (MHz), swr, rl, r, x, z, rpar, xpar, zpar, rhoPhase.
     Q_PROPERTY(QVariantList points READ points NOTIFY pointsChanged)
     Q_PROPERTY(int minSwrIndex READ minSwrIndex NOTIFY pointsChanged)
+    // True while startLive()'s single-frequency measurement is repeating.
+    Q_PROPERTY(bool liveMode READ liveMode NOTIFY liveModeChanged)
 
     // Scan settings, set from SettingsPage and used by scan().
     Q_PROPERTY(double fromKHz READ fromKHz WRITE setFromKHz NOTIFY fromKHzChanged)
@@ -45,6 +47,7 @@ public:
     QString status() const { return m_status; }
     QVariantList points() const { return m_points; }
     int minSwrIndex() const { return m_minSwrIndex; }
+    bool liveMode() const { return m_liveMode; }
 
     double fromKHz() const { return m_fromKHz; }
     double toKHz() const { return m_toKHz; }
@@ -59,6 +62,9 @@ public:
     Q_INVOKABLE void connectTo(int index);
     Q_INVOKABLE void disconnectAnalyzer();
     Q_INVOKABLE void scan();
+    // Repeating single-frequency measurement, chained off each completion
+    // (not a timer) until stop() is called. For the All Parameters page.
+    Q_INVOKABLE void startLive(double fqKHz);
     Q_INVOKABLE void stop();
 
 signals:
@@ -72,9 +78,11 @@ signals:
     void toKHzChanged();
     void sweepPointsChanged();
     void z0Changed();
+    void liveModeChanged();
 
 private:
     void startSearch();
+    void requestLivePoint();
     void setStatus(const QString& text);
     void setSearching(bool on);
     void setConnected(bool on);
@@ -94,6 +102,8 @@ private:
     QString m_status;
     QVariantList m_points;
     int m_minSwrIndex = -1;
+    bool m_liveMode = false;
+    double m_liveFqKHz = 0;
 
     double m_fromKHz = 14000;
     double m_toKHz = 14350;

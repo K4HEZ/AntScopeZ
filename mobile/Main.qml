@@ -13,6 +13,7 @@ ApplicationWindow {
         { title: qsTr("Connection"), source: "ConnectionPage.qml" },
         { title: qsTr("Scan"),       source: "ScanPage.qml" },
         { title: qsTr("Smith"),      source: "SmithPage.qml" },
+        { title: qsTr("All Parameters"), source: "AllParametersPage.qml" },
         { title: qsTr("Settings"),   source: "SettingsPage.qml" }
     ]
     property int currentPage: 0
