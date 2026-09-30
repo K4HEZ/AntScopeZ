@@ -31,6 +31,7 @@
 
 #include <QByteArray>
 #include <QCoreApplication>
+#include <QDebug>
 #include <QJniEnvironment>
 #include <QJniObject>
 #include <QString>
@@ -175,6 +176,7 @@ hid_enumerate(unsigned short vendor_id, unsigned short product_id)
     struct hid_device_info* head = nullptr;
     struct hid_device_info* tail = nullptr;
 
+    int matchCount = 0;
     while (it.callMethod<jboolean>("hasNext", "()Z")) {
         QJniObject device = it.callObjectMethod("next", "()Ljava/lang/Object;");
         const int vid = device.callMethod<jint>("getVendorId", "()I");
@@ -183,14 +185,21 @@ hid_enumerate(unsigned short vendor_id, unsigned short product_id)
             continue;
         if (product_id != 0 && pid != product_id)
             continue;
+        ++matchCount;
 
         int ifaceIndex = -1;
         QJniObject hidIface = findHidInterface(device, &ifaceIndex);
-        if (!hidIface.isValid())
+        if (!hidIface.isValid()) {
+            qInfo() << "hid.cpp hid_enumerate: matched vid/pid" << Qt::hex << vid << pid
+                    << "but no HID-class interface";
             continue;
+        }
 
-        if (!manager.callMethod<jboolean>("hasPermission", "(Landroid/hardware/usb/UsbDevice;)Z",
-                                           device.object<jobject>())) {
+        const bool hasPermission = manager.callMethod<jboolean>(
+            "hasPermission", "(Landroid/hardware/usb/UsbDevice;)Z", device.object<jobject>());
+        qInfo() << "hid.cpp hid_enumerate: matched vid/pid" << Qt::hex << vid << pid
+                << Qt::dec << "hasPermission" << hasPermission;
+        if (!hasPermission) {
             // Not connectable yet this pass -- still report it, same as
             // hidapi normally would for a device present but not (yet)
             // openable. See this file's top comment.
@@ -218,6 +227,8 @@ hid_enumerate(unsigned short vendor_id, unsigned short product_id)
             head = info;
         tail = info;
     }
+    if (matchCount == 0)
+        qInfo() << "hid.cpp hid_enumerate: no device matched vid/pid" << Qt::hex << vendor_id << product_id;
 
     return head;
 }
@@ -247,6 +258,7 @@ hid_open(unsigned short vendor_id, unsigned short product_id, const wchar_t *ser
     QJniObject it = values.callObjectMethod("iterator", "()Ljava/util/Iterator;");
 
     const QString wantSerial = serial_number ? QString::fromWCharArray(serial_number) : QString();
+    bool sawMatch = false;
 
     while (it.callMethod<jboolean>("hasNext", "()Z")) {
         QJniObject device = it.callObjectMethod("next", "()Ljava/lang/Object;");
@@ -254,19 +266,25 @@ hid_open(unsigned short vendor_id, unsigned short product_id, const wchar_t *ser
             continue;
         if (device.callMethod<jint>("getProductId", "()I") != product_id)
             continue;
+        sawMatch = true;
 
         QString actualSerial = device.callObjectMethod("getSerialNumber", "()Ljava/lang/String;").toString();
-        if (!wantSerial.isEmpty() && actualSerial != wantSerial)
+        if (!wantSerial.isEmpty() && actualSerial != wantSerial) {
+            qInfo() << "hid.cpp hid_open: serial mismatch, wanted" << wantSerial << "got" << actualSerial;
             continue;
+        }
 
         int ifaceIndex = -1;
         Q_UNUSED(ifaceIndex);
         QJniObject hidIface = findHidInterface(device, &ifaceIndex);
-        if (!hidIface.isValid())
+        if (!hidIface.isValid()) {
+            qInfo() << "hid.cpp hid_open: matched device but no HID-class interface";
             continue;
+        }
 
         if (!manager.callMethod<jboolean>("hasPermission", "(Landroid/hardware/usb/UsbDevice;)Z",
                                            device.object<jobject>())) {
+            qInfo() << "hid.cpp hid_open: no permission yet, requesting";
             requestPermissionFor(device);
             return nullptr; // not yet -- see this file's top comment
         }
@@ -274,12 +292,15 @@ hid_open(unsigned short vendor_id, unsigned short product_id, const wchar_t *ser
         QJniObject connection = manager.callObjectMethod(
             "openDevice", "(Landroid/hardware/usb/UsbDevice;)Landroid/hardware/usb/UsbDeviceConnection;",
             device.object<jobject>());
-        if (!connection.isValid())
+        if (!connection.isValid()) {
+            qInfo() << "hid.cpp hid_open: openDevice() returned null";
             return nullptr;
+        }
 
         if (!connection.callMethod<jboolean>(
                 "claimInterface", "(Landroid/hardware/usb/UsbInterface;Z)Z",
                 hidIface.object<jobject>(), jboolean(true))) {
+            qInfo() << "hid.cpp hid_open: claimInterface() failed";
             connection.callMethod<void>("close", "()V");
             return nullptr;
         }
@@ -287,6 +308,8 @@ hid_open(unsigned short vendor_id, unsigned short product_id, const wchar_t *ser
         QJniObject epIn, epOut;
         findEndpoints(hidIface, &epIn, &epOut);
         if (!epIn.isValid() || !epOut.isValid()) {
+            qInfo() << "hid.cpp hid_open: interrupt/bulk endpoints not found (in valid:"
+                    << epIn.isValid() << "out valid:" << epOut.isValid() << ")";
             connection.callMethod<jboolean>(
                 "releaseInterface", "(Landroid/hardware/usb/UsbInterface;)Z", hidIface.object<jobject>());
             connection.callMethod<void>("close", "()V");
@@ -301,8 +324,12 @@ hid_open(unsigned short vendor_id, unsigned short product_id, const wchar_t *ser
         dev->manufacturer = device.callObjectMethod("getManufacturerName", "()Ljava/lang/String;").toString();
         dev->product = device.callObjectMethod("getProductName", "()Ljava/lang/String;").toString();
         dev->serial = actualSerial;
+        qInfo() << "hid.cpp hid_open: success, product" << dev->product << "serial" << dev->serial;
         return dev;
     }
+
+    if (!sawMatch)
+        qInfo() << "hid.cpp hid_open: no device matched vid/pid" << Qt::hex << vendor_id << product_id;
 
     return nullptr;
 }
@@ -409,6 +436,7 @@ void HID_API_EXPORT HID_API_CALL hid_close(hid_device *device)
 {
     if (!device)
         return;
+    qInfo() << "hid.cpp hid_close: product" << device->product << "serial" << device->serial;
     if (device->connection.isValid()) {
         device->connection.callMethod<jboolean>(
             "releaseInterface", "(Landroid/hardware/usb/UsbInterface;)Z", device->usbInterface.object<jobject>());

@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QStringList>
+#include <QTimer>
 #include <QVariantList>
 #include <QtQml/qqmlregistration.h>
 
@@ -29,6 +30,9 @@ class AnalyzerController : public QObject
     Q_PROPERTY(int minSwrIndex READ minSwrIndex NOTIFY pointsChanged)
     // True while startLive()'s single-frequency measurement is repeating.
     Q_PROPERTY(bool liveMode READ liveMode NOTIFY liveModeChanged)
+    // True while connectUsb() is retrying (e.g. waiting on the Android USB
+    // permission dialog).
+    Q_PROPERTY(bool connectingUsb READ connectingUsb NOTIFY connectingUsbChanged)
 
     // Scan settings, set from SettingsPage and used by scan().
     Q_PROPERTY(double fromKHz READ fromKHz WRITE setFromKHz NOTIFY fromKHzChanged)
@@ -48,6 +52,7 @@ public:
     QVariantList points() const { return m_points; }
     int minSwrIndex() const { return m_minSwrIndex; }
     bool liveMode() const { return m_liveMode; }
+    bool connectingUsb() const { return m_connectingUsb; }
 
     double fromKHz() const { return m_fromKHz; }
     double toKHz() const { return m_toKHz; }
@@ -60,6 +65,15 @@ public:
 
     Q_INVOKABLE void search();
     Q_INVOKABLE void connectTo(int index);
+    // RigExpert Match over USB-HID -- no live device list like BLE's
+    // search()/connectTo(); HidAnalyzer enumerates+opens synchronously
+    // itself, retried here (not by HidAnalyzer's own checkTimerTick(),
+    // which only fires if AppConfig::get().usbOnly is set -- a shared
+    // desktop setting this deliberately doesn't touch) until connected or
+    // cancelUsbConnect() is called, since the first attempt typically just
+    // triggers Android's USB permission dialog rather than connecting.
+    Q_INVOKABLE void connectUsb();
+    Q_INVOKABLE void cancelUsbConnect();
     Q_INVOKABLE void disconnectAnalyzer();
     Q_INVOKABLE void scan();
     // Repeating single-frequency measurement, chained off each completion
@@ -83,10 +97,13 @@ signals:
     void sweepPointsChanged();
     void z0Changed();
     void liveModeChanged();
+    void connectingUsbChanged();
 
 private:
     void startSearch();
     void requestLivePoint();
+    void attemptUsbConnect();
+    void setConnectingUsb(bool on);
     void setStatus(const QString& text);
     void setSearching(bool on);
     void setConnected(bool on);
@@ -108,6 +125,8 @@ private:
     int m_minSwrIndex = -1;
     bool m_liveMode = false;
     double m_liveFqKHz = 0;
+    bool m_connectingUsb = false;
+    QTimer* m_usbRetryTimer = nullptr;
 
     double m_fromKHz = 14000;
     double m_toKHz = 14350;

@@ -65,6 +65,36 @@ Page {
             }
         }
 
+        RowLayout {
+            Layout.fillWidth: true
+            visible: !AnalyzerController.connected
+            Label {
+                text: qsTr("USB")
+                font.bold: true
+                Layout.fillWidth: true
+            }
+            BusyIndicator {
+                running: AnalyzerController.connectingUsb
+                visible: running
+                implicitWidth: 32
+                implicitHeight: 32
+            }
+            Button {
+                text: AnalyzerController.connectingUsb ? qsTr("Cancel") : qsTr("Connect via USB")
+                onClicked: AnalyzerController.connectingUsb
+                           ? AnalyzerController.cancelUsbConnect()
+                           : AnalyzerController.connectUsb()
+            }
+        }
+
+        Label {
+            visible: AnalyzerController.connectingUsb
+            text: qsTr("Waiting for USB permission -- allow it in the system dialog if one appeared.")
+            opacity: 0.7
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
+        }
+
         Item {
             Layout.fillHeight: true
             visible: AnalyzerController.connected

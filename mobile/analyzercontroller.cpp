@@ -20,10 +20,10 @@
 #include <QJniObject>
 #endif
 
-// Must match QT_ANDROID_PACKAGE_NAME (CMakeLists.txt) -- Qt's default
-// AndroidManifest.xml template already declares this FileProvider
-// (authority "${applicationId}.qtprovider") covering the app's files dir,
-// no manifest customization needed.
+// Must match QT_ANDROID_PACKAGE_NAME (CMakeLists.txt) -- declared in
+// mobile/android/AndroidManifest.xml (carried over verbatim from Qt's own
+// default template, authority "${applicationId}.qtprovider", covering the
+// app's files dir).
 static const char* const kFileProviderAuthority = "io.github.k4hez.antscopez.qtprovider";
 
 AnalyzerController::AnalyzerController(QObject* parent)
@@ -47,8 +47,14 @@ AnalyzerController::AnalyzerController(QObject* parent)
         if (!SelectionParameters::selected.serial.isEmpty())
             m_deviceName += " " + SelectionParameters::selected.serial;
         setConnected(true);
+        m_usbRetryTimer->stop();
+        setConnectingUsb(false);
         setStatus(tr("Connected"));
     });
+
+    m_usbRetryTimer = new QTimer(this);
+    m_usbRetryTimer->setInterval(2000);
+    connect(m_usbRetryTimer, &QTimer::timeout, this, &AnalyzerController::attemptUsbConnect);
     connect(m_analyzer, &AnalyzerPro::deviceDisconnected, this, [this]() {
         setConnected(false);
         setMeasuring(false);
@@ -164,8 +170,50 @@ void AnalyzerController::connectTo(int index)
     emit m_analyzer->analyzerFound(param->index());
 }
 
+void AnalyzerController::connectUsb()
+{
+    AnalyzerParameters* param = AnalyzerParameters::byName("Match");
+    if (!param) {
+        setStatus(tr("Unknown analyzer: Match"));
+        return;
+    }
+
+    SelectionParameters::selected.name = param->name();
+    SelectionParameters::selected.type = ReDeviceInfo::HID;
+    SelectionParameters::selected.id = QString();
+    SelectionParameters::selected.modelIndex = param->index();
+    SelectionParameters::selected.serial = QString();
+    AnalyzerParameters::setCurrent(param);
+
+    setConnectingUsb(true);
+    setStatus(tr("Connecting via USB..."));
+    attemptUsbConnect();
+    m_usbRetryTimer->start();
+}
+
+// Called once immediately by connectUsb(), then every 2s by m_usbRetryTimer
+// until analyzerFound (stops it) or cancelUsbConnect(). Each call tears
+// down and recreates the HidAnalyzer (see AnalyzerPro::createDevice()) --
+// wasteful compared to a targeted retry, but HID enumeration is a quick
+// local USB scan, not a BLE-style radio scan, so this is cheap enough, and
+// it reuses the exact same connect path a repeated manual tap would.
+void AnalyzerController::attemptUsbConnect()
+{
+    m_analyzer->on_connectDevice(nullptr);
+}
+
+void AnalyzerController::cancelUsbConnect()
+{
+    m_usbRetryTimer->stop();
+    setConnectingUsb(false);
+    m_analyzer->on_disconnectDevice();
+    setStatus(tr("Cancelled"));
+}
+
 void AnalyzerController::disconnectAnalyzer()
 {
+    m_usbRetryTimer->stop();
+    setConnectingUsb(false);
     m_analyzer->on_disconnectDevice();
 }
 
@@ -371,4 +419,12 @@ void AnalyzerController::setMeasuring(bool on)
         return;
     m_measuring = on;
     emit measuringChanged();
+}
+
+void AnalyzerController::setConnectingUsb(bool on)
+{
+    if (m_connectingUsb == on)
+        return;
+    m_connectingUsb = on;
+    emit connectingUsbChanged();
 }
