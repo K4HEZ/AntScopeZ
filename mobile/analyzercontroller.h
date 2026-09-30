@@ -66,6 +66,10 @@ public:
     // (not a timer) until stop() is called. For the All Parameters page.
     Q_INVOKABLE void startLive(double fqKHz);
     Q_INVOKABLE void stop();
+    // Writes the current scan as a 1-port Touchstone (.s1p) file to the
+    // app's private storage, then (Android only) opens the system Share
+    // sheet for it via a FileProvider content:// URI. Desktop just saves.
+    Q_INVOKABLE void shareTouchstone();
 
 signals:
     void devicesChanged();

@@ -35,6 +35,13 @@ Page {
             font.bold: true
         }
 
+        Button {
+            Layout.fillWidth: true
+            text: qsTr("Share Touchstone file")
+            enabled: AnalyzerController.points.length > 0
+            onClicked: AnalyzerController.shareTouchstone()
+        }
+
         SwrChart {
             Layout.fillWidth: true
             Layout.preferredHeight: 220

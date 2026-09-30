@@ -1,15 +1,30 @@
 #include "analyzercontroller.h"
 
 #include <QCoreApplication>
+#include <QDateTime>
+#include <QDir>
+#include <QFileInfo>
 #include <QPermissions>
+#include <QStandardPaths>
 
 #include <analyzer/analyzerparameters.h>
 #include <analyzer/analyzerpro.h>
 #include <analyzer/ble_analyzer.h>
+#include <measurementfiles.h>
 #include <measurementsession.h>
 #include <rfmath.h>
 
 #include "mobilesettings.h"
+
+#ifdef Q_OS_ANDROID
+#include <QJniObject>
+#endif
+
+// Must match QT_ANDROID_PACKAGE_NAME (CMakeLists.txt) -- Qt's default
+// AndroidManifest.xml template already declares this FileProvider
+// (authority "${applicationId}.qtprovider") covering the app's files dir,
+// no manifest customization needed.
+static const char* const kFileProviderAuthority = "io.github.k4hez.antscopez.qtprovider";
 
 AnalyzerController::AnalyzerController(QObject* parent)
     : QObject(parent)
@@ -235,6 +250,71 @@ void AnalyzerController::stop()
         setMeasuring(false);
     }
     m_analyzer->on_stopMeasure();
+}
+
+void AnalyzerController::shareTouchstone()
+{
+    if (m_points.isEmpty()) {
+        setStatus(tr("Nothing to share -- run a scan first"));
+        return;
+    }
+
+    QVector<RawData> data;
+    data.reserve(m_points.size());
+    for (const QVariant& v : m_points) {
+        const QVariantMap p = v.toMap();
+        RawData raw;
+        raw.fq = p.value("fq").toDouble();
+        raw.r = p.value("r").toDouble();
+        raw.x = p.value("x").toDouble();
+        data.append(raw);
+    }
+
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QDir().mkpath(dir);
+    const QString fileName = QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss") + ".s1p";
+    const QString filePath = QDir(dir).filePath(fileName);
+
+    // type 1 = S-parameters, Real/Imaginary -- no format picker on mobile,
+    // unlike desktop's Export dialog; one sensible default.
+    MeasurementFiles::writeRaw(filePath, 1, data, m_z0, QString());
+
+    if (!QFileInfo::exists(filePath)) {
+        setStatus(tr("Save failed"));
+        return;
+    }
+
+#ifdef Q_OS_ANDROID
+    QJniObject jFile = QJniObject::fromString(filePath);
+    QJniObject javaFile("java/io/File", "(Ljava/lang/String;)V", jFile.object<jstring>());
+    QJniObject context = QNativeInterface::QAndroidApplication::context();
+    QJniObject jAuthority = QJniObject::fromString(QLatin1String(kFileProviderAuthority));
+
+    QJniObject uri = QJniObject::callStaticObjectMethod(
+        "androidx/core/content/FileProvider", "getUriForFile",
+        "(Landroid/content/Context;Ljava/lang/String;Ljava/io/File;)Landroid/net/Uri;",
+        context.object<jobject>(), jAuthority.object<jstring>(), javaFile.object<jobject>());
+
+    QJniObject intent("android/content/Intent");
+    intent.callObjectMethod("setAction", "(Ljava/lang/String;)Landroid/content/Intent;",
+                             QJniObject::fromString("android.intent.action.SEND").object<jstring>());
+    intent.callObjectMethod("setType", "(Ljava/lang/String;)Landroid/content/Intent;",
+                             QJniObject::fromString("text/plain").object<jstring>());
+    intent.callObjectMethod("putExtra", "(Ljava/lang/String;Landroid/os/Parcelable;)Landroid/content/Intent;",
+                             QJniObject::fromString("android.intent.extra.STREAM").object<jstring>(),
+                             uri.object<jobject>());
+    intent.callObjectMethod("addFlags", "(I)Landroid/content/Intent;", 1 /* FLAG_GRANT_READ_URI_PERMISSION */);
+
+    QJniObject chooser = QJniObject::callStaticObjectMethod(
+        "android/content/Intent", "createChooser",
+        "(Landroid/content/Intent;Ljava/lang/CharSequence;)Landroid/content/Intent;",
+        intent.object<jobject>(), QJniObject::fromString(tr("Share Touchstone file")).object<jstring>());
+
+    context.callMethod<void>("startActivity", "(Landroid/content/Intent;)V", chooser.object<jobject>());
+    setStatus(tr("Sharing %1").arg(fileName));
+#else
+    setStatus(tr("Saved %1 (sharing needs the Android build)").arg(filePath));
+#endif
 }
 
 void AnalyzerController::addPoint(const RawData& raw)

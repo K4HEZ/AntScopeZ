@@ -24,8 +24,9 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   (`.s1p` including the cable model); `.asd` also keeps the analyzer's
   original points.
 - Early mobile app (`mobile/`, Qt Quick): Bluetooth connect and scan, an
-  SWR chart, a Smith chart, an All Parameters live view, and range/points/
-  Z0/band settings (persisted). Builds for Android and, for testing, the
+  SWR chart, a Smith chart, an All Parameters live view, range/points/
+  Z0/band settings (persisted), and a Share button (Touchstone .s1p via
+  the Android Share sheet). Builds for Android and, for testing, the
   desktop.
 
 ### Changed
