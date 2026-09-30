@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  RigExpert Match's VID/PID, decimal (Android's usb-device filter format,
+  unlike the hex used everywhere else in this codebase: see
+  core/analyzer/hid_analyzer.h's RE_VID/RE_PID/RE_BOOT_VID/RE_BOOT_PID,
+  0x0483/0xA1DE/0xA1DA). Referenced from AndroidManifest.xml's
+  USB_DEVICE_ATTACHED intent-filter.
+-->
+<resources>
+    <usb-device vendor-id="1155" product-id="41438" /> <!-- 0x0483 / 0xA1DE, normal mode -->
+    <usb-device vendor-id="1155" product-id="41434" /> <!-- 0x0483 / 0xA1DA, bootloader/firmware-update mode -->
+</resources>

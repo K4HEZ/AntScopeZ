@@ -28,6 +28,10 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   Z0/band settings (persisted), and a Share button (Touchstone .s1p via
   the Android Share sheet). Builds for Android and, for testing, the
   desktop.
+- Real Android USB-HID support (RigExpert Match over USB): the Android
+  `hidapi` backend was a stub (USB analyzers never enumerated); now
+  bridges to `android.hardware.usb.*` via JNI, with the USB-permission
+  prompt/flow that requires.
 
 ### Changed
 

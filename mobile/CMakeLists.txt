@@ -71,4 +71,7 @@ target_link_libraries(AntScopeZMobile PRIVATE
 set_target_properties(AntScopeZMobile PROPERTIES
     QT_ANDROID_PACKAGE_NAME "io.github.k4hez.antscopez"
     QT_ANDROID_VERSION_NAME "${PROJECT_VERSION}"
+    # Custom AndroidManifest.xml (USB host support, USB permission receiver)
+    # and UsbPermissionReceiver.java -- see mobile/android/'s own files.
+    QT_ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android"
 )

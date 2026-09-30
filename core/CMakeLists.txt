@@ -131,8 +131,10 @@ elseif(APPLE)
     find_library(IOKIT_FRAMEWORK IOKit REQUIRED)
     target_link_libraries(antscopez_core PRIVATE ${COREFOUNDATION_FRAMEWORK} ${IOKIT_FRAMEWORK})
 elseif(ANDROID)
-    # No libusb on Android: stub hidapi, USB analyzers just never enumerate.
-    target_sources(antscopez_core PRIVATE analyzer/usbhid/hidapi/android/hid.c)
+    # No libusb on Android: this hidapi backend bridges to
+    # android.hardware.usb.* directly via JNI (QJniObject, part of Qt6::Core
+    # on Android -- no extra linkage) instead of libusb.
+    target_sources(antscopez_core PRIVATE analyzer/usbhid/hidapi/android/hid.cpp)
 else()
     target_sources(antscopez_core PRIVATE analyzer/usbhid/hidapi/linux/hid.c)
     # AppPaths::sharedDataFolder() -- matches the AntScopeZ definition.

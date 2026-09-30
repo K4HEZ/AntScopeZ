@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<!--
+  Based on Qt's own default template
+  ($QTDIR/src/android/templates/AndroidManifest.xml); androiddeployqt
+  substitutes the %%INSERT_...%% placeholders the same way it would for
+  its auto-generated one. Customized here to add USB host support (RigExpert
+  Match over USB-HID; see core/analyzer/usbhid/hidapi/android/hid.cpp) on
+  top of what Qt's template already provides unchanged (QtActivity, and the
+  FileProvider AnalyzerController's shareTouchstone() already relies on).
+  Note for editors: XML comments may not contain two consecutive hyphens
+  anywhere in their body (only immediately before the closing marker), so
+  don't use that as a dash substitute in here the way the rest of this
+  codebase's comments do.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.qtproject.example"
+    android:installLocation="auto"
+    android:versionCode="-- %%INSERT_VERSION_CODE%% --"
+    android:versionName="-- %%INSERT_VERSION_NAME%% --">
+    <!-- %%INSERT_PERMISSIONS -->
+    <!-- %%INSERT_FEATURES -->
+    <!-- USB host support is optional: BLE-only devices (RigExpert Match
+         over Bluetooth) still work without it. -->
+    <uses-feature android:name="android.hardware.usb.host" android:required="false" />
+    <supports-screens
+        android:anyDensity="true"
+        android:largeScreens="true"
+        android:normalScreens="true"
+        android:smallScreens="true" />
+    <application
+        android:name="org.qtproject.qt.android.bindings.QtApplication"
+        android:hardwareAccelerated="true"
+        android:label="-- %%INSERT_APP_NAME%% --"
+        android:icon="-- %%INSERT_APP_ICON%% --"
+        android:enableOnBackInvokedCallback="false"
+        android:allowBackup="true"
+        android:fullBackupOnly="false">
+        <activity
+            android:name="org.qtproject.qt.android.bindings.QtActivity"
+            android:configChanges="orientation|uiMode|screenLayout|screenSize|smallestScreenSize|layoutDirection|locale|fontScale|keyboard|keyboardHidden|navigation|mcc|mnc|density"
+            android:label="-- %%INSERT_APP_NAME%% --"
+            android:launchMode="singleTop"
+            android:screenOrientation="unspecified"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Auto-launches (and grants USB permission for) a matching
+                 device plugged in while some other app, or none, has
+                 focus. device_filter.xml lists RigExpert Match's VID/PID
+                 (see core/analyzer/hid_analyzer.h's RE_VID/RE_PID). Covers
+                 the "just plugged it in" case; requestPermissionFor() in
+                 hid.cpp covers "already plugged in, app already running,
+                 user taps Connect" via the receiver below instead. -->
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+                android:resource="@xml/device_filter" />
+
+          <meta-data
+                android:name="android.app.lib_name"
+                android:value="-- %%INSERT_APP_LIB_NAME%% --" />
+
+          <meta-data
+                android:name="android.app.arguments"
+                android:value="-- %%INSERT_APP_ARGUMENTS%% --" />
+        </activity>
+
+        <!-- Target of UsbManager.requestPermission()'s PendingIntent
+             (hid.cpp's requestPermissionFor()) when the app is already
+             running and the device already plugged in. Doesn't need to do
+             anything in onReceive(): UsbManager.hasPermission() reflects
+             the grant/denial from that point on regardless; it only needs
+             to exist so the PendingIntent has somewhere to deliver to. -->
+        <receiver
+            android:name="io.github.k4hez.antscopez.UsbPermissionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="io.github.k4hez.antscopez.USB_PERMISSION" />
+            </intent-filter>
+        </receiver>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.qtprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/qtprovider_paths"/>
+        </provider>
+    </application>
+</manifest>
