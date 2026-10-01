@@ -11,6 +11,9 @@ a handful of stub sections into most of what's below; if something's
 missing or wrong, that's more likely this guide being incomplete than the
 app -- open an issue.
 
+This guide covers the desktop app. The Android app has its own
+[mobile guide](mobile-guide.md).
+
 See [Supported devices](#supported-devices) below for the full list of
 supported analyzer models and brands.
 

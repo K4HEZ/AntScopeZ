@@ -151,6 +151,12 @@ cmake --install build --prefix stage   # produces stage/AntScopeZ.app
 
 Or, for a quick local `.dmg` without CPack: `./build.sh [build-dir]`.
 
+## Mobile app
+
+The `mobile/` directory holds an Android (and desktop-test) app -- see
+[BUILDINFO.md](BUILDINFO.md)'s "Mobile app" section for how to build it, and
+[docs/mobile-guide.md](docs/mobile-guide.md) for what it does.
+
 ## Credits
 
 The cable presets in `shared/cables.txt` (over 100 cables, inherited from

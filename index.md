@@ -34,6 +34,13 @@ other brands) -- built for, and maintained by, the ham radio community.
 - Language Support: English, Ukrainian, Japanese, Spanish (AI generated)
 - ...and much more.
 
+## Mobile app (Android)
+
+A companion Android app is in development: connect over Bluetooth, USB or
+serial, scan, read SWR/Smith/impedance, run TDR, and share Touchstone
+files. See the [mobile guide](docs/mobile-guide.md); to try a pre-release
+build, see [testing a pre-release](docs/mobile-beta-testing.md).
+
 ## Download
 
 **[⬇ Download the latest release](https://github.com/K4HEZ/AntScopeZ/releases/latest)**

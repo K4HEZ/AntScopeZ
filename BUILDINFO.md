@@ -280,6 +280,67 @@ recomputed at configure time, going stale across ordinary incremental
 rebuilds -- not useful for actually identifying which build you're
 looking at.
 
+## Mobile app (`mobile/`)
+
+A Qt Quick phone app, its own CMake project (not part of the root build).
+It links `antscopez_core` (via `add_subdirectory(../core)`) and has no
+widgets. It builds for Android and, for trying the screens on a PC, for the
+desktop. For what the app does, see `docs/mobile-guide.md`.
+
+Layout: `main.cpp`; `analyzercontroller.*` (the QML-facing singleton:
+connection, scans, live data, TDR, limits); `bandpresets.*` (ITU bands);
+`swrchart.*`, `smithchart.*`, `tdrchart.*` (QPainter-drawn items -- Qt
+Graphs isn't used); `tdranalysis.*`; the `*.qml` pages; `android/` (custom
+`AndroidManifest.xml`, USB device filter, Java sources).
+
+### Desktop test build
+
+Uses the same Qt kit as the main build. Bluetooth and USB-HID work on a
+Linux desktop, so this is the quickest way to try changes:
+
+```
+cmake -S mobile -B mobile/build-desktop -DCMAKE_PREFIX_PATH=/opt/Qt/6.11.2/gcc_64
+cmake --build mobile/build-desktop -j8
+mobile/build-desktop/AntScopeZMobile
+```
+
+### Android build
+
+Needs Qt's Android kit for the target ABI (e.g. `/opt/Qt/6.11.2/android_arm64_v8a`),
+a full JDK (a JRE-only install is rejected), the Android SDK (platform
+android-36, build-tools 36.0.0) and NDK 27.2.12479018. The first build
+downloads the Android Gradle Plugin and AndroidX libraries (network
+needed; they are cached afterwards).
+
+```
+export JAVA_HOME=/usr/lib/jvm/zulu21-ca-amd64
+/opt/Qt/6.11.2/android_arm64_v8a/bin/qt-cmake -S mobile -B mobile/build-android-arm64_v8a \
+    -DANDROID_SDK_ROOT=~/Android/Sdk -DANDROID_NDK_ROOT=~/Android/Sdk/ndk/27.2.12479018
+cmake --build mobile/build-android-arm64_v8a -j8
+```
+
+The APK lands in
+`mobile/build-android-arm64_v8a/android-build/build/outputs/apk/debug/android-build-debug.apk`
+(debug-signed). Install with `adb install -r <that file>`. Use the
+`android_x86_64` kit the same way for an emulator image; note an emulator
+has no real Bluetooth or USB passthrough for the analyzers.
+
+### Android-specific code
+
+- **USB-HID** (RigExpert Match): `core/analyzer/usbhid/hidapi/android/hid.cpp`,
+  a hidapi backend that talks to `android.hardware.usb.*` over JNI.
+- **USB serial** (NanoVNA, RigExpert COM): the analyzer classes use a
+  `SerialPort` alias (`core/analyzer/serialport_compat.h`), which is
+  `QSerialPort` everywhere except Android, where it is
+  `AndroidSerialPort` (`core/analyzer/android_serialport.*`) backed by
+  `mobile/android/src/io/github/k4hez/antscopez/SerialBridge.java`.
+- **usb-serial-for-android** (MIT, see `THIRD-PARTY-LICENSES.md`) is
+  compiled in as source from `mobile/android/src/com/hoho/android/usbserial/`
+  rather than pulled in as a Gradle dependency.
+- `mobile/android/AndroidManifest.xml` replaces Qt's generated one wholesale
+  (USB host feature, USB permission receiver, the FileProvider used by Share).
+  XML comments in it can't contain two consecutive hyphens.
+
 ## Platform notes
 
 Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
@@ -307,6 +368,10 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   Windows hardware -- device enumeration/connection (HID, FTDI), `.asd` file
   association, `WM_DEVICECHANGE` hot-plug detection, per-user settings paths.
   See `docs/windows-port-audit.md` for the full checklist and findings.
+- **Android** (`mobile/` only) -- the mobile app builds as an arm64-v8a and
+  x86_64 APK. Not yet verified: running on a real phone (Bluetooth, USB-HID,
+  USB serial, the Share sheet) -- as of 2026-10-01 it has only been built,
+  and exercised through the desktop build of the same code.
 - **macOS** — uses the `hidapi` mac backend (needs both `CoreFoundation`
   and `IOKit` linked -- the latter was a real missing-link bug, found and
   fixed 2026-09-18 while first standing up CI for this platform). Builds
