@@ -36,6 +36,10 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   build; Connection page shows firmware, license, interface and protocol.
   A Match's range now comes from its LICx reply instead of a 750 MHz
   default.
+- Mobile app: TDR page (cable preset / velocity factor, top frequency and
+  points, window function, impulse/step/impedance trace, distance and
+  open/short of the strongest reflection, velocity factor from a known
+  length); metric/feet setting. Same math as the desktop TDR tool.
 - Android USB serial support (NanoVNA classic/V2, RigExpert COM units) via
   the bundled usb-serial-for-android library; the analyzer classes now use
   a `SerialPort` alias (QSerialPort on other platforms). Untested on

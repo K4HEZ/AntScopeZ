@@ -31,6 +31,10 @@ qt_add_executable(AntScopeZMobile
     swrchart.h
     smithchart.cpp
     smithchart.h
+    tdrchart.cpp
+    tdrchart.h
+    tdranalysis.cpp
+    tdranalysis.h
     bandpresets.cpp
     bandpresets.h
     mobilesettings.h
@@ -45,6 +49,7 @@ qt_add_qml_module(AntScopeZMobile
         ScanPage.qml
         SwrPage.qml
         SmithPage.qml
+        TdrPage.qml
         LiveDataPage.qml
         ImpedancePage.qml
         SettingsPage.qml
@@ -60,6 +65,7 @@ qt_add_resources(AntScopeZMobile "itu_bands"
     PREFIX "/"
     BASE ${CMAKE_CURRENT_SOURCE_DIR}/../shared
     FILES ${CMAKE_CURRENT_SOURCE_DIR}/../shared/itu-regions-defaults.txt
+          ${CMAKE_CURRENT_SOURCE_DIR}/../shared/cables.txt
 )
 
 qt_add_resources(AntScopeZMobile "icon"

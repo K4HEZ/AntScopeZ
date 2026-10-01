@@ -13,6 +13,7 @@
 #include <analyzer/nanovna_analyzer.h>
 #include <analyzer/nanovna_v2_analyzer.h>
 #include <devinfo/redeviceinfo.h>
+#include <cablecatalog.h>
 #include <measurementfiles.h>
 #include <measurementsession.h>
 #include <rfmath.h>
@@ -44,6 +45,12 @@ AnalyzerController::AnalyzerController(QObject* parent)
         m_sweepPoints = settings.value("scan/sweepPoints", m_sweepPoints).toInt();
         m_z0 = settings.value("scan/z0", m_z0).toDouble();
         m_chartMinPx = settings.value("chart/minPxPerPoint", m_chartMinPx).toDouble();
+        m_metric = settings.value("tdr/metric", m_metric).toBool();
+        m_tdrTopKHz = settings.value("tdr/topKHz", m_tdrTopKHz).toDouble();
+        m_tdrPoints = qBound(200, settings.value("tdr/points", m_tdrPoints).toInt(), 1000);
+        m_tdrVf = qBound(0.05, settings.value("tdr/vf", m_tdrVf).toDouble(), 1.0);
+        m_tdrWindow = qBound(0, settings.value("tdr/window", m_tdrWindow).toInt(), 4);
+        m_tdrBeta = qBound(0.0, settings.value("tdr/beta", m_tdrBeta).toDouble(), 20.0);
         m_useDeviceRange = settings.value("limits/useDeviceRange", m_useDeviceRange).toBool();
         m_absMinKHz = settings.value("limits/absMinKHz", m_absMinKHz).toDouble();
         m_absMaxKHz = settings.value("limits/absMaxKHz", m_absMaxKHz).toDouble();
@@ -51,6 +58,11 @@ AnalyzerController::AnalyzerController(QObject* parent)
             m_absMinKHz = 100;
             m_absMaxKHz = 10000000;
         }
+    }
+
+    for (const CableSpec& c : CableCatalog::load(QStringLiteral(":/cables.txt"))) {
+        m_cableNames << c.name;
+        m_cableVfs << c.velocityFactor;
     }
 
     connect(m_analyzer, &AnalyzerPro::analyzerFound, this, [this](int) {
@@ -96,6 +108,13 @@ AnalyzerController::AnalyzerController(QObject* parent)
     });
 
     connect(m_session, &MeasurementSession::measurementAdded, this, [this](int) {
+        if (m_tdrMode) {
+            m_tdrRaw.clear();
+            m_tdrProgress = 0;
+            emit tdrProgressChanged();
+            setMeasuring(true);
+            return;
+        }
         if (m_liveMode) {
             m_liveBestDeltaMHz = -1;
             return;
@@ -112,6 +131,10 @@ AnalyzerController::AnalyzerController(QObject* parent)
     connect(m_session, &MeasurementSession::pointAdded, this,
             [this](int, const RawData& raw) { addPoint(raw); });
     connect(m_session, &MeasurementSession::measurementFinished, this, [this](int) {
+        if (m_tdrMode) {
+            finishTdr();
+            return;
+        }
         if (m_liveMode) {
             m_liveFailures = 0;
             emit livePointChanged();
@@ -128,6 +151,13 @@ AnalyzerController::AnalyzerController(QObject* parent)
     connect(m_session, &MeasurementSession::measurementRemoved, this, [this](int) {
         if (m_startingMeasure)
             return;
+        if (m_tdrMode) {
+            m_tdrMode = false;
+            emit tdrScanningChanged();
+            setMeasuring(false);
+            setStatus(tr("TDR scan failed: no data from the analyzer"));
+            return;
+        }
         if (m_liveMode) {
             if (++m_liveFailures >= 3) {
                 m_liveMode = false;
@@ -448,6 +478,14 @@ void AnalyzerController::queueLivePoint()
 
 void AnalyzerController::stop()
 {
+    if (m_tdrMode) {
+        m_tdrMode = false;
+        emit tdrScanningChanged();
+        setMeasuring(false);
+        m_analyzer->on_stopMeasure();
+        setStatus(tr("TDR scan cancelled"));
+        return;
+    }
     const bool wasLive = m_liveMode;
     if (m_liveMode) {
         m_liveMode = false;
@@ -602,6 +640,12 @@ QVariantMap AnalyzerController::makePoint(const RawData& raw) const
 
 void AnalyzerController::addPoint(const RawData& raw)
 {
+    if (m_tdrMode) {
+        m_tdrRaw.append(raw);
+        m_tdrProgress = qMin(1.0, m_tdrRaw.size() / double(m_tdrRequestedPoints + 1));
+        emit tdrProgressChanged();
+        return;
+    }
     const QVariantMap p = makePoint(raw);
 
     if (m_liveMode) {
@@ -762,4 +806,158 @@ void AnalyzerController::setConnectingUsb(bool on)
         return;
     m_connectingUsb = on;
     emit connectingUsbChanged();
+}
+
+// ---- TDR ----
+
+static double defaultTdrTopKHz(double deviceMaxKHz)
+{
+    return deviceMaxKHz > 0 ? deviceMaxKHz : 500000;
+}
+
+QVariantMap AnalyzerController::tdrPeak() const
+{
+    QVariantMap p;
+    p["found"] = m_tdr.peakFound;
+    p["distance"] = m_tdr.peakDistance;
+    p["amplitude"] = m_tdr.peakAmplitude;
+    p["impedance"] = m_tdr.peakImpedance;
+    p["nearRangeEdge"] = m_tdr.peakNearRangeEdge;
+    p["aboveNoise"] = m_tdr.peakFound && qAbs(m_tdr.peakAmplitude) >= TdrAnalysis::kNoiseFloor;
+    return p;
+}
+
+QVariantMap AnalyzerController::tdrEstimate() const
+{
+    const double top = m_tdrTopKHz > 0 ? m_tdrTopKHz : defaultTdrTopKHz(m_deviceMaxKHz);
+    const TdrMath::Estimate est = TdrMath::estimate(m_tdrPoints, top / 1000.0, m_tdrVf, m_metric);
+    QVariantMap m;
+    m["range"] = est.fftSize == 0 ? 0.0 : est.unambiguousRange;
+    m["resolution"] = est.fftSize == 0 ? 0.0 : est.resolution;
+    return m;
+}
+
+double AnalyzerController::tdrCableVelocityFactor(int index) const
+{
+    return index >= 0 && index < m_cableVfs.size() ? m_cableVfs.at(index) : 0;
+}
+
+double AnalyzerController::tdrCalculatedVf(double knownLength) const
+{
+    if (!m_tdr.peakFound || qAbs(m_tdr.peakAmplitude) < TdrAnalysis::kNoiseFloor
+            || m_tdr.peakDistance <= 0 || knownLength <= 0)
+        return 0;
+    return m_tdrVf * knownLength / m_tdr.peakDistance;
+}
+
+QString AnalyzerController::tdrNote(double knownLength) const
+{
+    if (!m_tdr.peakFound || qAbs(m_tdr.peakAmplitude) < TdrAnalysis::kNoiseFloor)
+        return QString();
+    QStringList notes;
+    if (m_tdr.peakNearRangeEdge)
+        notes << tr("Peak is near the edge of this scan's range -- the real reflection may be "
+                    "farther away than this scan can resolve. More sweep points raises the range.");
+    if (knownLength > 0) {
+        const double resolution = tdrEstimate().value("resolution").toDouble();
+        if (resolution > 0 && knownLength - m_tdr.peakDistance > resolution)
+            notes << tr("Peak is %1 %2 short of the entered cable length -- possibly a fault "
+                        "partway along the cable rather than just the far end.")
+                         .arg(knownLength - m_tdr.peakDistance, 0, 'f', 2).arg(tdrUnit());
+    }
+    return notes.join(' ');
+}
+
+void AnalyzerController::startTdr()
+{
+    if (!m_connected || m_measuring)
+        return;
+    const int points = qBound(200, m_tdrPoints, 1000);
+    const double top = qBound(5000.0, m_tdrTopKHz > 0 ? m_tdrTopKHz : defaultTdrTopKHz(m_deviceMaxKHz),
+                              qMax(5000.0, limitMaxKHz()));
+    // TDR needs data starting within 0.1 MHz of DC: always from the device's own minimum.
+    const double minKHz = m_deviceMinKHz > 0 ? m_deviceMinKHz : 100;
+
+    m_tdrRequestedPoints = points;
+    m_tdrMode = true;
+    emit tdrScanningChanged();
+    setStatus(tr("TDR scan..."));
+    m_startingMeasure = true;
+    m_analyzer->on_measure(qint64(minKHz * 1000), qint64(top * 1000), points);
+    m_startingMeasure = false;
+}
+
+void AnalyzerController::finishTdr()
+{
+    m_tdrMode = false;
+    emit tdrScanningChanged();
+    setMeasuring(false);
+    if (m_tdrRaw.size() < m_tdrRequestedPoints) {
+        setStatus(tr("TDR scan incomplete"));
+        return;
+    }
+    recomputeTdr();
+    setStatus(m_tdr.valid ? tr("TDR scan complete")
+                          : tr("TDR failed: the sweep must start near DC (check the analyzer's minimum frequency)"));
+}
+
+void AnalyzerController::recomputeTdr()
+{
+    if (m_tdrRaw.isEmpty())
+        return;
+    m_tdr = TdrAnalysis::compute(m_tdrRaw, m_tdrVf, m_metric, TdrWindow(m_tdrWindow), m_tdrBeta, m_z0);
+    emit tdrChanged();
+}
+
+void AnalyzerController::setMetricUnits(bool v)
+{
+    if (m_metric == v)
+        return;
+    m_metric = v;
+    mobileSettings().setValue("tdr/metric", v);
+    emit tdrSettingsChanged();
+    recomputeTdr();
+}
+
+void AnalyzerController::setTdrTopKHz(double v)
+{
+    v = qMax(5000.0, v);
+    m_tdrTopKHz = v;
+    mobileSettings().setValue("tdr/topKHz", v);
+    emit tdrSettingsChanged();
+}
+
+void AnalyzerController::setTdrPoints(int v)
+{
+    m_tdrPoints = qBound(200, v, 1000);
+    mobileSettings().setValue("tdr/points", m_tdrPoints);
+    emit tdrSettingsChanged();
+}
+
+void AnalyzerController::setTdrVelocityFactor(double v)
+{
+    if (v < 0.05 || v > 1.0) {
+        emit tdrSettingsChanged(); // revert the field
+        return;
+    }
+    m_tdrVf = v;
+    mobileSettings().setValue("tdr/vf", v);
+    emit tdrSettingsChanged();
+    recomputeTdr();
+}
+
+void AnalyzerController::setTdrWindow(int v)
+{
+    m_tdrWindow = qBound(0, v, 4);
+    mobileSettings().setValue("tdr/window", m_tdrWindow);
+    emit tdrSettingsChanged();
+    recomputeTdr();
+}
+
+void AnalyzerController::setTdrKaiserBeta(double v)
+{
+    m_tdrBeta = qBound(0.0, v, 20.0);
+    mobileSettings().setValue("tdr/beta", m_tdrBeta);
+    emit tdrSettingsChanged();
+    recomputeTdr();
 }

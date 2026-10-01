@@ -62,6 +62,14 @@ Page {
             }
         }
 
+        Label { text: qsTr("Distance units"); font.bold: true }
+
+        Switch {
+            text: AnalyzerController.metricUnits ? qsTr("Metric (m)") : qsTr("Feet (ft)")
+            checked: AnalyzerController.metricUnits
+            onToggled: AnalyzerController.metricUnits = checked
+        }
+
         Label { text: qsTr("Frequency limits"); font.bold: true }
 
         Switch {

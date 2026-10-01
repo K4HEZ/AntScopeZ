@@ -14,6 +14,7 @@ ApplicationWindow {
         { title: qsTr("Scan"),       source: "ScanPage.qml" },
         { title: qsTr("SWR"),        source: "SwrPage.qml" },
         { title: qsTr("Smith"),      source: "SmithPage.qml" },
+        { title: qsTr("TDR"),        source: "TdrPage.qml" },
         { title: qsTr("Live Data"),  source: "LiveDataPage.qml" },
         { title: qsTr("Impedance"),  source: "ImpedancePage.qml" },
         { title: qsTr("Settings"),   source: "SettingsPage.qml" },

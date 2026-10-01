@@ -7,6 +7,11 @@
 #include <QVariantList>
 #include <QVariantMap>
 #include <QtQml/qqmlregistration.h>
+#include <QVector>
+
+#include <rfmath.h>
+
+#include "tdranalysis.h"
 
 class AnalyzerPro;
 class BleAnalyzer;
@@ -65,6 +70,26 @@ class AnalyzerController : public QObject
     Q_PROPERTY(double limitMinKHz READ limitMinKHz NOTIFY limitsChanged)
     Q_PROPERTY(double limitMaxKHz READ limitMaxKHz NOTIFY limitsChanged)
 
+    // TDR (cable fault finding): its own scan, kept apart from points. The
+    // traces are in `tdrUnit`; window indexes match tdrmath.h's TdrWindow.
+    Q_PROPERTY(bool metricUnits READ metricUnits WRITE setMetricUnits NOTIFY tdrSettingsChanged)
+    Q_PROPERTY(double tdrTopKHz READ tdrTopKHz WRITE setTdrTopKHz NOTIFY tdrSettingsChanged)
+    Q_PROPERTY(int tdrPoints READ tdrPoints WRITE setTdrPoints NOTIFY tdrSettingsChanged)
+    Q_PROPERTY(double tdrVelocityFactor READ tdrVelocityFactor WRITE setTdrVelocityFactor NOTIFY tdrSettingsChanged)
+    Q_PROPERTY(int tdrWindow READ tdrWindow WRITE setTdrWindow NOTIFY tdrSettingsChanged)
+    Q_PROPERTY(double tdrKaiserBeta READ tdrKaiserBeta WRITE setTdrKaiserBeta NOTIFY tdrSettingsChanged)
+    Q_PROPERTY(bool tdrScanning READ tdrScanning NOTIFY tdrScanningChanged)
+    Q_PROPERTY(double tdrProgress READ tdrProgress NOTIFY tdrProgressChanged)
+    Q_PROPERTY(QString tdrUnit READ tdrUnit NOTIFY tdrSettingsChanged)
+    Q_PROPERTY(QStringList tdrCableNames READ tdrCableNames CONSTANT)
+    Q_PROPERTY(bool tdrHasData READ tdrHasData NOTIFY tdrChanged)
+    Q_PROPERTY(QList<double> tdrImpulse READ tdrImpulse NOTIFY tdrChanged)
+    Q_PROPERTY(QList<double> tdrStep READ tdrStep NOTIFY tdrChanged)
+    Q_PROPERTY(QList<double> tdrImpedance READ tdrImpedance NOTIFY tdrChanged)
+    Q_PROPERTY(double tdrXStep READ tdrXStep NOTIFY tdrChanged)
+    // {found, distance, amplitude, impedance, nearRangeEdge, aboveNoise}
+    Q_PROPERTY(QVariantMap tdrPeak READ tdrPeak NOTIFY tdrChanged)
+
     // SWR chart: minimum px between points before it scrolls (Settings).
     Q_PROPERTY(double chartMinPxPerPoint READ chartMinPxPerPoint WRITE setChartMinPxPerPoint NOTIFY chartMinPxPerPointChanged)
 
@@ -115,6 +140,39 @@ public:
     void setAbsMaxKHz(double v);
     // Clamps a frequency to the effective range.
     Q_INVOKABLE double clampKHz(double kHz) const;
+
+    bool metricUnits() const { return m_metric; }
+    double tdrTopKHz() const { return m_tdrTopKHz > 0 ? m_tdrTopKHz : (m_deviceMaxKHz > 0 ? m_deviceMaxKHz : 500000); }
+    int tdrPoints() const { return m_tdrPoints; }
+    double tdrVelocityFactor() const { return m_tdrVf; }
+    int tdrWindow() const { return m_tdrWindow; }
+    double tdrKaiserBeta() const { return m_tdrBeta; }
+    bool tdrScanning() const { return m_tdrMode; }
+    double tdrProgress() const { return m_tdrProgress; }
+    QString tdrUnit() const { return m_metric ? QStringLiteral("m") : QStringLiteral("ft"); }
+    QStringList tdrCableNames() const { return m_cableNames; }
+    bool tdrHasData() const { return m_tdr.valid; }
+    QList<double> tdrImpulse() const { return m_tdr.impulse; }
+    QList<double> tdrStep() const { return m_tdr.step; }
+    QList<double> tdrImpedance() const { return m_tdr.impedance; }
+    double tdrXStep() const { return m_tdr.xStep; }
+    QVariantMap tdrPeak() const;
+    void setMetricUnits(bool v);
+    void setTdrTopKHz(double v);
+    void setTdrPoints(int v);
+    void setTdrVelocityFactor(double v);
+    void setTdrWindow(int v);
+    void setTdrKaiserBeta(double v);
+
+    // {range, resolution} in tdrUnit for the current settings, before scanning.
+    Q_INVOKABLE QVariantMap tdrEstimate() const;
+    // Velocity factor of the preset at `index` into tdrCableNames; 0 if invalid.
+    Q_INVOKABLE double tdrCableVelocityFactor(int index) const;
+    // VF that would make the strongest reflection land at knownLength; 0 if none.
+    Q_INVOKABLE double tdrCalculatedVf(double knownLength) const;
+    // Extra advice about the reflection (range edge, fault short of the known length).
+    Q_INVOKABLE QString tdrNote(double knownLength) const;
+    Q_INVOKABLE void startTdr();
 
     double chartMinPxPerPoint() const { return m_chartMinPx; }
     void setChartMinPxPerPoint(double v);
@@ -174,9 +232,15 @@ signals:
     void livePointChanged();
     void limitsChanged();
     void chartMinPxPerPointChanged();
+    void tdrSettingsChanged();
+    void tdrScanningChanged();
+    void tdrProgressChanged();
+    void tdrChanged();
 
 private:
     void refreshDeviceInfo();
+    void recomputeTdr();
+    void finishTdr();
     QVariantMap makePoint(const RawData& raw) const;
     void selectAfterScan();
     void reclampRange();
@@ -235,6 +299,19 @@ private:
     int m_liveFailures = 0;
     bool m_startingMeasure = false;
 
+    bool m_metric = true;
+    double m_tdrTopKHz = 0; // 0 until first used; then the device max
+    int m_tdrPoints = 500;
+    double m_tdrVf = 0.66;
+    int m_tdrWindow = 1; // Hamming
+    double m_tdrBeta = 6.0;
+    bool m_tdrMode = false;
+    double m_tdrProgress = 0;
+    int m_tdrRequestedPoints = 0;
+    QVector<RawData> m_tdrRaw;
+    TdrAnalysis m_tdr;
+    QStringList m_cableNames;
+    QList<double> m_cableVfs;
     double m_chartMinPx = 5;
     bool m_useDeviceRange = true;
     double m_absMinKHz = 100;
