@@ -1304,6 +1304,11 @@ void AnalyzerPro::on_disconnectDevice()
 
 void AnalyzerPro::slotFullInfo(const QString& _info)
 {
+    struct NotifyOnExit {
+        AnalyzerPro* self;
+        ~NotifyOnExit() { emit self->deviceInfoChanged(); }
+    } notify{this};
+
     int index = _info.indexOf("LIC");
     if (index != -1) {
         // The license level ("LIC1"/"LIC2"/"LIC3") describes the physically

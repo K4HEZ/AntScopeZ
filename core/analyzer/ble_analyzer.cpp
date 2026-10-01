@@ -761,6 +761,10 @@ void BleAnalyzer::parseFullInfo(QDataStream& stream)
         QString str = QString("FQ min = %1 kHz, FQ max = %2 kHz, max Points = %3")
                 .arg(long(minFq * mult)).arg(long(maxFq*mult)).arg(maxPoints);
         setResponse(str);
+        // Nothing else tells AnalyzerPro this changed the range/serial/
+        // version it reports (slotFullInfo() only looks for LICx, which BLE
+        // never sends) -- GUIs showing device info re-read it on this.
+        emit signalFullInfo(str);
     }
         break;
     case (quint8)BLE_FULLINFO_SERIAL_VER:
@@ -786,6 +790,7 @@ void BleAnalyzer::parseFullInfo(QDataStream& stream)
         setResponse(str);
         qInfo() << "BleAnalyzer::parseFullInfo SERIAL_VER: serial" << m_serialNumber
                  << "version" << m_version;
+        emit signalFullInfo(str); // see MEASURER above
     }
         break;
     case (quint8)BLE_FULLINFO_MCU_TYPE_STR:

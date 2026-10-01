@@ -164,6 +164,7 @@ public:
     QString getRevision() const;
     QString getSerialNumber(void) const;
     QString getLicense() const { return m_license; }
+    BaseAnalyzer* baseAnalyzer() const { return m_baseAnalyzer; }
     QString getMinFq(void);
     QString getMaxFq(void);
 
@@ -217,6 +218,10 @@ signals:
     void updateAutocalibrate5(int _dots, QString _msg);
     void stopAutocalibrate5();
     void analyzerFound (int analyzerIndex);
+    // Fires when the device's full-info reply (serial, LICx, ...) changes
+    // what getLicense()/getMaxFq()/getSerialNumber() report -- that reply
+    // arrives some time after analyzerFound().
+    void deviceInfoChanged();
     void signalAnalyzerError(const QString& msg);
     void signalMatch_12Received(QByteArray data);
     void signalMatch_Profile_B16Received(QByteArray data);
