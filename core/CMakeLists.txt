@@ -21,6 +21,7 @@ set(ANTSCOPE_CORE_SOURCES
     measurementsession.cpp
     rfmath.cpp
     tdrmath.cpp
+    cablecatalog.cpp
 
     analyzer/analyzerpro.cpp
     analyzer/baseanalyzer.cpp
@@ -59,6 +60,7 @@ set(ANTSCOPE_CORE_HEADERS
     measurementsession.h
     rfmath.h
     tdrmath.h
+    cablecatalog.h
     usermessage.h
 
     analyzer/analyzerparameters.h

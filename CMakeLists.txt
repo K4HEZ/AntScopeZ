@@ -117,7 +117,6 @@ set(ANTSCOPE_SOURCES
     desktop/analyzerdata.cpp
     desktop/antscopeupdatedialog.cpp
     desktop/appregistrationdialog.cpp
-    desktop/cablecatalog.cpp
     desktop/centralwidget.cpp
     desktop/correctionsdialog.cpp
     desktop/customgraph.cpp
@@ -187,7 +186,6 @@ set(ANTSCOPE_HEADERS
     desktop/analyzerdata.h
     desktop/antscopeupdatedialog.h
     desktop/appregistrationdialog.h
-    desktop/cablecatalog.h
     desktop/centralwidget.h
     desktop/correctionsdialog.h
     desktop/customgraph.h
