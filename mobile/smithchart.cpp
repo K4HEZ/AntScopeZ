@@ -1,5 +1,6 @@
 #include "smithchart.h"
 
+#include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
 #include <QVariantMap>
@@ -18,6 +19,68 @@ SmithChart::SmithChart(QQuickItem* parent)
     : QQuickPaintedItem(parent)
 {
     setImplicitHeight(260);
+    setAcceptedMouseButtons(Qt::LeftButton);
+}
+
+void SmithChart::setSelectedIndex(int v)
+{
+    if (m_selectedIndex == v)
+        return;
+    m_selectedIndex = v;
+    update();
+}
+
+// Same geometry as paint(): unit circle centered in the item with an 8px margin.
+QPointF SmithChart::pointToScreen(const QVariant& point) const
+{
+    const QVariantMap p = point.toMap();
+    double gx6 = 0, gy6 = 0;
+    RfMath::smithPoint(p.value("r").toDouble() / m_z0, p.value("x").toDouble() / m_z0, gx6, gy6);
+    const qreal radius = (qMin(width(), height()) - 16) / 2;
+    return QPointF(width() / 2 + gx6 / 6.0 * radius, height() / 2 - gy6 / 6.0 * radius);
+}
+
+void SmithChart::selectNear(const QPointF& pos)
+{
+    if (m_points.isEmpty() || m_z0 <= 0)
+        return;
+    int best = 0;
+    qreal bestDist = -1;
+    for (int i = 0; i < m_points.size(); ++i) {
+        const QPointF d = pointToScreen(m_points.at(i)) - pos;
+        const qreal dist = d.x() * d.x() + d.y() * d.y();
+        if (bestDist < 0 || dist < bestDist) {
+            bestDist = dist;
+            best = i;
+        }
+    }
+    emit pointSelected(best);
+}
+
+void SmithChart::mousePressEvent(QMouseEvent* event)
+{
+    // Keep the drag here; otherwise a vertical move hands it to the
+    // enclosing Flickable and horizontal tracking stops.
+    setKeepMouseGrab(true);
+    setKeepTouchGrab(true);
+    selectNear(event->position());
+}
+
+void SmithChart::mouseReleaseEvent(QMouseEvent*)
+{
+    setKeepMouseGrab(false);
+    setKeepTouchGrab(false);
+}
+
+void SmithChart::mouseUngrabEvent()
+{
+    setKeepMouseGrab(false);
+    setKeepTouchGrab(false);
+}
+
+void SmithChart::mouseMoveEvent(QMouseEvent* event)
+{
+    selectNear(event->position());
 }
 
 void SmithChart::setPoints(const QVariantList& points)
@@ -122,4 +185,10 @@ void SmithChart::paint(QPainter* painter)
     painter->setPen(curvePen);
     painter->drawPolyline(polyline);
     painter->setClipping(false);
+
+    if (m_selectedIndex >= 0 && m_selectedIndex < polyline.size()) {
+        painter->setPen(QPen(Qt::white, 1.5));
+        painter->setBrush(QColor(200, 30, 30));
+        painter->drawEllipse(polyline.at(m_selectedIndex), 6, 6);
+    }
 }

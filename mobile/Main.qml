@@ -12,11 +12,17 @@ ApplicationWindow {
     readonly property var pages: [
         { title: qsTr("Connection"), source: "ConnectionPage.qml" },
         { title: qsTr("Scan"),       source: "ScanPage.qml" },
+        { title: qsTr("SWR"),        source: "SwrPage.qml" },
         { title: qsTr("Smith"),      source: "SmithPage.qml" },
-        { title: qsTr("All Parameters"), source: "AllParametersPage.qml" },
-        { title: qsTr("Settings"),   source: "SettingsPage.qml" }
+        { title: qsTr("Live Data"),  source: "LiveDataPage.qml" },
+        { title: qsTr("Impedance"),  source: "ImpedancePage.qml" },
+        { title: qsTr("Settings"),   source: "SettingsPage.qml" },
+        { title: qsTr("About"),      source: "AboutPage.qml" }
     ]
     property int currentPage: 0
+
+    Binding { target: BandPresets; property: "limitMinKHz"; value: AnalyzerController.limitMinKHz }
+    Binding { target: BandPresets; property: "limitMaxKHz"; value: AnalyzerController.limitMaxKHz }
 
     function showPage(i) {
         currentPage = i
@@ -87,7 +93,7 @@ ApplicationWindow {
 
     footer: Label {
         text: AnalyzerController.status
-        elide: Label.ElideRight
+        wrapMode: Text.Wrap
         padding: 8
         opacity: 0.8
     }

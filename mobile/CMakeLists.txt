@@ -43,9 +43,13 @@ qt_add_qml_module(AntScopeZMobile
         Main.qml
         ConnectionPage.qml
         ScanPage.qml
+        SwrPage.qml
         SmithPage.qml
-        AllParametersPage.qml
+        LiveDataPage.qml
+        ImpedancePage.qml
         SettingsPage.qml
+        AboutPage.qml
+        ParametersGrid.qml
 )
 
 # The desktop ships shared/itu-regions-defaults.txt next to its binary via
@@ -57,6 +61,24 @@ qt_add_resources(AntScopeZMobile "itu_bands"
     BASE ${CMAKE_CURRENT_SOURCE_DIR}/../shared
     FILES ${CMAKE_CURRENT_SOURCE_DIR}/../shared/itu-regions-defaults.txt
 )
+
+qt_add_resources(AntScopeZMobile "icon"
+    PREFIX "/"
+    BASE ${CMAKE_CURRENT_SOURCE_DIR}/../desktop/resources
+    FILES ${CMAKE_CURRENT_SOURCE_DIR}/../desktop/resources/AntScopeZ.png
+)
+
+# Same per-build timestamp header the desktop About box uses (see the root
+# CMakeLists.txt), for About's "Build" line.
+add_custom_target(generate_build_timestamp
+    COMMAND ${CMAKE_COMMAND}
+        "-DIN_FILE=${CMAKE_CURRENT_SOURCE_DIR}/../cmake/build-timestamp.h.in"
+        "-DOUT_FILE=${CMAKE_BINARY_DIR}/build-timestamp.h"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/generate-build-timestamp.cmake"
+    BYPRODUCTS "${CMAKE_BINARY_DIR}/build-timestamp.h"
+)
+add_dependencies(AntScopeZMobile generate_build_timestamp)
+target_include_directories(AntScopeZMobile PRIVATE ${CMAKE_BINARY_DIR})
 
 target_compile_definitions(AntScopeZMobile PRIVATE
     ANTSCOPEZ_VER="${PROJECT_VERSION}${ANTSCOPEZ_VER_SUFFIX}"

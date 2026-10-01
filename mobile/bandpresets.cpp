@@ -29,19 +29,47 @@ void BandPresets::setRegion(const QString& region)
         return;
     m_region = region;
     mobileSettings().setValue("band/region", region);
+    rebuild();
+    emit regionChanged();
+}
 
+void BandPresets::rebuild()
+{
+    m_shown.clear();
     m_bandLabels.clear();
     m_bands.clear();
-    for (const BandPreset& b : m_allBands.value(region)) {
-        m_bandLabels << b.label;
+    for (const BandPreset& b : m_allBands.value(m_region)) {
+        if (b.toKHz < m_limitMinKHz || b.fromKHz > m_limitMaxKHz)
+            continue;
+        m_shown << b;
+        m_bandLabels << QString("%1 - (%2 - %3 kHz)").arg(b.label)
+                            .arg(QString::number(b.fromKHz, 'g', 10))
+                            .arg(QString::number(b.toKHz, 'g', 10));
         QVariantMap map;
         map["fromKHz"] = b.fromKHz;
         map["toKHz"] = b.toKHz;
         map["label"] = b.label;
         m_bands << map;
     }
-    emit regionChanged();
     emit bandsChanged();
+}
+
+void BandPresets::setLimitMinKHz(double v)
+{
+    if (m_limitMinKHz == v)
+        return;
+    m_limitMinKHz = v;
+    rebuild();
+    emit limitsChanged();
+}
+
+void BandPresets::setLimitMaxKHz(double v)
+{
+    if (m_limitMaxKHz == v)
+        return;
+    m_limitMaxKHz = v;
+    rebuild();
+    emit limitsChanged();
 }
 
 void BandPresets::setWidenPercent(int v)
@@ -57,10 +85,9 @@ void BandPresets::setWidenPercent(int v)
 QVariantMap BandPresets::widenedRange(int bandIndex) const
 {
     QVariantMap result;
-    const QList<BandPreset> bands = m_allBands.value(m_region);
-    if (bandIndex < 0 || bandIndex >= bands.size())
+    if (bandIndex < 0 || bandIndex >= m_shown.size())
         return result;
-    const BandPreset& b = bands.at(bandIndex);
+    const BandPreset& b = m_shown.at(bandIndex);
     double from = 0, to = 0;
     ItuBands::widen(b.fromKHz, b.toKHz, m_widenPercent, from, to);
     result["fromKHz"] = from;

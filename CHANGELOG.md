@@ -28,6 +28,14 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   Z0/band settings (persisted), and a Share button (Touchstone .s1p via
   the Android Share sheet). Builds for Android and, for testing, the
   desktop.
+- Mobile app reorganized: Connection (device info), Scan, SWR, Smith, Live
+  Data, Impedance, Settings, About. Tap the SWR chart or use the Smith
+  slider to read any point; bands limited to the device range, with
+  absolute frequency limits in Settings.
+- Mobile app: NanoVNA and RigExpert serial (COM) devices on the desktop
+  build; Connection page shows firmware, license, interface and protocol.
+  A Match's range now comes from its LICx reply instead of a 750 MHz
+  default.
 - Real Android USB-HID support (RigExpert Match over USB): the Android
   `hidapi` backend was a stub (USB analyzers never enumerated); now
   bridges to `android.hardware.usb.*` via JNI, with the USB-permission

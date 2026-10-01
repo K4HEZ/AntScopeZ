@@ -1,6 +1,9 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQmlContext>
 #include <QQuickStyle>
+
+#include "build-timestamp.h"
 
 int main(int argc, char *argv[])
 {
@@ -12,6 +15,7 @@ int main(int argc, char *argv[])
     QQuickStyle::setStyle("Material");
 
     QQmlApplicationEngine engine;
+    engine.rootContext()->setContextProperty("buildTimestamp", QStringLiteral(ANTSCOPEZ_BUILD_TIMESTAMP));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed,
                      &app, []() { QCoreApplication::exit(1); }, Qt::QueuedConnection);
     engine.loadFromModule("AntScopeZ.Mobile", "Main");

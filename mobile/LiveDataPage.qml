@@ -3,27 +3,34 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 Page {
-    // A live reading is a narrow 3-point span around the target frequency
-    // (the Match rejects a zero-span request); show whichever of the three
-    // lands closest to it rather than assuming an index.
-    readonly property var point: {
-        const pts = AnalyzerController.points
-        const targetMHz = Number(fqField.text) / 1000
-        var best = null, bestDelta = -1
-        for (var i = 0; i < pts.length; i++) {
-            const delta = Math.abs(pts[i].fq - targetMHz)
-            if (best === null || delta < bestDelta) {
-                best = pts[i]
-                bestDelta = delta
+    // Dark green at 1:1, yellow 3:1, orange 5:1, red toward 10:1.
+    readonly property var swrStops: [
+        { swr: 1,  r: 0.04, g: 0.48, b: 0.12 },
+        { swr: 3,  r: 0.90, g: 0.78, b: 0.00 },
+        { swr: 5,  r: 1.00, g: 0.55, b: 0.00 },
+        { swr: 10, r: 0.82, g: 0.00, b: 0.00 }
+    ]
+    function swrColor(swr) {
+        if (swr <= swrStops[0].swr)
+            return Qt.rgba(swrStops[0].r, swrStops[0].g, swrStops[0].b, 1)
+        for (var i = 1; i < swrStops.length; i++) {
+            if (swr <= swrStops[i].swr) {
+                const a = swrStops[i - 1], b = swrStops[i]
+                const t = (swr - a.swr) / (b.swr - a.swr)
+                return Qt.rgba(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t, a.b + (b.b - a.b) * t, 1)
             }
         }
-        return best
+        const last = swrStops[swrStops.length - 1]
+        return Qt.rgba(last.r, last.g, last.b, 1)
     }
 
-    function fmt(v) { return v === undefined ? "--" : Number(v).toFixed(2) }
-    function fmtFq(mhz) { return Number(mhz).toFixed(3) }
-
     Component.onCompleted: fqField.text = ((AnalyzerController.fromKHz + AnalyzerController.toKHz) / 2).toFixed(0)
+
+    // The device does one thing at a time; don't leave a live loop blocking Scan.
+    Component.onDestruction: {
+        if (AnalyzerController.liveMode)
+            AnalyzerController.stop()
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -52,45 +59,31 @@ Page {
                        : AnalyzerController.startLive(Number(fqField.text))
         }
 
-        Label {
-            visible: point !== null
-            text: point ? fmtFq(point.fq) + " MHz" : ""
-            font.pixelSize: 18
-            font.bold: true
-        }
-
-        GridLayout {
-            columns: 2
-            columnSpacing: 24
-            rowSpacing: 6
+        ParametersGrid {
+            point: AnalyzerController.livePoint
             Layout.fillWidth: true
-
-            Label { text: qsTr("SWR"); font.bold: true }
-            Label { text: point ? fmt(point.swr) : "--" }
-
-            Label { text: qsTr("Return Loss, dB"); font.bold: true }
-            Label { text: point ? fmt(point.rl) : "--" }
-
-            Label { text: qsTr("R + jX, Ω (series)"); font.bold: true }
-            Label {
-                text: point ? fmt(point.r) + (point.x < 0 ? " − j" : " + j") + fmt(Math.abs(point.x)) : "--"
-            }
-
-            Label { text: qsTr("|Z|, Ω"); font.bold: true }
-            Label { text: point ? fmt(point.z) : "--" }
-
-            Label { text: qsTr("R + jX, Ω (parallel)"); font.bold: true }
-            Label {
-                text: point ? fmt(point.rpar) + (point.xpar < 0 ? " − j" : " + j") + fmt(Math.abs(point.xpar)) : "--"
-            }
-
-            Label { text: qsTr("|Zp|, Ω"); font.bold: true }
-            Label { text: point ? fmt(point.zpar) : "--" }
-
-            Label { text: qsTr("Phase, °"); font.bold: true }
-            Label { text: point ? fmt(point.rhoPhase) : "--" }
         }
 
-        Item { Layout.fillHeight: true }
+        Label {
+            text: qsTr("SWR")
+            font.bold: true
+            Layout.alignment: Qt.AlignHCenter
+        }
+
+        // Fills the rest of the page; Text.Fit shrinks the number to whatever
+        // size the screen allows.
+        Label {
+            readonly property bool valid: AnalyzerController.livePoint.swr !== undefined
+            text: valid ? Number(AnalyzerController.livePoint.swr).toFixed(2) : "--"
+            color: valid ? swrColor(AnalyzerController.livePoint.swr) : palette.text
+            font.pixelSize: 1000
+            font.bold: true
+            fontSizeMode: Text.Fit
+            minimumPixelSize: 24
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+        }
     }
 }

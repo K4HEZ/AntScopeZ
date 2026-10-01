@@ -3,153 +3,72 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 Page {
-    id: page
-    property bool spanMode: false
-
-    function refreshFields() {
-        startField.text = AnalyzerController.fromKHz
-        stopField.text = AnalyzerController.toKHz
-        centerField.text = (AnalyzerController.fromKHz + AnalyzerController.toKHz) / 2
-        spanField.text = AnalyzerController.toKHz - AnalyzerController.fromKHz
+    function refreshLimits() {
+        absMinField.text = String(Math.round(AnalyzerController.absMinKHz))
+        absMaxField.text = String(Math.round(AnalyzerController.absMaxKHz))
     }
 
-    function applyStartStop() {
-        AnalyzerController.fromKHz = Number(startField.text)
-        AnalyzerController.toKHz = Number(stopField.text)
-        refreshFields()
+    Connections {
+        target: AnalyzerController
+        function onLimitsChanged() { refreshLimits() }
     }
 
-    function applyCenterSpan() {
-        const span = Number(spanField.text)
-        const center = Number(centerField.text)
-        AnalyzerController.fromKHz = center - span / 2
-        AnalyzerController.toKHz = center + span / 2
-        refreshFields()
-    }
-
-    Component.onCompleted: {
-        refreshFields()
-        pointsField.text = AnalyzerController.sweepPoints
-        z0Field.text = AnalyzerController.z0
-    }
+    Component.onCompleted: refreshLimits()
 
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 16
         spacing: 16
 
-        Label { text: qsTr("Band"); font.bold: true }
-
-        GridLayout {
-            columns: 2
-            columnSpacing: 10
-            rowSpacing: 6
-            Layout.fillWidth: true
-
-            Label { text: qsTr("ITU Region") }
-            Label { text: qsTr("Band") }
-            ComboBox {
-                id: regionCombo
-                Layout.fillWidth: true
-                model: BandPresets.regions
-                currentIndex: model.indexOf(BandPresets.region)
-                onActivated: BandPresets.region = model[currentIndex]
-            }
-            ComboBox {
-                id: bandCombo
-                Layout.fillWidth: true
-                model: BandPresets.bandLabels
-                onActivated: {
-                    const r = BandPresets.widenedRange(currentIndex)
-                    if (r.fromKHz !== undefined) {
-                        AnalyzerController.fromKHz = r.fromKHz
-                        AnalyzerController.toKHz = r.toKHz
-                        page.refreshFields()
-                    }
-                }
-            }
-        }
+        Label { text: qsTr("Add margin to scans"); font.bold: true }
 
         RowLayout {
             Layout.fillWidth: true
             spacing: 10
-            Label { text: qsTr("Widen range, %") }
-            SpinBox {
-                id: widenSpin
+            Slider {
                 from: 0
                 to: 100
+                stepSize: 1
+                snapMode: Slider.SnapAlways
                 value: BandPresets.widenPercent
-                onValueModified: BandPresets.widenPercent = value
+                onMoved: BandPresets.widenPercent = Math.round(value)
                 Layout.fillWidth: true
+            }
+            Label {
+                text: BandPresets.widenPercent + " %"
+                Layout.preferredWidth: 48
+                horizontalAlignment: Text.AlignRight
             }
         }
 
-        Label { text: qsTr("Frequency Range"); font.bold: true }
+        Label { text: qsTr("SWR chart density"); font.bold: true }
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 0
-            Button {
-                text: qsTr("Start / Stop")
-                highlighted: !page.spanMode
+            spacing: 10
+            Slider {
+                from: 1
+                to: 30
+                stepSize: 0.5
+                snapMode: Slider.SnapAlways
+                value: AnalyzerController.chartMinPxPerPoint
+                onMoved: AnalyzerController.chartMinPxPerPoint = value
                 Layout.fillWidth: true
-                onClicked: page.spanMode = false
             }
-            Button {
-                text: qsTr("Center / Span")
-                highlighted: page.spanMode
-                Layout.fillWidth: true
-                onClicked: page.spanMode = true
-            }
-        }
-
-        GridLayout {
-            columns: 2
-            visible: !page.spanMode
-            columnSpacing: 10
-            rowSpacing: 6
-            Layout.fillWidth: true
-
-            Label { text: qsTr("Start, kHz") }
-            Label { text: qsTr("Stop, kHz") }
-            TextField {
-                id: startField
-                inputMethodHints: Qt.ImhFormattedNumbersOnly
-                Layout.fillWidth: true
-                onEditingFinished: page.applyStartStop()
-            }
-            TextField {
-                id: stopField
-                inputMethodHints: Qt.ImhFormattedNumbersOnly
-                Layout.fillWidth: true
-                onEditingFinished: page.applyStartStop()
+            Label {
+                text: qsTr("%1 px/pt").arg(AnalyzerController.chartMinPxPerPoint)
+                Layout.preferredWidth: 72
+                horizontalAlignment: Text.AlignRight
             }
         }
 
-        GridLayout {
-            columns: 2
-            visible: page.spanMode
-            columnSpacing: 10
-            rowSpacing: 6
-            Layout.fillWidth: true
+        Label { text: qsTr("Frequency limits"); font.bold: true }
 
-            Label { text: qsTr("Center, kHz") }
-            Label { text: qsTr("Span, kHz") }
-            TextField {
-                id: centerField
-                inputMethodHints: Qt.ImhFormattedNumbersOnly
-                Layout.fillWidth: true
-                onEditingFinished: page.applyCenterSpan()
-            }
-            TextField {
-                id: spanField
-                inputMethodHints: Qt.ImhFormattedNumbersOnly
-                Layout.fillWidth: true
-                onEditingFinished: page.applyCenterSpan()
-            }
+        Switch {
+            text: qsTr("Use device range")
+            checked: AnalyzerController.useDeviceRange
+            onToggled: AnalyzerController.useDeviceRange = checked
         }
-
-        Label { text: qsTr("Sweep"); font.bold: true }
 
         GridLayout {
             columns: 2
@@ -157,19 +76,19 @@ Page {
             rowSpacing: 6
             Layout.fillWidth: true
 
-            Label { text: qsTr("Points") }
-            Label { text: qsTr("Z0, Ω") }
+            Label { text: qsTr("Absolute min, kHz") }
+            Label { text: qsTr("Absolute max, kHz") }
             TextField {
-                id: pointsField
-                inputMethodHints: Qt.ImhDigitsOnly
-                Layout.fillWidth: true
-                onEditingFinished: AnalyzerController.sweepPoints = parseInt(text)
-            }
-            TextField {
-                id: z0Field
+                id: absMinField
                 inputMethodHints: Qt.ImhFormattedNumbersOnly
                 Layout.fillWidth: true
-                onEditingFinished: AnalyzerController.z0 = Number(text)
+                onEditingFinished: AnalyzerController.absMinKHz = Number(text)
+            }
+            TextField {
+                id: absMaxField
+                inputMethodHints: Qt.ImhFormattedNumbersOnly
+                Layout.fillWidth: true
+                onEditingFinished: AnalyzerController.absMaxKHz = Number(text)
             }
         }
 
