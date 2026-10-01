@@ -304,7 +304,7 @@ QJsonObject RemoteApiConnection::cmdDevices() const
     }
 
     NanovnaAnalyzer::detectPorts();
-    foreach (const QSerialPortInfo& info, NanovnaAnalyzer::availablePorts()) {
+    foreach (const SerialPortInfo& info, NanovnaAnalyzer::availablePorts()) {
         QJsonObject dev;
         dev.insert("type", "nano");
         dev.insert("name", "NanoVNA");

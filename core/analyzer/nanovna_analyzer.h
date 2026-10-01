@@ -2,8 +2,7 @@
 #define NANOVNA_ANALYZER_H
 
 #include <QObject>
-#include <QtSerialPort/QSerialPort>
-#include <QSerialPortInfo>
+#include "serialport_compat.h"
 #include <QStringList>
 #include <QTimer>
 #include <qdebug.h>
@@ -58,7 +57,7 @@ public:
     void closeComPort();
 
     qint64 sendData(QString data);
-    QSerialPort* comport() { return m_comPort; }
+    SerialPort* comport() { return m_comPort; }
     RawData toRawData(QString& s1p);
     virtual bool refreshConnection();
     virtual bool connectAnalyzer();
@@ -68,7 +67,7 @@ public:
     bool stopCommandAbortsDevice() const override { return false; }
 
     static void detectPorts();
-    static QList<QSerialPortInfo> availablePorts() { return m_listNanovnaPorts; }
+    static QList<SerialPortInfo> availablePorts() { return m_listNanovnaPorts; }
     static int portsCount() { return m_listNanovnaPorts.size(); }
     static bool isConnected() { return m_isConnected; }
 
@@ -79,7 +78,7 @@ public:
     QString scanCapabilityDescription() const;
 
 private:
-    QSerialPort * m_comPort;
+    SerialPort * m_comPort;
     QStringList m_comAvailables;
     QByteArray m_incomingBuffer;
     QList <QString> m_stringList;
@@ -175,7 +174,7 @@ private:
     void parseAsciiScanLine(const QString& line);
     void emitPoint(double fqMHz, std::complex<double> s11, std::complex<double> s21); // scan tiers always have both together
 
-    static QList<QSerialPortInfo> m_listNanovnaPorts;
+    static QList<SerialPortInfo> m_listNanovnaPorts;
     static bool m_isConnected;
 
 signals:

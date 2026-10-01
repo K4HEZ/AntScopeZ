@@ -2,8 +2,7 @@
 #define COM_ANALYZER_H
 
 #include <QObject>
-#include <QtSerialPort/QSerialPort>
-#include <QSerialPortInfo>
+#include "serialport_compat.h"
 #include <QStringList>
 #include <QTimer>
 #include <qdebug.h>
@@ -88,7 +87,7 @@ private slots:
     void timeoutChartUser();
 
 private:
-    QSerialPort * m_comPort;
+    SerialPort * m_comPort;
     QStringList m_comAvailables;
     //QByteArray m_incomingBuffer;
     //QString m_chartData;

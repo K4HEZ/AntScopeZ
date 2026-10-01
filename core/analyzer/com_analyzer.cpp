@@ -1,7 +1,6 @@
 #include "com_analyzer.h"
 #include "appconfig.h"
 #include "customanalyzer.h"
-#include <qserialport.h>
 #include "AA55BTPacket.h"
 #include "debuglog.h"
 
@@ -44,7 +43,7 @@ ComAnalyzer::ComAnalyzer(QObject *parent) : BaseAnalyzer(parent),
     m_autoDetectMode(true)
 {
     m_type = ReDeviceInfo::Serial;
-    m_comPort = new QSerialPort(this);
+    m_comPort = new SerialPort(this);
 
     m_chartTimer = new QTimer(this);
     connect(m_chartTimer, SIGNAL(timeout()), this, SLOT(timeoutChart()));
@@ -80,21 +79,21 @@ bool ComAnalyzer::openComPort(const QString& portName, quint32 portSpeed)
         m_comPort->close();
     }
     m_comPort->setPortName(portName);
-    m_comPort->setBaudRate(portSpeed);//QSerialPort::Baud38400);
-    m_comPort->setFlowControl(QSerialPort::NoFlowControl);
-    m_comPort->setDataBits(QSerialPort::Data8);
-    m_comPort->setParity(QSerialPort::NoParity);
-    m_comPort->setStopBits(QSerialPort::OneStop);
+    m_comPort->setBaudRate(portSpeed);//SerialPort::Baud38400);
+    m_comPort->setFlowControl(SerialPort::NoFlowControl);
+    m_comPort->setDataBits(SerialPort::Data8);
+    m_comPort->setParity(SerialPort::NoParity);
+    m_comPort->setStopBits(SerialPort::OneStop);
 
-    bool result = m_comPort->open(QSerialPort::ReadWrite);
+    bool result = m_comPort->open(SerialPort::ReadWrite);
     if (!result) {
         // PermissionError is Qt's own cross-platform "something else already
         // has this port open" signal (a Windows sharing violation, a Linux/
-        // Mac lock/O_EXCL conflict -- QSerialPort abstracts the OS-specific
+        // Mac lock/O_EXCL conflict -- SerialPort abstracts the OS-specific
         // mechanism away), as opposed to e.g. DeviceNotFoundError, which
         // just means no such port -- only the former is worth telling the
         // user about specifically.
-        if (m_comPort->error() == QSerialPort::PermissionError) {
+        if (m_comPort->error() == SerialPort::PermissionError) {
             // errorString() is the OS's own message for this (e.g. "Permission
             // error" / "Access is denied" / "Resource busy") -- genuine
             // diagnostic data sitting right here, previously just discarded.

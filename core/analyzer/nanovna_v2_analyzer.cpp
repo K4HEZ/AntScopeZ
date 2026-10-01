@@ -1,5 +1,4 @@
 #include "nanovna_v2_analyzer.h"
-#include <qserialport.h>
 #include <QtEndian>
 #include <cmath>
 #include "debuglog.h"
@@ -32,12 +31,12 @@ constexpr int FIFO_RECORD_SIZE = 32;
 } // namespace
 
 // static members
-QList<QSerialPortInfo> NanovnaV2Analyzer::m_listNanovnaV2Ports;
+QList<SerialPortInfo> NanovnaV2Analyzer::m_listNanovnaV2Ports;
 
 NanovnaV2Analyzer::NanovnaV2Analyzer(QObject *parent) : BaseAnalyzer(parent)
 {
     m_type = ReDeviceInfo::NANOV2;
-    m_comPort = new QSerialPort(this);
+    m_comPort = new SerialPort(this);
 }
 
 NanovnaV2Analyzer::~NanovnaV2Analyzer()
@@ -56,14 +55,14 @@ bool NanovnaV2Analyzer::openComPort(const QString& portName, quint32 portSpeed)
     }
     m_comPort->setPortName(portName);
     m_comPort->setBaudRate(portSpeed); // meaningless over USB-CDC, kept for parity with NanovnaAnalyzer
-    m_comPort->setFlowControl(QSerialPort::NoFlowControl);
-    m_comPort->setDataBits(QSerialPort::Data8);
-    m_comPort->setParity(QSerialPort::NoParity);
-    m_comPort->setStopBits(QSerialPort::OneStop);
+    m_comPort->setFlowControl(SerialPort::NoFlowControl);
+    m_comPort->setDataBits(SerialPort::Data8);
+    m_comPort->setParity(SerialPort::NoParity);
+    m_comPort->setStopBits(SerialPort::OneStop);
 
     connect(m_comPort, SIGNAL(readyRead()), this, SLOT(dataArrived()));
-    connect(m_comPort, &QSerialPort::aboutToClose, this, &NanovnaV2Analyzer::portClosed);
-    bool result = m_comPort->open(QSerialPort::ReadWrite);
+    connect(m_comPort, &SerialPort::aboutToClose, this, &NanovnaV2Analyzer::portClosed);
+    bool result = m_comPort->open(SerialPort::ReadWrite);
     return result;
 }
 
@@ -377,8 +376,8 @@ void NanovnaV2Analyzer::portClosed()
 void NanovnaV2Analyzer::detectPorts()
 {
     NanovnaV2Analyzer::m_listNanovnaV2Ports.clear();
-    const QList<QSerialPortInfo> listPorts = QSerialPortInfo::availablePorts();
-    for (const QSerialPortInfo& info : listPorts) {
+    const QList<SerialPortInfo> listPorts = SerialPortInfo::availablePorts();
+    for (const SerialPortInfo& info : listPorts) {
         if (info.vendorIdentifier() == NANOVNA_V2_VID && info.productIdentifier() == NANOVNA_V2_PID) {
             NanovnaV2Analyzer::m_listNanovnaV2Ports << info;
         }

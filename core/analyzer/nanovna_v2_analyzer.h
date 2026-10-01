@@ -2,8 +2,7 @@
 #define NANOVNA_V2_ANALYZER_H
 
 #include <QObject>
-#include <QtSerialPort/QSerialPort>
-#include <QSerialPortInfo>
+#include "serialport_compat.h"
 #include <QByteArray>
 #include <QTimer>
 #include <complex>
@@ -25,7 +24,7 @@
 // from the protocol facts both confirmed, not a port of either -- also a
 // better structural fit regardless, since both reference clients use
 // blocking/synchronous serial I/O while every AntScopeZ analyzer backend
-// (this one included) is async, QSerialPort::readyRead()-driven.
+// (this one included) is async, SerialPort::readyRead()-driven.
 #define NANOVNA_V2_VID 0x04B4
 #define NANOVNA_V2_PID 0x0008
 
@@ -54,11 +53,11 @@ public:
     bool stopCommandAbortsDevice() const override { return false; }
 
     static void detectPorts();
-    static QList<QSerialPortInfo> availablePorts() { return m_listNanovnaV2Ports; }
+    static QList<SerialPortInfo> availablePorts() { return m_listNanovnaV2Ports; }
     static int portsCount() { return m_listNanovnaV2Ports.size(); }
 
 private:
-    QSerialPort* m_comPort;
+    SerialPort* m_comPort;
     QByteArray m_incomingBuffer;
 
     qint64 m_fqFrom = 0;
@@ -94,7 +93,7 @@ private:
     void finishSweep();       // shared "sweep fully read" completion logic, mirrors NanovnaAnalyzer::finishMeasurementSegment()
     void emitPoint(double fqMHz, std::complex<double> s11, std::complex<double> s21); // mirrors NanovnaAnalyzer::emitPoint() -- same RawData r/x formula, same SParamPoint shape
 
-    static QList<QSerialPortInfo> m_listNanovnaV2Ports;
+    static QList<SerialPortInfo> m_listNanovnaV2Ports;
 
 signals:
     void dataReceived(QString msg);

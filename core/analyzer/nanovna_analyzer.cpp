@@ -1,18 +1,17 @@
 #include "nanovna_analyzer.h"
-#include <qserialport.h>
 #include <cstring>
 #include "customanalyzer.h"
 #include "debuglog.h"
 
 // static members
-QList<QSerialPortInfo> NanovnaAnalyzer::m_listNanovnaPorts;
+QList<SerialPortInfo> NanovnaAnalyzer::m_listNanovnaPorts;
 bool NanovnaAnalyzer::m_isConnected = false;
 
 NanovnaAnalyzer::NanovnaAnalyzer(QObject *parent) : BaseAnalyzer(parent),
     m_analyzerPresent(false)
 {
     m_type = ReDeviceInfo::NANO;
-    m_comPort = new QSerialPort(this);
+    m_comPort = new SerialPort(this);
 
     //qDebug() << "NanovnaAnalyzer::NanovnaAnalyzer";
     //QTimer::singleShot(5000, this, SLOT(searchAnalyzer()));
@@ -37,15 +36,15 @@ bool NanovnaAnalyzer::openComPort(const QString& portName, quint32 portSpeed)
         m_comPort->close();
     }
     m_comPort->setPortName(portName);
-    m_comPort->setBaudRate(portSpeed);//QSerialPort::Baud38400);
-    m_comPort->setFlowControl(QSerialPort::NoFlowControl);
-    m_comPort->setDataBits(QSerialPort::Data8);
-    m_comPort->setParity(QSerialPort::NoParity);
-    m_comPort->setStopBits(QSerialPort::OneStop);
+    m_comPort->setBaudRate(portSpeed);//SerialPort::Baud38400);
+    m_comPort->setFlowControl(SerialPort::NoFlowControl);
+    m_comPort->setDataBits(SerialPort::Data8);
+    m_comPort->setParity(SerialPort::NoParity);
+    m_comPort->setStopBits(SerialPort::OneStop);
 
     connect(m_comPort, SIGNAL(readyRead()), this, SLOT(dataArrived()));
-    connect(m_comPort, &QSerialPort::aboutToClose, this, &NanovnaAnalyzer::portClosed);
-    bool result = m_comPort->open(QSerialPort::ReadWrite);
+    connect(m_comPort, &SerialPort::aboutToClose, this, &NanovnaAnalyzer::portClosed);
+    bool result = m_comPort->open(SerialPort::ReadWrite);
     if (!result) {
         QString str = m_comPort->errorString();
         //qDebug() << "comAnalyzer::openComPort: " << portName << " " << str << " [" << m_comPort->error() << "]";
@@ -252,9 +251,9 @@ qint32 NanovnaAnalyzer::parse (QByteArray arr)
 
 void NanovnaAnalyzer::searchAnalyzer()
 {
-    QList<QSerialPortInfo> listPorts = QSerialPortInfo::availablePorts();
+    QList<SerialPortInfo> listPorts = SerialPortInfo::availablePorts();
     for (int idx=0; idx<listPorts.size(); idx++) {
-        QSerialPortInfo info = listPorts.at(idx);
+        SerialPortInfo info = listPorts.at(idx);
 
         QString portName = info.portName();
         QString systemLocation =info.systemLocation() ;
@@ -812,9 +811,9 @@ void NanovnaAnalyzer::portClosed()
 void NanovnaAnalyzer::detectPorts()
 {
     NanovnaAnalyzer::m_listNanovnaPorts.clear();
-    QList<QSerialPortInfo> listPorts = QSerialPortInfo::availablePorts();
+    QList<SerialPortInfo> listPorts = SerialPortInfo::availablePorts();
     for (int idx=0; idx<listPorts.size(); idx++) {
-        QSerialPortInfo info = listPorts.at(idx);
+        SerialPortInfo info = listPorts.at(idx);
         quint16 vendorIdentifier = info.vendorIdentifier() ;
         quint16 productIdentifier = info.productIdentifier() ;
 

@@ -135,6 +135,12 @@ elseif(ANDROID)
     # android.hardware.usb.* directly via JNI (QJniObject, part of Qt6::Core
     # on Android -- no extra linkage) instead of libusb.
     target_sources(antscopez_core PRIVATE analyzer/usbhid/hidapi/android/hid.cpp)
+    # Qt's QSerialPort can't open USB serial devices on Android; the
+    # analyzer classes use SerialPort (analyzer/serialport_compat.h), which
+    # is this JNI-backed stand-in there. Java side: mobile/android/src.
+    target_sources(antscopez_core PRIVATE
+        analyzer/android_serialport.cpp
+        analyzer/android_serialport.h)
 else()
     target_sources(antscopez_core PRIVATE analyzer/usbhid/hidapi/linux/hid.c)
     # AppPaths::sharedDataFolder() -- matches the AntScopeZ definition.
