@@ -36,6 +36,10 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
   build; Connection page shows firmware, license, interface and protocol.
   A Match's range now comes from its LICx reply instead of a 750 MHz
   default.
+- Android USB serial support (NanoVNA classic/V2, RigExpert COM units) via
+  the bundled usb-serial-for-android library; the analyzer classes now use
+  a `SerialPort` alias (QSerialPort on other platforms). Untested on
+  hardware.
 - Real Android USB-HID support (RigExpert Match over USB): the Android
   `hidapi` backend was a stub (USB analyzers never enumerated); now
   bridges to `android.hardware.usb.*` via JNI, with the USB-permission

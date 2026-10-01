@@ -180,6 +180,23 @@ must travel with that build.
 
 ---
 
+## Android-only
+
+### usb-serial-for-android
+- **Files:** `mobile/android/src/com/hoho/android/usbserial/` (the
+  library's `driver/` and `util/` sources, unmodified, plus a small
+  `BuildConfig.java` stand-in for the one its own Gradle build generates);
+  license text kept alongside as `LICENSE.txt`.
+- **Source:** `github.com/mik3y/usb-serial-for-android`, commit
+  `16d84116a03880a7842a9439b83f5f62ac892df2`.
+- **Copyright:** 2011-2013 Google Inc.; 2013 Mike Wakerly (and other
+  contributors).
+- **License:** MIT.
+- **Notes:** Used by the Android build only, for USB serial analyzers
+  (NanoVNA etc.); compiled with the app's Java sources.
+
+---
+
 *Maintainers: if a future change swaps out any of the above (e.g., dropping
 QCustomPlot, buying a commercial license for it, or bundling a different
 FTDI package on another platform), update this file and re-evaluate whether

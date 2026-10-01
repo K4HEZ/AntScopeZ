@@ -9,4 +9,6 @@
 <resources>
     <usb-device vendor-id="1155" product-id="41438" /> <!-- 0x0483 / 0xA1DE, normal mode -->
     <usb-device vendor-id="1155" product-id="41434" /> <!-- 0x0483 / 0xA1DA, bootloader/firmware-update mode -->
+    <usb-device vendor-id="1155" product-id="22336" /> <!-- 0x0483 / 0x5740, NanoVNA classic -->
+    <usb-device vendor-id="1204" product-id="8" /> <!-- 0x04B4 / 0x0008, NanoVNA V2 / LiteVNA -->
 </resources>

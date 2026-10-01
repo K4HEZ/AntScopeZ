@@ -147,10 +147,10 @@ Page {
                     enabled: AnalyzerController.connectingUsb
                              || (!AnalyzerController.connected && (page.mode === 1 || deviceList.currentIndex >= 0))
                     onClicked: {
-                        if (page.mode === 1) {
-                            AnalyzerController.connectingUsb
-                                ? AnalyzerController.cancelUsbConnect()
-                                : AnalyzerController.connectUsb()
+                        if (AnalyzerController.connectingUsb) {
+                            AnalyzerController.cancelUsbConnect()
+                        } else if (page.mode === 1) {
+                            AnalyzerController.connectUsb()
                         } else if (page.mode === 0) {
                             AnalyzerController.connectTo(deviceList.currentIndex)
                         } else {

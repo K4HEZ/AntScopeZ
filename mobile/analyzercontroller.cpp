@@ -242,13 +242,24 @@ void AnalyzerController::searchSerial()
     m_serialNames.clear();
 
     NanovnaAnalyzer::detectPorts();
-    for (const QSerialPortInfo& info : NanovnaAnalyzer::availablePorts())
+    for (const SerialPortInfo& info : NanovnaAnalyzer::availablePorts())
         m_serialEntries.append({int(ReDeviceInfo::NANO), QStringLiteral("NanoVNA"), info.portName().trimmed()});
 
     NanovnaV2Analyzer::detectPorts();
-    for (const QSerialPortInfo& info : NanovnaV2Analyzer::availablePorts())
+    for (const SerialPortInfo& info : NanovnaV2Analyzer::availablePorts())
         m_serialEntries.append({int(ReDeviceInfo::NANOV2), QStringLiteral("NanoVNA V2"), info.portName().trimmed()});
 
+#ifdef Q_OS_ANDROID
+    // No FTDI D2XX listing on Android: pick RigExpert units out of the USB
+    // serial devices by product string instead.
+    for (const SerialPortInfo& info : SerialPortInfo::availablePorts()) {
+        if (info.productName().startsWith("RigExpert", Qt::CaseInsensitive)) {
+            QString name = info.productName();
+            name.remove("RigExpert ", Qt::CaseInsensitive);
+            m_serialEntries.append({int(ReDeviceInfo::Serial), name.trimmed(), info.portName().trimmed()});
+        }
+    }
+#endif
     for (const ReDeviceInfo& info : ReDeviceInfo::availableDevices(ReDeviceInfo::Serial)) {
         const QString name = info.deviceName(info).replace("Analyzer", "", Qt::CaseInsensitive).trimmed();
         m_serialEntries.append({int(ReDeviceInfo::Serial), name, info.portName().trimmed()});
@@ -285,7 +296,14 @@ void AnalyzerController::connectSerial(int index)
     AnalyzerParameters::setCurrent(param);
 
     setStatus(tr("Connecting to %1...").arg(e.name));
+#ifdef Q_OS_ANDROID
+    // The first open only triggers the USB permission dialog; retry like USB.
+    setConnectingUsb(true);
+    attemptUsbConnect();
+    m_usbRetryTimer->start();
+#else
     m_analyzer->on_connectDevice(nullptr);
+#endif
 }
 
 void AnalyzerController::connectUsb()
