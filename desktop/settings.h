@@ -49,8 +49,9 @@ public:
     double getCableLength(void)const;
     void setCableFarEndMeasurement(int value);
     int getCableFarEndMeasurement(void)const;
-    void setCableIndex(int value);
-    int getCableIndex(void)const;
+    // Selected cable preset by name; empty if none.
+    void setCableName(const QString& name);
+    QString getCableName(void)const { return m_cableName; }
     // true = Preset (cableComboBox drives velocity factor/R0/loss, fields
     // read-only), false = Custom (combo disabled, fields hand-editable).
     // See updateCableEditability() in settings.cpp.
@@ -104,6 +105,10 @@ private:
     int m_farEndMeasurement;
 
     QList <QString> m_cablesList;
+    QString m_cableName;
+    QStringList cableNames() const;
+    void applyCablePreset();
+    void updateCableButton();
 
     static int m_serialIndex;
 
@@ -222,7 +227,7 @@ private slots:
     void on_doNothingBtn_clicked(bool checked);
     void on_subtractCableBtn_clicked(bool checked);
     void on_addCableBtn_clicked(bool checked);
-    void on_cableComboBox_currentIndexChanged(int index);
+    void on_cableComboBox_clicked();
     void on_themeComboBox_currentIndexChanged(int index);
     void on_aa30bootFound();
     void on_aa30updateComplete();

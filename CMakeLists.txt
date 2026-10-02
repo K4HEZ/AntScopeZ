@@ -175,6 +175,7 @@ set(ANTSCOPE_SOURCES
     desktop/style.cpp
     desktop/tdrscandialog.cpp
     desktop/tdrscanpanel.cpp
+    desktop/cablepickerdialog.cpp
     desktop/unitrequestdialog.cpp
     desktop/updatedialog.cpp
     desktop/userguidedialog.cpp
@@ -226,6 +227,7 @@ set(ANTSCOPE_HEADERS
     desktop/style.h
     desktop/tdrscandialog.h
     desktop/tdrscanpanel.h
+    desktop/cablepickerdialog.h
     desktop/unitrequestdialog.h
     desktop/updatedialog.h
     desktop/userguidedialog.h

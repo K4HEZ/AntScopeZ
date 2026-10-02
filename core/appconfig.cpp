@@ -16,6 +16,7 @@ void AppConfig::load(QSettings& settings)
     useTls = settings.value("useTls", useTls).toBool();
     maxMarkers = settings.value("maxMarkers", maxMarkers).toInt();
     autoMarkerAtLowestSwr = settings.value("autoMarkerAtLowestSwr", autoMarkerAtLowestSwr).toBool();
+    bandMarginPercent = qBound(0, settings.value("bandMarginPercent", bandMarginPercent).toInt(), 100);
     settings.endGroup();
 
     settings.beginGroup("MainWindow");
@@ -33,7 +34,8 @@ void AppConfig::load(QSettings& settings)
     cable.lossAtAnyFq = settings.value("LossAtAnyFrequency", 0).toInt() != 0;
     cable.lengthFeet = settings.value("Length", cable.lengthFeet).toDouble();
     farEndMeasurement = settings.value("FarEndMeasurement", farEndMeasurement).toInt();
-    cableIndex = settings.value("CableIndex", cableIndex).toInt();
+    cableName = settings.value("CableName").toString();
+    recentCables = settings.value("RecentCables").toStringList();
     cableIsPreset = settings.value("CableIsPreset", cableIsPreset).toBool();
     settings.endGroup();
 }
@@ -47,6 +49,7 @@ void AppConfig::save(QSettings& settings) const
     settings.setValue("useTls", useTls);
     settings.setValue("maxMarkers", maxMarkers);
     settings.setValue("autoMarkerAtLowestSwr", autoMarkerAtLowestSwr);
+    settings.setValue("bandMarginPercent", bandMarginPercent);
     settings.endGroup();
 
     settings.beginGroup("MainWindow");
@@ -64,7 +67,8 @@ void AppConfig::save(QSettings& settings) const
     settings.setValue("LossAtAnyFrequency", cable.lossAtAnyFq ? 1 : 0); // int, as before
     settings.setValue("Length", cable.lengthFeet);
     settings.setValue("FarEndMeasurement", farEndMeasurement);
-    settings.setValue("CableIndex", cableIndex);
+    settings.setValue("CableName", cableName);
+    settings.setValue("RecentCables", recentCables);
     settings.setValue("CableIsPreset", cableIsPreset);
     settings.endGroup();
 }

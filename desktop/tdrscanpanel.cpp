@@ -1,6 +1,7 @@
 #include "tdrscanpanel.h"
 #include "ui_tdrscanpanel.h"
 #include "settings.h"
+#include "cablepickerdialog.h"
 
 // Same "no real reflection" noise floor CalcTdr() itself uses to zero out
 // m_pdTdrImp[]/tdrImpGraph samples (see measurements_tdr.cpp) -- reusing it
@@ -25,19 +26,18 @@ TdrScanPanel::TdrScanPanel(QWidget* parent) :
     ui->kaiserBetaNameLabel->setVisible(false);
     ui->kaiserBetaSpin->setVisible(false);
 
-    populateCableTypeCombo();
+    loadCables();
 
     connect(ui->topFreqSlider, &QSlider::valueChanged, this, &TdrScanPanel::onTopFreqSliderChanged);
     connect(ui->topFreqEdit, &QLineEdit::editingFinished, this, &TdrScanPanel::onTopFreqEditChanged);
     connect(ui->dotsSlider, &QSlider::valueChanged, this, &TdrScanPanel::onDotsSliderChanged);
     connect(ui->dotsEdit, &QLineEdit::editingFinished, this, &TdrScanPanel::onDotsEditChanged);
-    // textChanged (not editingFinished) -- picking a cableTypeCombo preset
+    // textChanged (not editingFinished) -- picking a cable preset
     // calls velocityFactorEdit->setText() programmatically, which only
     // fires textChanged, not editingFinished. Matches TDRAnalysisDialog's
     // own original wiring.
     connect(ui->velocityFactorEdit, &QLineEdit::textChanged, this, &TdrScanPanel::onVelocityFactorEdited);
-    connect(ui->cableTypeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, &TdrScanPanel::onCableTypeChanged);
+    connect(ui->cableTypeButton, &QPushButton::clicked, this, &TdrScanPanel::onCableTypeClicked);
     connect(ui->knownLengthEdit, &QLineEdit::textChanged, this, &TdrScanPanel::refreshResult);
     connect(ui->applyVfButton, &QPushButton::clicked, this, &TdrScanPanel::onApplyVfClicked);
     connect(ui->windowCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
@@ -60,25 +60,32 @@ TdrScanPanel::~TdrScanPanel()
     delete ui;
 }
 
-void TdrScanPanel::populateCableTypeCombo()
+void TdrScanPanel::loadCables()
 {
     m_cables = CableCatalog::load(Settings::programDataPath("cables.txt"));
-
-    ui->cableTypeCombo->blockSignals(true);
-    ui->cableTypeCombo->clear();
-    ui->cableTypeCombo->addItem(tr("-- Select preset --"));
-    for (const CableSpec& c : m_cables)
-        ui->cableTypeCombo->addItem(c.name);
-    ui->cableTypeCombo->setCurrentIndex(0);
-    ui->cableTypeCombo->blockSignals(false);
+    updateCableButton();
 }
 
-void TdrScanPanel::onCableTypeChanged(int index)
+void TdrScanPanel::updateCableButton()
 {
-    if (index < 1 || index > m_cables.length())
-        return; // placeholder, or stale index from a combo rebuild
+    ui->cableTypeButton->setText(m_cableName.isEmpty() ? tr("Select cable preset...") : m_cableName);
+}
 
-    ui->velocityFactorEdit->setText(QString::number(m_cables.at(index - 1).velocityFactor, 'f', 3));
+void TdrScanPanel::onCableTypeClicked()
+{
+    QStringList names;
+    for (const CableSpec& c : m_cables)
+        names << c.name;
+    const QString name = CablePickerDialog::pick(this, names, m_cableName);
+    const int i = names.indexOf(name);
+    if (i < 0)
+        return;
+
+    m_pickingCable = true;
+    ui->velocityFactorEdit->setText(QString::number(m_cables.at(i).velocityFactor, 'f', 3));
+    m_pickingCable = false;
+    m_cableName = name;
+    updateCableButton();
     // velocityFactorEdit::textChanged already triggers onVelocityFactorEdited().
 }
 
@@ -101,9 +108,6 @@ void TdrScanPanel::setFrequencyLimits(qint64 minFqKHz, qint64 maxFqKHz)
 
 void TdrScanPanel::setVelocityFactor(double vf)
 {
-    ui->cableTypeCombo->blockSignals(true);
-    ui->cableTypeCombo->setCurrentIndex(0); // a bare VF number won't match any preset
-    ui->cableTypeCombo->blockSignals(false);
     ui->velocityFactorEdit->setText(QString::number(vf, 'f', 3));
     // velocityFactorEdit::textChanged already triggers onVelocityFactorEdited().
 }
@@ -130,7 +134,7 @@ void TdrScanPanel::setScanning(bool scanning)
     ui->dotsSlider->setEnabled(!scanning);
     ui->dotsEdit->setEnabled(!scanning);
     ui->velocityFactorEdit->setEnabled(!scanning);
-    ui->cableTypeCombo->setEnabled(!scanning);
+    ui->cableTypeButton->setEnabled(!scanning);
     updateScanButtonEnabled();
     // windowCombo/kaiserBetaSpin stay enabled while scanning -- changing the
     // window only re-plots already-captured data, doesn't touch the
@@ -194,6 +198,10 @@ void TdrScanPanel::onDotsEditChanged()
 
 void TdrScanPanel::onVelocityFactorEdited()
 {
+    if (!m_pickingCable && !m_cableName.isEmpty()) {
+        m_cableName.clear();
+        updateCableButton();
+    }
     updateEstimateLabels();
     refreshResult();
 }
@@ -373,7 +381,7 @@ void TdrScanPanel::onApplyVfClicked()
 {
     if (m_lastCalculatedVf <= 0)
         return;
-    setVelocityFactor(m_lastCalculatedVf); // copies it up into the Scan setup field, resets cableTypeCombo to "-- Select preset --"
+    setVelocityFactor(m_lastCalculatedVf); // copies it up into the Scan setup field, resets the cable button
     emit applyVelocityFactorAsCustom(m_lastCalculatedVf);
 }
 

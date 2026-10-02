@@ -2,6 +2,8 @@
 #define APPCONFIG_H
 
 #include "rfmath.h"
+#include <QString>
+#include <QStringList>
 
 // Absolute, non-user-facing ceiling -- how many points the app will ever
 // attempt for a single scan, full stop. Not what the Points field/slider
@@ -38,6 +40,7 @@ public:
     // https + cert verification for RigExpert requests. Issue #14.
     bool useTls = true;
     int maxMarkers = 5;               // Settings > Markers
+    int bandMarginPercent = 20; // padding per side around a band picked in the band selector
     bool autoMarkerAtLowestSwr = true; // marker at the lowest SWR after a Single scan
 
     // Persisted, ini [MainWindow] group.
@@ -47,7 +50,8 @@ public:
     // Persisted, ini [Cable] group (Settings > Cable).
     RfMath::CableParams cable;
     double cableLossFqMHz = 1;
-    int cableIndex = 0;
+    QString cableName; // selected Settings > Cable preset; empty = none
+    QStringList recentCables; // picker's last picks, most recent first
     bool cableIsPreset = false;
     int farEndMeasurement = 0; // 0 off, 1 subtract cable, 2 add cable
 

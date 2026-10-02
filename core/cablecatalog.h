@@ -3,6 +3,7 @@
 
 #include <QString>
 #include <QList>
+#include <QStringList>
 
 // One entry from cables.txt (see that file's own header comment for the
 // full field list/units) -- just the fields TDRAnalysisDialog actually
@@ -24,6 +25,17 @@ public:
     // own picker starts with, even if path can't be opened -- callers
     // don't need to special-case a missing/unreadable file.
     static QList<CableSpec> load(const QString& path);
+
+    // Names containing every whitespace-separated word of filter,
+    // case-insensitively; all of them if filter is blank.
+    static QStringList filterNames(const QStringList& names, const QString& filter);
+    // Moves name to the front of recents, capped at maxRecent.
+    static void pushRecent(QStringList& recents, const QString& name, int maxRecent = kMaxRecent);
+    // recents without names missing from names, capped at maxRecent.
+    static QStringList pruneRecents(const QStringList& recents, const QStringList& names,
+                                    int maxRecent = kMaxRecent);
+
+    static constexpr int kMaxRecent = 5;
 };
 
 #endif // CABLECATALOG_H

@@ -92,7 +92,7 @@ void MainWindow::on_actionSettings_triggered()
     m_settingsDialog->setCableLossAtAnyFq(AppConfig::get().cable.lossAtAnyFq);
     m_settingsDialog->setCableLength(AppConfig::get().cable.lengthFeet);
     m_settingsDialog->setCableFarEndMeasurement(AppConfig::get().farEndMeasurement);
-    m_settingsDialog->setCableIndex(AppConfig::get().cableIndex);
+    m_settingsDialog->setCableName(AppConfig::get().cableName);
     m_settingsDialog->setCableIsPreset(AppConfig::get().cableIsPreset);
     m_settingsDialog->setRestrictFq(m_fqRestrict);
 
@@ -301,7 +301,7 @@ void MainWindow::on_settingsParamsChanged()
         AppConfig::get().cable.lossAtAnyFq = m_settingsDialog->getCableLossAtAnyFq();
         AppConfig::get().cable.lengthFeet = m_settingsDialog->getCableLength();
         AppConfig::get().farEndMeasurement = m_settingsDialog->getCableFarEndMeasurement();
-        AppConfig::get().cableIndex = m_settingsDialog->getCableIndex();
+        AppConfig::get().cableName = m_settingsDialog->getCableName();
         AppConfig::get().cableIsPreset = m_settingsDialog->getCableIsPreset();
 
         if(m_measurements != NULL)

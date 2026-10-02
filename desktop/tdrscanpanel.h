@@ -101,7 +101,7 @@ signals:
     void windowChanged(TdrWindow window, double beta);
     // "Use this velocity factor" (reverse-solve) -- see applyVfButton's
     // tooltip. Never emitted just from editing velocityFactorEdit or
-    // picking a cableTypeCombo preset, which stay local to this panel.
+    // picking a cable preset, which stay local to this panel.
     void applyVelocityFactorAsCustom(double vf);
 
 private slots:
@@ -112,7 +112,7 @@ private slots:
     void onVelocityFactorEdited();
     void onWindowComboChanged(int index);
     void onScanClicked();
-    void onCableTypeChanged(int index);
+    void onCableTypeClicked();
     void onApplyVfClicked();
 
 private:
@@ -122,6 +122,8 @@ private:
     qint64 m_minFqKHz = TDR_MIN_FREQUENCY;
     qint64 m_maxFqKHz = TDR_MIN_FREQUENCY;
     QList<CableSpec> m_cables;
+    QString m_cableName; // last picked; cleared when the velocity factor is edited
+    bool m_pickingCable = false;
     // Both feed tdrSingleButton's enabled state (updateScanButtonEnabled())
     // -- neither setScanning() nor setConnected() alone should ever
     // re-enable it out from under the other.
@@ -136,7 +138,8 @@ private:
     void updateEstimateLabels();
     void updateWindowExplanation();
     void updateScanButtonEnabled();
-    void populateCableTypeCombo();
+    void loadCables();
+    void updateCableButton();
     double velocityFactor() const;
     static TdrWindow windowForComboIndex(int index);
 };

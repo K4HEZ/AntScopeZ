@@ -306,6 +306,46 @@ Warns before Delete/Clear All discards any dirty measurement.</string>
         </widget>
        </item>
        <item row="2" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="horizontalLayout_bandMargin">
+         <item>
+          <widget class="QLabel" name="label_bandMargin">
+           <property name="toolTip">
+            <string>Extra range added on each side of a band picked in the band selector, as a percentage of the band's width. Presets are never padded.</string>
+           </property>
+           <property name="text">
+            <string>Band margin (%):</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="NoScrollSpinBox" name="spinBoxBandMargin">
+           <property name="toolTip">
+            <string>Extra range added on each side of a band picked in the band selector, as a percentage of the band's width. Presets are never padded.</string>
+           </property>
+           <property name="maximum">
+            <number>100</number>
+           </property>
+           <property name="value">
+            <number>20</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_bandMargin">
+           <property name="orientation">
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item row="3" column="0" colspan="2">
         <spacer name="verticalSpacer_general_bottom">
          <property name="orientation">
           <enum>Qt::Orientation::Vertical</enum>
@@ -1245,7 +1285,7 @@ Was computed from Window Background, now directly-editable.</string>
         </layout>
        </item>
        <item>
-        <widget class="NoScrollComboBox" name="cableComboBox">
+        <widget class="QPushButton" name="cableComboBox">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
            <horstretch>0</horstretch>

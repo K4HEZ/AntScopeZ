@@ -12,6 +12,7 @@
 #include "filedialog.h"
 #include "debuglog.h"
 #include "apppaths.h"
+#include "cablepickerdialog.h"
 #include <QAbstractButton>
 #include <QFile>
 #include <QFileInfo>
@@ -134,6 +135,7 @@ Settings::Settings(QWidget *parent) :
     ui->spinBoxActiveLineWidth->setValue(g_activeGraphPenWidth);
     ui->spinBoxInactiveLineWidth->setValue(g_inactiveGraphPenWidth);
     ui->spinBoxMaxMarkers->setValue(AppConfig::get().maxMarkers);
+    ui->spinBoxBandMargin->setValue(AppConfig::get().bandMarginPercent);
     ui->checkBoxAutoMarkerLowestSwr->setChecked(AppConfig::get().autoMarkerAtLowestSwr);
     ui->lineEditScanPointsMax->setText(QString::number(g_pointsMax));
     ui->lineEditScanWarnThreshold->setText(QString::number(g_pointsWarnThreshold));
@@ -246,8 +248,7 @@ Settings::Settings(QWidget *parent) :
     connect(ui->lineEditZAxisMin, &QLineEdit::editingFinished, this, &Settings::on_zAxisMinFinished);
     connect(ui->lineEditZAxisMax, &QLineEdit::editingFinished, this, &Settings::on_zAxisMaxFinished);
 
-    ui->cableComboBox->addItem(tr("Change parameters or choose from list..."));
-    ui->cableComboBox->setMaxVisibleItems(20);
+    updateCableButton();
 
     connect(ui->lineEditMin, &QLineEdit::editingFinished, this, &Settings::on_fqMinFinished);
     connect(ui->lineEditMax, &QLineEdit::editingFinished, this, &Settings::on_fqMaxFinished);
@@ -402,6 +403,7 @@ Settings::~Settings()
     g_activeGraphPenWidth = ui->spinBoxActiveLineWidth->value();
     g_inactiveGraphPenWidth = ui->spinBoxInactiveLineWidth->value();
     AppConfig::get().maxMarkers = ui->spinBoxMaxMarkers->value();
+    AppConfig::get().bandMarginPercent = ui->spinBoxBandMargin->value();
     AppConfig::get().autoMarkerAtLowestSwr = ui->checkBoxAutoMarkerLowestSwr->isChecked();
     // Re-read (not just trust the editingFinished handlers) in case the
     // dialog's being closed with one of these still focused/unconfirmed --
@@ -1042,14 +1044,23 @@ int Settings::getCableFarEndMeasurement(void)const
     return m_farEndMeasurement;
 }
 //------------------------------------------------------------------------------
-void Settings::setCableIndex(int value)
+void Settings::setCableName(const QString& name)
 {
-    if(value >= 0)
-        ui->cableComboBox->setCurrentIndex(value);
+    m_cableName = cableNames().contains(name) ? name : QString();
+    updateCableButton();
 }
-int Settings::getCableIndex(void)const
+
+QStringList Settings::cableNames() const
 {
-    return ui->cableComboBox->currentIndex();
+    QStringList names;
+    for (const QString& line : m_cablesList)
+        names << line.section(',', 0, 0);
+    return names;
+}
+
+void Settings::updateCableButton()
+{
+    ui->cableComboBox->setText(m_cableName.isEmpty() ? tr("Select cable preset...") : m_cableName);
 }
 //------------------------------------------------------------------------------
 
@@ -1058,13 +1069,9 @@ void Settings::openCablesFile(QString path)
 {
     m_cablesList.clear();
 
-    ui->cableComboBox->addItem(tr("Ideal 50-Ohm cable"));
     m_cablesList.append(tr("Ideal 50-Ohm cable, 50, 0.66, 0.0, 0.0, 0, 0"));
-    ui->cableComboBox->addItem(tr("Ideal 75-Ohm cable"));
     m_cablesList.append(tr("Ideal 75-Ohm cable, 75, 0.66, 0.0, 0.0, 0, 0"));
-    ui->cableComboBox->addItem(tr("Ideal 25-Ohm cable"));
     m_cablesList.append(tr("Ideal 25-Ohm cable, 25, 0.66, 0.0, 0.0, 0, 0"));
-    ui->cableComboBox->addItem(tr("Ideal 37.5-Ohm cable"));
     m_cablesList.append(tr("Ideal 37.5-Ohm cable, 37.5, 0.66, 0.0, 0.0, 0, 0"));
 
     if (path.isEmpty())
@@ -1094,7 +1101,6 @@ void Settings::openCablesFile(QString path)
             list = line.split(',');
             if(list.length() == 7)
             {
-                ui->cableComboBox->addItem(list.at(0));
                 m_cablesList.append(line);
             }else
             {
@@ -1105,18 +1111,27 @@ void Settings::openCablesFile(QString path)
 }
 
 
-void Settings::on_cableComboBox_currentIndexChanged(int index)
+void Settings::on_cableComboBox_clicked()
 {
-    // Custom mode: the combo isn't driving anything (it's disabled for
-    // user interaction anyway -- see updateCableEditability() -- but
-    // setCableIndex() below still sets its index programmatically on
-    // dialog open, which would otherwise fire this and clobber whatever
-    // custom values were just loaded).
+    const QString name = CablePickerDialog::pick(this, cableNames(), m_cableName);
+    if (name.isEmpty())
+        return;
+    m_cableName = name;
+    updateCableButton();
+    applyCablePreset();
+}
+
+// Loads the selected preset's fields into the Cable tab; Custom mode and
+// no selection leave them alone.
+void Settings::applyCablePreset()
+{
     if (!ui->cablePresetRadio->isChecked())
         return;
-    if(index > 0)
+    const int index = cableNames().indexOf(m_cableName);
+    if (index < 0)
+        return;
     {
-        QString str = m_cablesList.at(index-1);
+        QString str = m_cablesList.at(index);
         QList <QString> paramsList = str.split(',');
         //1. Cable name
         ui->cableR0->setText( paramsList.at(1));//2. R0 in Ohm
@@ -1181,8 +1196,8 @@ void Settings::updateCableEditability()
     // otherwise switching Custom -> hand-edit -> Preset would leave stale
     // hand-edited numbers on screen even though they're now read-only and
     // claim to be that preset's real spec.
-    if (isPreset && ui->cableComboBox->currentIndex() > 0)
-        on_cableComboBox_currentIndexChanged(ui->cableComboBox->currentIndex());
+    if (isPreset)
+        applyCablePreset();
 }
 
 void Settings::setCableIsPreset(bool value)
@@ -1262,7 +1277,7 @@ QList<QPair<QString, QString>> Settings::availableLanguages()
 void Settings::on_translate()
 {
     ui->retranslateUi(this);
-    ui->cableComboBox->setItemText(0, tr("Change parameters or choose from list..."));
+    updateCableButton();
 }
 
 void Settings::initCustomizeTab()

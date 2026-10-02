@@ -10,6 +10,8 @@
 #include "printmulti.h"
 #include "style.h"
 #include "filedialog.h"
+#include "appconfig.h"
+#include "itubands.h"
 #include <QWindow>
 
 extern QString appendSpaces(const QString& number);
@@ -310,12 +312,15 @@ void MainWindow::on_presetsBandComboBox_currentIndexChanged(int index)
         // Clamped, not the raw itu-regions text -- a hand-edited
         // itu-regions.txt (see Settings' ITU Bands tab) could otherwise
         // still hand the plots an out-of-device-range value.
-        double start = clampFqKhz(range.at(0).toDouble());
-        double stop = clampFqKhz(range.at(1).toDouble());
+        double wideStart, wideStop;
+        ItuBands::widen(range.at(0).toDouble(), range.at(1).toDouble(),
+                        AppConfig::get().bandMarginPercent, wideStart, wideStop);
+        double start = clampFqKhz(wideStart);
+        double stop = clampFqKhz(wideStop);
 
         if (!m_isRange) {
-            setFqFrom(range.at(0));
-            setFqTo(range.at(1));
+            setFqFrom(start);
+            setFqTo(stop);
         } else {
             setFqFrom((start + stop) / 2);
             setFqTo((stop - start) / 2);
