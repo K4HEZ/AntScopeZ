@@ -59,7 +59,7 @@ Page {
             Button {
                 Layout.fillWidth: true
                 enabled: !AnalyzerController.tdrScanning
-                text: AnalyzerController.tdrCableName || qsTr("Select cable preset...")
+                text: AnalyzerController.tdrCableName.replace(/&/g, "&&") || qsTr("Select cable preset...") // && = literal &
                 onClicked: cablePicker.open()
             }
 

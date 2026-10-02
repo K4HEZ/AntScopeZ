@@ -61,7 +61,7 @@ Popup {
             }
             delegate: ItemDelegate {
                 width: list.width
-                text: modelData.name
+                text: modelData.name.replace(/&/g, "&&") // && = literal &
                 highlighted: modelData.name === AnalyzerController.tdrCableName
                 onClicked: {
                     // Close first: selecting rebuilds rows and destroys this delegate.

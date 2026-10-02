@@ -68,7 +68,8 @@ void TdrScanPanel::loadCables()
 
 void TdrScanPanel::updateCableButton()
 {
-    ui->cableTypeButton->setText(m_cableName.isEmpty() ? tr("Select cable preset...") : m_cableName);
+    ui->cableTypeButton->setText(m_cableName.isEmpty() ? tr("Select cable preset...")
+                                                     : QString(m_cableName).replace("&", "&&")); // not a mnemonic
 }
 
 void TdrScanPanel::onCableTypeClicked()

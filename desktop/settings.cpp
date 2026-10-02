@@ -1060,7 +1060,8 @@ QStringList Settings::cableNames() const
 
 void Settings::updateCableButton()
 {
-    ui->cableComboBox->setText(m_cableName.isEmpty() ? tr("Select cable preset...") : m_cableName);
+    ui->cableComboBox->setText(m_cableName.isEmpty() ? tr("Select cable preset...")
+                                              : QString(m_cableName).replace("&", "&&")); // not a mnemonic
 }
 //------------------------------------------------------------------------------
 
