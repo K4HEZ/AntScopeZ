@@ -177,11 +177,23 @@ Page {
 
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 0
+                spacing: 10
                 enabled: AnalyzerController.tdrHasData
-                Button { text: qsTr("Zoom −"); Layout.fillWidth: true; onClicked: chart.zoomOut() }
-                Button { text: qsTr("Fit"); Layout.fillWidth: true; onClicked: chart.fit() }
-                Button { text: qsTr("Zoom +"); Layout.fillWidth: true; onClicked: chart.zoomIn() }
+                Label { text: qsTr("Zoom") }
+                // Logarithmic, so each step feels like the same change.
+                Slider {
+                    from: 0
+                    to: Math.max(0.01, Math.log(chart.maxZoom) / Math.LN2)
+                    value: Math.log(chart.zoom) / Math.LN2
+                    onMoved: chart.zoom = Math.pow(2, value)
+                    Layout.fillWidth: true
+                }
+                Label {
+                    text: chart.zoom.toFixed(1) + "×"
+                    Layout.preferredWidth: 48
+                    horizontalAlignment: Text.AlignRight
+                }
+                Button { text: qsTr("Fit"); onClicked: chart.fit() }
             }
 
             Label {

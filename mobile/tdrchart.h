@@ -23,7 +23,8 @@ class TdrChart : public QQuickPaintedItem
     Q_PROPERTY(QString valueUnit READ valueUnit WRITE setValueUnit)
     // Zoom (>= 1) shows 1/zoom of the trace; viewSize/viewPosition drive a
     // ScrollBar the same way as SwrChart's.
-    Q_PROPERTY(double zoom READ zoom NOTIFY viewChanged)
+    Q_PROPERTY(double zoom READ zoom WRITE setZoom NOTIFY viewChanged)
+    Q_PROPERTY(double maxZoom READ maxZoom NOTIFY viewChanged)
     Q_PROPERTY(double viewSize READ viewSize NOTIFY viewChanged)
     Q_PROPERTY(double viewPosition READ viewPosition WRITE setViewPosition NOTIFY viewChanged)
     // Index marked by the cursor; -1 for none. Touch/drag emits pointSelected().
@@ -48,8 +49,8 @@ public:
     double viewPosition() const;
     void setViewPosition(double v);
 
-    Q_INVOKABLE void zoomIn() { setZoom(m_zoom * 2); }
-    Q_INVOKABLE void zoomOut() { setZoom(m_zoom / 2); }
+    double maxZoom() const;
+    void setZoom(double zoom);
     Q_INVOKABLE void fit() { setZoom(1); }
 
 signals:
@@ -65,7 +66,6 @@ protected:
 private:
     QRectF plotRect() const;
     double visibleSpan() const; // in index steps
-    void setZoom(double zoom);
     void setFirst(double first);
     void edgeScrollTick();
     void selectAt(qreal x);

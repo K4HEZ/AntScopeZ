@@ -66,6 +66,26 @@ Page {
                 when: !panBar.pressed
             }
 
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 10
+                Label { text: qsTr("Density") }
+                Slider {
+                    from: 1
+                    to: 30
+                    stepSize: 0.5
+                    snapMode: Slider.SnapAlways
+                    value: AnalyzerController.chartMinPxPerPoint
+                    onMoved: AnalyzerController.chartMinPxPerPoint = value
+                    Layout.fillWidth: true
+                }
+                Label {
+                    text: qsTr("%1 px/pt").arg(AnalyzerController.chartMinPxPerPoint)
+                    Layout.preferredWidth: 72
+                    horizontalAlignment: Text.AlignRight
+                }
+            }
+
             Label {
                 text: qsTr("Touch the chart to read a point.")
                 opacity: 0.7

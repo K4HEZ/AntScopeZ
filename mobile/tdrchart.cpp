@@ -70,13 +70,18 @@ void TdrChart::setFirst(double first)
     update();
 }
 
+// At least ~16 samples stay in view.
+double TdrChart::maxZoom() const
+{
+    return qMax(1.0, (m_values.size() - 1) / 16.0);
+}
+
 void TdrChart::setZoom(double zoom)
 {
     const int n = m_values.size();
     if (n < 2)
         return;
-    // At least ~16 samples stay in view.
-    zoom = qBound(1.0, zoom, qMax(1.0, (n - 1) / 16.0));
+    zoom = qBound(1.0, zoom, maxZoom());
     if (qFuzzyCompare(m_zoom, zoom))
         return;
     // Anchor on the marker if it's in view (it stays at the same spot on

@@ -13,7 +13,8 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Added
 
-- Mobile TDR chart: zoom and scroll, value units (ρ, Ω), and the marker
+- Mobile: SWR chart density slider moved from Settings to the SWR page.
+- Mobile TDR chart: zoom slider and scroll, value units (ρ, Ω), and the marker
   now stays put when switching traces.
 - Desktop: searchable cable picker (last 5 on top) for Settings > Cable
   and the TDR panel; Settings > Cable now remembers the cable by name.
