@@ -13,6 +13,7 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Added
 
+- Mobile TDR: searchable cable picker with the last 5 cables on top.
 - README Credits section and About dialog line crediting cable data
   sources (AC6LA and manufacturers).
 - Measurements list "Corr." column showing each measurement's AntScopeZ

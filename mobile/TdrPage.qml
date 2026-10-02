@@ -55,14 +55,11 @@ Page {
 
             Label { text: qsTr("Scan setup"); font.bold: true }
 
-            ComboBox {
+            Button {
                 Layout.fillWidth: true
-                model: [qsTr("-- Select cable preset --")].concat(AnalyzerController.tdrCableNames)
-                onActivated: (index) => {
-                    if (index > 0)
-                        AnalyzerController.tdrVelocityFactor = AnalyzerController.tdrCableVelocityFactor(index - 1)
-                    currentIndex = 0
-                }
+                enabled: !AnalyzerController.tdrScanning
+                text: AnalyzerController.tdrCableName || qsTr("Select cable preset...")
+                onClicked: cablePicker.open()
             }
 
             GridLayout {
@@ -238,4 +235,6 @@ Page {
             }
         }
     }
+
+    CablePickerDialog { id: cablePicker }
 }

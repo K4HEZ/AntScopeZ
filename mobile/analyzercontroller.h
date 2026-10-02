@@ -81,7 +81,9 @@ class AnalyzerController : public QObject
     Q_PROPERTY(bool tdrScanning READ tdrScanning NOTIFY tdrScanningChanged)
     Q_PROPERTY(double tdrProgress READ tdrProgress NOTIFY tdrProgressChanged)
     Q_PROPERTY(QString tdrUnit READ tdrUnit NOTIFY tdrSettingsChanged)
-    Q_PROPERTY(QStringList tdrCableNames READ tdrCableNames CONSTANT)
+    // Cable last picked; empty once the velocity factor is edited by hand.
+    Q_PROPERTY(QString tdrCableName READ tdrCableName NOTIFY tdrSettingsChanged)
+    Q_PROPERTY(QStringList tdrRecentCables READ tdrRecentCables NOTIFY tdrSettingsChanged)
     Q_PROPERTY(bool tdrHasData READ tdrHasData NOTIFY tdrChanged)
     Q_PROPERTY(QList<double> tdrImpulse READ tdrImpulse NOTIFY tdrChanged)
     Q_PROPERTY(QList<double> tdrStep READ tdrStep NOTIFY tdrChanged)
@@ -150,7 +152,8 @@ public:
     bool tdrScanning() const { return m_tdrMode; }
     double tdrProgress() const { return m_tdrProgress; }
     QString tdrUnit() const { return m_metric ? QStringLiteral("m") : QStringLiteral("ft"); }
-    QStringList tdrCableNames() const { return m_cableNames; }
+    QString tdrCableName() const { return m_tdrCableName; }
+    QStringList tdrRecentCables() const { return m_recentCables; }
     bool tdrHasData() const { return m_tdr.valid; }
     QList<double> tdrImpulse() const { return m_tdr.impulse; }
     QList<double> tdrStep() const { return m_tdr.step; }
@@ -166,8 +169,10 @@ public:
 
     // {range, resolution} in tdrUnit for the current settings, before scanning.
     Q_INVOKABLE QVariantMap tdrEstimate() const;
-    // Velocity factor of the preset at `index` into tdrCableNames; 0 if invalid.
-    Q_INVOKABLE double tdrCableVelocityFactor(int index) const;
+    // Cable names containing every whitespace-separated word of `filter`.
+    Q_INVOKABLE QStringList tdrFilterCables(const QString& filter) const;
+    // Applies the cable's velocity factor and records it as recent.
+    Q_INVOKABLE void tdrSelectCable(const QString& name);
     // VF that would make the strongest reflection land at knownLength; 0 if none.
     Q_INVOKABLE double tdrCalculatedVf(double knownLength) const;
     // Extra advice about the reflection (range edge, fault short of the known length).
@@ -311,6 +316,8 @@ private:
     QVector<RawData> m_tdrRaw;
     TdrAnalysis m_tdr;
     QStringList m_cableNames;
+    QString m_tdrCableName;
+    QStringList m_recentCables;
     QList<double> m_cableVfs;
     double m_chartMinPx = 5;
     bool m_useDeviceRange = true;

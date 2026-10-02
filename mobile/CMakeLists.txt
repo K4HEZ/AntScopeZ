@@ -50,6 +50,7 @@ qt_add_qml_module(AntScopeZMobile
         SwrPage.qml
         SmithPage.qml
         TdrPage.qml
+        CablePickerDialog.qml
         LiveDataPage.qml
         ImpedancePage.qml
         SettingsPage.qml
