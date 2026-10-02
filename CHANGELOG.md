@@ -13,6 +13,12 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Added
 
+- Mobile TDR chart: zoom and scroll, value units (ρ, Ω), and the marker
+  now stays put when switching traces.
+- Desktop: searchable cable picker (last 5 on top) for Settings > Cable
+  and the TDR panel; Settings > Cable now remembers the cable by name.
+- Band margin (Settings > General, default 20 %): the band selector pads
+  the range by that much each side. Presets stay exact.
 - Mobile TDR: searchable cable picker with the last 5 cables on top.
 - README Credits section and About dialog line crediting cable data
   sources (AC6LA and manufacturers).

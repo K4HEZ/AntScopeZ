@@ -11,6 +11,7 @@ Page {
     readonly property var traceValues: trace === 0 ? AnalyzerController.tdrImpulse
                                       : trace === 1 ? AnalyzerController.tdrStep
                                       : AnalyzerController.tdrImpedance
+    readonly property string valueUnit: trace === 0 ? qsTr("amp") : trace === 1 ? "ρ" : "Ω"
     readonly property double knownLength: Number(knownField.text)
     // Re-evaluated when the peak or velocity factor changes.
     readonly property double calcVf: {
@@ -25,7 +26,7 @@ Page {
     }
 
     function refreshFields() {
-        vfField.text = String(AnalyzerController.tdrVelocityFactor)
+        vfField.text = String(Number(fmt(AnalyzerController.tdrVelocityFactor, 3)))
         topField.text = String(Math.round(AnalyzerController.tdrTopKHz))
         pointsField.text = String(AnalyzerController.tdrPoints)
         betaField.text = String(AnalyzerController.tdrKaiserBeta)
@@ -37,7 +38,7 @@ Page {
     Connections {
         target: AnalyzerController
         function onTdrSettingsChanged() { page.refreshFields() }
-        function onTdrChanged() { page.selIndex = -1 }
+        function onTdrScanned() { page.selIndex = -1; chart.fit() }
     }
 
     Component.onCompleted: refreshFields()
@@ -130,36 +131,64 @@ Page {
                     text: qsTr("Impulse")
                     highlighted: page.trace === 0
                     Layout.fillWidth: true
-                    onClicked: { page.trace = 0; page.selIndex = -1 }
+                    onClicked: page.trace = 0
                 }
                 Button {
                     text: qsTr("Step")
                     highlighted: page.trace === 1
                     Layout.fillWidth: true
-                    onClicked: { page.trace = 1; page.selIndex = -1 }
+                    onClicked: page.trace = 1
                 }
                 Button {
                     text: qsTr("Impedance")
                     highlighted: page.trace === 2
                     Layout.fillWidth: true
-                    onClicked: { page.trace = 2; page.selIndex = -1 }
+                    onClicked: page.trace = 2
                 }
             }
 
             TdrChart {
+                id: chart
                 Layout.fillWidth: true
                 Layout.preferredHeight: 220
                 values: page.traceValues
                 xStep: AnalyzerController.tdrXStep
                 unit: AnalyzerController.tdrUnit
+                valueUnit: page.valueUnit
                 selectedIndex: page.selIndex
                 onPointSelected: (index) => page.selIndex = index
             }
 
+            ScrollBar {
+                id: panBar
+                orientation: Qt.Horizontal
+                Layout.fillWidth: true
+                visible: chart.viewSize < 1
+                policy: ScrollBar.AlwaysOn
+                size: chart.viewSize
+                onPositionChanged: if (pressed) chart.viewPosition = position
+            }
+            Binding {
+                target: panBar
+                property: "position"
+                value: chart.viewPosition
+                when: !panBar.pressed
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 0
+                enabled: AnalyzerController.tdrHasData
+                Button { text: qsTr("Zoom −"); Layout.fillWidth: true; onClicked: chart.zoomOut() }
+                Button { text: qsTr("Fit"); Layout.fillWidth: true; onClicked: chart.fit() }
+                Button { text: qsTr("Zoom +"); Layout.fillWidth: true; onClicked: chart.zoomIn() }
+            }
+
             Label {
                 text: page.selIndex >= 0 && page.selIndex < page.traceValues.length
-                      ? qsTr("%1 %2:  %3").arg(fmt(page.selIndex * AnalyzerController.tdrXStep, 2))
+                      ? qsTr("%1 %2:  %3 %4").arg(fmt(page.selIndex * AnalyzerController.tdrXStep, 2))
                             .arg(AnalyzerController.tdrUnit).arg(fmt(page.traceValues[page.selIndex], 3))
+                            .arg(page.valueUnit)
                       : (AnalyzerController.tdrHasData ? qsTr("Touch the chart to read a point.")
                                                         : qsTr("Run a TDR scan to see the trace."))
                 opacity: 0.8
@@ -230,7 +259,7 @@ Page {
                 Button {
                     text: qsTr("Use")
                     enabled: page.calcVf > 0 && page.calcVf <= 1
-                    onClicked: AnalyzerController.tdrVelocityFactor = page.calcVf
+                    onClicked: AnalyzerController.tdrVelocityFactor = Number(fmt(page.calcVf, 3))
                 }
             }
         }

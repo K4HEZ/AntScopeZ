@@ -241,6 +241,7 @@ signals:
     void tdrScanningChanged();
     void tdrProgressChanged();
     void tdrChanged();
+    void tdrScanned(); // new scan data, as opposed to a recompute
 
 private:
     void refreshDeviceInfo();

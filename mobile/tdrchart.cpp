@@ -14,11 +14,79 @@ TdrChart::TdrChart(QQuickItem* parent)
 {
     setAcceptedMouseButtons(Qt::LeftButton);
     setImplicitHeight(220);
+    m_edgeTimer.setInterval(16);
+    connect(&m_edgeTimer, &QTimer::timeout, this, &TdrChart::edgeScrollTick);
 }
 
 void TdrChart::setValues(const QList<double>& v)
 {
+    const bool resized = v.size() != m_values.size();
     m_values = v;
+    if (resized) {
+        m_zoom = 1;
+        m_first = 0;
+        emit viewChanged();
+    }
+    update();
+}
+
+void TdrChart::setValueUnit(const QString& v)
+{
+    m_valueUnit = v;
+    update();
+}
+
+double TdrChart::visibleSpan() const
+{
+    const int n = m_values.size();
+    return n < 2 ? 1 : (n - 1) / m_zoom;
+}
+
+double TdrChart::viewSize() const
+{
+    const int n = m_values.size();
+    return n < 2 ? 1 : visibleSpan() / (n - 1);
+}
+
+double TdrChart::viewPosition() const
+{
+    const int n = m_values.size();
+    return n < 2 ? 0 : m_first / (n - 1);
+}
+
+void TdrChart::setViewPosition(double v)
+{
+    setFirst(v * (m_values.size() - 1));
+}
+
+void TdrChart::setFirst(double first)
+{
+    const int n = m_values.size();
+    first = qBound(0.0, first, n < 2 ? 0.0 : (n - 1) - visibleSpan());
+    if (qFuzzyCompare(m_first + 1, first + 1))
+        return;
+    m_first = first;
+    emit viewChanged();
+    update();
+}
+
+void TdrChart::setZoom(double zoom)
+{
+    const int n = m_values.size();
+    if (n < 2)
+        return;
+    // At least ~16 samples stay in view.
+    zoom = qBound(1.0, zoom, qMax(1.0, (n - 1) / 16.0));
+    if (qFuzzyCompare(m_zoom, zoom))
+        return;
+    // Anchor on the marker if it's in view (it stays at the same spot on
+    // screen), else on the centre.
+    const bool anchored = m_selectedIndex >= m_first && m_selectedIndex <= m_first + visibleSpan();
+    const double anchorIndex = anchored ? m_selectedIndex : m_first + visibleSpan() / 2;
+    const double anchorFrac = (anchorIndex - m_first) / visibleSpan();
+    m_zoom = zoom;
+    m_first = qBound(0.0, anchorIndex - anchorFrac * visibleSpan(), (n - 1) - visibleSpan());
+    emit viewChanged();
     update();
 }
 
@@ -54,8 +122,30 @@ void TdrChart::selectAt(qreal x)
     const QRectF plot = plotRect();
     if (plot.width() <= 0)
         return;
-    const double idx = (x - plot.left()) / plot.width() * (m_values.size() - 1);
-    emit pointSelected(qBound(0, int(qRound(idx)), int(m_values.size()) - 1));
+    const double idx = m_first + (x - plot.left()) / plot.width() * visibleSpan();
+    const int lo = int(std::ceil(m_first - 1e-9));
+    const int hi = qMin(int(m_values.size()) - 1, int(std::floor(m_first + visibleSpan() + 1e-9)));
+    emit pointSelected(qBound(lo, int(qRound(idx)), hi));
+}
+
+// Dragging near (or past) a plot edge scrolls under the marker, faster the
+// closer to / further past the edge.
+void TdrChart::edgeScrollTick()
+{
+    const QRectF plot = plotRect();
+    const qreal zone = 36;
+    qreal depth = 0; // -1..1, sign = direction
+    if (m_dragX < plot.left() + zone)
+        depth = -qMin(1.0, (plot.left() + zone - m_dragX) / zone);
+    else if (m_dragX > plot.right() - zone)
+        depth = qMin(1.0, (m_dragX - (plot.right() - zone)) / zone);
+    const qint64 ms = m_edgeClock.restart();
+    if (depth == 0 || viewSize() >= 1 || plot.width() <= 0)
+        return;
+    const double pxPerPoint = plot.width() / visibleSpan();
+    const double pxPerSec = 250;
+    setFirst(m_first + depth * pxPerSec * (ms / 1000.0) / pxPerPoint);
+    selectAt(m_dragX);
 }
 
 void TdrChart::mousePressEvent(QMouseEvent* event)
@@ -63,22 +153,31 @@ void TdrChart::mousePressEvent(QMouseEvent* event)
     // Same reasoning as SwrChart: keep the drag out of the enclosing Flickable.
     setKeepMouseGrab(true);
     setKeepTouchGrab(true);
-    selectAt(event->position().x());
+    m_dragging = true;
+    m_dragX = event->position().x();
+    m_edgeClock.start();
+    m_edgeTimer.start();
+    selectAt(m_dragX);
 }
 
 void TdrChart::mouseMoveEvent(QMouseEvent* event)
 {
-    selectAt(event->position().x());
+    m_dragX = event->position().x();
+    selectAt(m_dragX);
 }
 
 void TdrChart::mouseReleaseEvent(QMouseEvent*)
 {
+    m_dragging = false;
+    m_edgeTimer.stop();
     setKeepMouseGrab(false);
     setKeepTouchGrab(false);
 }
 
 void TdrChart::mouseUngrabEvent()
 {
+    m_dragging = false;
+    m_edgeTimer.stop();
     setKeepMouseGrab(false);
     setKeepTouchGrab(false);
 }
@@ -111,7 +210,8 @@ void TdrChart::paint(QPainter* painter)
     hi += pad;
 
     auto toY = [&](double v) { return plot.bottom() - (v - lo) / (hi - lo) * plot.height(); };
-    auto toX = [&](double i) { return plot.left() + i / (n - 1) * plot.width(); };
+    const double span = visibleSpan();
+    auto toX = [&](double i) { return plot.left() + (i - m_first) / span * plot.width(); };
 
     // Zero line, and Y labels at the extremes.
     if (lo < 0 && hi > 0) {
@@ -123,24 +223,32 @@ void TdrChart::paint(QPainter* painter)
     painter->setPen(Qt::black);
     painter->drawText(QRectF(0, plot.top() - 2, kLeftMargin - 4, 14), Qt::AlignRight, QString::number(hi, 'g', 3));
     painter->drawText(QRectF(0, plot.bottom() - 12, kLeftMargin - 4, 14), Qt::AlignRight, QString::number(lo, 'g', 3));
+    if (!m_valueUnit.isEmpty())
+        painter->drawText(QRectF(0, plot.center().y() - 7, kLeftMargin - 4, 14), Qt::AlignRight, m_valueUnit);
 
-    const double span = (n - 1) * m_xStep;
-    painter->drawText(QRectF(plot.left() - 10, plot.bottom() + 2, 80, 16), Qt::AlignLeft, "0");
+    const double xFrom = m_first * m_xStep;
+    const double xTo = (m_first + span) * m_xStep;
+    painter->drawText(QRectF(plot.left() - 10, plot.bottom() + 2, 80, 16), Qt::AlignLeft,
+                       QString::number(xFrom, 'f', 1));
     painter->drawText(QRectF(plot.center().x() - 40, plot.bottom() + 2, 80, 16), Qt::AlignHCenter,
-                       QString::number(span / 2, 'f', 1));
+                       QString::number((xFrom + xTo) / 2, 'f', 1));
     painter->drawText(QRectF(plot.right() - 90, plot.bottom() + 2, 96, 16), Qt::AlignRight,
-                       QString("%1 %2").arg(span, 0, 'f', 1).arg(m_unit));
+                       QString("%1 %2").arg(xTo, 0, 'f', 1).arg(m_unit));
 
     painter->setClipRect(plot.adjusted(-1, -1, 1, 1));
     QPen curve(QColor(30, 100, 200));
     curve.setWidthF(1.5);
     painter->setPen(curve);
 
+    // Visible samples, one either side so the line reaches the edges.
+    const int i0 = qMax(0, int(std::floor(m_first)));
+    const int i1 = qMin(n - 1, int(std::ceil(m_first + span)));
+    const int count = i1 - i0 + 1;
     const int columns = qMax(1, int(plot.width()));
-    if (n <= columns * 2) {
+    if (count <= columns * 2) {
         QPolygonF line;
-        line.reserve(n);
-        for (int i = 0; i < n; ++i)
+        line.reserve(count);
+        for (int i = i0; i <= i1; ++i)
             line << QPointF(toX(i), toY(m_values[i]));
         painter->drawPolyline(line);
     } else {
@@ -148,10 +256,10 @@ void TdrChart::paint(QPainter* painter)
         QPolygonF line;
         line.reserve(columns * 2);
         for (int c = 0; c < columns; ++c) {
-            const int from = int(qint64(c) * n / columns);
-            const int to = qMax(from + 1, int(qint64(c + 1) * n / columns));
+            const int from = i0 + int(qint64(c) * count / columns);
+            const int to = qMax(from + 1, i0 + int(qint64(c + 1) * count / columns));
             double cMin = m_values[from], cMax = m_values[from];
-            for (int i = from; i < qMin(to, n); ++i) {
+            for (int i = from; i < qMin(to, i1 + 1); ++i) {
                 cMin = qMin(cMin, m_values[i]);
                 cMax = qMax(cMax, m_values[i]);
             }
@@ -161,7 +269,8 @@ void TdrChart::paint(QPainter* painter)
         painter->drawPolyline(line);
     }
 
-    if (m_selectedIndex >= 0 && m_selectedIndex < n) {
+    if (m_selectedIndex >= 0 && m_selectedIndex < n && m_selectedIndex >= m_first
+        && m_selectedIndex <= m_first + span) {
         const QPointF marker(toX(m_selectedIndex), toY(m_values[m_selectedIndex]));
         QPen dash(QColor(120, 120, 120));
         dash.setStyle(Qt::DashLine);

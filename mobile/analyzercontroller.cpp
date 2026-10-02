@@ -30,8 +30,6 @@
 // app's files dir).
 static const char* const kFileProviderAuthority = "io.github.k4hez.antscopez.qtprovider";
 
-static const int kMaxRecentCables = 5;
-
 AnalyzerController::AnalyzerController(QObject* parent)
     : QObject(parent)
     , m_analyzer(new AnalyzerPro(this))
@@ -69,9 +67,7 @@ AnalyzerController::AnalyzerController(QObject* parent)
 
     {
         QSettings settings = mobileSettings();
-        for (const QString& n : settings.value("tdr/recentCables").toStringList())
-            if (m_cableNames.contains(n) && m_recentCables.size() < kMaxRecentCables)
-                m_recentCables << n;
+        m_recentCables = CableCatalog::pruneRecents(settings.value("tdr/recentCables").toStringList(), m_cableNames);
         const int i = m_cableNames.indexOf(settings.value("tdr/cableName").toString());
         if (i >= 0 && qFuzzyCompare(m_cableVfs.at(i), m_tdrVf))
             m_tdrCableName = m_cableNames.at(i);
@@ -851,16 +847,7 @@ QVariantMap AnalyzerController::tdrEstimate() const
 
 QStringList AnalyzerController::tdrFilterCables(const QString& filter) const
 {
-    const QStringList words = filter.split(QChar(' '), Qt::SkipEmptyParts);
-    QStringList out;
-    for (const QString& n : m_cableNames) {
-        bool all = true;
-        for (const QString& w : words)
-            all = all && n.contains(w, Qt::CaseInsensitive);
-        if (all)
-            out << n;
-    }
-    return out;
+    return CableCatalog::filterNames(m_cableNames, filter);
 }
 
 void AnalyzerController::tdrSelectCable(const QString& name)
@@ -872,10 +859,7 @@ void AnalyzerController::tdrSelectCable(const QString& name)
     if (!qFuzzyCompare(m_tdrVf, m_cableVfs.at(i))) // out of range, rejected
         return;
     m_tdrCableName = name;
-    m_recentCables.removeAll(name);
-    m_recentCables.prepend(name);
-    while (m_recentCables.size() > kMaxRecentCables)
-        m_recentCables.removeLast();
+    CableCatalog::pushRecent(m_recentCables, name);
     QSettings settings = mobileSettings();
     settings.setValue("tdr/cableName", name);
     settings.setValue("tdr/recentCables", m_recentCables);
@@ -937,6 +921,7 @@ void AnalyzerController::finishTdr()
         return;
     }
     recomputeTdr();
+    emit tdrScanned();
     setStatus(m_tdr.valid ? tr("TDR scan complete")
                           : tr("TDR failed: the sweep must start near DC (check the analyzer's minimum frequency)"));
 }
