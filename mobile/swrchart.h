@@ -46,6 +46,9 @@ public:
     double viewSize() const;
     double viewPosition() const;
     void setViewPosition(double v);
+    // Density (px/point) at which the whole scan just fits, rounded down to
+    // 0.1 and floored at the 0.5 minimum; 0 with no scan.
+    Q_INVOKABLE double fitPixelsPerPoint() const;
 
 signals:
     void pointSelected(int index);

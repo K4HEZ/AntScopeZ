@@ -71,7 +71,7 @@ Page {
                 spacing: 10
                 Label { text: qsTr("Density") }
                 Slider {
-                    from: 1
+                    from: 0.5
                     to: 30
                     stepSize: 0.5
                     snapMode: Slider.SnapAlways
@@ -83,6 +83,11 @@ Page {
                     text: qsTr("%1 px/pt").arg(AnalyzerController.chartMinPxPerPoint)
                     Layout.preferredWidth: 72
                     horizontalAlignment: Text.AlignRight
+                }
+                Button {
+                    text: qsTr("Fit")
+                    enabled: AnalyzerController.points.length > 1
+                    onClicked: AnalyzerController.chartMinPxPerPoint = chart.fitPixelsPerPoint()
                 }
             }
 

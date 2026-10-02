@@ -94,6 +94,14 @@ double SwrChart::viewPosition() const
     return n < 2 ? 0 : m_first / (n - 1);
 }
 
+double SwrChart::fitPixelsPerPoint() const
+{
+    const int n = m_fq.size();
+    if (n < 2)
+        return 0;
+    return qMax(0.5, std::floor(plotRect().width() / (n - 1) * 10) / 10);
+}
+
 void SwrChart::setViewPosition(double v)
 {
     setFirst(v * (m_fq.size() - 1));
