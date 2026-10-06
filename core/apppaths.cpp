@@ -140,6 +140,10 @@ QString AppPaths::localDataFolder()
 // how an un-installed dev build (build-debug/build-release) stages them.
 QString AppPaths::sharedDataFolder()
 {
+    // A dev build stages its own copies beside the binary; those win over an
+    // older installed copy in the data dir.
+    if (QFile::exists(QCoreApplication::applicationDirPath() + "/itu-regions-defaults.txt"))
+        return QCoreApplication::applicationDirPath();
 #ifdef ANTSCOPE_SHARED_DATA_DIR
     if (QDir(ANTSCOPE_SHARED_DATA_DIR).exists())
         return ANTSCOPE_SHARED_DATA_DIR;
