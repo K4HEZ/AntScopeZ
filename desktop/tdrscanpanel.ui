@@ -18,14 +18,26 @@
     <enum>QLayout::SetMinimumSize</enum>
    </property>
    <item>
-    <widget class="QGroupBox" name="scanSetupGroupBox">
-     <property name="title">
+    <widget class="Line" name="scanSetupHeadingLine">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="scanSetupHeading">
+     <property name="font">
+      <font>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
       <string>Scan setup</string>
      </property>
+    </widget>
+   </item>
+   <item>
      <layout class="QGridLayout" name="scanSetupGridLayout">
-      <property name="topMargin">
-       <number>20</number>
-      </property>
       <item row="0" column="0">
        <widget class="QLabel" name="cableTypeNameLabel">
         <property name="text">
@@ -186,7 +198,6 @@
        </widget>
       </item>
      </layout>
-    </widget>
    </item>
    <item>
     <layout class="QHBoxLayout" name="scanButtonsLayout">
@@ -207,7 +218,7 @@
       <widget class="QPushButton" name="tdrSingleButton">
        <property name="minimumSize">
         <size>
-         <width>0</width>
+         <width>180</width>
          <height>36</height>
         </size>
        </property>
@@ -231,17 +242,42 @@
        </property>
       </widget>
      </item>
+     <item>
+      <spacer name="scanButtonsSpacerRight">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
     </layout>
    </item>
    <item>
-    <widget class="QGroupBox" name="resultGroupBox">
-     <property name="title">
+    <widget class="Line" name="resultHeadingLine">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="resultHeading">
+     <property name="font">
+      <font>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
       <string>Result (after scanning)</string>
      </property>
+    </widget>
+   </item>
+   <item>
      <layout class="QFormLayout" name="resultFormLayout">
-      <property name="topMargin">
-       <number>20</number>
-      </property>
       <item row="0" column="0">
        <widget class="QLabel" name="windowNameLabel">
         <property name="text">
@@ -299,43 +335,29 @@
        </widget>
       </item>
       <item row="2" column="0" colspan="2">
-       <widget class="QLabel" name="windowExplanationLabel">
-        <property name="wordWrap">
-         <bool>true</bool>
+       <spacer name="resultGap1">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
         </property>
-        <property name="text">
-         <string notr="true">General-purpose default -- good resolution and low ringing near a strong reflection.</string>
+        <property name="sizeType">
+         <enum>QSizePolicy::Fixed</enum>
         </property>
-       </widget>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>0</width>
+          <height>4</height>
+         </size>
+        </property>
+       </spacer>
       </item>
-      <item row="3" column="0" colspan="2">
-       <layout class="QHBoxLayout" name="windowResultSeparatorLayout">
-        <property name="leftMargin">
-         <number>24</number>
-        </property>
-        <property name="rightMargin">
-         <number>24</number>
-        </property>
-        <item>
-         <widget class="Line" name="windowResultSeparatorLine">
-          <property name="frameShadow">
-           <enum>QFrame::Plain</enum>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="4" column="0">
+      <item row="3" column="0">
        <widget class="QLabel" name="cableLengthNameLabel">
         <property name="text">
          <string>Distance to strongest reflection:</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
+      <item row="3" column="1">
        <widget class="QLabel" name="cableLengthLabel">
         <property name="font">
          <font>
@@ -347,58 +369,64 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="0">
+      <item row="4" column="0">
        <widget class="QLabel" name="reflectionNameLabel">
         <property name="text">
          <string>Reflection:</string>
         </property>
        </widget>
       </item>
-      <item row="5" column="1">
+      <item row="4" column="1">
        <widget class="QLabel" name="reflectionLabel">
         <property name="text">
          <string notr="true">-- (run a TDR scan first)</string>
         </property>
        </widget>
       </item>
-      <item row="6" column="0" colspan="2">
+      <item row="5" column="0">
+       <widget class="QLabel" name="rangeNoteNameLabel">
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+        </property>
+        <property name="text">
+         <string>Note:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
        <widget class="QLabel" name="rangeNoteLabel">
         <property name="wordWrap">
          <bool>true</bool>
         </property>
         <property name="text">
-         <string notr="true"></string>
+         <string notr="true">--</string>
         </property>
        </widget>
       </item>
-      <item row="7" column="0" colspan="2">
-       <layout class="QHBoxLayout" name="reverseSolveSeparatorLayout">
-        <property name="leftMargin">
-         <number>24</number>
+      <item row="6" column="0" colspan="2">
+       <spacer name="resultGap2">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
         </property>
-        <property name="rightMargin">
-         <number>24</number>
+        <property name="sizeType">
+         <enum>QSizePolicy::Fixed</enum>
         </property>
-        <item>
-         <widget class="Line" name="reverseSolveSeparatorLine">
-          <property name="frameShadow">
-           <enum>QFrame::Plain</enum>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-       </layout>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>0</width>
+          <height>4</height>
+         </size>
+        </property>
+       </spacer>
       </item>
-      <item row="8" column="0">
+      <item row="7" column="0">
        <widget class="QLabel" name="knownLengthNameLabel">
         <property name="text">
          <string>Known cable length:</string>
         </property>
        </widget>
       </item>
-      <item row="8" column="1">
+      <item row="7" column="1">
        <layout class="QHBoxLayout" name="knownLengthLayout">
         <item>
          <widget class="QLineEdit" name="knownLengthEdit"/>
@@ -412,14 +440,14 @@
         </item>
        </layout>
       </item>
-      <item row="9" column="0">
+      <item row="8" column="0">
        <widget class="QLabel" name="calculatedVfNameLabel">
         <property name="text">
          <string>Calculated velocity factor:</string>
         </property>
        </widget>
       </item>
-      <item row="9" column="1">
+      <item row="8" column="1">
        <widget class="QLabel" name="calculatedVfLabel">
         <property name="font">
          <font>
@@ -431,7 +459,7 @@
         </property>
        </widget>
       </item>
-      <item row="10" column="1">
+      <item row="9" column="1">
        <widget class="QPushButton" name="applyVfButton">
         <property name="enabled">
          <bool>false</bool>
@@ -445,7 +473,6 @@
        </widget>
       </item>
      </layout>
-    </widget>
    </item>
    <item>
     <spacer name="verticalSpacer">

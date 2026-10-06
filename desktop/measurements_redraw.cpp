@@ -666,7 +666,7 @@ void Measurements::redrawS21(bool _incrementally)
     bool rescaledPhaseAxis = false;
     for(; i < m_measurements.length(); ++i)
     {
-        if (m_measurements[i].visible) {
+        if (rowShown(i)) {
             m_s21Widget->graph(i*4+1)->setData(QSharedPointer<QCPGraphDataContainer>::create(m_measurements[i].s21MagGraph));
             m_s21Widget->graph(i*4+2)->setData(QSharedPointer<QCPGraphDataContainer>::create(m_measurements[i].s21PhaseGraph));
             m_s21Widget->graph(i*4+3)->setData(QSharedPointer<QCPGraphDataContainer>::create(m_measurements[i].s12MagGraph));
@@ -696,7 +696,7 @@ void Measurements::redrawSmith(bool _incrementally)
     int i = _incrementally ? (m_measurements.length()-1) : 0;
     for(; i < m_measurements.length(); ++i)
     {
-        if (!m_measurements[i].visible)
+        if (!rowShown(i))
             continue;
         // Cable-corrected series are built from calibrated points already.
         int cable = rowCable(i);

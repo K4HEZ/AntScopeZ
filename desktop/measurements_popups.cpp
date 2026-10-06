@@ -280,8 +280,8 @@ void Measurements::on_newCursorSmithPos (double x, double y, int index)
     fields << qMakePair(tr("Frequency"), str + " kHz")
            << qMakePair(tr("SWR"), QString::number(swr,'f', 2))
            << qMakePair(tr("RL"), QString::number(rl,'f', 2) + " dB")
-           << qMakePair(tr("Z"), zString + " Ohm")
-           << qMakePair(tr("|Z|"), QString::number(z,'f', 2) + " Ohm")
+           << qMakePair(tr("Z"), zString + " Ω")
+           << qMakePair(tr("|Z|"), QString::number(z,'f', 2) + " Ω")
            << qMakePair(tr("|rho|"), QString::number(rho,'f', 2))
            << qMakePair(tr("Phase"), QString::number(phase,'f', 2) + " °");
     if (x1 > 0) {
@@ -289,7 +289,7 @@ void Measurements::on_newCursorSmithPos (double x, double y, int index)
     } else {
         fields << qMakePair(tr("C"), QString::number(c,'f', 2) + " pF");
     }
-    fields << qMakePair(tr("Zpar"), zparString + " Ohm");
+    fields << qMakePair(tr("Zpar"), zparString + " Ω");
     if (x1 > 0) {
         fields << qMakePair(tr("Lpar"), QString::number(lpar,'f', 2) + " nH");
     } else {
@@ -345,7 +345,7 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
 
     if(!m_graphHintValueLabels.isEmpty())
     {
-        if (!m_measurements[index].visible) {
+        if (!rowShown(index)) {
             return;
         }
         if(m_currentTab == "tab_tdr")
@@ -498,7 +498,7 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
                             {tr("Time"), timeNs + " ns"},
                             {tr("Impulse response"), ir},
                             {tr("Step response"), sr},
-                            {tr("|Z|"), zStr + " Ohm"},
+                            {tr("|Z|"), zStr + " Ω"},
                         });
 
                         if(m_graphBriefHint != NULL)
@@ -993,8 +993,8 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
             fields << qMakePair(tr("Frequency"), str + " kHz")
                    << qMakePair(tr("SWR"), QString::number(swr,'f', 2))
                    << qMakePair(tr("RL"), QString::number(rl,'f', 2) + " dB")
-                   << qMakePair(tr("Z"), zString + " Ohm")
-                   << qMakePair(tr("|Z|"), QString::number(z,'f', 2) + " Ohm")
+                   << qMakePair(tr("Z"), zString + " Ω")
+                   << qMakePair(tr("|Z|"), QString::number(z,'f', 2) + " Ω")
                    << qMakePair(tr("|rho|"), QString::number(rho,'f', 2))
                    << qMakePair(tr("Phase"), QString::number(phase,'f', 2) + " °");
             if (x > 0) {
@@ -1002,7 +1002,7 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
             } else {
                 fields << qMakePair(tr("C"), QString::number(c,'f', 2) + " pF");
             }
-            fields << qMakePair(tr("Zpar"), zparString + " Ohm");
+            fields << qMakePair(tr("Zpar"), zparString + " Ω");
             if (x > 0) {
                 fields << qMakePair(tr("Lpar"), QString::number(lpar,'f', 2) + " nH");
             } else {
@@ -1075,16 +1075,6 @@ void Measurements::hideGraphCursor()
     m_previousI = -1;
 
     replot();
-}
-
-void Measurements::on_mainWindowPos(int x, int y)
-{
-    // m_graphHintBox used to need repositioning here too, back when it was
-    // a floating PopUp tracking the main window's own moves (see PopUp::
-    // MainWindowPos()) -- now it's a plain child widget in mainwindow.ui's
-    // layout, which the layout engine keeps positioned for free.
-    if (m_oneFqWidget)
-        m_oneFqWidget->MainWindowPos(x, y);
 }
 
 bool Measurements::getGraphHintEnabled(void)

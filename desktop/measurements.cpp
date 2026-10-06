@@ -126,12 +126,6 @@ Measurements::Measurements(QObject *parent) : QObject(parent),
     m_cableVelFactor = m_settings->value("VelFactor",0.66 ).toDouble();
     m_settings->endGroup();
 
-    m_settings->beginGroup("OneFqWidget");
-    m_oneFqDisplayStyle = m_settings->value("DisplayStyle", 0).toInt() == 1
-                               ? OneFqDisplayStyle::BigReadout
-                               : OneFqDisplayStyle::Detailed;
-    m_settings->endGroup();
-
     // m_graphHintBox/m_graphHintNameLabels/m_graphHintValueLabels used to
     // be a single self-constructed PopUp (floating Qt::Tool window,
     // positioned via setName("Hint")'s persisted x/y, colored per
@@ -158,10 +152,6 @@ Measurements::~Measurements()
     m_settings->setValue("GraphBriefHintEnabled",m_graphBriefHintEnabled);
     m_settings->setValue("S21ShowS21",m_s21ShowS21);
     m_settings->setValue("S21ShowS12",m_s21ShowS12);
-    m_settings->endGroup();
-
-    m_settings->beginGroup("OneFqWidget");
-    m_settings->setValue("DisplayStyle", m_oneFqDisplayStyle == OneFqDisplayStyle::BigReadout ? 1 : 0);
     m_settings->endGroup();
 
     // m_graphHintBox/m_graphHintNameLabels/m_graphHintValueLabels are owned
@@ -509,7 +499,7 @@ void Measurements::updateS21GraphVisibility()
         int base = row*4 + 1; // +1: graph(0) is a non-measurement placeholder, see mainwindow.cpp
         if (base+3 >= m_s21Widget->graphCount())
             continue;
-        bool rowVisible = m_measurements.at(row).visible;
+        bool rowVisible = rowShown(row);
         m_s21Widget->graph(base+0)->setVisible(rowVisible && m_s21ShowS21); // S21 dB
         m_s21Widget->graph(base+1)->setVisible(rowVisible && m_s21ShowS21); // S21 deg
         m_s21Widget->graph(base+2)->setVisible(rowVisible && m_s21ShowS12); // S12 dB
@@ -623,6 +613,7 @@ void Measurements::on_newMeasurement(QString name)
     // A scan keeps the corrections switched on now; a loaded file resets
     // this (noteLoadedCorrections()).
     m_measurements.last().corrections = scanCorrections();
+    m_measurements.last().kind = m_mode;
     m_measurements.last().analyzerSerial = (m_calibration != nullptr) ? m_calibration->getSerial() : QString();
     m_viewMeasurements.append( measurement());
     m_farEndMeasurementsAdd.append( measurement());
@@ -821,6 +812,8 @@ void Measurements::on_newMeasurement(QString name)
         // widened to actually read it -- user-draggable now.
         m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_NAME, QHeaderView::Interactive);
         m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_POINTS, QHeaderView::Fixed);
+        m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_TYPE, QHeaderView::Fixed);
+        m_tableWidget->horizontalHeader()->resizeSection(COL_TYPE, 46);
         m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_CORR, QHeaderView::Fixed);
         m_tableWidget->horizontalHeader()->resizeSection(COL_CORR, 58);
         m_tableWidget->horizontalHeader()->resizeSection(COL_VISIBLE, cell_side);
@@ -863,6 +856,11 @@ void Measurements::on_newMeasurement(QString name)
             item = new QTableWidgetItem();
             item->setTextAlignment(Qt::AlignCenter);
             item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+            m_tableWidget->setItem(i,COL_TYPE, item);
+
+            item = new QTableWidgetItem();
+            item->setTextAlignment(Qt::AlignCenter);
+            item->setFlags(item->flags() & ~Qt::ItemIsEditable);
             m_tableWidget->setItem(i,COL_CORR, item);
             refreshCorrectionsCell(i);
 
@@ -870,6 +868,7 @@ void Measurements::on_newMeasurement(QString name)
             item->setTextAlignment(Qt::AlignCenter);
             item->setText(pointsCellText(mm));
             m_tableWidget->setItem(i,COL_POINTS, item);
+            refreshTypeCell(i);
         }
 
         m_tableWidget->reset();
@@ -877,6 +876,8 @@ void Measurements::on_newMeasurement(QString name)
         m_tableWidget->selectionModel()->select(myIndex,QItemSelectionModel::Select | QItemSelectionModel::Rows);
         m_tableWidget->scrollToBottom();
     }
+
+    applyRowVisibility(m_measurements.length()-1);
 
     // New measurement's 4 S21 graphs default to QCPGraph's own
     // visible=true regardless of the current S21/S12 toggles -- apply the
@@ -1027,7 +1028,7 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
             GraphData unused;
             RfMath::prepareGraphs(p, m_Z0, nullptr, shown, unused);
         }
-        updateOneFqWidget(shown);
+        publishOneFqData(shown);
         return;
     }
 
@@ -1622,10 +1623,24 @@ bool Measurements::on_measurementComplete()
 
 void Measurements::toggleVisibility(int row, bool _state)
 {
+    m_measurements[row].visible = _state;
+    applyRowVisibility(row);
+    replot();
+}
+
+bool Measurements::rowShown(int row) const
+{
+    const measurement& mm = m_measurements.at(row);
+    return mm.visible && mm.kind == m_mode;
+}
+
+// Graph visibility = the row's checkbox AND its kind matching the mode.
+void Measurements::applyRowVisibility(int row)
+{
     measurement& mm = m_measurements[row];
-    mm.visible = _state;
+    bool _state = rowShown(row);
     int count = m_swrWidget->graphCount();
-    if (count > 1) {
+    if (count > 1 && row + 1 < count) {
         m_swrWidget->graph(row+1)->setVisible(_state);
         m_phaseWidget->graph(row+1)->setVisible(_state);
         m_rlWidget->graph(row+1)->setVisible(_state);
@@ -1653,7 +1668,44 @@ void Measurements::toggleVisibility(int row, bool _state)
         m_tdrWidget->graph(row1+1)->setVisible(_state);
         m_tdrWidget->graph(row1+2)->setVisible(_state);
     }
-    replot();
+}
+
+void Measurements::setMode(MeasurementKind kind)
+{
+    m_mode = kind;
+    for (int row = 0; row < m_measurements.length(); row++) {
+        refreshTypeCell(row);
+        applyRowVisibility(row);
+    }
+    on_redrawGraphs();
+}
+
+void Measurements::setLastMeasurementKind(MeasurementKind kind)
+{
+    if (m_measurements.isEmpty())
+        return;
+    int row = m_measurements.length() - 1;
+    m_measurements[row].kind = kind;
+    refreshTypeCell(row);
+    applyRowVisibility(row);
+}
+
+// Type column; rows of the other mode's kind are dimmed.
+void Measurements::refreshTypeCell(int row)
+{
+    if (m_tableWidget == nullptr || row < 0 || row >= m_measurements.size()
+        || row >= m_tableWidget->rowCount() || m_tableWidget->item(row, COL_TYPE) == nullptr)
+        return;
+    MeasurementKind kind = m_measurements.at(row).kind;
+    QTableWidgetItem* item = m_tableWidget->item(row, COL_TYPE);
+    item->setText(kind == MeasurementKind::Tdr ? tr("TDR") : tr("Sweep"));
+    bool foreign = kind != m_mode;
+    item->setToolTip(foreign ? tr("Belongs to the other mode; switch modes to see it.") : QString());
+    QBrush dim = m_tableWidget->palette().brush(QPalette::Disabled, QPalette::Text);
+    for (int col = 0; col < m_tableWidget->columnCount(); col++) {
+        if (QTableWidgetItem* it = m_tableWidget->item(row, col))
+            it->setForeground(foreign ? dim : QBrush());
+    }
 }
 
 // Corr. column: the corrections this measurement shows.

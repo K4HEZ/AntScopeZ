@@ -31,7 +31,7 @@ void MainWindow::applyScanModeLabels(bool isRange)
     {
         ui->startLabel->setText(tr("Start"));
         ui->stopLabel->setText(tr("Stop"));
-        ui->groupBox_Presets->setTitle(tr("Presets (limits), kHz"));
+        ui->presetsHeading->setText(tr("Presets (limits), kHz"));
         ui->tableWidget_presets->horizontalHeaderItem(0)->setText(tr("Start"));
         ui->tableWidget_presets->horizontalHeaderItem(1)->setText(tr("Stop"));
     }
@@ -39,7 +39,7 @@ void MainWindow::applyScanModeLabels(bool isRange)
     {
         ui->startLabel->setText(tr("Center"));
         ui->stopLabel->setText(tr("Range (+/-)"));
-        ui->groupBox_Presets->setTitle(tr("Presets (center, range), kHz"));
+        ui->presetsHeading->setText(tr("Presets (center, range), kHz"));
         ui->tableWidget_presets->horizontalHeaderItem(0)->setText(tr("Center"));
         ui->tableWidget_presets->horizontalHeaderItem(1)->setText(tr("Range(+/-)"));
     }

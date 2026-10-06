@@ -50,7 +50,7 @@ int Measurements::CalcTdr(QVector <RawData> *data)
 
     int asize = data->length();
 
-    // m_tdrDots is the dot count Tools > TDR Measurement's own scan was
+    // m_tdrDots is the dot count TDR mode's own scan was
     // started with (startTDRProgress()) -- this guard's real job is
     // refusing to FFT a TDR-tool scan that was canceled before collecting
     // as many points as it was asked for (stopTDRProgress() always
@@ -106,8 +106,8 @@ void Measurements::stopTDRProgress()
     // on_redrawGraphs() only redraws whichever tab is currently visible
     // (see its own tab_swr/tab_phase/.../tab_tdr dispatch) -- fine for a
     // normal frequency-sweep scan, since the user is necessarily looking at
-    // *some* chart tab while one runs. TdrScanPanel (Tools > TDR
-    // Measurement) breaks that assumption: it's deliberately tab-
+    // *some* chart tab while one runs. TdrScanPanel (TDR mode)
+    // breaks that assumption: it's deliberately tab-
     // independent (see the tdr-scan-rework-plan memory -- "replaces the old
     // tab-implicit trigger"), so a scan run from there with any *other* tab
     // selected left tdrImpGraph/tdrStepGraph/tdrZGraph never (re)populated

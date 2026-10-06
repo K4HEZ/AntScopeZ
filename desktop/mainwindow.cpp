@@ -127,16 +127,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->scanModeCombo->lineEdit()->setReadOnly(true);
     ui->scanModeCombo->lineEdit()->setAlignment(Qt::AlignRight);
 
-    // leftPane (Frequency/Presets/Measurements) and middlePane (Graph Hint)
-    // should stay at their natural/preferred width when the window is
-    // resized; rightPane (the plot tabWidget) should absorb all the extra
-    // space. QSplitter has no .ui-file property for per-pane stretch
-    // factors -- setStretchFactor() has to be called at runtime. Indices
-    // match addWidget() order, which mirrors the panes' left-to-right
-    // declaration order in mainwindow.ui (leftPane, middlePane, rightPane).
+    // controlPane keeps its natural width on resize; rightPane (the plot
+    // tabWidget) absorbs the rest. QSplitter has no .ui property for
+    // stretch factors, so set them here (indices = declaration order).
     ui->splitter->setStretchFactor(0, 0);
-    ui->splitter->setStretchFactor(1, 0);
-    ui->splitter->setStretchFactor(2, 1);
+    ui->splitter->setStretchFactor(1, 1);
     // resizeWnd() (keeps the Smith chart circular/as-large-as-possible)
     // previously only ever ran on an actual *window* resize -- dragging
     // this splitter changes m_smithWidget's size too (rightPane absorbs
@@ -571,7 +566,7 @@ MainWindow::MainWindow(QWidget *parent) :
                                m_s21Widget,
                                m_smithWidget,
                                ui->tableWidget_measurments);
-    m_measurements->setGraphHintWidgets(ui->groupBox_GraphHint, {
+    m_measurements->setGraphHintWidgets(ui->graphHintPanel, {
         ui->graphHintName0, ui->graphHintName1, ui->graphHintName2, ui->graphHintName3,
         ui->graphHintName4, ui->graphHintName5, ui->graphHintName6, ui->graphHintName7,
         ui->graphHintName8, ui->graphHintName9, ui->graphHintName10,
@@ -580,6 +575,12 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->graphHintValue4, ui->graphHintValue5, ui->graphHintValue6, ui->graphHintValue7,
         ui->graphHintValue8, ui->graphHintValue9, ui->graphHintValue10,
     });
+    setupTdrPanel();
+    setupTuning();
+    m_settings->beginGroup("Settings");
+    QString savedMode = m_settings->value("appMode", "sweep").toString();
+    m_settings->endGroup();
+    setAppMode(savedMode == "tdr" ? AppMode::Tdr : (savedMode == "tuning" ? AppMode::Tuning : AppMode::Sweep));
     {
         // drawSmithImage() (called from setWidgets() above) resets the Smith inner
         // circle and arcs/labels to their hardcoded default colors; re-sync them
@@ -613,10 +614,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_analyzer, &AnalyzerPro::continueMeasurement, m_measurements, &Measurements::on_continueMeasurement);
     connect(this, &MainWindow::currentTab, m_measurements, &Measurements::on_currentTab);
     connect(this, &MainWindow::focus, m_measurements, &Measurements::on_focus);
-    connect(this, &MainWindow::mainWindowMinimized, m_measurements, &Measurements::on_mainWindowMinimized);
     connect(this, &MainWindow::newCursorFq, m_measurements, &Measurements::on_newCursorFq);
     connect(this, &MainWindow::newCursorSmithPos, m_measurements, &Measurements::on_newCursorSmithPos);
-    connect(this, &MainWindow::mainWindowPos, m_measurements, &Measurements::on_mainWindowPos);
     connect(this, &MainWindow::measureOneFq, m_measurements, &Measurements::on_newMeasurementOneFq);
     connect(m_measurements, SIGNAL(calibrationChanged()), this,SLOT(on_calibrationChanged()));
     connect(m_measurements, &Measurements::import_finished, this, &MainWindow::on_importFinished);
@@ -934,12 +933,12 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tableWidget_presets->horizontalHeader()->show();
     if(!m_isRange)
     {
-        ui->groupBox_Presets->setTitle(tr("Presets (limits), kHz"));
+        ui->presetsHeading->setText(tr("Presets (limits), kHz"));
         ui->tableWidget_presets->horizontalHeaderItem(0)->setText(tr("Start"));
         ui->tableWidget_presets->horizontalHeaderItem(1)->setText(tr("Stop"));
     }else
     {
-        ui->groupBox_Presets->setTitle(tr("Presets (center, range), kHz"));
+        ui->presetsHeading->setText(tr("Presets (center, range), kHz"));
         ui->tableWidget_presets->horizontalHeaderItem(0)->setText(tr("Center"));
         ui->tableWidget_presets->horizontalHeaderItem(1)->setText(tr("Range(+/-)"));
     }
@@ -1189,11 +1188,6 @@ bool MainWindow::event(QEvent * e)
         // already drive (see above) to hide them on minimize and bring them
         // back on restore.
         emit focus(!isMinimized());
-        // Separate signal, deliberately not reusing focus(bool) above: a
-        // real, taskbar-visible window (OneFqBigReadout) wants literal
-        // minimize/restore in lockstep with this window, not "hide on any
-        // OS focus loss" -- see mainWindowMinimized()'s declaration comment.
-        emit mainWindowMinimized(isMinimized());
     }
     return QMainWindow::event(e) ;
 }
@@ -1648,16 +1642,11 @@ void MainWindow::setWidgetsSettings()
 #endif
 }
 
-void MainWindow::moveEvent(QMoveEvent *)
-{
-    emit mainWindowPos(this->x(), this->y());
-}
-
 void MainWindow::resizeEvent(QResizeEvent * e)
 {
     resizeWnd();
     // A very fast drag (especially slamming into a layout's minimum-size
-    // constraint, e.g. the splitter's leftPane/middlePane floor) can queue
+    // constraint, e.g. the splitter's controlPane floor) can queue
     // resize events faster than layout settles between them -- the
     // synchronous resizeWnd() above forces its own layout pass, but that's
     // only ever as current as *this* event's geometry, which for a rapid

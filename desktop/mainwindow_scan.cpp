@@ -43,6 +43,10 @@ bool MainWindow::confirmScanPoints(int dots)
 
 void MainWindow::on_singleStart_clicked()
 {
+    if (m_appMode == AppMode::Tdr && !isMeasuring()) {
+        ui->singleStart->setChecked(false); // F9; TDR scans start from the TDR panel
+        return;
+    }
     m_measurements->setContinuous(false);
 
     if (isMeasuring())
@@ -65,7 +69,7 @@ void MainWindow::on_singleStart_clicked()
         // Always clean up One Fq mode's floating widget on stop, or it's
         // left orphaned (see the trigger just below, and
         // on_measurementComplete()'s own comment).
-        m_measurements->hideOneFqWidget();
+        m_measurements->stopOneFq();
         // on_startOneFq() disables these four unconditionally when One Fq
         // mode starts; nothing on any stop path re-enabled them until now
         // -- confirmed 2026-08-20 (stayed disabled after Esc/stop).
@@ -82,11 +86,9 @@ void MainWindow::on_singleStart_clicked()
     ui->fullBtn->setChecked(false);
 
     ui->singleStart->setChecked(true);
-    quint64 fqFrom = ui->lineEdit_fqFrom->text().remove(' ').toLongLong();
-    quint64 fqTo = ui->lineEdit_fqTo->text().remove(' ').toLongLong();
-    bool oneFq = m_isRange ? (fqTo==0) : (fqTo==fqFrom);
-    if (oneFq) {
-        on_startOneFq(fqFrom, m_dotsNumber, false);
+    if (singleFrequencyEntered()) {
+        ui->singleStart->setChecked(false);
+        ui->fullBtn->setEnabled(true);
         return;
     }
 
@@ -201,6 +203,10 @@ void MainWindow::on_singleStart_clicked()
 
 void MainWindow::on_continuousStartBtn_clicked(bool checked)
 {
+    if (m_appMode == AppMode::Tdr && !isMeasuring()) {
+        ui->continuousStartBtn->setChecked(false);
+        return;
+    }
     if (isMeasuring())
     {
         m_bInterrupted = true;
@@ -216,12 +222,8 @@ void MainWindow::on_continuousStartBtn_clicked(bool checked)
 
         // Same reasoning as on_singleStart_clicked()'s stop path -- always
         // clean up One Fq mode's widget on stop.
-        m_measurements->hideOneFqWidget();
+        m_measurements->stopOneFq();
         ui->actionExport->setEnabled(true);
-        return;
-    }
-    if(ui->tabWidget->currentWidget()->objectName() == "tab_tdr") {
-        ui->continuousStartBtn->setChecked(false);
         return;
     }
 
@@ -230,22 +232,9 @@ void MainWindow::on_continuousStartBtn_clicked(bool checked)
         return;
     }
 
-    // Scoped to `checked` (true only for a genuine user press of
-    // Continuous) -- that was the actual bug: on_measurementComplete()
-    // calls this function with checked=false to stop One Fq mode after
-    // each batch, and this block used to fire on *that* call too (nothing
-    // here ever looked at `checked`), silently restarting instead of
-    // stopping, producing a self-sustaining restart loop. Confirmed
-    // 2026-08-20.
-    if (checked) {
-        quint64 fqFrom = ui->lineEdit_fqFrom->text().remove(' ').toLongLong();
-        quint64 fqTo = ui->lineEdit_fqTo->text().remove(' ').toLongLong();
-        bool oneFq = m_isRange ? (fqTo==0) : (fqTo==fqFrom);
-        if (oneFq) {
-            ui->continuousStartBtn->setChecked(true);
-            on_startOneFq(fqFrom, m_dotsNumber, true);
-            return;
-        }
+    if (checked && singleFrequencyEntered()) {
+        ui->continuousStartBtn->setChecked(false);
+        return;
     }
 
     ui->singleStart->setChecked(false);
@@ -336,7 +325,22 @@ void MainWindow::on_continuousStartBtn_clicked(bool checked)
     m_measurements->setContinuous(m_isContinuos);
 }
 
-void MainWindow::on_startOneFq(quint64 _fq, int _dots, bool _continuous)
+// Start == Stop (or a zero Center/Range width) isn't a sweep; point the user
+// at Tuning mode instead of guessing.
+bool MainWindow::singleFrequencyEntered()
+{
+    quint64 fqFrom = ui->lineEdit_fqFrom->text().remove(' ').toLongLong();
+    quint64 fqTo = ui->lineEdit_fqTo->text().remove(' ').toLongLong();
+    bool single = m_isRange ? (fqTo == 0) : (fqTo == fqFrom);
+    if (single) {
+        Notification::showMessage(tr("Start and Stop are the same frequency. "
+                                     "For a single-frequency readout, use Mode > Tuning."),
+                                  this);
+    }
+    return single;
+}
+
+void MainWindow::on_startOneFq(quint64 _fqHz, int _dots, bool _continuous)
 {
     // Always requests exactly one point on the wire now (FRX1), looping
     // here instead of asking the device for one big FRX<N> batch -- see
@@ -349,10 +353,11 @@ void MainWindow::on_startOneFq(quint64 _fq, int _dots, bool _continuous)
     m_analyzer->setContinuos(m_isContinuos);
     m_measurements->setContinuous(m_isContinuos);
     m_bInterrupted = false;
-    m_oneFqFreq = _fq;
+    m_oneFqFreq = _fqHz;
+    m_oneFqRequestTime.restart();
     m_oneFqRemaining = _dots;
 
-    emit measureOneFq(this, _fq*1000, 1);
+    emit measureOneFq(this, _fqHz, 1);
 
     ui->actionExport->setEnabled(false);
 }
@@ -388,7 +393,7 @@ void MainWindow::on_tdrScanRequested(qint64 topFreqKHz, int dots, TdrWindow wind
     m_bInterrupted = false;
 
     // Same min-frequency logic setFrequencyLimits() callers use (see
-    // MainWindow::on_actionTDRMeasurement_triggered()) -- TDR always starts
+    // MainWindow::refreshTdrPanelLimits()) -- TDR always starts
     // near DC (see CalcTdr()'s own "Wrong fq" guard), so only the top
     // frequency is ever user-adjustable; the bottom always comes from the
     // device/Custom Analyzer's own real minimum.
@@ -418,25 +423,11 @@ void MainWindow::on_tdrScanRequested(qint64 topFreqKHz, int dots, TdrWindow wind
     // m_isMeasuring was already false by the time either fired). Doing the
     // setup first means the reentrant case finalizes it correctly instead.
     m_measurements->startTDRProgress(this, dots);
-    if (m_tdrScanDialog != nullptr)
-        m_tdrScanDialog->panel()->setScanning(true);
+    m_tdrPanel->setScanning(true);
 
     ui->actionExport->setEnabled(false);
 
     emit measure(minFqKHz*1000, topFreqKHz*1000, dots);
-}
-
-// TdrScanDialog::closing() -- see mainwindow.h's comment. No-op if nothing's
-// actually running (the dialog can close any time, scanning or not).
-void MainWindow::on_tdrStopRequested()
-{
-    if (!isMeasuring())
-        return;
-    m_bInterrupted = true;
-    emit stopMeasure();
-    if (m_tdrScanDialog != nullptr)
-        m_tdrScanDialog->panel()->setScanning(false);
-    ui->actionExport->setEnabled(true);
 }
 
 // AnalyzerPro::drainingChanged() -- see AnalyzerPro::m_isDraining's own
@@ -450,8 +441,7 @@ void MainWindow::onAnalyzerDrainingChanged(bool draining)
     ui->singleStart->setEnabled(!draining);
     ui->continuousStartBtn->setEnabled(!draining);
     ui->fullBtn->setEnabled(!draining);
-    if (m_tdrScanDialog != nullptr)
-        m_tdrScanDialog->panel()->setScanning(draining);
+    m_tdrPanel->setScanning(draining);
 }
 
 void MainWindow::onAnalyzerStatusMessageChanged(const QString& text)
@@ -498,8 +488,7 @@ void MainWindow::on_measurementComplete()
         m_bInterrupted = true;
         m_analyzer->setIsMeasuring(false);
         PopUpIndicator::setIndicatorVisible(false);
-        if (m_tdrScanDialog != nullptr)
-            m_tdrScanDialog->panel()->setScanning(false);
+        m_tdrPanel->setScanning(false);
         ui->actionExport->setEnabled(true);
         // Restore the velocity factor on_tdrScanRequested() overrode --
         // deferred, not done right here, because TdrScanPanel::refreshResult()
@@ -536,8 +525,7 @@ void MainWindow::on_measurementComplete()
     if (m_analyzer->connectionType() == ReDeviceInfo::NANO ||
         m_analyzer->connectionType() == ReDeviceInfo::NANOV2)
         return;
-    // One Fq mode (Start==Stop or Range==0) is reachable in the shipped
-    // build. Every wire request is a single FRX1 now (see on_startOneFq()),
+    // One Fq (Tuning mode). Every wire request is a single FRX1 now (see on_startOneFq()),
     // so "one batch" here means
     // one point -- looping (Single: m_oneFqRemaining more times; Continuous:
     // forever) happens app-side by re-triggering on_startOneFq() from here,
@@ -546,16 +534,26 @@ void MainWindow::on_measurementComplete()
     // m_measurements.last() note (why this can't just fall through to the
     // normal Continuous-scan completion path below): One Fq's on_newData()
     // never adds anything to m_measurements (it short-circuits straight to
-    // updateOneFqWidget()), so Measurements::on_continueMeasurement()'s
+    // publishOneFqData()), so Measurements::on_continueMeasurement()'s
     // m_measurements.last() would assert on an empty list. Confirmed via
     // coredumpctl/gdb backtrace, 2026-08-20.
     if (m_measurements->isOneFqMode()) {
         if (!m_bInterrupted && (m_isContinuos || m_oneFqRemaining > 1)) {
             int remaining = m_isContinuos ? 0 : m_oneFqRemaining - 1;
+            // Tuning: next reading after the Rate interval (measured from the
+            // last request, so a slow device isn't delayed further). Always via
+            // the timer, even at Fast: re-requesting from inside this
+            // completion callback ran the whole next request nested in the
+            // analyzer's data handler.
+            if (m_appMode == AppMode::Tuning) {
+                int waitMs = (m_tuningControls->rateSeconds() * 1000) - static_cast<int>(m_oneFqRequestTime.elapsed());
+                m_tuningTimer.start(qMax(0, waitMs));
+                return;
+            }
             on_startOneFq(m_oneFqFreq, remaining, m_isContinuos);
             return;
         }
-        on_continuousStartBtn_clicked(false);
+        m_tuningControls->setRunning(false);
         return;
     }
 
@@ -728,8 +726,7 @@ void MainWindow::on_measurementCompleteNano()
         m_bInterrupted = true;
         m_analyzer->setIsMeasuring(false);
         PopUpIndicator::setIndicatorVisible(false);
-        if (m_tdrScanDialog != nullptr)
-            m_tdrScanDialog->panel()->setScanning(false);
+        m_tdrPanel->setScanning(false);
         ui->actionExport->setEnabled(true);
         // See on_measurementComplete()'s identical comment: deferred so
         // TdrScanPanel::refreshResult() (connected after this slot) still

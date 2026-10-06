@@ -158,8 +158,6 @@ set(ANTSCOPE_SOURCES
     desktop/modelesspopup.cpp
     desktop/noscrollwidgets.cpp
     desktop/Notification.cpp
-    desktop/onefqbigreadout.cpp
-    desktop/onefqwidget.cpp
     desktop/popup.cpp
     desktop/popupindicator.cpp
     desktop/presets.cpp
@@ -173,8 +171,10 @@ set(ANTSCOPE_SOURCES
     desktop/selectdevicedialog.cpp
     desktop/settings.cpp
     desktop/style.cpp
-    desktop/tdrscandialog.cpp
     desktop/tdrscanpanel.cpp
+    desktop/tuningcontrols.cpp
+    desktop/tuningpanel.cpp
+    desktop/bandindicator.cpp
     desktop/cablepickerdialog.cpp
     desktop/unitrequestdialog.cpp
     desktop/updatedialog.cpp
@@ -209,8 +209,6 @@ set(ANTSCOPE_HEADERS
     desktop/modelesspopup.h
     desktop/noscrollwidgets.h
     desktop/Notification.h
-    desktop/onefqbigreadout.h
-    desktop/onefqwidget.h
     desktop/popup.h
     desktop/popupindicator.h
     desktop/qcpgraphdatahelpers.h
@@ -225,8 +223,10 @@ set(ANTSCOPE_HEADERS
     desktop/selectdevicedialog.h
     desktop/settings.h
     desktop/style.h
-    desktop/tdrscandialog.h
     desktop/tdrscanpanel.h
+    desktop/tuningcontrols.h
+    desktop/tuningpanel.h
+    desktop/bandindicator.h
     desktop/cablepickerdialog.h
     desktop/unitrequestdialog.h
     desktop/updatedialog.h

@@ -46,8 +46,10 @@ void MainWindow::on_analyzerNameFound(QString name)
     ui->continuousStartBtn->setEnabled(true);
     ui->fullBtn->setEnabled(true);
     ui->actionDisconnectAnalyzer->setEnabled(true);
-    if (m_tdrScanDialog != nullptr)
-        m_tdrScanDialog->panel()->setConnected(true);
+    m_tdrPanel->setConnected(true);
+    refreshTdrPanelLimits();
+    m_tuningControls->setConnected(true);
+    refreshTuningLimits();
     // Was `!NanovnaAnalyzer::isConnected() && !zeroII` -- that static flag
     // only tracks classic NanoVNA, so a V2/LiteVNA64 connection fell
     // through to the enabled branch below with nothing real behind either
@@ -175,8 +177,10 @@ void MainWindow::on_deviceDisconnected()
     ui->speedAccuracySlider->setEnabled(true);
     ui->fullBtn->setEnabled(false);
     ui->fullBtn->setChecked(false);
-    if (m_tdrScanDialog != nullptr)
-        m_tdrScanDialog->panel()->setConnected(false);
+    m_tdrPanel->setConnected(false);
+    m_tuningTimer.stop();
+    m_tuningControls->setRunning(false);
+    m_tuningControls->setConnected(false);
 
     PopUpIndicator::hideIndicator(this);
     m_analyzer->setIsMeasuring(false);

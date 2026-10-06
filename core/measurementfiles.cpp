@@ -110,6 +110,8 @@ MeasurementFiles::ReadResult MeasurementFiles::readAsd(const QString& path)
     QJsonArray measureArray = mainObj["Measurements"].toArray();
     if (mainObj.contains("Corrections"))
         res.applied = correctionsFromJson(mainObj["Corrections"].toObject());
+    if (mainObj["Kind"].toString() == "tdr")
+        res.kind = MeasurementKind::Tdr;
 
     int size = measureArray.size();
     if (size < 2) {
@@ -445,7 +447,7 @@ MeasurementFiles::ReadResult MeasurementFiles::readNwl(const QString& path)
 }
 
 bool MeasurementFiles::writeAsd(QString path, const QVector<RawData>& data, const Corrections& applied,
-                                const QVector<RawData>& asReceived)
+                                const QVector<RawData>& asReceived, MeasurementKind kind)
 {
     // Was `if (path.indexOf(".asd") >= 0) { ... }` wrapping the whole
     // function -- a path without ".asd" in it (FileDialog::getSaveFileName()
@@ -481,6 +483,8 @@ bool MeasurementFiles::writeAsd(QString path, const QVector<RawData>& data, cons
     // Points as shown -- what older readers use.
     mainObj["Measurements"] = measurementsArray;
     mainObj["Corrections"] = correctionsJson(applied);
+    if (kind == MeasurementKind::Tdr)
+        mainObj["Kind"] = "tdr";
 
     if (applied.any() && asReceived.size() == data.size()) {
         QJsonArray origArray;

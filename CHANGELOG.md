@@ -59,6 +59,20 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Changed
 
+- Desktop: new Mode menu (Sweep / TDR). TDR mode docks the TDR panel in the
+  left column (replacing Tools > TDR Measurement) and shows only the TDR chart;
+  Sweep mode has no TDR tab. Measurements carry a kind (new Type column, saved
+  in `.asd`) and each mode shows only its own, the rest dimmed.
+- Desktop: Tuning mode (Mode > Tuning) replaces One Fq: a Tuning tab with a
+  large SWR number (green/amber/red), the parameter grid and a band indicator
+  (centered on the frequency; drag the dot to tune, drag the strip to slide,
+  scroll to zoom); frequency field with step buttons, band quick-pick, Rate
+  slider, own Start/Stop. No
+  averaging; the floating readout boxes are gone. Start = Stop in Sweep mode
+  now shows a message instead.
+- Desktop: left side is one column -- group boxes replaced by headings and
+  rules, Cursor Details moved under Measurements, splitter between them gone.
+
 - OSL calibration and cable add/subtract now belong to each measurement:
   the Calibration checkbox and Settings → Cable apply to new scans, and
   changing them no longer changes measurements you already have. Opened

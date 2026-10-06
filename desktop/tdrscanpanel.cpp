@@ -50,7 +50,13 @@ TdrScanPanel::TdrScanPanel(QWidget* parent) :
 
     ui->windowCombo->setCurrentIndex(1); // Hamming -- matches Measurements' own default
 
-    updateWindowExplanation();
+    // Plain tooltips don't wrap; a fixed-width rich-text table does.
+    for (QWidget* w : findChildren<QWidget*>()) {
+        QString tip = w->toolTip();
+        if (tip.length() > 50 && !tip.startsWith('<'))
+            w->setToolTip(QString("<table width='300'><tr><td>%1</td></tr></table>").arg(tip.toHtmlEscaped()));
+    }
+    setWindowToolTip();
     updateEstimateLabels();
     refreshResult();
 }
@@ -227,32 +233,31 @@ void TdrScanPanel::onWindowComboChanged(int index)
     bool isKaiser = (window == TdrWindow::Kaiser);
     ui->kaiserBetaNameLabel->setVisible(isKaiser);
     ui->kaiserBetaSpin->setVisible(isKaiser);
-    updateWindowExplanation();
     emit windowChanged(window, ui->kaiserBetaSpin->value());
 }
 
-void TdrScanPanel::updateWindowExplanation()
+// One tooltip on the window combo covers all five choices.
+void TdrScanPanel::setWindowToolTip()
 {
     // Condensed from docs/tdr-use.md's table -- keep the two in sync if
     // either changes.
-    static const QString explanations[] = {
-        tr("Sharpest resolution, most ringing near a strong reflection -- "
-           "use to separate two close, comparably-strong reflections."),
-        tr("General-purpose default -- good resolution, low ringing near a "
-           "strong reflection."),
-        tr("Slightly softer resolution than Hamming, quieter further from a "
-           "strong reflection -- use when hunting a small fault well away "
-           "from a dominant one."),
-        tr("Lowest ringing, softest resolution -- use when a strong "
-           "reflection (e.g. an open/shorted far end) might be masking a "
-           "weaker fault nearby."),
-        tr("Adjustable via beta -- higher beta trades resolution for lower "
-           "ringing, continuously between Rectangular- and Blackman-like "
-           "extremes."),
+    const QString explanations[] = {
+        tr("Sharpest resolution, most ringing near a strong reflection. "
+           "Separates two close, comparably strong reflections."),
+        tr("General-purpose default: good resolution, low ringing."),
+        tr("Slightly softer than Hamming, quieter far from a strong "
+           "reflection. For a small fault well away from a dominant one."),
+        tr("Lowest ringing, softest resolution. For a weak fault hidden "
+           "next to a strong reflection (open or shorted far end)."),
+        tr("Adjustable with beta: higher beta trades resolution for lower "
+           "ringing."),
     };
-    int index = ui->windowCombo->currentIndex();
-    if (index >= 0 && index < (int)(sizeof(explanations)/sizeof(explanations[0])))
-        ui->windowExplanationLabel->setText(explanations[index]);
+    QString tip = "<table width='300'><tr><td>";
+    for (int i = 0; i < 5; i++)
+        tip += QString("<p style='margin:0 0 4px 0'><b>%1</b>: %2</p>")
+                   .arg(ui->windowCombo->itemText(i).toHtmlEscaped(), explanations[i].toHtmlEscaped());
+    tip += "</td></tr></table>";
+    ui->windowCombo->setToolTip(tip);
 }
 
 double TdrScanPanel::velocityFactor() const
@@ -295,7 +300,7 @@ void TdrScanPanel::updateEstimateLabels()
 
 void TdrScanPanel::refreshResult()
 {
-    ui->rangeNoteLabel->setText(QString());
+    ui->rangeNoteLabel->setText("--");
 
     if (m_measurements == nullptr) {
         ui->cableLengthLabel->setText("--");
@@ -360,7 +365,7 @@ void TdrScanPanel::refreshResult()
             }
         }
     }
-    ui->rangeNoteLabel->setText(notes.join(" "));
+    ui->rangeNoteLabel->setText(notes.isEmpty() ? QString("--") : notes.join(" "));
 
     // -- Reverse-solve: velocity factor from a known length --
     bool knownLengthValid = false;

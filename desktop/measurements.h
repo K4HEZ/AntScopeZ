@@ -22,8 +22,6 @@
 
 #include "ProgressDlg.h"
 
-#include "onefqwidget.h"
-#include "onefqbigreadout.h"
 #include "CustomPlot.h"
 
 #define MAX_MEASUREMENTS 5
@@ -116,6 +114,14 @@ public:
     // row's actual graph visibility (this toggle AND'ed with that row's
     // own visibility checkbox, toggleVisibility()) and replots.
     void setS21ShowS21(bool show);
+    // The app mode's kind of measurement: new scans get it, and only
+    // measurements of this kind are drawn (others stay in the table,
+    // dimmed).
+    void setMode(MeasurementKind kind);
+    MeasurementKind mode() const { return m_mode; }
+    // For a loaded file whose kind differs from the current mode's.
+    void setLastMeasurementKind(MeasurementKind kind);
+    bool rowShown(int row) const;
     void setS21ShowS12(bool show);
     bool getS21ShowS21(void) const { return m_s21ShowS21; }
     bool getS21ShowS12(void) const { return m_s21ShowS12; }
@@ -398,67 +404,17 @@ private:
     bool m_focus;
 
     bool m_oneFqMode = false;
+    MeasurementKind m_mode = MeasurementKind::Sweep;
     qint64 m_oneFqStartTime;
-    // Both constructed together on entering One-Fq mode and kept alive
-    // for the whole session -- toggleOneFqDisplayStyle() only ever
-    // hide()s/show()s between them, never destroys/recreates one mid-
-    // session. Originally this destroyed and rebuilt whichever style
-    // wasn't active on every toggle; that crashed deep in Qt's AT-SPI
-    // accessibility bridge the moment the replacement widget's native
-    // window was created (confirmed via core dump 2026-08-24, SIGSEGV in
-    // QAccessibleWidget::text() during QWidget::create() -- reproduced
-    // whether the recreate ran inline or deferred via
-    // QTimer::singleShot(0, ...), so it wasn't a re-entrancy problem,
-    // just rapid native-window churn). Keeping both alive for the session
-    // means a toggle is just a visibility flip on already-created native
-    // windows, sidestepping that whole class of bug -- and as a bonus,
-    // both stay fed with live data the whole time (see
-    // updateOneFqWidget()), so switching styles never shows stale values.
-    OneFqWidget* m_oneFqWidget = nullptr;
-    OneFqBigReadout* m_oneFqBigReadout = nullptr;
-    // Which one is currently visible, ini-persisted (sticky across
-    // sessions, see constructor/destructor). Flipped by
-    // toggleOneFqDisplayStyle().
-    OneFqDisplayStyle m_oneFqDisplayStyle = OneFqDisplayStyle::Detailed;
-    // Graph-hint enabled/short-hint-enabled flags, saved once on entering
-    // One-Fq mode and restored once on leaving it. Centralized here
-    // (rather than on whichever display widget happens to be active, as
-    // before OneFqBigReadout existed) so the flags survive a style swap
-    // mid-session instead of being re-captured -- already-suppressed --
-    // from the outgoing widget.
-    QPair<bool, bool> m_oneFqSavedHints{true, true};
 
     int m_autoCalibration = 0; // 1-R,L(old AA-1400), 2-C,L(new AA-230 ZOOM)
     bool m_RangeMode = false;
     int m_previousI = 0;
 
 
-    // Constructs both display widgets (called once, entering One-Fq mode)
-    // and wires their signals. Doesn't show either -- see
-    // updateOneFqDisplayVisibility().
-    void createOneFqDisplayWidgets(QWidget* parent, int dots);
-    // Shows whichever of m_oneFqWidget/m_oneFqBigReadout matches
-    // m_oneFqDisplayStyle, hides the other. The entire effect of
-    // toggleOneFqDisplayStyle() once both widgets exist.
-    void updateOneFqDisplayVisibility();
-    // Tears down and nulls both m_oneFqWidget/m_oneFqBigReadout (end of
-    // session, not a style toggle -- see updateOneFqDisplayVisibility()
-    // for that). Doesn't touch m_oneFqMode/hint-flag state -- see
-    // endOneFqMode() for that half.
-    void destroyOneFqDisplayWidgets();
-    // Pure One-Fq-mode state teardown (restores the saved hint flags,
-    // clears m_oneFqMode/m_isContinuing, notifies listeners). Deliberately
-    // doesn't touch either display widget's lifecycle -- see
-    // hideOneFqWidget() vs. onOneFqBigReadoutClosing() for why "who closes
-    // the widget" differs by caller.
+    // Ends One-Fq (Tuning) mode: clears m_oneFqMode/m_isContinuing and
+    // notifies listeners.
     void endOneFqMode();
-    // OneFqBigReadout tells us (via its closing() signal) that it's
-    // already closing itself (title-bar X, or Esc while it has focus) --
-    // ends the whole session and takes down its sibling OneFqWidget, but
-    // must not close()/delete OneFqBigReadout itself again here; just
-    // drop our now-stale pointer, its own Qt::WA_DeleteOnClose handles
-    // the rest.
-    void onOneFqBigReadoutClosing();
 
     // Fills as many of the graph-hint panel's fixed row pool
     // (m_graphHintNameLabels/m_graphHintValueLabels) as fields needs --
@@ -514,6 +470,8 @@ signals:
     void import_finished(double _fqMin_khz, double _fqMax_khz);
     void measurementCanceled();
     void oneFqCanceled();
+    // One live reading in Tuning mode (calibration/cable already applied).
+    void oneFqData(const GraphData& data);
     void selectMeasurement(int row, int col);
     // First real 2-port point of a live capture -- MainWindow listens for
     // this to reveal the S21 tab the same way on_importFinished() does
@@ -548,7 +506,6 @@ public slots:
     // than switching on m_currentTab -- harmless if already hidden, and
     // avoids relying on m_currentTab being perfectly in sync.
     void hideGraphCursor();
-    void on_mainWindowPos(int x, int y);
     void setGraphHintEnabled(bool enabled);
     void setGraphBriefHintEnabled(bool enabled);
     void setCalibrationMode(bool enabled);
@@ -556,23 +513,15 @@ public slots:
     void on_redrawGraphs(bool _incrementally=false);
     void on_changeMeasureSystemMetric (bool state);
     void replot();
-    void showOneFqWidget(QWidget* parent, int _dots);
-    void updateOneFqWidget(GraphData& _data);
-    void hideOneFqWidget(bool dummy=false);
-    // Swaps the active One-Fq display widget for the other style, wired
-    // to both OneFqWidget::styleToggleRequested() and
-    // OneFqBigReadout::styleToggleRequested() (double-click on either).
-    void toggleOneFqDisplayStyle();
-    // Wired to MainWindow::mainWindowMinimized() -- keeps OneFqBigReadout
-    // (a real, taskbar-visible dialog) minimized/restored in lockstep with
-    // the main window, distinct from on_focus()'s hide-on-any-OS-focus-loss
-    // behavior for the Tool-popup-style widgets.
-    void on_mainWindowMinimized(bool minimized);
+    void publishOneFqData(GraphData& _data);
+    void stopOneFq(bool dummy=false);
     void on_isRangeChanged(bool);
     void on_impedanceChanged(double _z0);
 
     bool on_measurementComplete(); // returns true if the just-finished (empty) row was deleted
     void toggleVisibility(int row, bool _state);
+    void applyRowVisibility(int row);
+    void refreshTypeCell(int row);
     // Re-centers the Smith chart cursor dot (m_smithTracer, One Fq/marker-
     // click only) to the 50 ohm center point. Called on a new scan starting
     // and on Clear -- without this it just sat at its last One-Fq/marker

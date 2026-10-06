@@ -15,7 +15,7 @@ class TdrScanPanel;
 // 2026-08-21 from the now-retired TDRAnalysisDialog -- post-scan peak
 // analysis and a reverse velocity-factor solve) -- deliberately a plain
 // QWidget, not baked into a QDialog, so it can be hosted in a modeless
-// TdrScanDialog today and moved into a docked QGroupBox later (mirroring
+// TdrScanDialog today and docked in the main window's TDR mode (mirroring
 // the graph-hint-box's own floating->docked history -- see
 // MainWindow::setGraphHintWidgets()'s comment) without a rewrite. See the
 // tdr-scan-rework-plan memory for the full design and the formulas'
@@ -136,7 +136,7 @@ private:
     double m_lastCalculatedVf = 0;
 
     void updateEstimateLabels();
-    void updateWindowExplanation();
+    void setWindowToolTip();
     void updateScanButtonEnabled();
     void loadCables();
     void updateCableButton();

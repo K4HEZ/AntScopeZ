@@ -26,39 +26,46 @@ extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
 // mainwindow.cpp itself for the pieces left behind) -- pure code motion,
 // no behavior change. All pieces still define methods of MainWindow.
 
+// F1-F7: ignores a tab hidden by the current mode.
+void MainWindow::selectTab(int index)
+{
+    if (index < ui->tabWidget->count() && ui->tabWidget->isTabVisible(index))
+        ui->tabWidget->setCurrentIndex(index);
+}
+
 void MainWindow::on_pressF1 ()
 {
-    ui->tabWidget->setCurrentIndex(0);
+    selectTab(0);
 }
 
 void MainWindow::on_pressF2 ()
 {
-    ui->tabWidget->setCurrentIndex(1);
+    selectTab(1);
 }
 
 void MainWindow::on_pressF3 ()
 {
-    ui->tabWidget->setCurrentIndex(2);
+    selectTab(2);
 }
 
 void MainWindow::on_pressF4 ()
 {
-    ui->tabWidget->setCurrentIndex(3);
+    selectTab(3);
 }
 
 void MainWindow::on_pressF5 ()
 {
-    ui->tabWidget->setCurrentIndex(4);
+    selectTab(4);
 }
 
 void MainWindow::on_pressF6 ()
 {
-    ui->tabWidget->setCurrentIndex(5);
+    selectTab(5);
 }
 
 void MainWindow::on_pressF7 ()
 {
-    ui->tabWidget->setCurrentIndex(6);
+    selectTab(6);
 }
 
 void MainWindow::on_pressEsc ()
@@ -66,8 +73,10 @@ void MainWindow::on_pressEsc ()
     ui->singleStart->setChecked(false);
     ui->continuousStartBtn->setChecked(false);
     m_bInterrupted = true;
+    m_tuningControls->setRunning(false);
+    m_tuningTimer.stop();
 
-    m_measurements->hideOneFqWidget();
+    m_measurements->stopOneFq();
     // Same fix as on_singleStart_clicked()/on_continuousStartBtn_clicked()'s
     // stop paths -- on_startOneFq() disables this unconditionally, and
     // nothing re-enabled it on the Esc path either.

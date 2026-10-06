@@ -18,6 +18,7 @@
 #include "analyzerdata.h"
 #include <screenshot.h>
 #include <QTimer>
+#include <QElapsedTimer>
 #include <settings.h>
 #include <updatechecker.h>
 #include <markers.h>
@@ -34,14 +35,16 @@
 #include <QTabWidget>
 #include <qserialport.h>
 #include <markercomparisondialog.h>
-#include <tdrscandialog.h>
+#include <tdrscanpanel.h>
+#include <tuningcontrols.h>
+#include <tuningpanel.h>
 #include <userguidedialog.h>
 #include "remoteapihost.h"
 #include "appconfig.h"
 
 
 
-#define MEASUREMENTS_TABLE_COLUMNS 5
+#define MEASUREMENTS_TABLE_COLUMNS 6
 // Order here is the on-screen column order (every table-building/-updating
 // site uses these symbolic names, not hardcoded indices, so reordering the
 // enum alone reorders the columns). COL_MENU (the rename pencil) removed
@@ -61,6 +64,8 @@ enum {
     // both show marker "#"=1).
     COL_SERIAL,
     COL_NAME,
+    // measurement::kind ("Sweep"/"TDR") -- which app mode owns the row.
+    COL_TYPE,
     // AntScopeZ corrections this measurement shows (Corrections::tag()),
     // details in the tooltip.
     COL_CORR,
@@ -99,6 +104,9 @@ public:
         option->textElideMode = Qt::ElideRight;
     }
 };
+
+// What the left column and chart area are set up for.
+enum class AppMode { Sweep, Tuning, Tdr };
 
 class MainWindow : public QMainWindow, public RemoteApiHost
 {
@@ -212,9 +220,15 @@ private:
     QSettings *m_settings = nullptr;
     Calibration *m_calibration = nullptr;
     MarkerComparisonDialog *m_markerComparisonDialog = nullptr;
-    // TDRAnalysisDialog merged into TdrScanDialog/TdrScanPanel 2026-08-21 --
-    // see the tdr-scan-rework-plan memory.
-    TdrScanDialog *m_tdrScanDialog = nullptr;
+    // Docked in modeStack's TDR page (setupTdrPanel()).
+    TdrScanPanel *m_tdrPanel = nullptr;
+    TuningControls *m_tuningControls = nullptr;
+    TuningPanel *m_tuningPanel = nullptr;
+    QTimer m_tuningTimer;   // spacing between Tuning readings (Rate)
+    QElapsedTimer m_oneFqRequestTime;
+    AppMode m_appMode = AppMode::Sweep;
+    bool m_appModeApplied = false; // first setAppMode() must run even for the default
+    QHash<QWidget*, bool> m_tabsShownBeforeSolo;
 
     Print *m_print = nullptr;
 
@@ -352,7 +366,6 @@ private:
     void addBand (QCustomPlot * widget, double x1, double x2, double y1, double y2, QString& name);
     void createTabs (QString sequence);
     void createUserTab();
-    void moveEvent(QMoveEvent *);
     void resizeEvent(QResizeEvent *e);
     bool event(QEvent *event);
     // Lets speedAccuracySlider claim Left/Right/Up/Down for itself while
@@ -429,6 +442,13 @@ private:
     // post-loadLanguage() relabel-after-retranslateUi() correction).
     void applyScanMode(bool isRange);
     void applyScanModeLabels(bool isRange);
+    void selectTab(int index);
+    void setupTdrPanel();
+    void setupTuning();
+    void refreshTuningBands(const QStringList* bands);
+    void refreshTuningLimits();
+    void refreshTdrPanelLimits();
+    void setAppMode(AppMode mode);
     // Single source of truth for the measurement points count: clamps to
     // [10, g_pointsMax] (mainwindow.cpp), updates lineEdit_points and
     // speedAccuracySlider (each with the other's signals blocked, to avoid
@@ -455,15 +475,8 @@ signals:
     void measureOneFq(QWidget*,qint64,int);
     void currentTab(QString);
     void focus(bool);
-    // Minimize-state-specific, distinct from focus() above (which also
-    // fires on plain OS focus loss, e.g. alt-tabbing away, via
-    // WindowDeactivate) -- for widgets that should track literal
-    // iconify/restore rather than hide on any focus loss. See
-    // OneFqBigReadout/Measurements::on_mainWindowMinimized().
-    void mainWindowMinimized(bool minimized);
     void newCursorFq(double x, int number, int mouseX, int mouseY);
     void newCursorSmithPos(double x, double y, int number);
-    void mainWindowPos(int, int);
     void aa30bootFound();
     void stopMeasure();
     void isRangeChanged(bool);
@@ -545,14 +558,11 @@ public slots:
     void on_measurementComplete();
     void on_measurementCompleteNano();
     void on_translate(QString code);
-    void on_startOneFq(quint64 fq, int dots, bool continuous);
+    void on_startOneFq(quint64 fqHz, int dots, bool continuous);
+    bool singleFrequencyEntered();
     // TdrScanPanel::scanRequested() -- see the comment on m_isTdrScanning
     // for the design.
     void on_tdrScanRequested(qint64 topFreqKHz, int dots, TdrWindow window, double beta, double velFactor);
-    // TdrScanDialog::closing() -- safety net so closing the dialog mid-scan
-    // (Esc, the window's close button, etc.) actually stops the scan
-    // instead of leaving it running headless with no UI left to stop it.
-    void on_tdrStopRequested();
     void on_selectDeviceDialog();
     void on_refreshConnection();
 
@@ -583,7 +593,11 @@ private slots:
     void on_actionAbout_triggered();
     void on_actionUserGuide_triggered();
     void on_actionMarkerComparison_triggered();
-    void on_actionTDRMeasurement_triggered();
+    void on_actionModeSweep_triggered();
+    void on_actionModeTuning_triggered();
+    void on_actionModeTdr_triggered();
+    void on_tuningStart();
+    void on_tuningStop();
     void on_tableWidget_measurments_cellClicked(int row, int column);
     void on_tableWidget_measurments_cellActivated(int row, int column);
     void on_actionScreenshot_triggered();

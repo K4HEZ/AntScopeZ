@@ -260,7 +260,7 @@ void MainWindow::on_tableWidget_measurments_cellActivated(int row, int column)
         return;
     qint32 count = m_measurements->getMeasurementLength();
     measurement* mm = m_measurements->getMeasurement(count - row - 1);
-    if (!mm->visible)
+    if (!mm->visible || mm->kind != m_measurements->mode())
         return;
     qint64 from = mm->qint64From/1000;
     qint64 to = mm->qint64To/1000;

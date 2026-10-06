@@ -277,6 +277,7 @@ void MainWindow::populateBandSelector(const QString& band)
     ui->presetsBandComboBox->addItem(tr("Select a band"));
 
     QStringList* bands = m_BandsMap.value(band, nullptr);
+    refreshTuningBands(bands);
     if (bands != nullptr) {
         foreach (const QString& line, *bands) {
             QStringList fields = line.split(',');

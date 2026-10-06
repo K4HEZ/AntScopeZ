@@ -27,7 +27,7 @@ supported analyzer models and brands.
 - [Settings](#settings)
 - [Interpreting your data](#interpreting-your-data)
 - [Scan modes: Single vs. Continuous](#scan-modes-single-vs-continuous)
-- [One Fq: live single-frequency readout](#one-fq-live-single-frequency-readout)
+- [Tuning mode: live single-frequency readout](#tuning-mode-live-single-frequency-readout)
 - [Calibration and cable correction](#calibration-and-cable-correction)
 - [Presets and bands](#presets-and-bands)
 - [Markers](#markers)
@@ -339,12 +339,19 @@ menu bar instead (File / Analyzer / View / Tools / Help).
 | Language | UI language -- auto-discovered from whatever `QtLanguage_*.qm` files are installed, not a fixed list |
 | Theme | Light or Dark -- see [CHANGELOG.md](../CHANGELOG.md) for what it does and doesn't cover |
 
+*Mode*
+
+| Control | What it does |
+|---|---|
+| Sweep | Frequency sweeps: the Frequency and Presets controls, and the SWR, impedance, Smith and other charts (default) |
+| Tuning | Live SWR readout at one frequency, for trimming an antenna -- see [Tuning mode](#tuning-mode-live-single-frequency-readout) |
+| TDR | Time-domain reflectometry: the TDR scan panel replaces Frequency/Presets, and the chart area shows only the TDR chart -- see [TDR](#tdr-time-domain-reflectometry). Can't be switched while a scan is running; the choice is remembered |
+
 *Tools*
 
 | Control | What it does |
 |---|---|
 | Marker Comparison... | Compare two placed markers and estimate an antenna trim -- see [Markers](#markers) |
-| TDR Measurement... | Set up and run a TDR scan (cable type/velocity factor, top frequency, points, window function), and read the results afterward (distance/open-short/impedance, a velocity-factor calculator) -- see [TDR](#tdr-time-domain-reflectometry) |
 
 *Analyzer*
 
@@ -526,7 +533,7 @@ moved to the [Analyzer tab](#analyzer-tab) below.
 
 Lets you tell AntScopeZ about your feedline, so it can account for cable
 loss/length in what it shows you -- useful when your analyzer is some
-distance from the antenna through lossy coax. Independent of Tools → TDR
+distance from the antenna through lossy coax. Independent of TDR mode
 Measurement's own cable type/velocity factor fields, which apply only to a
 single TDR scan and its results (see [TDR](#tdr-time-domain-reflectometry))
 -- unless you use that dialog's "Use this velocity factor," which does
@@ -540,7 +547,7 @@ locked or hand-editable:
 | Control | What it does |
 |---|---|
 | Preset | The cable dropdown is enabled; velocity factor, R0, conductive/dielectric loss, loss units, and frequency are locked to whatever cable you've selected there (shown, but not editable) -- picking a different cable re-applies its numbers immediately |
-| Custom | The cable dropdown is disabled; all of those fields become hand-editable instead -- use this for a cable not in the list (e.g. off a manufacturer datasheet), or after using Tools → TDR Measurement's "Use this velocity factor" (see [TDR](#tdr-time-domain-reflectometry)), which always switches to Custom rather than pretending a reverse-solved number matches some named cable |
+| Custom | The cable dropdown is disabled; all of those fields become hand-editable instead -- use this for a cable not in the list (e.g. off a manufacturer datasheet), or after using the TDR panel's "Use this velocity factor" (see [TDR](#tdr-time-domain-reflectometry)), which always switches to Custom rather than pretending a reverse-solved number matches some named cable |
 
 Locked (Preset) fields are styled distinctly from Qt's normal "disabled"
 dimming -- full-contrast text on a flattened background, so they read as
@@ -908,35 +915,49 @@ reconnect to drain unwanted data" switches to closing and reopening the
 connection instead, often faster for a large scan, though not guaranteed
 to make every device actually discard what it already queued internally.
 
-## One Fq: live single-frequency readout
+## Tuning mode: live single-frequency readout
 
-Set **Start equal to Stop** (or, in Center/Range mode, set **Range to
-0**), then click **Single** or **Continuous** as usual -- instead of a
-normal sweep, AntScopeZ switches to a live single-frequency readout mode:
+**Mode → Tuning** is a live SWR readout at one frequency, for trimming an
+antenna to length or adjusting a telescopic. Nothing is recorded: the
+Measurements list is hidden, the readings take the place of Cursor Details,
+and the chart area shows a single **Tuning** tab.
 
-- A small, draggable, semi-transparent floating box appears, showing
-  FQ/SWR/RhoPhase/RhoMod/R/X/Z/Rpar/Xpar/Zpar/RL at that one frequency,
-  updating every couple of seconds as new samples arrive (values are
-  averaged sample-to-sample, not just replaced).
-- A magenta tracer dot appears on the **Smith** chart, tracking that same
-  point live.
-- Drag the box anywhere -- its position is remembered for next time.
+**Left column**
 
-**Only the Smith chart animates.** The floating box's numbers update live
-(SWR included), but the SWR/Phase/Z/RL chart *tabs* themselves stay
-static during One Fq mode -- no live-moving trace or point appears on any
-of them. If you want to watch SWR settle visually while adjusting an
-antenna, use [Continuous scan](#scan-modes-single-vs-continuous) across a
-narrow range instead; One Fq mode's live view is the Smith tracer (plus
-the box's own SWR number), not the SWR chart.
+- **Band** -- jumps to the middle of a band from the active region's band
+  list (View → Band Highlighting).
+- **Frequency, kHz** -- type a frequency. **Step** sets how far the ▲/▼
+  buttons (hold to repeat) or the Up/Down arrow keys move it. The frequency
+  and step are remembered.
+- **Rate** -- time between readings, from **Fast** (as quick as the analyzer
+  allows) to 10 s. A slow analyzer is never held to this setting.
+- **Start** / **Stop** -- Start begins continuous readings at that frequency
+  (it needs a connected analyzer); Stop or **Esc** ends them. You can change
+  the frequency while it runs. Mode can't be switched while it runs.
+- **Readings** (bottom of the left column, where Cursor Details sits in the other
+  modes) -- frequency, SWR, return loss, |ρ| and its phase, R, X, |Z|, and the
+  parallel Rp, Xp, |Zp|.
 
-**To stop:** press **Esc**. (Clicking **Full range** does *not* reliably
-close this box -- Esc is the dependable way to exit One Fq mode.)
+**Tuning tab**
 
-This is useful for watching SWR/impedance settle at one specific
-frequency in real time -- e.g. while making a small physical adjustment
-right at your operating frequency, without the visual noise of a full
-sweep redrawing around it.
+- A large **SWR** number centered in the tab: green up to 2.0, amber up to
+  3.0, red above.
+- A **band indicator** along the bottom: the area around the current
+  frequency, centered on it, with bands in view shaded as on the charts and a
+  dot at the frequency in the SWR color. Its width follows the band you're in
+  (padded by the Band margin setting, Settings → General). **Drag the dot**
+  to tune; **drag anywhere else** to slide the view left or right; **click**
+  to jump the frequency to that spot; **scroll** to zoom. If you slide the
+  frequency out of view, an arrow at the edge points to it. Typing a
+  frequency, stepping, or picking a band recenters the view.
+
+Every reading is shown as it arrives; there's no averaging, because the
+antenna changes as you adjust it. The calibration and cable settings apply
+as everywhere else.
+
+Tuning isn't available on NanoVNA-type analyzers. Setting **Start equal to
+Stop** in Sweep mode no longer starts a single-frequency readout; it shows a
+message pointing here.
 
 ## Calibration and cable correction
 
@@ -994,7 +1015,7 @@ calibration too.
   Changing the checkbox or the cable settings never changes measurements
   you already have.
 - **Everything about a measurement follows its own corrections** --
-  charts, markers, cursor popups, TDR, and saving. The One Fq live
+  charts, markers, cursor popups, TDR, and saving. The Tuning
   readout follows the current settings.
 - **The Calibration checkbox turns off whenever an analyzer connects**,
   since an OSL calibration belongs to one analyzer; the status bar shows
@@ -1363,7 +1384,7 @@ A TDR run in AntScopeZ is not a separate kind of measurement -- it's a normal
 frequency sweep, just an unusually wide one, always starting near DC. Unlike
 every other chart, TDR isn't driven by the Frequency panel's Start/Stop
 fields or the main Single/Continuous buttons at all -- it has its own
-dedicated setup dialog, **Tools → TDR Measurement**, covered below. That
+dedicated setup panel in **Mode → TDR**, covered below. That
 sweep runs through the exact same measurement pipeline as a regular scan --
 a genuine, real complex-impedance sweep from near-DC up to whatever top
 frequency you choose (capped at your connected analyzer's own maximum, or a
@@ -1377,17 +1398,13 @@ along the cable, instead of as a function of frequency. That trace only
 appears once the scan finishes -- unlike every other chart, TDR doesn't draw
 progressively while the sweep is running.
 
-### Why the same scan shows up in the other charts too
+### TDR scans stay in TDR mode
 
-Because a TDR scan is just a regular sweep under the hood, every other
-frequency-domain chart (SWR, Z=R+jX, Z=R‖jX, Return Loss, Phase, S21) is
-simply a different view of that same raw data, so they populate right along
-with the TDR chart. This is expected, not a bug.
-
-The reverse doesn't happen: a normal band-limited scan (say, just your 20m
-band) never shows up in the TDR chart, because the inverse-FFT math behind
-TDR requires the sweep to start near DC. A narrowband scan doesn't satisfy
-that, so TDR is correctly left empty in that case.
+Each measurement has a kind, shown in the Measurements table's Type column:
+Sweep or TDR. A scan takes the kind of the mode it was run in, and each mode
+draws only its own kind. Measurements of the other kind stay in the table,
+dimmed, and come back when you switch modes. Saved `.asd` files remember
+their kind; other imported formats are always Sweep.
 
 ### Reading the data with that in mind
 
@@ -1404,14 +1421,10 @@ in mind before treating it like a normal scan of your operating band:
   (noisy, reactive, not meaningful for tuning) rather than a second usable
   band.
 
-So: if you run a TDR scan and then flip to SWR/Multi and see a curve running
-all the way from ~100 kHz to ~500 MHz, that's expected -- it's the same sweep
-TDR needed, just viewed through a different chart.
+### The TDR panel
 
-### Tools > TDR Measurement
-
-One dialog covers both setting up a TDR scan and reading the results
-afterward, split into two group boxes.
+In TDR mode the left column shows one panel for setting up a TDR scan and
+reading the results afterward, in two sections.
 
 #### Scan setup
 
