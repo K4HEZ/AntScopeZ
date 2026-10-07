@@ -2,6 +2,7 @@
 #include "ui_print.h"
 #include "filedialog.h"
 #include "printutils.h"
+#include "measurements.h"
 #include <QPdfWriter>
 #include <QPagedPaintDevice>
 #include <QScopedPointer>
@@ -714,6 +715,8 @@ void Print::drawSmithImage(void)
     down02->setText("-0.2");
     down02->setFont(serifFont);
     down02->setColor(QColor(0, 0, 0, 150));
+
+    Measurements::addSmithSwrCircles(ui->widgetGraph);
 
     ui->widgetGraph->xAxis->setTicks(false);
     ui->widgetGraph->yAxis->setTicks(false);

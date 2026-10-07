@@ -274,6 +274,7 @@ public:
     // to -- see MainWindow's windowChanged() handler.
     void redrawTDR(int _index=-1, bool resetRange=true);
     void drawSmithImage(void);
+    static void addSmithSwrCircles(QCustomPlot* plot);
     void setSmithBackgroundColor(QColor color);
     void setSmithForegroundColor(QColor color);
     void setBriefHintColor();

@@ -229,6 +229,7 @@ private:
     AppMode m_appMode = AppMode::Sweep;
     bool m_appModeApplied = false; // first setAppMode() must run even for the default
     QHash<QWidget*, bool> m_tabsShownBeforeSolo;
+    QPointer<QWidget> m_sweepTab; // tab selected when leaving Sweep
 
     Print *m_print = nullptr;
 

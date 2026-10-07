@@ -13,6 +13,7 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Added
 
+- Smith chart (and its print): dashed 2:1, 3:1 and 5:1 SWR circles, labeled above.
 - Double-click a marker row: Sweep centers the charts on it, Tuning tunes to it.
 - Tuning: frequency shown above the SWR readout.
 - Mobile: SWR chart density slider moved from Settings to the SWR page.

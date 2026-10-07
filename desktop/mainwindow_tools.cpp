@@ -310,6 +310,8 @@ void MainWindow::setAppMode(AppMode mode)
                        static_cast<QWidget*>(ui->tableWidget_measurments)})
         w->setVisible(!tuning);
     m_measurements->setGraphHintSuppressed(tuning);
+    if (QWidget* join = ui->tabWidget->cornerWidget(Qt::TopRightCorner))
+        join->setVisible(!tdr && !tuning); // Join (+) is Sweep-only
     ui->graphHintHeadingLine->setVisible(!tuning);
     m_tuningPanel->parametersWidget()->setVisible(tuning);
 
@@ -321,6 +323,7 @@ void MainWindow::setAppMode(AppMode mode)
     int solo = tdr ? tdrIndex : (tuning ? tuningIndex : -1);
     if (solo >= 0) {
         if (m_tabsShownBeforeSolo.isEmpty()) {
+            m_sweepTab = ui->tabWidget->currentWidget();
             for (int i = 0; i < ui->tabWidget->count(); i++)
                 m_tabsShownBeforeSolo.insert(ui->tabWidget->widget(i), ui->tabWidget->isTabVisible(i));
         }
@@ -335,7 +338,10 @@ void MainWindow::setAppMode(AppMode mode)
             ui->tabWidget->setTabVisible(i, show);
         }
         m_tabsShownBeforeSolo.clear();
-        if (!ui->tabWidget->isTabVisible(ui->tabWidget->currentIndex()))
+        int back = m_sweepTab != nullptr ? ui->tabWidget->indexOf(m_sweepTab) : -1;
+        if (back >= 0 && ui->tabWidget->isTabVisible(back))
+            ui->tabWidget->setCurrentIndex(back);
+        else if (!ui->tabWidget->isTabVisible(ui->tabWidget->currentIndex()))
             ui->tabWidget->setCurrentIndex(0);
     }
 

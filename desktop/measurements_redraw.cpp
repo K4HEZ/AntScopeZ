@@ -147,6 +147,34 @@ void Measurements::replot()
     tab->repaint();
 }
 
+// Constant-SWR circles: radius = 6 * (S - 1) / (S + 1) on the Smith chart's
+// 6-unit scale. Own color, so theme recoloring leaves them alone. Shared
+// with Print::drawSmithImage().
+void Measurements::addSmithSwrCircles(QCustomPlot* plot)
+{
+    const QColor swrColor(215, 85, 40);
+    QPen swrPen(swrColor);
+    swrPen.setStyle(Qt::DashLine);
+    QFont swrFont("Times", 10, QFont::Bold);
+    for (int swr : {2, 3, 5}) {
+        double r = 6.0 * (swr - 1) / (swr + 1);
+        QCPCurve* circle = new QCPCurve(plot->xAxis, plot->yAxis);
+        QCPCurveDataContainer map;
+        for (int i = 0; i <= 360; ++i) {
+            double a = i * M_PI / 180.0;
+            map.add(QCPCurveData(i, r * qCos(a), r * qSin(a)));
+        }
+        circle->setData(QSharedPointer<QCPCurveDataContainer>::create(map));
+        circle->setPen(swrPen);
+        QCPItemText* label = new QCPItemText(plot);
+        label->position->setCoords(0, r);
+        label->setPositionAlignment(Qt::AlignHCenter | Qt::AlignBottom);
+        label->setText(QString("%1:1").arg(swr));
+        label->setFont(swrFont);
+        label->setColor(swrColor);
+    }
+}
+
 void Measurements::drawSmithImage (void)
 {
     QPen pen;
@@ -384,6 +412,7 @@ void Measurements::drawSmithImage (void)
     m_smithLabels = {center5, center2, center1, center05, center02, center0,
                       up5, up2, up1, up05, up02,
                       down5, down2, down1, down05, down02};
+    addSmithSwrCircles(m_smithWidget);
 }
 
 void Measurements::setSmithBackgroundColor(QColor color)
