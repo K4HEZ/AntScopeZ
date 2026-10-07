@@ -19,6 +19,11 @@ public:
     // knownLength: entered cable length in the set's unit; 0 = none.
     void setEvents(const Measurements::TdrEventSet& set, double knownLength);
 
+    // What the table shows, for printing.
+    QStringList headerLabels() const;
+    QList<QStringList> rowTexts() const;
+    QVector<double> eventDistances() const { return m_distances; }
+
 signals:
     void eventSelected(int index); // -1 = none
     void eventActivated(double distance); // double-click

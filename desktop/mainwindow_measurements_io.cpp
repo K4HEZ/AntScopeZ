@@ -539,7 +539,14 @@ void MainWindow::on_actionPrint_triggered()
         }
     }
 #endif
-    if(name != "tab_smith")
+    if(name == "tab_tdr")
+    {
+        // Events, not sweep markers: lines on the chart and the table below it.
+        const QVector<double> distances = m_tdrEvents->eventDistances();
+        for(int i = 0; i < distances.size(); ++i)
+            m_print->addMarker(distances.at(i), i+1);
+        m_print->setEventsTable(m_tdrEvents->headerLabels(), m_tdrEvents->rowTexts());
+    }else if(name != "tab_smith")
     {
         qint32 markersCount = m_markers->getMarkersCount();
         for(int i = 0; i < markersCount; ++i)

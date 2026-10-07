@@ -40,6 +40,7 @@ public:
 
     virtual void rescale();
     void updateMarkers(int markers, int measurements, QList<QList<QVariant>> info);
+    void setEventsTable(const QStringList& headers, const QList<QStringList>& rows);
 
 protected:
     void resizeEvent(QResizeEvent *e);

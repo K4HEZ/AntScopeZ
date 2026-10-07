@@ -815,7 +815,17 @@ void Print::showEvent(QShowEvent * e)
     // see the "geometry" QSettings read there). Deferred one event-loop
     // tick so this runs after the dialog is actually laid out and visible
     // on screen, with widgetGraph at its true final size.
-    QTimer::singleShot(0, this, [this]() { rescale(); });
+    QTimer::singleShot(0, this, [this]() {
+        // The slider's position is the line width; the traces arrive with the
+        // chart's own pen widths, so bring them in line with it.
+        on_lineSlider_valueChanged(ui->lineSlider->value());
+        rescale();
+    });
+}
+
+void Print::setEventsTable(const QStringList& headers, const QList<QStringList>& rows)
+{
+    ui->markersWidget->setTable(headers, rows);
 }
 
 void Print::updateMarkers(int markers, int measurements, QList<QList<QVariant>> info)

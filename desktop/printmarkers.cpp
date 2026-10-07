@@ -89,6 +89,34 @@ void PrintMarkers::updateMarkers(int markers, int measurements)
     }
 }
 
+void PrintMarkers::setTable(const QStringList& headers, const QList<QStringList>& rows)
+{
+    clearTable();
+    m_markers = 0;
+    m_measurements = 0;
+    if (rows.isEmpty()) {
+        setVisible(false);
+        return;
+    }
+    const QString style = "QLabel {color: black; font: 14pt}";
+    const QString headStyle = "QLabel {color: black; font: bold 14pt}";
+    for (int r = -1; r < rows.size(); ++r) {
+        const QStringList& cells = r < 0 ? headers : rows.at(r);
+        QList<QWidget*> row;
+        for (int c = 0; c < cells.size(); ++c) {
+            QLabel* label = new QLabel(cells.at(c), this);
+            label->setStyleSheet(r < 0 ? headStyle : style);
+            label->setAlignment(Qt::AlignCenter);
+            m_layout.addWidget(label, r + 1, c);
+            label->show();
+            row << label;
+        }
+        m_rows << row;
+    }
+    setVisible(true);
+    updateTable();
+}
+
 void PrintMarkers::updateInfo(QList<QList<QVariant>>& info)
 {
     if (info.size() != (m_markers*m_measurements))

@@ -1514,7 +1514,7 @@ function, change units, or edit the velocity factor. They are not saved in
 `.asd` files. The number of markers per scan is limited by Settings →
 Markers → Maximum number of markers.
 
-Right-click anywhere in the table to **Copy as CSV** or **Save as CSV...**.
+Right-click anywhere in the table to **Copy as CSV** or **Save as CSV...**. Printing or saving a PDF/PNG of the TDR tab includes this table and draws the numbered event lines on the chart.
 
 **Workflows this answers:**
 

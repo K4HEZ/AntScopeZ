@@ -176,3 +176,23 @@ void TdrEventsPanel::saveCsv()
     out << toCsv();
     FileDialog::noteUserDataDirIfEnabled(path);
 }
+
+QStringList TdrEventsPanel::headerLabels() const
+{
+    QStringList labels;
+    for (int c = 0; c < m_table->columnCount(); ++c)
+        labels << (m_table->horizontalHeaderItem(c) ? m_table->horizontalHeaderItem(c)->text() : QString());
+    return labels;
+}
+
+QList<QStringList> TdrEventsPanel::rowTexts() const
+{
+    QList<QStringList> rows;
+    for (int r = 0; r < m_table->rowCount(); ++r) {
+        QStringList cells;
+        for (int c = 0; c < m_table->columnCount(); ++c)
+            cells << (m_table->item(r, c) ? m_table->item(r, c)->text() : QString());
+        rows << cells;
+    }
+    return rows;
+}

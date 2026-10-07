@@ -22,6 +22,8 @@ protected:
 public slots:
     virtual void updateMarkers(int markers, int measurements);
     virtual void updateInfo(QList<QList<QVariant>>& info);
+    // Plain text table instead of marker fields (TDR events).
+    void setTable(const QStringList& headers, const QList<QStringList>& rows);
     void clearTable(void);
     QList<int> getColumns();
 
