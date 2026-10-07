@@ -496,7 +496,7 @@ void MainWindow::on_measurementComplete()
         // (connected after this slot, so it runs after this returns) and
         // needs cableVelFactor() to still read the just-used override when
         // it computes the fresh peak's rescale ratio (see
-        // Measurements::findTdrPeak()'s comment) -- restoring synchronously
+        // the Result readout, see Measurements::tdrEvents()) -- restoring synchronously
         // here would make that ratio wrong for the scan that just ran.
         // QTimer::singleShot(0, ...) runs after every same-signal listener
         // (this slot and refreshResult() both) has already finished, so it

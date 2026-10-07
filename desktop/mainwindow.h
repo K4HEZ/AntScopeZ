@@ -451,6 +451,8 @@ private:
     void refreshTuningBands(const QStringList* bands);
     void refreshTuningLimits();
     void refreshTdrPanelLimits();
+    // Events table, chart lines and the Result readout for the displayed TDR scan.
+    void refreshTdrResults();
     void setAppMode(AppMode mode);
     // Single source of truth for the measurement points count: clamps to
     // [10, g_pointsMax] (mainwindow.cpp), updates lineEdit_points and

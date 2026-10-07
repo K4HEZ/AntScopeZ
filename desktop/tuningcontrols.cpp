@@ -182,8 +182,15 @@ void TuningControls::setBands(const QList<BandPreset>& bands)
     m_bands = bands;
     m_bandCombo->clear();
     m_bandCombo->addItem(tr("Select a band"));
-    for (const BandPreset& b : bands)
-        m_bandCombo->addItem(b.label.isEmpty() ? QString::number(b.fromKHz) : b.label);
+    for (const BandPreset& b : bands) {
+        QString center = QString::number((b.fromKHz + b.toKHz) / 2, 'f', 3);
+        while (center.endsWith('0'))
+            center.chop(1);
+        if (center.endsWith('.'))
+            center.chop(1);
+        QString name = b.label.isEmpty() ? QString::number(b.fromKHz) : b.label;
+        m_bandCombo->addItem(tr("%1 (%2 kHz)").arg(name, center));
+    }
 }
 
 void TuningControls::setRunning(bool running)

@@ -195,7 +195,7 @@ public:
     // Current live value (Settings > Cable, propagated via
     // MainWindow::on_settingsParamsChanged()) -- what redrawTDR() actually
     // used to turn the last TDR scan's raw data into the distance-keyed
-    // tdrImpGraph/tdrZGraph/etc. QCPGraphDataContainers. findTdrPeak() (and, via that,
+    // tdrImpGraph/tdrZGraph/etc. QCPGraphDataContainers. tdrEvents() (and, via that,
     // TdrScanPanel) reads this to rescale those already-computed distances
     // to whatever velocity factor is locally being tried, without
     // re-running the FFT. MainWindow::on_tdrScanRequested() also
@@ -240,32 +240,6 @@ public:
     int tdrUserMarkerCount() const;
     void setTdrEventHighlight(int index);
 
-    struct TdrPeak {
-        bool found = false;
-        double distance = 0; // in whatever unit `metric` (findTdrPeak()'s param) asked for
-        double amplitude = 0; // signed -- see Markers/CalcTdr's Gre-based reflection amplitude
-        // Approximate impedance (Ohms) at the peak's distance -- read
-        // straight from tdrZGraph/tdrZGraphFeet (already computed by
-        // CalcTdr(), already plotted on the TDR chart, just never
-        // surfaced as a number before 2026-08-21). Not rescaled by
-        // localVf like distance is -- Z doesn't depend on velocity
-        // factor, only on the reflection coefficient at that point.
-        double impedanceOhms = 0;
-        // True if the peak sits in the last ~5% of this scan's unambiguous
-        // range -- the real reflection may be farther out than this scan
-        // can resolve. See findTdrPeak()'s own comment.
-        bool nearRangeEdge = false;
-    };
-    // Strongest reflection in the most recent TDR scan's trace, in
-    // whatever unit `metric` asks for (ft or m -- same choice redrawTDR()
-    // makes for the chart). Distance comes back already rescaled from
-    // cableVelFactor() (whatever velocity factor was active when that
-    // scan's data was computed) to `localVf` -- see the .cpp for why that
-    // rescale is valid without re-running the FFT. Moved here from
-    // TDRAnalysisDialog 2026-08-21 when it merged into TdrScanPanel -- this
-    // is TDR-trace analysis, not dialog logic, so it belongs on
-    // Measurements rather than duplicated/copied into whatever UI reads it.
-    TdrPeak findTdrPeak(bool metric, double localVf);
     void setCableResistance(double value);
     void setCableLossConductive(double value);
     void setCableLossDielectric(double value);
@@ -540,6 +514,10 @@ public slots:
     // than switching on m_currentTab -- harmless if already hidden, and
     // avoids relying on m_currentTab being perfectly in sync.
     void hideGraphCursor();
+    // Crosshairs, popup and Cursor Details back to blank (labels for the
+    // active tab), for when the tab, mode or selected measurement changes;
+    // the next mouse move over data fills them in again.
+    void resetCursorDisplay();
     void setGraphHintEnabled(bool enabled);
     void setGraphBriefHintEnabled(bool enabled);
     void setCalibrationMode(bool enabled);

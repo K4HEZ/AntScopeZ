@@ -1158,7 +1158,7 @@ whatever you typed, reloading the last-saved text.
 ## Markers
 
 Double-click anywhere on a frequency-domain chart (any tab except Smith
-and TDR, where a marker wouldn't mean the same thing) to drop a
+and TDR -- TDR has its own distance-based [events table](#events-table)) to drop a
 numbered marker at that frequency -- or right-click and choose **Create
 marker** from the context menu. Markers appear at the same frequency
 across every chart at once (SWR, Phase, Rs, Rp, RL, S21), each labeled
@@ -1441,7 +1441,7 @@ reading the results afterward, in two sections.
 | Control | What it shows |
 |---|---|
 | Window (function) | Reshapes the already-captured trace, live, with no rescan needed -- see the table below for what each choice trades off |
-| Distance to strongest reflection | The single biggest reflection in the scan, at whatever velocity factor is currently set in Scan setup above -- recalculates live as you change it, no re-scan needed (distance is exactly linear in velocity factor) |
+| Distance to strongest reflection | The single biggest reflection in the scan shown in the events table (the selected TDR scan, otherwise the latest one), at whatever velocity factor is currently set in Scan setup above -- recalculates live as you change it, no re-scan needed (distance is exactly linear in velocity factor) |
 | Reflection | Open or Short, with an approximate impedance in Ohms, based on the sign and size of that reflection -- or "None detected" if nothing crosses the noise floor. The Ohms figure is a rough estimate, not a precision measurement -- real cable loss and the window function you've picked both affect it, so don't treat small differences between scans as meaningful |
 | (automatic note) | If you've entered a known cable length below, the peak is compared against it automatically -- a peak noticeably short of that length is flagged as a possible fault partway along the cable rather than just the far end |
 | Known cable length → Calculated velocity factor | The reverse direction: type in a length you've actually measured, get the velocity factor that makes the two agree -- exact, not trial-and-error |
@@ -1461,6 +1461,60 @@ fault that isn't real).
 | Hann | Slightly softer than Hamming | Quieter far from the peak | Hunting a small fault well away from a strong reflection |
 | Blackman | Softest | Best | One dominant reflection (an open/shorted far end) and you're hunting for a weak fault that might be hiding in its ringing |
 | Kaiser | Adjustable (beta) | Adjustable (beta) | You want to dial continuously between the extremes above instead of picking a fixed point |
+
+#### Events table
+
+In TDR mode the markers table is replaced by an **events table**: every
+reflection found in a TDR scan, nearest first, plus any markers you add
+yourself. It shows the **selected** TDR measurement in the Measurements list
+(or the latest TDR scan if the selected row isn't a TDR one), and its heading
+names the scan.
+
+| Column | Meaning |
+|---|---|
+| # | Order along the cable |
+| Distance | In m or ft, as set in Settings, using the velocity factor currently in effect |
+| Time | Round-trip travel time to the reflection and back, in ns |
+| % length | Distance as a percentage of the Known cable length you entered below; `--` if none |
+| Kind | A label chosen by simple rules, described below -- a hint about what to look at, not a diagnosis |
+| Z | Impedance on the line just past that point, from the settled step response (a rough estimate, same caveat as the Reflection line above) |
+| ρ | Signed reflection size: positive means the impedance rose, negative means it fell |
+| Note | "near range edge" (the real reflection may be farther than this scan can resolve) or "about twice marker @ N ns" (see Possible echo) |
+
+Kinds:
+
+- **Open end / Short end** -- the last real reflection, and a strong one
+  (|ρ| of at least 0.5), positive for open, negative for short.
+- **High-Z / Low-Z** -- any other reflection, by sign: the impedance went up
+  or down at that point.
+- **Near-end mismatch** -- within one resolution step of the analyzer, so
+  it's at or right next to the connector you plugged into.
+- **Possible echo** -- a weaker reflection at about twice the distance of an
+  earlier one. A strong reflection can bounce back and forth in the cable and
+  show up again at double the distance; the Note names the one it may repeat.
+  A real feature can sit at double the distance too, so treat it as a hint.
+- **User** -- a marker you added (below).
+
+Detection ignores anything below the noise floor and anything much weaker
+than the strongest reflection, and merges peaks closer together than the
+scan's resolution. The thresholds are fixed starting values; if a scan shows
+spurious extra events, a softer window (Hann, Blackman) usually calms them.
+
+Each event also gets a numbered line on the TDR chart. Click a row to
+highlight its line; double-click a row to pan the chart to center on it.
+
+**Your own markers:** right-click (or double-click) the TDR chart and choose
+**Create marker** to add a marker at that distance; it appears in the table
+as a **User** row with the time, impedance and ρ read from the trace at that
+point, drawn in teal. Right-click a User row to remove it, or **Clear All User
+Markers**. Markers belong to the scan that was shown when you added them --
+selecting another scan shows that scan's markers -- and are deleted with it.
+They're kept as distances, so they stay put when you re-run the window
+function, change units, or edit the velocity factor. They are not saved in
+`.asd` files. The number of markers per scan is limited by Settings →
+Markers → Maximum number of markers.
+
+Right-click anywhere in the table to **Copy as CSV** or **Save as CSV...**.
 
 **Workflows this answers:**
 

@@ -340,14 +340,19 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
     // visible. m_graphHintBox doesn't need the equivalent -- it's never
     // hidden by hideGraphCursor() (see that function's own comment), only by
     // showHideHints(), which already keeps it in sync with the checkbox.
+    // Nothing to show for a selected measurement that isn't in the current
+    // mode (e.g. a sweep row while in TDR mode) -- and don't leave the popup
+    // up with the previous mode's text either.
+    if (index < 0 || index >= m_measurements.length() || !rowShown(index)) {
+        if (m_graphBriefHint)
+            m_graphBriefHint->focusHide();
+        return;
+    }
     if (m_graphBriefHintEnabled && m_focus && m_graphBriefHint && !m_graphBriefHint->isVisible())
         m_graphBriefHint->focusShow();
 
     if(!m_graphHintValueLabels.isEmpty())
     {
-        if (!rowShown(index)) {
-            return;
-        }
         if(m_currentTab == "tab_tdr")
         {
             QCPGraphDataContainer *tdrmapImp;
@@ -1039,6 +1044,15 @@ void Measurements::updatePopUp(double xPos, int index, int mouseX, int mouseY)
         }
     }
     replot();
+}
+
+void Measurements::resetCursorDisplay()
+{
+    if (m_swrWidget == nullptr)
+        return; // before setWidgets()
+    hideGraphCursor();
+    if (!m_graphHintValueLabels.isEmpty())
+        setGraphHintPlaceholder();
 }
 
 void Measurements::hideGraphCursor()

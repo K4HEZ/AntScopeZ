@@ -13,7 +13,7 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Added
 
-- TDR mode: events table (distance, time, % of cable length, kind, Z, ρ) of the reflections found in the latest TDR scan, replacing the markers table. Each event gets a line and #n label on the TDR chart; click a row to highlight it, double-click to center the chart on it. Right-click (or double-click) the TDR chart to add your own distance markers; right-click a user row to remove it.
+- TDR mode: events table (distance, time, % of cable length, kind, Z, ρ) of the reflections found in the latest TDR scan, replacing the markers table. Each event gets a line and #n label on the TDR chart; click a row to highlight it, double-click to center the chart on it. Right-click (or double-click) the TDR chart to add your own distance markers; right-click a user row to remove it. Right-click the table to copy or save it as CSV; the Result readout now follows the same scan as the table.
 - Smith chart (and its print): dashed 2:1, 3:1 and 5:1 SWR circles, labeled above.
 - Double-click a marker row: Sweep centers the charts on it, Tuning tunes to it.
 - Tuning: frequency shown above the SWR readout.
@@ -91,6 +91,8 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Fixed
 
+- Cursor details and popup no longer keep the previous mode's values: they clear when the tab, mode or selected measurement changes, with labels for the active tab.
+- TDR cursor popup no longer vanishes a second after it appears.
 - Markers, auto-marker and Q-factor showed zeros/nothing when calibration
   and cable add/subtract were both on.
 - Parallel values: with calibration on, Xp (and Lp/Cp/|Zp| from it)

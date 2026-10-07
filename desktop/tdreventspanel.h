@@ -26,6 +26,10 @@ signals:
     void clearUserMarkers();
 
 private:
+    QString toCsv() const;
+    void saveCsv();
+
+    QString m_scanName;
     QLabel* m_heading;
     QTableWidget* m_table;
     QVector<double> m_distances;

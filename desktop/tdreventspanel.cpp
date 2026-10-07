@@ -1,5 +1,11 @@
 #include "tdreventspanel.h"
+#include "filedialog.h"
+#include <QApplication>
+#include <QClipboard>
+#include <QFile>
 #include <QHeaderView>
+#include <QRegularExpression>
+#include <QTextStream>
 #include <QMenu>
 #include <algorithm>
 #include <QLabel>
@@ -53,6 +59,9 @@ TdrEventsPanel::TdrEventsPanel(QWidget* parent) :
             int user = m_userIndex.at(row);
             menu.addAction(tr("Remove Marker"), this, [this, user]() { emit removeUserMarker(user); });
         }
+        menu.addAction(tr("Copy as CSV"), this, [this]() { QApplication::clipboard()->setText(toCsv()); });
+        menu.addAction(tr("Save as CSV..."), this, [this]() { saveCsv(); });
+        menu.addSeparator();
         QAction* clear = menu.addAction(tr("Clear All User Markers"), this, [this]() { emit clearUserMarkers(); });
         clear->setEnabled(std::any_of(m_userIndex.begin(), m_userIndex.end(), [](int u) { return u >= 0; }));
         menu.exec(m_table->viewport()->mapToGlobal(pos));
@@ -84,6 +93,7 @@ void TdrEventsPanel::setEvents(const Measurements::TdrEventSet& set, double know
         m_table->setRowCount(0);
         return;
     }
+    m_scanName = set.name;
     m_heading->setText(tr("TDR events: %1").arg(set.name));
 
     if (set.events.isEmpty()) {
@@ -122,4 +132,47 @@ void TdrEventsPanel::setEvents(const Measurements::TdrEventSet& set, double know
             m_table->setItem(row, c, new QTableWidgetItem(cells.at(c)));
     }
     m_table->resizeColumnsToContents();
+}
+
+QString TdrEventsPanel::toCsv() const
+{
+    auto quote = [](QString s) {
+        if (s.contains(QRegularExpression("[\",\n]")))
+            return "\"" + s.replace("\"", "\"\"") + "\"";
+        return s;
+    };
+    QStringList lines;
+    QStringList fields;
+    for (int c = 0; c < m_table->columnCount(); ++c)
+        fields << quote(m_table->horizontalHeaderItem(c) ? m_table->horizontalHeaderItem(c)->text() : QString());
+    lines << fields.join(',');
+    for (int r = 0; r < m_table->rowCount(); ++r) {
+        fields.clear();
+        for (int c = 0; c < m_table->columnCount(); ++c)
+            fields << quote(m_table->item(r, c) ? m_table->item(r, c)->text() : QString());
+        lines << fields.join(',');
+    }
+    return lines.join('\n') + '\n';
+}
+
+void TdrEventsPanel::saveCsv()
+{
+    QString base = QStringLiteral("TDR events");
+    if (!m_scanName.isEmpty())
+        base += " - " + m_scanName;
+    base.replace(QRegularExpression("[\\\\/:*?\"<>|]"), "_");
+    QString path = FileDialog::getSaveFileName(this, tr("Save"),
+                       FileDialog::withExtension(FileDialog::userDataDir() + "/" + base, "csv"),
+                       tr("CSV (*.csv)"));
+    if (path.isEmpty())
+        return;
+    if (!path.endsWith(".csv", Qt::CaseInsensitive))
+        path += ".csv";
+    QFile file(path);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+        return;
+    QTextStream out(&file);
+    out.setEncoding(QStringConverter::Utf8);
+    out << toCsv();
+    FileDialog::noteUserDataDirIfEnabled(path);
 }

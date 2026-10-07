@@ -200,6 +200,7 @@ void Measurements::setWidgets(CustomPlot * swr,   CustomPlot * phase,
     m_tdrWidget->legend->setBrush(br);
     m_smithWidget = smith;
     m_tableWidget = table;
+    connect(m_tableWidget, &QTableWidget::itemSelectionChanged, this, &Measurements::resetCursorDisplay);
     drawSmithImage();
 
     if(m_graphBriefHint != NULL)
@@ -318,6 +319,28 @@ void Measurements::setGraphHintFields(const QList<QPair<QString, QString>>& fiel
 // |rho|'s line.
 void Measurements::setGraphHintPlaceholder()
 {
+    // Labels of whatever the active tab will show once the cursor is over data.
+    if (m_currentTab == "tab_tdr") {
+        setGraphHintFields({
+            {tr("Distance"), QString()},
+            {tr("Distance in air"), QString()},
+            {tr("Time"), QString()},
+            {tr("Impulse response"), QString()},
+            {tr("Step response"), QString()},
+            {tr("|Z|"), QString()},
+        });
+        return;
+    }
+    if (m_currentTab == "tab_s21") {
+        setGraphHintFields({
+            {tr("Frequency"), QString()},
+            {tr("S21"), QString()},
+            {tr("S21 Phase"), QString()},
+            {tr("S12"), QString()},
+            {tr("S12 Phase"), QString()},
+        });
+        return;
+    }
     setGraphHintFields({
         {tr("Frequency"), QString()},
         {tr("SWR"), QString()},
@@ -451,6 +474,7 @@ void Measurements::deleteRow(int row)
 
     m_tableWidget->setRowCount(m_measurements.length());
     emit tdrEventsChanged();
+    resetCursorDisplay();
 }
 
 // Rebuilds m_s21Widget's legend from scratch to show only row's 4 graphs
@@ -1451,6 +1475,7 @@ void Measurements::on_newSParamPoint(SParamPoint sp)
 void Measurements::on_currentTab(QString name)
 {
     m_currentTab = name;
+    resetCursorDisplay();
     on_redrawGraphs();
 }
 
@@ -1675,6 +1700,7 @@ void Measurements::applyRowVisibility(int row)
 void Measurements::setMode(MeasurementKind kind)
 {
     m_mode = kind;
+    resetCursorDisplay();
     for (int row = 0; row < m_measurements.length(); row++) {
         refreshTypeCell(row);
         applyRowVisibility(row);

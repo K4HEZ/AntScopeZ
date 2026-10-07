@@ -106,17 +106,9 @@ void MainWindow::setupTdrPanel()
     m_tdrEvents = new TdrEventsPanel(this);
     ui->markersPanelContainer->layout()->addWidget(m_tdrEvents);
     m_tdrEvents->setVisible(false);
-    auto refreshEvents = [this]() {
-        Measurements::TdrEventSet set = m_measurements->tdrEvents();
-        m_tdrEvents->setEvents(set, m_tdrPanel->knownLength());
-        QVector<double> distances;
-        QVector<bool> user;
-        for (int i = 0; i < set.events.size(); ++i) {
-            distances << set.events.at(i).distance;
-            user << (set.userIndex.value(i, -1) >= 0);
-        }
-        m_measurements->setTdrEventLines(distances, user);
-    };
+    auto refreshEvents = [this]() { refreshTdrResults(); };
+    connect(m_measurements, &Measurements::tdrRedrawn, this, refreshEvents);
+    connect(m_tdrPanel, &TdrScanPanel::knownLengthChanged, this, refreshEvents);
     connect(m_measurements, &Measurements::tdrEventsChanged, this, refreshEvents);
     connect(ui->tableWidget_measurments, &QTableWidget::itemSelectionChanged, this, refreshEvents);
     connect(m_tdrEvents, &TdrEventsPanel::removeUserMarker, m_measurements, &Measurements::removeTdrUserMarker);
@@ -129,9 +121,23 @@ void MainWindow::setupTdrPanel()
         m_tdrWidget->xAxis->setRange(lower, lower + r.size());
         m_tdrWidget->replot();
     });
-    connect(m_measurements, &Measurements::tdrRedrawn, this, refreshEvents);
-    connect(m_tdrPanel, &TdrScanPanel::knownLengthChanged, this, refreshEvents);
     refreshEvents();
+}
+
+void MainWindow::refreshTdrResults()
+{
+    if (m_tdrEvents == nullptr || m_tdrPanel == nullptr)
+        return;
+    Measurements::TdrEventSet set = m_measurements->tdrEvents();
+    m_tdrEvents->setEvents(set, m_tdrPanel->knownLength());
+    QVector<double> distances;
+    QVector<bool> user;
+    for (int i = 0; i < set.events.size(); ++i) {
+        distances << set.events.at(i).distance;
+        user << (set.userIndex.value(i, -1) >= 0);
+    }
+    m_measurements->setTdrEventLines(distances, user);
+    m_tdrPanel->refreshResult();
 }
 
 // Device limits, velocity factor and units can change while the panel is
@@ -380,8 +386,10 @@ void MainWindow::setAppMode(AppMode mode)
     }
 
     m_measurements->setMode(tdr ? MeasurementKind::Tdr : MeasurementKind::Sweep);
-    if (tdr)
+    if (tdr) {
         refreshTdrPanelLimits();
+        refreshTdrResults();
+    }
     if (tuning)
         refreshTuningLimits();
 

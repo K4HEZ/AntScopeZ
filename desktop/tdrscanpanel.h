@@ -53,7 +53,7 @@ public:
     // preview-only anymore. Call each time the panel becomes visible.
     void setVelocityFactor(double vf);
     void setMeasureSystemMetric(bool metric);
-    // Needed for the post-scan Result groupbox (findTdrPeak()) and the
+    // Needed for the post-scan Result groupbox (tdrEvents()) and the
     // "Use this velocity factor" apply path. Call once, when the panel/
     // dialog is created.
     void setMeasurements(Measurements* measurements);

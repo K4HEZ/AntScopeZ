@@ -111,7 +111,7 @@ void Measurements::stopTDRProgress()
     // independent (see the tdr-scan-rework-plan memory -- "replaces the old
     // tab-implicit trigger"), so a scan run from there with any *other* tab
     // selected left tdrImpGraph/tdrStepGraph/tdrZGraph never (re)populated
-    // for the just-finished measurement. findTdrPeak() then read an empty
+    // for the just-finished measurement. the Result readout then read an empty
     // container and TdrScanPanel::refreshResult() (connected to the same
     // measurementComplete() signal, right after this call returns) always
     // showed "-- (run a TDR scan first)" no matter what was actually
@@ -382,101 +382,5 @@ void Measurements::redrawTDR(int _index, bool resetRange)
 
     replot();
     emit tdrRedrawn();
-}
-
-// Note: the "is this actually a reflection, or just noise" check (against
-// CalcTdr()'s own 0.015 noise floor) intentionally isn't done here -- it
-// stays in the caller (TdrScanPanel), same as it did in the now-merged
-// TDRAnalysisDialog, since it only affects how the result is *displayed*
-// ("No reflection above noise floor"), not whether a peak was technically
-// found.
-Measurements::TdrPeak Measurements::findTdrPeak(bool metric, double localVf)
-{
-    TdrPeak p;
-    if (isEmpty())
-        return p;
-
-    // Same most-recent-measurement selection as
-    // MarkerComparisonDialog::qFactorAt() -- see cableVelFactor()'s comment
-    // and last()'s own comment for why this has to be 0, not
-    // getMeasurementLength()-1.
-    int mostRecent = 0;
-    measurement* mm;
-    switch (rowCable(m_measurements.length()-1)) {
-    case 1: mm = getMeasurementSub(mostRecent); break;
-    case 2: mm = getMeasurementAdd(mostRecent); break;
-    default: mm = last(); break;
-    }
-    if (mm == nullptr)
-        return p;
-
-    QCPGraphDataContainer& impMap = metric ? mm->tdrImpGraph : mm->tdrImpGraphFeet;
-    // QCPGraphDataContainer has no .keys() (2026-08-25 QCustomPlot 2.x
-    // port) -- it's already a sorted-by-key (ascending distance) sequence
-    // with native index access, so walk it directly. bestKey/keys.at(i)
-    // lookups against impMap *itself* (this loop) use impMap.at(i) rather
-    // than a separate key lookup, since the index is already known; the
-    // stepMap/zMap lookups further down are genuine cross-container
-    // exact-key lookups and use graphValueAt() instead.
-    if (impMap.isEmpty())
-        return p;
-
-    double bestKey = impMap.at(0)->key;
-    double bestAmp = impMap.at(0)->value;
-    int bestIndex = 0;
-    for (int i = 1; i < impMap.size(); ++i) {
-        double amp = impMap.at(i)->value;
-        if (qAbs(amp) > qAbs(bestAmp)) {
-            bestAmp = amp;
-            bestKey = impMap.at(i)->key;
-            bestIndex = i;
-        }
-    }
-
-    // Impedance is read from the *step* response (tdrStepGraph/tdrZGraph),
-    // not at the same key as the impulse peak above. CalcTdr()'s Z is
-    // Z0*(1+ig)/(1-ig), where ig is a *running, cumulative* integral of the
-    // reflection response ("step response," the classic TDR technique) --
-    // it only reaches its true, settled value some distance *after* a
-    // reflection's leading edge, not exactly at the impulse response's own
-    // peak. Reading Z at bestKey directly gave a partial, transitional
-    // value (confirmed 2026-08-21: a genuinely open 13ft cable read
-    // "≈101 Ω" -- nowhere near VALUE_LIMIT=9999, the ceiling a real open
-    // should approach). Fixed by searching forward from the impulse peak
-    // for where the step response itself reaches its own largest
-    // magnitude -- that's where it's actually settled -- and reading Z
-    // there instead. Distance/amplitude above still use the impulse peak,
-    // which is the right signal for *locating* and classifying (open vs.
-    // short) a reflection; only the Ohms reading needed to move.
-    QCPGraphDataContainer& stepMap = metric ? mm->tdrStepGraph : mm->tdrStepGraphFeet;
-    QCPGraphDataContainer& zMap = metric ? mm->tdrZGraph : mm->tdrZGraphFeet;
-    double zKey = bestKey;
-    double bestStep = graphValueAt(stepMap, bestKey);
-    for (int i = bestIndex + 1; i < impMap.size(); ++i) {
-        double candidateKey = impMap.at(i)->key;
-        double step = graphValueAt(stepMap, candidateKey);
-        if (qAbs(step) > qAbs(bestStep)) {
-            bestStep = step;
-            zKey = candidateKey;
-        }
-    }
-    p.impedanceOhms = graphValueAt(zMap, zKey);
-
-    // The stored key is a distance computed with whatever velocity factor
-    // was active when redrawTDR() last ran (cableVelFactor()). Distance is
-    // linear in velocity factor (see chartStep's formula in
-    // TdrMath::estimateRaw()), so rescaling to localVf is exact and doesn't
-    // need re-running the FFT -- only re-plotting would.
-    double globalVf = cableVelFactor();
-    double ratio = (globalVf > 0 && localVf > 0) ? (localVf / globalVf) : 1.0;
-
-    p.found = true;
-    p.distance = bestKey * ratio;
-    p.amplitude = bestAmp;
-
-    double lastKey = impMap.at(impMap.size()-1)->key;
-    p.nearRangeEdge = (lastKey > 0 && bestKey >= 0.95 * lastKey);
-
-    return p;
 }
 

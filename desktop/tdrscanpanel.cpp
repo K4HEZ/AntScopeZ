@@ -318,7 +318,33 @@ void TdrScanPanel::refreshResult()
         return;
     }
 
-    Measurements::TdrPeak p = m_measurements->findTdrPeak(m_measureSystemMetric, velocityFactor());
+    // Strongest auto-detected reflection of the scan the events table shows,
+    // distance rescaled from the velocity factor it was computed with to this
+    // panel's (distance is linear in it).
+    struct {
+        bool found = false;
+        double distance = 0;
+        double amplitude = 0;
+        double impedanceOhms = 0;
+        bool nearRangeEdge = false;
+    } p;
+    Measurements::TdrEventSet set = m_measurements->tdrEvents();
+    if (set.valid) {
+        p.found = true;
+        const TdrMath::Event* best = nullptr;
+        for (int i = 0; i < set.events.size(); ++i) {
+            const TdrMath::Event& e = set.events.at(i);
+            if (set.userIndex.value(i, -1) < 0 && (best == nullptr || qAbs(e.amplitude) > qAbs(best->amplitude)))
+                best = &e;
+        }
+        if (best != nullptr) {
+            double ratio = set.velFactor > 0 ? velocityFactor() / set.velFactor : 1.0;
+            p.distance = best->distance * ratio;
+            p.amplitude = best->amplitude;
+            p.impedanceOhms = best->impedance;
+            p.nearRangeEdge = best->nearRangeEdge;
+        }
+    }
 
     if (!p.found) {
         ui->cableLengthLabel->setText("--");
@@ -336,8 +362,7 @@ void TdrScanPanel::refreshResult()
         ui->reflectionLabel->setText(tr("None detected"));
     } else {
         ui->cableLengthLabel->setText(QString("%1 %2").arg(p.distance, 0, 'f', 2).arg(unit));
-        // Impedance -- read straight from tdrZGraph (see findTdrPeak()'s
-        // comment), not just the open/short binary this used to be.
+        // Open/short plus the impedance at the settled step response.
         ui->reflectionLabel->setText(p.amplitude > 0
                                        ? tr("Open (≈ %1 %2)").arg(p.impedanceOhms, 0, 'f', 0).arg(QChar(0x03A9))
                                        : tr("Short (≈ %1 %2)").arg(p.impedanceOhms, 0, 'f', 0).arg(QChar(0x03A9)));
