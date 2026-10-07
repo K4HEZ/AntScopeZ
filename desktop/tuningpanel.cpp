@@ -121,7 +121,17 @@ void TuningPanel::addData(const GraphData& d)
     m_swrLabel->setText(d.SWR == DBL_MAX ? QStringLiteral("--")
                                          : (d.SWR > 99.9 ? QStringLiteral(">99.9:1") : number(d.SWR) + QStringLiteral(":1")));
     m_swrLabel->setStyleSheet(QString("QLabel { color: %1; }").arg(c.name()));
-    m_freqLabel->setText(d.FQ == DBL_MAX ? QStringLiteral("--") : number(d.FQ, 4) + QStringLiteral(" MHz"));
+    QString freq = QStringLiteral("--");
+    if (d.FQ != DBL_MAX) {
+        // Same format as the frequency selector.
+        freq = QString::number(d.FQ * 1000.0, 'f', 3);
+        while (freq.endsWith('0'))
+            freq.chop(1);
+        if (freq.endsWith('.'))
+            freq.chop(1);
+        freq += QStringLiteral(" kHz");
+    }
+    m_freqLabel->setText(freq);
     m_freqLabel->setStyleSheet(m_swrLabel->styleSheet());
     m_band->setDotColor(c);
     fitFontToLabel();

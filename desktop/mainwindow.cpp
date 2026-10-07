@@ -645,6 +645,7 @@ MainWindow::MainWindow(QWidget *parent) :
                               m_s21Widget,
                               m_smithWidget);
         m_markers->setMeasurements(m_measurements);
+        connect(m_markers, &Markers::markerActivated, this, &MainWindow::on_markerActivated);
         connect(this, SIGNAL(currentTab(QString)), m_markers, SLOT(on_currentTab(QString)));
         connect(this, SIGNAL(rescale()), m_markers, SLOT(rescale()));
         connect(m_analyzer, SIGNAL(newMeasurement(QString)), m_markers, SLOT(on_newMeasurement(QString)));

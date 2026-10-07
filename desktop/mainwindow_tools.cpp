@@ -172,7 +172,6 @@ void MainWindow::setupTuning()
     connect(m_tuningPanel, &TuningPanel::frequencyPicked, this, [this](double khz) {
         m_tuningControls->setFrequencyKHz(khz);
     });
-    connect(m_markers, &Markers::markerActivated, this, &MainWindow::on_markerActivated);
     connect(m_tuningControls, &TuningControls::startRequested, this, &MainWindow::on_tuningStart);
     connect(m_tuningControls, &TuningControls::stopRequested, this, &MainWindow::on_tuningStop);
     connect(m_measurements, &Measurements::oneFqData, m_tuningPanel, &TuningPanel::addData);
