@@ -268,7 +268,7 @@ void Markers::add()
 void Markers::updateHintVisibility()
 {
     if (m_markersHint)
-        m_markersHint->setVisible(m_markersHintEnabled);
+        m_markersHint->setVisible(m_markersHintEnabled && !m_panelSuppressed);
 }
 
 void Markers::repaint()

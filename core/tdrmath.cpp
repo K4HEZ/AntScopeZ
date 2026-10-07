@@ -152,6 +152,7 @@ TdrMath::Result TdrMath::compute(const QVector<RawData>& data, double velFactor,
 
     int fftSize = est.fftSize;
     res.range = est.unambiguousRange;
+    res.resolution = est.resolution;
     res.impulse.resize(fftSize);
     res.step.resize(fftSize);
     res.impedance.resize(fftSize);
@@ -330,4 +331,103 @@ void TdrMath::fft(float real[], float imag[], int length, int Inverse)
             real[i] /= (double)length;
             imag[i] /= (double)length;
         }
+}
+
+double TdrMath::roundTripNs(double distance, double velFactor, bool metric)
+{
+    double meters = metric ? distance : distance / FEETINMETER;
+    if (velFactor <= 0)
+        return 0;
+    return 2.0 * meters / (299792458.0 * velFactor) * 1.0e9;
+}
+
+QVector<TdrMath::Event> TdrMath::findEvents(const Result& result, const EventParams& params)
+{
+    QVector<Event> events;
+    int n = result.fftSize;
+    if (n <= 1 || result.impulse.size() < n || result.range <= 0)
+        return events;
+
+    double step = result.range / n;
+    double maxAbs = 0;
+    for (int i = 0; i < n; ++i)
+        maxAbs = qMax(maxAbs, qAbs(result.impulse.at(i)));
+    double floor = qMax(params.noiseFloor, params.relativeFloor * maxAbs);
+    if (maxAbs < params.noiseFloor)
+        return events;
+
+    // Peaks: local maxima of |impulse|, strongest within half a resolution.
+    int half = qMax(1, qRound(0.5 * result.resolution / step));
+    QVector<int> peaks;
+    for (int i = 0; i < n; ++i) {
+        double a = qAbs(result.impulse.at(i));
+        if (a < floor)
+            continue;
+        bool best = true;
+        int lo = qMax(0, i - half), hi = qMin(n - 1, i + half);
+        for (int j = lo; j <= hi && best; ++j) {
+            double b = qAbs(result.impulse.at(j));
+            // Ties go to the earlier bin so a flat top gives one peak.
+            if (b > a || (b == a && j < i))
+                best = false;
+        }
+        if (best)
+            peaks << i;
+    }
+
+    double lastKey = (n - 1) * step;
+    for (int k = 0; k < peaks.size(); ++k) {
+        int idx = peaks.at(k);
+        int stop = (k + 1 < peaks.size()) ? peaks.at(k + 1) : n;
+        // Impedance at the quietest bin after this pulse (before the next
+        // one starts), where the step response has settled.
+        int zIdx = idx;
+        double quiet = 1e300;
+        for (int i = idx + 1; i < stop; ++i) {
+            double a = qAbs(result.impulse.at(i));
+            if (a < quiet) {
+                quiet = a;
+                zIdx = i;
+            }
+            if (a == 0)
+                break;
+        }
+        Event e;
+        e.distance = idx * step;
+        e.amplitude = result.impulse.at(idx);
+        e.impedance = result.impedance.at(zIdx);
+        e.nearRangeEdge = lastKey > 0 && e.distance >= 0.95 * lastKey;
+        events << e;
+    }
+
+    // Echoes: weaker events about twice an earlier event's distance.
+    for (int i = 0; i < events.size(); ++i) {
+        for (int j = 0; j < i; ++j) {
+            if (events[j].echoOf >= 0 || qAbs(events[i].amplitude) >= qAbs(events[j].amplitude))
+                continue;
+            if (qAbs(events[i].distance - 2.0 * events[j].distance) <= result.resolution) {
+                events[i].echoOf = j;
+                break;
+            }
+        }
+    }
+
+    int last = -1;
+    for (int i = 0; i < events.size(); ++i) {
+        if (events[i].echoOf < 0)
+            last = i;
+    }
+    for (int i = 0; i < events.size(); ++i) {
+        Event& e = events[i];
+        bool rising = e.amplitude > 0;
+        if (e.echoOf >= 0)
+            e.kind = EventKind::PossibleEcho;
+        else if (e.distance <= result.resolution)
+            e.kind = EventKind::NearEndMismatch;
+        else if (i == last && qAbs(e.amplitude) >= params.endStrength)
+            e.kind = rising ? EventKind::OpenEnd : EventKind::ShortEnd;
+        else
+            e.kind = rising ? EventKind::HighZ : EventKind::LowZ;
+    }
+    return events;
 }

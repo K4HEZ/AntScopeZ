@@ -215,6 +215,31 @@ public:
         return c;
     }
 
+    struct TdrEventSet {
+        bool valid = false;
+        QVector<TdrMath::Event> events; // auto-detected and user, by distance
+        QVector<int> userIndex; // per event: index into the user markers, -1 = auto
+        double velFactor = 0;
+        bool metric = true;
+        QString name;
+    };
+    // Reflections in the TDR measurement shown in the events table, as
+    // shown (cable correction/OSL applied like the chart).
+    TdrEventSet tdrEvents();
+    // Row whose TDR events are shown: the selected row if it is a TDR
+    // measurement, else the latest TDR one; -1 if none.
+    int tdrDisplayRow() const;
+    // Vertical line + "#n" label on the TDR chart per event; replaces the
+    // previous set. highlight < 0 = none.
+    void setTdrEventLines(const QVector<double>& distances, const QVector<bool>& user);
+    // User markers are kept as distances (meters), so they stay put across
+    // scans and unit changes. chartDistance is in the chart's current unit.
+    void addTdrUserMarker(double chartDistance);
+    void removeTdrUserMarker(int index);
+    void clearTdrUserMarkers();
+    int tdrUserMarkerCount() const;
+    void setTdrEventHighlight(int index);
+
     struct TdrPeak {
         bool found = false;
         double distance = 0; // in whatever unit `metric` (findTdrPeak()'s param) asked for
@@ -344,6 +369,10 @@ private:
     QCPItemStraightLine *m_s21Line;
     QCPItemStraightLine *m_s21Line2;
     QCPItemStraightLine *m_tdrLine;
+    QList<QCPItemStraightLine*> m_tdrEventLines;
+    QList<QCPItemText*> m_tdrEventLabels;
+    QHash<int, QVector<double>> m_tdrUserMeters; // by measurement serial number
+    QVector<bool> m_tdrEventIsUser;
 
     QSettings * m_settings;
     Calibration * m_calibration;
@@ -469,6 +498,8 @@ private:
     void rebuildRowGraphs(int row);
 
 signals:
+    void tdrRedrawn();
+    void tdrEventsChanged(); // user markers added/removed
     void calibrationChanged();
     void import_finished(double _fqMin_khz, double _fqMax_khz);
     void measurementCanceled();

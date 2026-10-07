@@ -386,6 +386,7 @@ void Measurements::deleteRow(int row)
         m_smithWidget->removePlottable(m_farEndMeasurementsAdd[row].smithCurve);
         m_smithWidget->removePlottable(m_farEndMeasurementsSub[row].smithCurve);
         measurement mm = m_measurements[row];
+        m_tdrUserMeters.remove(mm.serialNumber);
         m_measurements.removeAt(row);
         m_viewMeasurements.removeAt(row);
         m_farEndMeasurementsAdd.removeAt(row);
@@ -449,6 +450,7 @@ void Measurements::deleteRow(int row)
     }
 
     m_tableWidget->setRowCount(m_measurements.length());
+    emit tdrEventsChanged();
 }
 
 // Rebuilds m_s21Widget's legend from scratch to show only row's 4 graphs

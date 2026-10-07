@@ -147,6 +147,7 @@ set(ANTSCOPE_SOURCES
     desktop/markercomparisondialog.cpp
     desktop/markers.cpp
     desktop/markerspanel.cpp
+    desktop/tdreventspanel.cpp
     desktop/measurements.cpp
     desktop/measurements_autocal.cpp
     desktop/measurements_farend.cpp
@@ -205,6 +206,7 @@ set(ANTSCOPE_HEADERS
     desktop/markers.h
     desktop/measurement.h
     desktop/markerspanel.h
+    desktop/tdreventspanel.h
     desktop/measurements.h
     desktop/modelesspopup.h
     desktop/noscrollwidgets.h
@@ -260,6 +262,12 @@ set(ANTSCOPE_FORMS
 #
 
 add_subdirectory(core)
+
+option(ANTSCOPEZ_BUILD_TESTS "Build core self-tests" OFF)
+if(ANTSCOPEZ_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
 
 
 #

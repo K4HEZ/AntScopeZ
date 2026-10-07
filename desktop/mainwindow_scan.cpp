@@ -851,7 +851,7 @@ void MainWindow::updateGraph ()
 void MainWindow::on_1secTimerTick()
 {
     QString str = ui->tabWidget->currentWidget()->objectName();
-    if(str == "tab_tdr" || str == "tab_smith")
+    if(str == "tab_smith")
     {
         m_measurements->hideGraphBriefHint();
         return;
@@ -868,7 +868,8 @@ void MainWindow::on_1secTimerTick()
     // also force hideGraphBriefHint() above, adding more show/hide churn
     // right at the tab bar). mapToGlobal() walks the full parent chain
     // correctly instead of re-deriving it by hand.
-    QRect plotRect(m_swrWidget->mapToGlobal(QPoint(0, 0)), m_swrWidget->size());
+    QCustomPlot* plotWidget = (str == "tab_tdr") ? m_tdrWidget : m_swrWidget;
+    QRect plotRect(plotWidget->mapToGlobal(QPoint(0, 0)), plotWidget->size());
     if (plotRect.contains(QCursor::pos()))
     {
         m_measurements->showHideHints();

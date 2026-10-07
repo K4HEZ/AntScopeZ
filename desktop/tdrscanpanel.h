@@ -84,8 +84,11 @@ public slots:
     // scan (not just ones triggered from this panel), same as before the
     // merge. No-op if nothing's been scanned yet.
     void refreshResult();
+    // Entered cable length, 0 if none or invalid.
+    double knownLength() const;
 
 signals:
+    void knownLengthChanged();
     // topFreqKHz/dots/window/beta/velFactor: whatever the controls
     // currently hold. Matches the rest of the app's kHz convention for
     // frequency fields (see mainwindow.ui's "Frequency, kHz" label) -- the

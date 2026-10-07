@@ -47,6 +47,7 @@ void fft(float real[], float imag[], int length, int inverse = 0);
 struct Result {
     int fftSize = 0; // 0 == no valid TDR for this data
     double range = 0; // == Estimate::unambiguousRange
+    double resolution = 0; // == Estimate::resolution
     QVector<double> impulse;
     QVector<double> step;
     QVector<double> impedance;
@@ -56,6 +57,30 @@ struct Result {
 // otherwise, or if there aren't enough points.
 Result compute(const QVector<RawData>& data, double velFactor, bool metric,
                TdrWindow window, double kaiserBeta, double z0);
+
+enum class EventKind { OpenEnd, ShortEnd, HighZ, LowZ, NearEndMismatch, PossibleEcho, User };
+
+struct Event {
+    double distance = 0; // m or ft, as the Result was computed
+    double amplitude = 0; // signed reflection (impulse) at the peak
+    double impedance = 0; // ohms, from the settled step response
+    EventKind kind = EventKind::HighZ;
+    bool nearRangeEdge = false; // real reflection may lie beyond the range
+    int echoOf = -1; // PossibleEcho: index of the earlier event it repeats
+};
+
+struct EventParams {
+    double noiseFloor = 0.015; // absolute |impulse| floor
+    double relativeFloor = 0.10; // fraction of the strongest peak
+    double endStrength = 0.5; // |amplitude| at/above which the last event is a full open/short
+};
+
+// Reflections in a Result, nearest first. Empty if nothing is above the
+// noise floor.
+QVector<Event> findEvents(const Result& result, const EventParams& params = EventParams());
+
+// Round-trip travel time (ns) to a reflection at `distance`.
+double roundTripNs(double distance, double velFactor, bool metric);
 
 }
 

@@ -82,6 +82,8 @@ public:
     void changeColorTheme();
     void changeMarkersHint();
     MarkersPanel * markersHint() { return m_markersHint; }
+    // Hide the table without touching the user's show/hide setting (TDR mode).
+    void setPanelSuppressed(bool s) { m_panelSuppressed = s; updateHintVisibility(); }
     QList<QList<QVariant>> updateInfo(QList<int> _columnTypes);
     // Single marker, most recent measurement -- see definition in
     // markers.cpp for why this exists alongside updateInfo().
@@ -114,6 +116,7 @@ private:
     MarkersPanel * m_markersHint;
 
     QString m_currentTab;
+    bool m_panelSuppressed = false;
 
     bool m_markersHintEnabled;
 

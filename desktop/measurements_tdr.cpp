@@ -142,6 +142,159 @@ void Measurements::updateTDRProgress(int dots)
     }
 }
 
+int Measurements::tdrDisplayRow() const
+{
+    int selected = m_tableWidget != nullptr ? m_tableWidget->currentRow() : -1;
+    if (m_tableWidget != nullptr) {
+        const QList<QTableWidgetItem*> items = m_tableWidget->selectedItems();
+        selected = items.isEmpty() ? -1 : items.first()->row();
+    }
+    if (selected >= 0 && selected < m_measurements.length()
+            && m_measurements.at(selected).kind == MeasurementKind::Tdr)
+        return selected;
+    for (int i = m_measurements.length() - 1; i >= 0; --i) {
+        if (m_measurements.at(i).kind == MeasurementKind::Tdr)
+            return i;
+    }
+    return -1;
+}
+
+int Measurements::tdrUserMarkerCount() const
+{
+    int row = tdrDisplayRow();
+    return row < 0 ? 0 : m_tdrUserMeters.value(m_measurements.at(row).serialNumber).size();
+}
+
+Measurements::TdrEventSet Measurements::tdrEvents()
+{
+    TdrEventSet set;
+    set.metric = m_measureSystemMetric;
+    int i = tdrDisplayRow();
+    if (i >= 0) {
+        int serial = m_measurements.at(i).serialNumber;
+        const QVector<double> userMeters = m_tdrUserMeters.value(serial);
+        int mode = rowCable(i);
+        const measurement& mm = (mode == 1) ? m_farEndMeasurementsSub[i]
+                              : (mode == 2) ? m_farEndMeasurementsAdd[i] : m_measurements.at(i);
+        bool calib = (mode == 0) && rowOsl(i);
+        TdrMath::Result r = TdrMath::compute(calib ? mm.dataRXCalib : mm.dataRX, m_cableVelFactor,
+                                             m_measureSystemMetric, m_tdrWindowType, m_tdrKaiserBeta, m_Z0);
+        if (r.fftSize == 0)
+            return set;
+        set.valid = true;
+        set.events = TdrMath::findEvents(r);
+        set.userIndex = QVector<int>(set.events.size(), -1);
+        double step = r.range / r.fftSize;
+        for (int u = 0; u < userMeters.size(); ++u) {
+            TdrMath::Event e;
+            e.distance = m_measureSystemMetric ? userMeters.at(u) : userMeters.at(u) * FEETINMETER;
+            int idx = qBound(0, qRound(e.distance / step), r.fftSize - 1);
+            e.amplitude = r.impulse.at(idx);
+            e.impedance = r.impedance.at(idx);
+            e.nearRangeEdge = e.distance > r.range;
+            e.kind = TdrMath::EventKind::User;
+            int at = 0;
+            while (at < set.events.size() && set.events.at(at).distance <= e.distance)
+                ++at;
+            // Keep echoOf pointing at the same events after the insert.
+            for (TdrMath::Event& other : set.events) {
+                if (other.echoOf >= at)
+                    ++other.echoOf;
+            }
+            set.events.insert(at, e);
+            set.userIndex.insert(at, u);
+        }
+        set.velFactor = m_cableVelFactor;
+        set.metric = m_measureSystemMetric;
+        set.name = m_measurements.at(i).name;
+        return set;
+    }
+    return set;
+}
+
+static const QColor kTdrEventColor(215, 85, 40);
+static const QColor kTdrUserColor(0, 130, 150);
+
+// User markers belong to the measurement the events table is showing.
+void Measurements::addTdrUserMarker(double chartDistance)
+{
+    int row = tdrDisplayRow();
+    if (row < 0)
+        return;
+    m_tdrUserMeters[m_measurements.at(row).serialNumber]
+        << (m_measureSystemMetric ? chartDistance : chartDistance / FEETINMETER);
+    emit tdrEventsChanged();
+}
+
+void Measurements::removeTdrUserMarker(int index)
+{
+    int row = tdrDisplayRow();
+    if (row < 0)
+        return;
+    QVector<double>& list = m_tdrUserMeters[m_measurements.at(row).serialNumber];
+    if (index < 0 || index >= list.size())
+        return;
+    list.remove(index);
+    emit tdrEventsChanged();
+}
+
+void Measurements::clearTdrUserMarkers()
+{
+    int row = tdrDisplayRow();
+    if (row < 0 || m_tdrUserMeters.value(m_measurements.at(row).serialNumber).isEmpty())
+        return;
+    m_tdrUserMeters.remove(m_measurements.at(row).serialNumber);
+    emit tdrEventsChanged();
+}
+
+void Measurements::setTdrEventLines(const QVector<double>& distances, const QVector<bool>& user)
+{
+    for (QCPItemStraightLine* line : m_tdrEventLines)
+        m_tdrWidget->removeItem(line);
+    for (QCPItemText* label : m_tdrEventLabels)
+        m_tdrWidget->removeItem(label);
+    m_tdrEventLines.clear();
+    m_tdrEventLabels.clear();
+    m_tdrEventIsUser = user;
+
+    for (int i = 0; i < distances.size(); ++i) {
+        QCPItemStraightLine* line = new QCPItemStraightLine(m_tdrWidget);
+        line->setAntialiased(false);
+        line->point1->setCoords(distances.at(i), 0);
+        line->point2->setCoords(distances.at(i), 1);
+        m_tdrEventLines << line;
+
+        // Pinned to the top of the plot whatever the y zoom.
+        QCPItemText* label = new QCPItemText(m_tdrWidget);
+        label->position->setTypeX(QCPItemPosition::ptPlotCoords);
+        label->position->setTypeY(QCPItemPosition::ptAxisRectRatio);
+        label->position->setAxisRect(m_tdrWidget->xAxis->axisRect());
+        label->position->setCoords(distances.at(i), 0.02);
+        label->setPositionAlignment(Qt::AlignHCenter | Qt::AlignTop);
+        label->setText(QString("#%1").arg(i + 1));
+        label->setColor(user.value(i) ? kTdrUserColor : kTdrEventColor);
+        label->setBrush(QBrush(QColor(255, 255, 255, 140)));
+        label->setPadding(QMargins(3, 1, 3, 1));
+        m_tdrEventLabels << label;
+    }
+    setTdrEventHighlight(-1);
+}
+
+void Measurements::setTdrEventHighlight(int index)
+{
+    for (int i = 0; i < m_tdrEventLines.size(); ++i) {
+        bool on = (i == index);
+        bool user = m_tdrEventIsUser.value(i);
+        QPen pen(user ? kTdrUserColor : kTdrEventColor, on ? 2.5 : 1.0,
+                 (on || user) ? Qt::SolidLine : Qt::DashLine);
+        m_tdrEventLines.at(i)->setPen(pen);
+        QFont font = m_tdrEventLabels.at(i)->font();
+        font.setBold(on);
+        m_tdrEventLabels.at(i)->setFont(font);
+    }
+    m_tdrWidget->replot();
+}
+
 void Measurements::redrawTDR(int _index, bool resetRange)
 {
     m_tdrZRange = 0;
@@ -228,6 +381,7 @@ void Measurements::redrawTDR(int _index, bool resetRange)
     g_mainWindow->m_tdrZRange = m_tdrZRange;
 
     replot();
+    emit tdrRedrawn();
 }
 
 // Note: the "is this actually a reflection, or just noise" check (against

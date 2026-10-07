@@ -39,6 +39,7 @@ TdrScanPanel::TdrScanPanel(QWidget* parent) :
     connect(ui->velocityFactorEdit, &QLineEdit::textChanged, this, &TdrScanPanel::onVelocityFactorEdited);
     connect(ui->cableTypeButton, &QPushButton::clicked, this, &TdrScanPanel::onCableTypeClicked);
     connect(ui->knownLengthEdit, &QLineEdit::textChanged, this, &TdrScanPanel::refreshResult);
+    connect(ui->knownLengthEdit, &QLineEdit::textChanged, this, &TdrScanPanel::knownLengthChanged);
     connect(ui->applyVfButton, &QPushButton::clicked, this, &TdrScanPanel::onApplyVfClicked);
     connect(ui->windowCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &TdrScanPanel::onWindowComboChanged);
@@ -296,6 +297,13 @@ void TdrScanPanel::updateEstimateLabels()
     QString unit = m_measureSystemMetric ? "m" : "ft";
     ui->unambiguousRangeLabel->setText(QString("%1 %2").arg(est.unambiguousRange, 0, 'f', 2).arg(unit));
     ui->resolutionLabel->setText(QString("%1 %2").arg(est.resolution, 0, 'f', 2).arg(unit));
+}
+
+double TdrScanPanel::knownLength() const
+{
+    bool ok = false;
+    double v = ui->knownLengthEdit->text().toDouble(&ok);
+    return ok && v > 0 ? v : 0;
 }
 
 void TdrScanPanel::refreshResult()

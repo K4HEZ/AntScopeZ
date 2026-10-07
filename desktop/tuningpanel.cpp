@@ -41,6 +41,14 @@ TuningPanel::TuningPanel(QWidget* parent) :
     m_swrLabel->setFont(bold);
     m_swrLabel->installEventFilter(this);
 
+    QLabel* caution = new QLabel(tr("Caution: Please consider EMI exposure and electrical risks "
+                                    "when tuning antennas even with low powered VNAs!"), this);
+    caution->setAlignment(Qt::AlignCenter);
+    caution->setWordWrap(true);
+    QFont cautionFont = caution->font();
+    cautionFont.setPointSize(cautionFont.pointSize() + 2);
+    caution->setFont(cautionFont);
+
     m_freqLabel = new QLabel(QStringLiteral("--"), this);
     m_freqLabel->setAlignment(Qt::AlignCenter);
     m_freqLabel->setFont(bold);
@@ -50,6 +58,7 @@ TuningPanel::TuningPanel(QWidget* parent) :
 
     QVBoxLayout* readout = new QVBoxLayout();
     readout->setSpacing(0);
+    readout->addWidget(caution, 0);
     readout->addWidget(m_freqLabel, 0);
     readout->addWidget(m_swrLabel, 1);
     readout->addWidget(caption, 0);

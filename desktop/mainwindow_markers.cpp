@@ -43,8 +43,23 @@ void MainWindow::onCreateMarker(const QPoint& pos)
     //if (m_measurements->isEmpty())
       //  return;
     QCustomPlot* plot = getCurrentPlot();
-    if (plot->objectName().contains("smith") || plot->objectName().contains("tdr"))
+    if (plot->objectName().contains("smith"))
         return;
+    if (plot->objectName().contains("tdr")) {
+        // TDR markers are distances in their own table, not sweep markers.
+        double distance = plot->xAxis->pixelToCoord(pos.x());
+        if (!std::isfinite(distance) || distance < 0)
+            return;
+        if (m_measurements->tdrUserMarkerCount() >= AppConfig::get().maxMarkers) {
+            Notification::showMessage(tr("Maximum number of markers reached (%1) -- "
+                                          "remove one, or raise the limit in Settings.")
+                                           .arg(AppConfig::get().maxMarkers),
+                                       this);
+            return;
+        }
+        m_measurements->addTdrUserMarker(distance);
+        return;
+    }
     if (!m_markers->canAddMarker()) {
         Notification::showMessage(tr("Maximum number of markers reached (%1) -- "
                                       "remove one, or raise the limit in Settings.")
@@ -79,7 +94,7 @@ void MainWindow::onCustomContextMenuRequested(const QPoint& pos)
 {
     QMenu *menu=new QMenu(this);
     QCustomPlot* plot = getCurrentPlot();
-    if (!plot->objectName().contains("smith") && !plot->objectName().contains("tdr"))
+    if (!plot->objectName().contains("smith"))
     {
         QAction* action = menu->addAction(tr("Create marker"));
         action->setData(pos);

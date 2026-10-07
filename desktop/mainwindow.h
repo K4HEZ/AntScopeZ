@@ -38,6 +38,7 @@
 #include <tdrscanpanel.h>
 #include <tuningcontrols.h>
 #include <tuningpanel.h>
+#include <tdreventspanel.h>
 #include <userguidedialog.h>
 #include "remoteapihost.h"
 #include "appconfig.h"
@@ -224,6 +225,7 @@ private:
     TdrScanPanel *m_tdrPanel = nullptr;
     TuningControls *m_tuningControls = nullptr;
     TuningPanel *m_tuningPanel = nullptr;
+    TdrEventsPanel *m_tdrEvents = nullptr;
     QTimer m_tuningTimer;   // spacing between Tuning readings (Rate)
     QElapsedTimer m_oneFqRequestTime;
     AppMode m_appMode = AppMode::Sweep;
