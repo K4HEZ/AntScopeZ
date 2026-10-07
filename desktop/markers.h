@@ -140,6 +140,7 @@ private:
     void updateHintVisibility();
 
 signals:
+    void markerActivated(double fqKHz); // double-click on a table row
     // Emitted by add()/on_removeMarker() whenever the marker list itself
     // changes -- distinct from on_measurementComplete(), which fires for a
     // new sweep and routes through changeMarkersHint() just like they do,

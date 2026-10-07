@@ -13,6 +13,8 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Added
 
+- Double-click a marker row: Sweep centers the charts on it, Tuning tunes to it.
+- Tuning: frequency shown above the SWR readout.
 - Mobile: SWR chart density slider moved from Settings to the SWR page.
 - Mobile TDR chart: zoom slider and scroll, value units (ρ, Ω), and the marker
   now stays put when switching traces.

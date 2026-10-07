@@ -88,6 +88,7 @@ signals:
     void changeColumns();
     // Issue #36 -- table's right-click "Clear All".
     void clearAllMarkers();
+    void markerActivated(int index); // double-click; 0-based
 
 private:
     QVBoxLayout* m_layout;

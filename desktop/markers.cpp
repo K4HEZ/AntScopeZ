@@ -37,6 +37,10 @@ Markers::Markers(QObject *parent) : QObject(parent),
         updateHintVisibility();
         connect(m_markersHint, SIGNAL(removeMarker(int)), SLOT(on_removeMarker(int)));
         connect(m_markersHint, &MarkersPanel::clearAllMarkers, this, &Markers::on_removeAllMarkers);
+        connect(m_markersHint, &MarkersPanel::markerActivated, this, [this](int i) {
+            if (i >= 0 && i < m_markersList.length())
+                emit markerActivated(m_markersList.at(i)->frequency);
+        });
         connect(m_markersHint, &MarkersPanel::changeColumns, this, [&](){ repaint(); });
         repaint();
     }

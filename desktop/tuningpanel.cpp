@@ -41,11 +41,16 @@ TuningPanel::TuningPanel(QWidget* parent) :
     m_swrLabel->setFont(bold);
     m_swrLabel->installEventFilter(this);
 
+    m_freqLabel = new QLabel(QStringLiteral("--"), this);
+    m_freqLabel->setAlignment(Qt::AlignCenter);
+    m_freqLabel->setFont(bold);
+
     QLabel* caption = new QLabel(tr("SWR"), this);
     caption->setAlignment(Qt::AlignCenter);
 
     QVBoxLayout* readout = new QVBoxLayout();
     readout->setSpacing(0);
+    readout->addWidget(m_freqLabel, 0);
     readout->addWidget(m_swrLabel, 1);
     readout->addWidget(caption, 0);
 
@@ -116,6 +121,8 @@ void TuningPanel::addData(const GraphData& d)
     m_swrLabel->setText(d.SWR == DBL_MAX ? QStringLiteral("--")
                                          : (d.SWR > 99.9 ? QStringLiteral(">99.9:1") : number(d.SWR) + QStringLiteral(":1")));
     m_swrLabel->setStyleSheet(QString("QLabel { color: %1; }").arg(c.name()));
+    m_freqLabel->setText(d.FQ == DBL_MAX ? QStringLiteral("--") : number(d.FQ, 4) + QStringLiteral(" MHz"));
+    m_freqLabel->setStyleSheet(m_swrLabel->styleSheet());
     m_band->setDotColor(c);
     fitFontToLabel();
 
@@ -146,10 +153,15 @@ bool TuningPanel::eventFilter(QObject* watched, QEvent* event)
 // Largest point size at which the text still fits the label.
 void TuningPanel::fitFontToLabel()
 {
+    if (m_fitting)
+        return;
+    m_fitting = true;
     QString text = m_swrLabel->text();
     QRect target = m_swrLabel->contentsRect().adjusted(10, 10, -10, -10);
-    if (text.isEmpty() || target.width() <= 0 || target.height() <= 0)
+    if (text.isEmpty() || target.width() <= 0 || target.height() <= 0) {
+        m_fitting = false;
         return;
+    }
     QFont font = m_swrLabel->font();
     int lo = 1, hi = 500, best = lo;
     while (lo <= hi) {
@@ -168,5 +180,14 @@ void TuningPanel::fitFontToLabel()
         m_swrLabel->setFont(font);
     }
     // Digits have no descenders; push the line down so they look centered.
-    m_swrLabel->setContentsMargins(0, QFontMetrics(font).descent(), 0, 0);
+    int top = QFontMetrics(font).descent();
+    if (m_swrLabel->contentsMargins().top() != top)
+        m_swrLabel->setContentsMargins(0, top, 0, 0);
+    m_fitting = false;
+
+    // Frequency readout at a quarter of the SWR size.
+    QFont freqFont = m_freqLabel->font();
+    freqFont.setPointSize(qMax(8, best / 4));
+    if (freqFont.pointSize() != m_freqLabel->font().pointSize())
+        m_freqLabel->setFont(freqFont);
 }

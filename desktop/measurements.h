@@ -119,6 +119,7 @@ public:
     // dimmed).
     void setMode(MeasurementKind kind);
     MeasurementKind mode() const { return m_mode; }
+    void setGraphHintSuppressed(bool s) { m_graphHintSuppressed = s; showHideHints(); }
     // For a loaded file whose kind differs from the current mode's.
     void setLastMeasurementKind(MeasurementKind kind);
     bool rowShown(int row) const;
@@ -405,6 +406,7 @@ private:
 
     bool m_oneFqMode = false;
     MeasurementKind m_mode = MeasurementKind::Sweep;
+    bool m_graphHintSuppressed = false;
     qint64 m_oneFqStartTime;
 
     int m_autoCalibration = 0; // 1-R,L(old AA-1400), 2-C,L(new AA-230 ZOOM)

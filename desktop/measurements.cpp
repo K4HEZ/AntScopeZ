@@ -295,7 +295,7 @@ void Measurements::setGraphHintWidgets(QWidget* box, const QList<QLabel*>& nameL
 
     setGraphHintPlaceholder();
     if (m_graphHintBox != nullptr)
-        m_graphHintBox->setVisible(m_graphHintEnabled);
+        m_graphHintBox->setVisible(m_graphHintEnabled && !m_graphHintSuppressed);
 }
 
 void Measurements::setGraphHintFields(const QList<QPair<QString, QString>>& fields)

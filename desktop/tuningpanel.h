@@ -43,6 +43,8 @@ private:
     QLabel* m_swrLabel;
     QList<QLabel*> m_values; // parameter grid, in setValues() order
     QWidget* m_params;
+    bool m_fitting = false;
+    QLabel* m_freqLabel;
     BandIndicator* m_band;
 };
 

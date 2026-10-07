@@ -15,7 +15,7 @@ BandIndicator::BandIndicator(QWidget* parent) :
     QWidget(parent),
     m_dotColor(Qt::gray)
 {
-    setFixedHeight(30);
+    setFixedHeight(60);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     setMouseTracking(true);
     setCursor(Qt::OpenHandCursor);
@@ -104,7 +104,7 @@ void BandIndicator::paintEvent(QPaintEvent*)
 
     // Band highlights, same blue as the charts'.
     QFont small = font();
-    small.setPointSize(8);
+    small.setPointSize(12);
     p.setFont(small);
     QFontMetrics fm(small);
     for (const BandPreset& b : m_bands) {

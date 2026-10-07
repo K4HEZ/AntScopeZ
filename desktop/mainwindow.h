@@ -559,6 +559,7 @@ public slots:
     void on_measurementCompleteNano();
     void on_translate(QString code);
     void on_startOneFq(quint64 fqHz, int dots, bool continuous);
+    void on_markerActivated(double fqKHz);
     bool singleFrequencyEntered();
     // TdrScanPanel::scanRequested() -- see the comment on m_isTdrScanning
     // for the design.

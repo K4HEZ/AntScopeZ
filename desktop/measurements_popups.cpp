@@ -76,7 +76,7 @@ void Measurements::showHideHints()
         // and toggling the checkbox while Settings had focus appeared to do
         // nothing since m_focus stayed false either way. Checkbox state
         // alone decides visibility here, same as before docking.
-        m_graphHintBox->setVisible(m_graphHintEnabled);
+        m_graphHintBox->setVisible(m_graphHintEnabled && !m_graphHintSuppressed);
     }
     if(m_graphBriefHint)
     {

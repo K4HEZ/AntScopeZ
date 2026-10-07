@@ -23,6 +23,13 @@ MarkersPanel::MarkersPanel(QWidget *parent) : QWidget(parent)
     m_table->setTabKeyNavigation(false);
     // Issue #36 -- right-click "Clear All" (removing every marker at once,
     // vs. clicking each row's own "X" button individually).
+    connect(m_table, &QTableWidget::cellDoubleClicked, this, [this](int row, int) {
+        QTableWidgetItem* numItem = m_table->item(row, 1); // fieldNum, frozen column
+        bool ok = false;
+        int num = numItem != nullptr ? numItem->text().toInt(&ok) : 0;
+        if (ok)
+            emit markerActivated(num - 1);
+    });
     m_table->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(m_table, &QTableWidget::customContextMenuRequested,
             this, &MarkersPanel::on_customContextMenuRequested);

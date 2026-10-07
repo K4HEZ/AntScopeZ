@@ -172,6 +172,7 @@ void MainWindow::setupTuning()
     connect(m_tuningPanel, &TuningPanel::frequencyPicked, this, [this](double khz) {
         m_tuningControls->setFrequencyKHz(khz);
     });
+    connect(m_markers, &Markers::markerActivated, this, &MainWindow::on_markerActivated);
     connect(m_tuningControls, &TuningControls::startRequested, this, &MainWindow::on_tuningStart);
     connect(m_tuningControls, &TuningControls::stopRequested, this, &MainWindow::on_tuningStop);
     connect(m_measurements, &Measurements::oneFqData, m_tuningPanel, &TuningPanel::addData);
@@ -232,6 +233,29 @@ void MainWindow::on_tuningStart()
     on_startOneFq(static_cast<quint64>(qRound64(m_tuningControls->frequencyKHz() * 1000.0)), 0, true);
 }
 
+// Marker table double-click: Tuning tunes to the marker; Sweep pans the charts
+// to center on it, keeping the zoom.
+void MainWindow::on_markerActivated(double fqKHz)
+{
+    if (m_appMode == AppMode::Tuning) {
+        m_tuningControls->setFrequencyKHz(fqKHz);
+        return;
+    }
+    if (m_appMode != AppMode::Sweep)
+        return;
+    QList<QCustomPlot*> plots = {m_swrWidget, m_phaseWidget, m_rsWidget, m_rpWidget, m_rlWidget, m_s21Widget};
+#if USER_DEFINED_FEATURE
+    plots << m_userWidget;
+#endif
+    for (QCustomPlot* plot : plots) {
+        QCPRange r = plot->xAxis->range();
+        double half = r.size() / 2;
+        plot->xAxis->setRange(fqKHz - half, fqKHz + half);
+        plot->replot();
+    }
+    QTimer::singleShot(5, m_markers, SLOT(redraw()));
+}
+
 void MainWindow::on_tuningStop()
 {
     on_pressEsc();
@@ -286,7 +310,8 @@ void MainWindow::setAppMode(AppMode mode)
     for (QWidget* w : {static_cast<QWidget*>(ui->measurementsHeading), static_cast<QWidget*>(ui->measurementsHeadingLine),
                        static_cast<QWidget*>(ui->tableWidget_measurments)})
         w->setVisible(!tuning);
-    ui->graphHintPanel->setVisible(!tuning && m_measurements->getGraphHintEnabled());
+    m_measurements->setGraphHintSuppressed(tuning);
+    ui->graphHintHeadingLine->setVisible(!tuning);
     m_tuningPanel->parametersWidget()->setVisible(tuning);
 
     // Chart area: TDR and Tuning each show only their own tab. Other tabs
