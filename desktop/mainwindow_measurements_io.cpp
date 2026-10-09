@@ -260,7 +260,7 @@ void MainWindow::on_tableWidget_measurments_cellActivated(int row, int column)
         return;
     qint32 count = m_measurements->getMeasurementLength();
     measurement* mm = m_measurements->getMeasurement(count - row - 1);
-    if (!mm->visible || mm->kind != m_measurements->mode())
+    if (!mm->visible)
         return;
     qint64 from = mm->qint64From/1000;
     qint64 to = mm->qint64To/1000;
@@ -642,6 +642,13 @@ void MainWindow::on_importFinished(double _fqMin_khz, double _fqMax_khz)
     measurement* justImported = m_measurements->last();
     if ((justImported != nullptr) && !justImported->dataSParam.isEmpty()) {
         ui->tabWidget->setTabVisible(ui->tabWidget->indexOf(m_tab_s21), true);
+    }
+
+    // The TDR chart can only show a sweep that starts near DC; if that's the
+    // chart showing and this file isn't one, move to a chart that can show it.
+    if (ui->tabWidget->currentWidget() == m_tab_tdr && !m_measurements->tdrCapable(m_measurements->getMeasurementLength() - 1)) {
+        QWidget* target = (m_sweepTab != nullptr) ? m_sweepTab.data() : m_tab_swr;
+        ui->tabWidget->setCurrentWidget(target);
     }
 }
 

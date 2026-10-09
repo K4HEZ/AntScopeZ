@@ -73,9 +73,12 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 - Print: "Print Band Highlighting" is now "Reduce toner usage" (on by
   default) and also drops the Smith chart's shading.
 - Desktop: new Mode menu (Sweep / TDR). TDR mode docks the TDR panel in the
-  left column (replacing Tools > TDR Measurement) and shows only the TDR chart;
-  Sweep mode has no TDR tab. Measurements carry a kind (new Type column, saved
-  in `.asd`) and each mode shows only its own, the rest dimmed.
+  left column (replacing Tools > TDR Measurement) and selects the TDR chart.
+  Every chart tab stays available; the mode follows the chart you click (the
+  TDR tab is TDR mode). The TDR chart and its events table work on any
+  measurement that starts at 0.1 MHz or lower with at least 100 points, and
+  say why when the selected one doesn't. Nothing is labeled or hidden by
+  mode: the row checkboxes decide what each chart draws.
 - Desktop: Tuning mode (Mode > Tuning) replaces One Fq: a Tuning tab with a
   large SWR number (green/amber/red), the parameter grid and a band indicator
   (centered on the frequency; drag the dot to tune, drag the strip to slide,

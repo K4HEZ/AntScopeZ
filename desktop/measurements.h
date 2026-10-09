@@ -114,15 +114,11 @@ public:
     // row's actual graph visibility (this toggle AND'ed with that row's
     // own visibility checkbox, toggleVisibility()) and replots.
     void setS21ShowS21(bool show);
-    // The app mode's kind of measurement: new scans get it, and only
-    // measurements of this kind are drawn (others stay in the table,
-    // dimmed).
-    void setMode(MeasurementKind kind);
-    MeasurementKind mode() const { return m_mode; }
     void setGraphHintSuppressed(bool s) { m_graphHintSuppressed = s; showHideHints(); }
-    // For a loaded file whose kind differs from the current mode's.
-    void setLastMeasurementKind(MeasurementKind kind);
+    // A row's checkbox is on (it's drawn on every chart that can show it).
     bool rowShown(int row) const;
+    // Whether the measurement can be shown as TDR: see TdrMath::canCompute().
+    bool tdrCapable(int row) const;
     void setS21ShowS12(bool show);
     bool getS21ShowS21(void) const { return m_s21ShowS21; }
     bool getS21ShowS12(void) const { return m_s21ShowS12; }
@@ -222,6 +218,9 @@ public:
         double velFactor = 0;
         bool metric = true;
         QString name;
+        // Why there's nothing to show (!valid), or that the selected
+        // measurement was skipped (valid).
+        QString note;
     };
     // Reflections in the TDR measurement shown in the events table, as
     // shown (cable correction/OSL applied like the chart).
@@ -229,6 +228,7 @@ public:
     // Row whose TDR events are shown: the selected row if it is a TDR
     // measurement, else the latest TDR one; -1 if none.
     int tdrDisplayRow() const;
+    int selectedRow() const; // -1 if none
     // Vertical line + "#n" label on the TDR chart per event; replaces the
     // previous set. highlight < 0 = none.
     void setTdrEventLines(const QVector<double>& distances, const QVector<bool>& user);
@@ -409,7 +409,6 @@ private:
     bool m_focus;
 
     bool m_oneFqMode = false;
-    MeasurementKind m_mode = MeasurementKind::Sweep;
     bool m_graphHintSuppressed = false;
     qint64 m_oneFqStartTime;
 
@@ -533,7 +532,6 @@ public slots:
     bool on_measurementComplete(); // returns true if the just-finished (empty) row was deleted
     void toggleVisibility(int row, bool _state);
     void applyRowVisibility(int row);
-    void refreshTypeCell(int row);
     // Re-centers the Smith chart cursor dot (m_smithTracer, One Fq/marker-
     // click only) to the 50 ohm center point. Called on a new scan starting
     // and on Clear -- without this it just sat at its last One-Fq/marker

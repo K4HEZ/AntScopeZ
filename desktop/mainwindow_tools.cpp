@@ -312,7 +312,23 @@ void MainWindow::on_actionModeTdr_triggered()
     setAppMode(AppMode::Tdr);
 }
 
-void MainWindow::setAppMode(AppMode mode)
+// The table under the charts follows the chart showing: the TDR events table
+// on the TDR tab, the markers table on the others.
+void MainWindow::updateLowerPanel()
+{
+    if (m_tdrEvents == nullptr)
+        return;
+    const bool onTdr = (ui->tabWidget->currentWidget() == m_tab_tdr) && m_appMode != AppMode::Tuning;
+    m_tdrEvents->setVisible(onTdr);
+    if (m_markers != nullptr)
+        m_markers->setPanelSuppressed(onTdr);
+    if (onTdr)
+        refreshTdrResults();
+}
+
+// selectTab: also switch to the mode's chart (false when the mode is following
+// a tab the user just clicked).
+void MainWindow::setAppMode(AppMode mode, bool selectTab)
 {
     bool tdr = (mode == AppMode::Tdr);
     bool tuning = (mode == AppMode::Tuning);
@@ -347,45 +363,43 @@ void MainWindow::setAppMode(AppMode mode)
                        static_cast<QWidget*>(ui->tableWidget_measurments)})
         w->setVisible(!tuning);
     m_measurements->setGraphHintSuppressed(tuning);
-    m_tdrEvents->setVisible(tdr);
-    if (m_markers != nullptr)
-        m_markers->setPanelSuppressed(tdr);
     if (QWidget* join = ui->tabWidget->cornerWidget(Qt::TopRightCorner))
-        join->setVisible(!tdr && !tuning); // Join (+) is Sweep-only
+        join->setVisible(!tuning); // nothing to join in Tuning (the TDR and Tuning charts never join)
     ui->graphHintHeadingLine->setVisible(!tuning);
     m_tuningPanel->parametersWidget()->setVisible(tuning);
 
-    // Chart area: TDR and Tuning each show only their own tab. Other tabs
-    // (S21, User, Multi) already come and go on their own, so remember what
-    // was showing and put that back.
-    int tdrIndex = ui->tabWidget->indexOf(m_tab_tdr);
+    // Chart area. Every chart tab stays available in Sweep and TDR modes; the
+    // mode only picks which one is showing. Tuning has no measurements, so it
+    // shows just its own tab (and puts the others back afterwards -- S21 and
+    // Multi come and go on their own).
     int tuningIndex = ui->tabWidget->indexOf(m_tuningPanel);
-    int solo = tdr ? tdrIndex : (tuning ? tuningIndex : -1);
-    if (solo >= 0) {
+    if (tuning) {
         if (m_tabsShownBeforeSolo.isEmpty()) {
-            m_sweepTab = ui->tabWidget->currentWidget();
             for (int i = 0; i < ui->tabWidget->count(); i++)
                 m_tabsShownBeforeSolo.insert(ui->tabWidget->widget(i), ui->tabWidget->isTabVisible(i));
         }
         for (int i = 0; i < ui->tabWidget->count(); i++)
-            ui->tabWidget->setTabVisible(i, i == solo);
-        ui->tabWidget->setCurrentIndex(solo);
+            ui->tabWidget->setTabVisible(i, i == tuningIndex);
+        ui->tabWidget->setCurrentIndex(tuningIndex);
     } else {
         for (int i = 0; i < ui->tabWidget->count(); i++) {
             QWidget* w = ui->tabWidget->widget(i);
-            bool own = (i == tdrIndex || i == tuningIndex);
+            bool own = (i == tuningIndex);
             bool show = !own && (m_tabsShownBeforeSolo.value(w, false) || ui->tabWidget->isTabVisible(i));
             ui->tabWidget->setTabVisible(i, show);
         }
         m_tabsShownBeforeSolo.clear();
-        int back = m_sweepTab != nullptr ? ui->tabWidget->indexOf(m_sweepTab) : -1;
-        if (back >= 0 && ui->tabWidget->isTabVisible(back))
-            ui->tabWidget->setCurrentIndex(back);
-        else if (!ui->tabWidget->isTabVisible(ui->tabWidget->currentIndex()))
-            ui->tabWidget->setCurrentIndex(0);
+        if (selectTab) {
+            QWidget* target = tdr ? static_cast<QWidget*>(m_tab_tdr) : m_sweepTab.data();
+            int index = target != nullptr ? ui->tabWidget->indexOf(target) : -1;
+            if (index >= 0 && ui->tabWidget->isTabVisible(index))
+                ui->tabWidget->setCurrentIndex(index);
+            else if (!ui->tabWidget->isTabVisible(ui->tabWidget->currentIndex()))
+                ui->tabWidget->setCurrentIndex(0);
+        }
     }
+    updateLowerPanel();
 
-    m_measurements->setMode(tdr ? MeasurementKind::Tdr : MeasurementKind::Sweep);
     if (tdr) {
         refreshTdrPanelLimits();
         refreshTdrResults();

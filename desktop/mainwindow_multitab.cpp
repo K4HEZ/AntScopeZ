@@ -37,6 +37,9 @@ extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
 void MainWindow::toMultiTab(int tab_index)
 {
     QWidget* tab = ui->tabWidget->widget(tab_index);
+    // TDR and Tuning are their own modes' tabs; they never join Multi.
+    if (tab->objectName() == "tab_tdr" || tab->objectName() == "tab_tuning")
+        return;
     m_multiTabData.tabs << tab->objectName();
     buildMultiTabLayout();
     ui->tabWidget->setTabVisible(tab_index, false);
@@ -71,7 +74,7 @@ QMenu& MainWindow::menuMultiTab(QMenu &menu)
     QMap<QString, QPair<int, QString>> tab_title; // <tab_name, <index, title> >
     for (int i=0; i<ui->tabWidget->count(); i++) {
         QString tab_name = ui->tabWidget->widget(i)->objectName();
-        if (tab_name != "tab_multi") {
+        if (tab_name != "tab_multi" && tab_name != "tab_tuning") {
 #if !USER_DEFINED_FEATURE
             if (tab_name == "tab_user")
                 continue;
@@ -254,7 +257,7 @@ void MainWindow::restoreMultitab(const QString& tabs)
                 continue;
             // Don't restore a previously-saved TDR join either -- see the
             // matching exclusion (and explanation) in menuMultiTab().
-            if (tab_name == "tab_tdr")
+            if (tab_name == "tab_tdr" || tab_name == "tab_tuning")
                 continue;
             for (int idx = 0; idx<ui->tabWidget->count(); idx++) {
                 if (ui->tabWidget->widget(idx)->objectName() == tab_name) {

@@ -6,6 +6,11 @@
 #include "rfmath.h" // FEETINMETER
 
 #define TDR_MAXARRAY 20000
+
+// A sweep can be shown as TDR if it starts near DC (the first point at or
+// below this, in MHz) and has enough points to mean something.
+#define TDR_MAX_START_MHZ 0.1
+#define TDR_MIN_DATA_POINTS 100
 //#define TDR_MAXARRAY 32768
 //#define TDR_MAXARRAY 65536
 
@@ -52,6 +57,10 @@ struct Result {
     QVector<double> step;
     QVector<double> impedance;
 };
+
+// Whether `data` is a sweep TDR can work on: starts at or below
+// TDR_MAX_START_MHZ and has at least TDR_MIN_DATA_POINTS points.
+bool canCompute(const QVector<RawData>& data);
 
 // Full TDR of one sweep. `data` must start near DC; returns fftSize 0
 // otherwise, or if there aren't enough points.

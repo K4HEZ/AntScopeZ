@@ -28,7 +28,7 @@ void Measurements::saveData(quint32 number, QString path)
 
     // As shown, with a record of its corrections and the original points.
     const measurement& mm = m_measurements.at(number);
-    MeasurementFiles::writeAsd(path, mm.shownPoints(), mm.shownCorrections(), mm.originalPoints(), mm.kind);
+    MeasurementFiles::writeAsd(path, mm.shownPoints(), mm.shownCorrections(), mm.originalPoints());
 }
 
 Corrections Measurements::currentCorrections() const
@@ -60,7 +60,6 @@ void Measurements::loadData(QString path)
                           static_cast<qint64>(r.fqMinMHz * 1000000),
                           static_cast<qint64>(r.fqMaxMHz * 1000000), size);
         m_measurements.last().dirty = false; // loaded from a file, see measurement::dirty's own comment
-        setLastMeasurementKind(r.kind);
         noteLoadedCorrections(r.applied);
         m_measurements.last().asReceived = r.asReceived;
 
@@ -116,7 +115,6 @@ void Measurements::importData(QString _name, bool /*user_format*/)
 {
     on_newMeasurement(MeasurementFiles::nameFromPath(_name));
     m_measurements.last().dirty = false; // loaded from a file, see measurement::dirty's own comment
-    setLastMeasurementKind(MeasurementKind::Sweep);
 
     QFile file(_name);
     bool result = file.open(QFile::ReadOnly);

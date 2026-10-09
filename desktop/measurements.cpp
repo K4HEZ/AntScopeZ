@@ -639,7 +639,6 @@ void Measurements::on_newMeasurement(QString name)
     // A scan keeps the corrections switched on now; a loaded file resets
     // this (noteLoadedCorrections()).
     m_measurements.last().corrections = scanCorrections();
-    m_measurements.last().kind = m_mode;
     m_measurements.last().analyzerSerial = (m_calibration != nullptr) ? m_calibration->getSerial() : QString();
     m_viewMeasurements.append( measurement());
     m_farEndMeasurementsAdd.append( measurement());
@@ -838,8 +837,6 @@ void Measurements::on_newMeasurement(QString name)
         // widened to actually read it -- user-draggable now.
         m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_NAME, QHeaderView::Interactive);
         m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_POINTS, QHeaderView::Fixed);
-        m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_TYPE, QHeaderView::Fixed);
-        m_tableWidget->horizontalHeader()->resizeSection(COL_TYPE, 46);
         m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_CORR, QHeaderView::Fixed);
         m_tableWidget->horizontalHeader()->resizeSection(COL_CORR, 58);
         m_tableWidget->horizontalHeader()->resizeSection(COL_VISIBLE, cell_side);
@@ -882,11 +879,6 @@ void Measurements::on_newMeasurement(QString name)
             item = new QTableWidgetItem();
             item->setTextAlignment(Qt::AlignCenter);
             item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-            m_tableWidget->setItem(i,COL_TYPE, item);
-
-            item = new QTableWidgetItem();
-            item->setTextAlignment(Qt::AlignCenter);
-            item->setFlags(item->flags() & ~Qt::ItemIsEditable);
             m_tableWidget->setItem(i,COL_CORR, item);
             refreshCorrectionsCell(i);
 
@@ -894,7 +886,6 @@ void Measurements::on_newMeasurement(QString name)
             item->setTextAlignment(Qt::AlignCenter);
             item->setText(pointsCellText(mm));
             m_tableWidget->setItem(i,COL_POINTS, item);
-            refreshTypeCell(i);
         }
 
         m_tableWidget->reset();
@@ -1657,11 +1648,15 @@ void Measurements::toggleVisibility(int row, bool _state)
 
 bool Measurements::rowShown(int row) const
 {
-    const measurement& mm = m_measurements.at(row);
-    return mm.visible && mm.kind == m_mode;
+    return m_measurements.at(row).visible;
 }
 
-// Graph visibility = the row's checkbox AND its kind matching the mode.
+bool Measurements::tdrCapable(int row) const
+{
+    return row >= 0 && row < m_measurements.length() && TdrMath::canCompute(m_measurements.at(row).dataRX);
+}
+
+// Graph visibility = the row's checkbox (combined with the S21/S12 toggles).
 void Measurements::applyRowVisibility(int row)
 {
     measurement& mm = m_measurements[row];
@@ -1694,45 +1689,6 @@ void Measurements::applyRowVisibility(int row)
         m_tdrWidget->graph(row1+0)->setVisible(_state);
         m_tdrWidget->graph(row1+1)->setVisible(_state);
         m_tdrWidget->graph(row1+2)->setVisible(_state);
-    }
-}
-
-void Measurements::setMode(MeasurementKind kind)
-{
-    m_mode = kind;
-    resetCursorDisplay();
-    for (int row = 0; row < m_measurements.length(); row++) {
-        refreshTypeCell(row);
-        applyRowVisibility(row);
-    }
-    on_redrawGraphs();
-}
-
-void Measurements::setLastMeasurementKind(MeasurementKind kind)
-{
-    if (m_measurements.isEmpty())
-        return;
-    int row = m_measurements.length() - 1;
-    m_measurements[row].kind = kind;
-    refreshTypeCell(row);
-    applyRowVisibility(row);
-}
-
-// Type column; rows of the other mode's kind are dimmed.
-void Measurements::refreshTypeCell(int row)
-{
-    if (m_tableWidget == nullptr || row < 0 || row >= m_measurements.size()
-        || row >= m_tableWidget->rowCount() || m_tableWidget->item(row, COL_TYPE) == nullptr)
-        return;
-    MeasurementKind kind = m_measurements.at(row).kind;
-    QTableWidgetItem* item = m_tableWidget->item(row, COL_TYPE);
-    item->setText(kind == MeasurementKind::Tdr ? tr("TDR") : tr("Sweep"));
-    bool foreign = kind != m_mode;
-    item->setToolTip(foreign ? tr("Belongs to the other mode; switch modes to see it.") : QString());
-    QBrush dim = m_tableWidget->palette().brush(QPalette::Disabled, QPalette::Text);
-    for (int col = 0; col < m_tableWidget->columnCount(); col++) {
-        if (QTableWidgetItem* it = m_tableWidget->item(row, col))
-            it->setForeground(foreign ? dim : QBrush());
     }
 }
 

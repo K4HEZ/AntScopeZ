@@ -120,6 +120,11 @@ double TdrMath::windowCoeff(TdrWindow type, double beta, int i, int n)
     }
 }
 
+bool TdrMath::canCompute(const QVector<RawData>& data)
+{
+    return data.size() >= TDR_MIN_DATA_POINTS && data.first().fq <= TDR_MAX_START_MHZ;
+}
+
 TdrMath::Result TdrMath::compute(const QVector<RawData>& data, double velFactor, bool metric,
                                  TdrWindow window, double kaiserBeta, double z0)
 {
@@ -129,7 +134,7 @@ TdrMath::Result TdrMath::compute(const QVector<RawData>& data, double velFactor,
         return res;
 
     double minfq = data.at(0).fq;
-    if ( minfq > 0.1 )
+    if ( minfq > TDR_MAX_START_MHZ )
     {
         return res; // Wrong fq
     }

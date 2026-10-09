@@ -89,12 +89,13 @@ void TdrEventsPanel::setEvents(const Measurements::TdrEventSet& set, double know
     });
 
     if (!set.valid) {
-        m_heading->setText(tr("TDR events"));
+        m_heading->setText(set.note.isEmpty() ? tr("TDR events") : set.note);
         m_table->setRowCount(0);
         return;
     }
     m_scanName = set.name;
-    m_heading->setText(tr("TDR events: %1").arg(set.name));
+    m_heading->setText(set.note.isEmpty() ? tr("TDR events: %1").arg(set.name)
+                                          : tr("TDR events: %1 (%2)").arg(set.name, set.note));
 
     if (set.events.isEmpty()) {
         m_table->setRowCount(1);

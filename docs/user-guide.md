@@ -343,9 +343,9 @@ menu bar instead (File / Analyzer / View / Tools / Help).
 
 | Control | What it does |
 |---|---|
-| Sweep | Frequency sweeps: the Frequency and Presets controls, and the SWR, impedance, Smith and other charts (default) |
+| Sweep | Frequency sweeps: the Frequency and Presets controls, and the SWR, impedance, Smith and other charts (default). Clicking any chart tab other than TDR or Tuning puts you in this mode |
 | Tuning | Live SWR readout at one frequency, for trimming an antenna -- see [Tuning mode](#tuning-mode-live-single-frequency-readout) |
-| TDR | Time-domain reflectometry: the TDR scan panel replaces Frequency/Presets, and the chart area shows only the TDR chart -- see [TDR](#tdr-time-domain-reflectometry). Can't be switched while a scan is running; the choice is remembered |
+| TDR | Time-domain reflectometry: the TDR scan panel replaces Frequency/Presets and the TDR chart is selected. Every chart tab stays available, and clicking the TDR tab puts you in this mode -- see [TDR](#tdr-time-domain-reflectometry). Can't be switched while a scan is running; the choice is remembered |
 
 *Tools*
 
@@ -1429,13 +1429,25 @@ along the cable, instead of as a function of frequency. That trace only
 appears once the scan finishes -- unlike every other chart, TDR doesn't draw
 progressively while the sweep is running.
 
-### TDR scans stay in TDR mode
+### Which measurements the TDR chart can show
 
-Each measurement has a kind, shown in the Measurements table's Type column:
-Sweep or TDR. A scan takes the kind of the mode it was run in, and each mode
-draws only its own kind. Measurements of the other kind stay in the table,
-dimmed, and come back when you switch modes. Saved `.asd` files remember
-their kind; other imported formats are always Sweep.
+A TDR scan is stored like any other measurement, and every chart tab stays
+available in both modes -- the mode only decides which controls are on the
+left and which chart is showing, and it follows the chart you click (the TDR
+tab is TDR mode, the other charts are Sweep mode). What each chart draws is
+decided by the row checkboxes in the Measurements list.
+
+The TDR chart and the [events table](#events-table) work on any measurement
+whose sweep starts at 0.1 MHz or lower and has at least 100 points: a TDR
+scan, or any other sweep that starts at the analyzer's minimum frequency
+(such as one from **Full range**). They show the measurement selected in the
+list if it qualifies, otherwise the newest one that does, and the table's
+heading names it. If none qualifies, the heading says why -- for example a
+file that starts at 1 MHz, which a TDR can't use.
+
+A TDR scan runs from the analyzer's minimum frequency up to the top frequency
+you chose, so it is very wide when shown on the SWR and other frequency
+charts; untick its checkbox if it gets in the way.
 
 ### Reading the data with that in mind
 
@@ -1497,9 +1509,10 @@ fault that isn't real).
 
 In TDR mode the markers table is replaced by an **events table**: every
 reflection found in a TDR scan, nearest first, plus any markers you add
-yourself. It shows the **selected** TDR measurement in the Measurements list
-(or the latest TDR scan if the selected row isn't a TDR one), and its heading
-names the scan.
+yourself. It shows the **selected** measurement in the Measurements list if
+it can be shown as TDR (see [above](#which-measurements-the-tdr-chart-can-show)),
+otherwise the newest one that can, and its heading names it. It takes the place
+of the markers table while the TDR tab is showing.
 
 | Column | Meaning |
 |---|---|

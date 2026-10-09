@@ -45,7 +45,7 @@
 
 
 
-#define MEASUREMENTS_TABLE_COLUMNS 6
+#define MEASUREMENTS_TABLE_COLUMNS 5
 // Order here is the on-screen column order (every table-building/-updating
 // site uses these symbolic names, not hardcoded indices, so reordering the
 // enum alone reorders the columns). COL_MENU (the rename pencil) removed
@@ -65,8 +65,6 @@ enum {
     // both show marker "#"=1).
     COL_SERIAL,
     COL_NAME,
-    // measurement::kind ("Sweep"/"TDR") -- which app mode owns the row.
-    COL_TYPE,
     // AntScopeZ corrections this measurement shows (Corrections::tag()),
     // details in the tooltip.
     COL_CORR,
@@ -453,7 +451,8 @@ private:
     void refreshTdrPanelLimits();
     // Events table, chart lines and the Result readout for the displayed TDR scan.
     void refreshTdrResults();
-    void setAppMode(AppMode mode);
+    void setAppMode(AppMode mode, bool selectTab = true);
+    void updateLowerPanel();
     // Single source of truth for the measurement points count: clamps to
     // [10, g_pointsMax] (mainwindow.cpp), updates lineEdit_points and
     // speedAccuracySlider (each with the other's signals blocked, to avoid

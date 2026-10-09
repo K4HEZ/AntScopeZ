@@ -142,18 +142,24 @@ void Measurements::updateTDRProgress(int dots)
     }
 }
 
+int Measurements::selectedRow() const
+{
+    if (m_tableWidget == nullptr)
+        return -1;
+    const QList<QTableWidgetItem*> items = m_tableWidget->selectedItems();
+    int row = items.isEmpty() ? -1 : items.first()->row();
+    return (row >= 0 && row < m_measurements.length()) ? row : -1;
+}
+
+// The selected measurement if it can be shown as TDR, otherwise the newest
+// one that can.
 int Measurements::tdrDisplayRow() const
 {
-    int selected = m_tableWidget != nullptr ? m_tableWidget->currentRow() : -1;
-    if (m_tableWidget != nullptr) {
-        const QList<QTableWidgetItem*> items = m_tableWidget->selectedItems();
-        selected = items.isEmpty() ? -1 : items.first()->row();
-    }
-    if (selected >= 0 && selected < m_measurements.length()
-            && m_measurements.at(selected).kind == MeasurementKind::Tdr)
+    int selected = selectedRow();
+    if (tdrCapable(selected))
         return selected;
     for (int i = m_measurements.length() - 1; i >= 0; --i) {
-        if (m_measurements.at(i).kind == MeasurementKind::Tdr)
+        if (tdrCapable(i))
             return i;
     }
     return -1;
@@ -170,7 +176,25 @@ Measurements::TdrEventSet Measurements::tdrEvents()
     TdrEventSet set;
     set.metric = m_measureSystemMetric;
     int i = tdrDisplayRow();
+    if (i < 0) {
+        int selected = selectedRow();
+        if (m_measurements.isEmpty()) {
+            set.note = tr("Run a TDR scan, or open a sweep that starts at %1 MHz or lower.").arg(TDR_MAX_START_MHZ);
+        } else if (selected >= 0 && !m_measurements.at(selected).dataRX.isEmpty()
+                   && m_measurements.at(selected).dataRX.first().fq > TDR_MAX_START_MHZ) {
+            set.note = tr("%1 can't be shown as TDR: it starts at %2 MHz (TDR needs %3 MHz or lower).")
+                           .arg(m_measurements.at(selected).name)
+                           .arg(m_measurements.at(selected).dataRX.first().fq)
+                           .arg(TDR_MAX_START_MHZ);
+        } else {
+            set.note = tr("TDR needs a sweep that starts at %1 MHz or lower, with at least %2 points.")
+                           .arg(TDR_MAX_START_MHZ).arg(TDR_MIN_DATA_POINTS);
+        }
+    }
     if (i >= 0) {
+        int selected = selectedRow();
+        if (selected >= 0 && selected != i)
+            set.note = tr("the selected measurement can't be shown as TDR");
         int serial = m_measurements.at(i).serialNumber;
         const QVector<double> userMeters = m_tdrUserMeters.value(serial);
         int mode = rowCable(i);

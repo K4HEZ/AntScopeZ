@@ -23,7 +23,6 @@ struct ReadResult {
     ReadError error = ReadError::Silent;
     Corrections applied;         // built into `raw`, as recorded in the file; none if not recorded
     QVector<RawData> asReceived; // .asd only: the analyzer's original points, if saved
-    MeasurementKind kind = MeasurementKind::Sweep; // .asd only; older files are Sweep
     bool ok() const { return error == ReadError::None; }
     QVector<RawData> raw;
     QList<SParamPoint> sparams; // 2-port Touchstone only
@@ -40,8 +39,7 @@ ReadResult readNwl(const QString& path);
 // and (when that's any) `asReceived`, the analyzer's original points.
 // Appends ".asd" if missing; false if it can't be opened.
 bool writeAsd(QString path, const QVector<RawData>& points, const Corrections& applied = Corrections(),
-              const QVector<RawData>& asReceived = QVector<RawData>(),
-              MeasurementKind kind = MeasurementKind::Sweep);
+              const QVector<RawData>& asReceived = QVector<RawData>());
 // Picks the format from the extension (.s1p/.csv/.nwl); other names are
 // ignored. type (.s1p only): 0 Z RI, 1 S RI, 2 S MA, 3 S DB. `applied` is
 // recorded in .s1p comments (CSV/NWL stay plain for other tools).

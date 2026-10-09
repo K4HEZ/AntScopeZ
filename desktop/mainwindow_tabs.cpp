@@ -362,7 +362,7 @@ void MainWindow::createTabs (QString sequence)
             // explanation) in menuMultiTab(). This is a separate menu
             // (right-click directly on a chart tab, vs. on the Multi tab
             // itself or the "+" button), so it needs its own guard.
-            if (tabName == "tab_tdr")
+            if (tabName == "tab_tdr" || tabName == "tab_tuning")
                 return;
             menu.addAction(tr("Move chart to the tab Multi"), this, [=]() {
                 toMultiTab(tabIndex);
@@ -417,6 +417,18 @@ void MainWindow::on_tabWidget_currentChanged(int index)
 {
     Q_UNUSED(index)
     QString str = ui->tabWidget->currentWidget()->objectName();
+    if (str != "tab_tdr" && str != "tab_tuning")
+        m_sweepTab = ui->tabWidget->currentWidget();
+    // The mode follows the chart: the TDR tab is TDR mode, the other charts
+    // are Sweep mode. (Refused mid-scan; the chart still changes.)
+    if (m_appModeApplied && m_appMode != AppMode::Tuning) {
+        const bool onTdr = (str == "tab_tdr");
+        if (onTdr && m_appMode != AppMode::Tdr)
+            setAppMode(AppMode::Tdr, false);
+        else if (!onTdr && m_appMode == AppMode::Tdr)
+            setAppMode(AppMode::Sweep, false);
+    }
+    updateLowerPanel();
     updateGraph();
     emit currentTab (str);
     QTimer::singleShot(20, m_markers, SLOT(redraw()));

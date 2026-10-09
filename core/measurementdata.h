@@ -29,7 +29,6 @@ struct Corrections
 };
 
 // What a measurement was taken for. Each app mode works with its own kind.
-enum class MeasurementKind { Sweep, Tdr };
 
 // One measurement's real data, UI-free. The GUI's `measurement` (measurement.h)
 // adds its plot caches on top of this.
@@ -53,7 +52,6 @@ struct MeasurementData
     // (display preference, not data) or by a cancelled save. Shown as a
     // trailing " *" in the Points column (Measurements::pointsCellText()).
     bool dirty = true;
-    MeasurementKind kind = MeasurementKind::Sweep;
     qint64 qint64From;
     qint64 qint64To;
     qint64 qint64Dots;
