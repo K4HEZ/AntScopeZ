@@ -314,7 +314,7 @@ the main window.
 **Menu bar**
 
 There's no toolbar of buttons any more -- everything below lives in the
-menu bar instead (File / Analyzer / View / Tools / Help).
+menu bar instead (File / Edit / View / Mode / Analyzer / Tools / Help).
 
 *File*
 
@@ -326,6 +326,32 @@ menu bar instead (File / Analyzer / View / Tools / Help).
 | Print... | Opens the [Print dialog](#print-and-screenshots) for the current chart |
 | Save Screenshot... | Saves the *current chart* (not the whole window) straight to a PNG file you pick -- same image Ctrl+C copies, just written to disk instead of the clipboard |
 | Exit | Closes AntScopeZ |
+
+*Edit*
+
+The same actions as the right-click menus of the Presets, Measurements and
+Markers tables, as menu items, acting on whatever is selected in that table.
+Items are grayed out when they don't apply; the menu works out which, each
+time you open it.
+
+| Group | Item | What it does |
+|---|---|---|
+| Presets | Add | Adds a preset from the current Start/Stop (or Center/Range) fields |
+| | Delete | Deletes the selected preset |
+| | Move Up | Moves the selected preset up one row (not available for the first one) |
+| Measurements | Select Color... | Changes the selected measurement's trace color |
+| | Rename... | Renames the selected measurement |
+| | Save as... | Opens the same save dialog as File → Save for the selected measurement |
+| | Toggle Visibility | Turns the selected measurement on or off on the charts (its checkbox in the list) |
+| | Delete | Deletes the selected measurement, asking first if it has unsaved changes. Not while a scan is running |
+| | Clear All | Deletes every measurement, with the same unsaved-changes prompt. Available whenever there are any, but not while a scan is running |
+| Markers | Clear Selected Marker | Removes the marker selected in the markers table |
+| | Clear All Markers | Removes every marker |
+| | Clear Empty Markers | Removes the markers that have no valid data in any measurement |
+
+The Markers items act on the markers table, which the TDR events table
+replaces while the TDR tab is showing; remove events-table markers from that
+table's own right-click menu (see [TDR](#events-table)).
 
 *View*
 
@@ -347,12 +373,6 @@ menu bar instead (File / Analyzer / View / Tools / Help).
 | Tuning | Live SWR readout at one frequency, for trimming an antenna -- see [Tuning mode](#tuning-mode-live-single-frequency-readout) |
 | TDR | Time-domain reflectometry: the TDR scan panel replaces Frequency/Presets and the TDR chart is selected. Every chart tab stays available, and clicking the TDR tab puts you in this mode -- see [TDR](#tdr-time-domain-reflectometry). Can't be switched while a scan is running; the choice is remembered |
 
-*Tools*
-
-| Control | What it does |
-|---|---|
-| Marker Comparison... | Compare two placed markers and estimate an antenna trim -- see [Markers](#markers) |
-
 *Analyzer*
 
 | Control | What it does |
@@ -361,6 +381,12 @@ menu bar instead (File / Analyzer / View / Tools / Help).
 | Screenshot... | Captures the *analyzer's own* on-device screen (not every model supports this -- see [Supported devices](#supported-devices)) -- see [Print and screenshots](#print-and-screenshots) |
 | Data from AA | Loads measurement results already stored in the analyzer's own memory -- see [Data from AA](#data-from-aa) |
 | Disconnect | Ends the current connection without closing AntScopeZ |
+
+*Tools*
+
+| Control | What it does |
+|---|---|
+| Marker Comparison... | Compare two placed markers and estimate an antenna trim -- see [Markers](#markers) |
 
 *Help*
 
@@ -700,7 +726,7 @@ A 3-column grid (chart, min, max):
 <!-- SCREENSHOT: Settings dialog, ITU Bands tab -->
 
 The band editor, moved here from its own standalone "Edit ITU Bands..."
-dialog (formerly on the Edit menu, now gone entirely) -- same text box
+dialog (formerly an item on the Edit menu) -- same text box
 and Cancel/Restore Defaults/Save buttons, just living on its own tab
 instead. See [Editing band definitions](#editing-band-definitions) for
 the file format and what each button does.
