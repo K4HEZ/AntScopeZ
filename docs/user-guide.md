@@ -1353,22 +1353,46 @@ image or document:
 - **File → Save Screenshot...** saves the *current chart tab* straight
   to a PNG file you pick -- the same image Ctrl+C copies to the
   clipboard, just written to disk instead. Not available for Multi.
-- **File → Print...** opens a dedicated dialog: a preview of the current
-  chart, the markers table beneath it (on the TDR tab, the [TDR events
-  table](#events-table) instead, with the numbered event lines drawn on the
-  chart), an auto-generated header (e.g.
-  "SWR graph") that isn't user-editable in this dialog, a free-text
-  Comment box, a Line width slider affecting the printed/exported trace
-  thickness (applied as soon as the dialog opens), and a **Reduce toner usage** checkbox (on by default) that
-  leaves out the shaded areas -- band highlighting on the frequency charts,
-  and the shading outside the 2:1 circle on the Smith chart. Uncheck it to
-  include them. From there:
-  - **Print** sends it to your system's print dialog.
-  - **Export PDF** / **Export PNG** save it directly to a file instead,
-    with the same header/chart/markers/comment layout.
+- **File → Print...** opens the print dialog: the page as it will come
+  out on your paper, with the controls in a row above it.
 
-  The Print button/dialog isn't available while the Multi tab is
-  active -- clicking it does nothing in that case.
+  | Control | What it does |
+  |---|---|
+  | Title | The heading at the top of the page, pre-filled with the analyzer, date and time, and chart name (e.g. "Match, 09.10.2026-10:05, Smith graph"). Editable; also used as the PDF's document title |
+  | Comment | Free text, printed at the end of the page |
+  | Line width | Thickness of the printed traces |
+  | Reduce toner usage | On by default. Leaves out the shaded areas -- band highlighting on the frequency charts, and the shading outside the 2:1 circle on the Smith chart. Uncheck it to include them |
+  | Page Setup... | Paper size, orientation and margins |
+  | Print... | Sends the page to your system's print dialog (including "Print to File") |
+  | Save as .pdf / Save as .png | Write the same page to a file |
+
+  Under the controls, the preview has its own toolbar: **Fit width**,
+  **Fit page**, zoom out/in, previous/next page (with "Page N of M"), and
+  **Portrait** / **Landscape**. Use the scroll bars and zoom to look at any
+  part of the sheet.
+
+  **The page.** The first time, the paper size comes from your default
+  printer, with that printer's orientation and half-inch margins; after that
+  the dialog remembers what you chose in Page Setup. Everything -- preview,
+  printer, PDF and PNG -- is laid out the same way for that paper. The page
+  holds the title, the chart, then the table, then the comment. They share
+  the first page when they fit: the chart gets smaller to make room, down to
+  a minimum size. A longer table continues on the following pages with its
+  header row repeated, and a page number appears at the bottom when there is
+  more than one page.
+
+  **The table** is the markers table (it lists every measurement's rows,
+  hidden measurements included), or on the TDR tab the [TDR events
+  table](#events-table), with its numbered lines drawn on the chart. The
+  Smith chart prints no markers table, and its legend lists the visible
+  measurements by name.
+
+  **Save as .png** writes the whole sheet at 200 dpi, so Letter comes out as
+  1700 x 2200 pixels. A report that runs to more than one page saves the
+  extra pages as `name-p2.png`, `name-p3.png` and so on.
+
+  The Print dialog isn't available while the Multi tab is active --
+  clicking it does nothing in that case.
 - **Analyzer → Screenshot...** captures the *analyzer's own* on-device
   screen (not every model supports this; NanoVNA classic does, see
   [Supported devices](#supported-devices)) and opens its own small

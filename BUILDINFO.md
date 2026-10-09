@@ -166,6 +166,14 @@ ctest --test-dir build-tests
   `TdrMath::EventParams` against real scans; a file that doesn't start near
   DC is rejected as not a TDR scan.
 
+- **`print_report_demo`** writes sample reports through `desktop/printreport.cpp`
+  (the page layout behind the Print dialog) as PDFs, PNGs and a grab of Qt's
+  print-preview widget, on Letter and A4 in both orientations, for checking
+  the layout by eye: `print_report_demo outdir`. Setting `DEMO_DARK=1` uses a
+  dark application palette, which is how the Print dialog's invisible-text
+  problem on dark themes was reproduced. Check the PDFs with `pdfinfo` and
+  `pdftoppm`.
+
 Otherwise none currently -- `ANTSCOPE_NEW_CONNECTION`, `ANTSCOPE_NEW_ANALYZER`,
 and `ANTSCOPE_OLD_TDR` used to gate old code paths they replaced; all
 three were always `ON`, and the flags and their dead OFF-path code are
@@ -501,6 +509,16 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   (a RigExpert manual made by Acrobat Distiller) the same way -- that's a
   qpdfview bug/quirk, not this app's output; use `pdfinfo` or a different
   viewer to actually check a PDF's page size.
+- **Print dialog: single page layout (2026-10-09).** The Print dialog now
+  paints title, chart, table and comment through `PrintReport`
+  (`desktop/printreport.cpp`), laid out from the dialog's `QPageLayout`, for
+  the preview (`QPrintPreviewWidget`), the printer, `QPdfWriter` and a PNG
+  image alike. The page size and orientation are therefore taken from Page
+  Setup instead of being fixed in code, which replaces the hard-coded
+  positions behind the A4/Letter history above for that dialog. The analyzer
+  Screenshot dialog's PDF (`Screenshot::savePDF()`) still has its own code.
+  Not verified on Windows or macOS (Qt's print preview can differ by
+  platform).
 - **`Screenshot::savePDF()`'s device-screenshot image placement was
   off-center or flush against the page edges -- fixed 2026-08-11.** Two
   separate device-size branches, both wrong in different ways: the small/
