@@ -1666,19 +1666,6 @@ void MainWindow::on_pressCtrlC ()
 
     QPixmap pixmap = (plot != nullptr) ? plot->grab() : ui->tabWidget->currentWidget()->grab();
 
-    QPainter painter(&pixmap);
-    QPixmap logo(":/new/prefix1/logo_watermark.png");
-    painter.drawPixmap(10, 10, logo);
-
-    QFont font = painter.font();
-    font.setFamily("Courier New");
-    painter.setFont(font);
-
-    QString text = "RigExpert AntScope: antenna and cable analysis software";
-    painter.setPen(qRgb(0x55, 0x7b, 0xce));
-    QRect bound = painter.boundingRect(pixmap.rect(), Qt::AlignBottom|Qt::AlignRight, text);
-    painter.drawText(bound.left()-2, bound.bottom()-1, text);
-
     QClipboard *pClipboard = QApplication::clipboard();
     pClipboard->setPixmap(pixmap);
 }

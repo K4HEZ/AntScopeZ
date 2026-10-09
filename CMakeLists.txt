@@ -89,7 +89,7 @@ qt_standard_project_setup()
 # Qt6CoreMacros.cmake for this Qt version). Without this, res.qrc is listed as
 # a source of the AntScopeZ target below but is never actually run through
 # rcc, so every resource in it (checkbox indicator icons, rig_logo.png,
-# logo_watermark.png, pencil.png, the app icon) silently fails to load at
+# pencil.png, the app icon) silently fails to load at
 # runtime -- QDir(":/new/prefix1").entryList() comes back empty. Must be set
 # before qt_add_executable() so the target picks it up at creation time.
 set(CMAKE_AUTORCC ON)

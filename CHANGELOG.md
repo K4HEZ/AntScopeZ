@@ -69,6 +69,7 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Changed
 
+- Screenshots from the chart (Ctrl+C, File > Save Screenshot) no longer carry the logo in the corner.
 - Print: "Print Band Highlighting" is now "Reduce toner usage" (on by
   default) and also drops the Smith chart's shading.
 - Desktop: new Mode menu (Sweep / TDR). TDR mode docks the TDR panel in the
