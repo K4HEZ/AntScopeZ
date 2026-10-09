@@ -1407,8 +1407,8 @@ image or document:
   header row repeated, and a page number appears at the bottom when there is
   more than one page.
 
-  **The table** is the markers table (it lists every measurement's rows,
-  hidden measurements included), or on the TDR tab the [TDR events
+  **The table** is the markers table (only the measurements that are
+  checked in the Measurements list), or on the TDR tab the [TDR events
   table](#events-table), with its numbered lines drawn on the chart. The
   Smith chart prints no markers table, and its legend lists the visible
   measurements by name.
@@ -1425,7 +1425,10 @@ image or document:
   dialog: add an optional comment, then **Export to PDF**,
   **Export to BMP**, or **To clipboard**. **Refresh** re-captures the
   device's screen again without closing the dialog, in case it's
-  changed since it was first captured.
+  changed since it was first captured. The PDF uses the paper size,
+  orientation and margins chosen in the Print dialog's Page Setup, with a
+  title line like the Print dialog's, the picture scaled to fit the page
+  (at most twice the device's own size) and the comment, wrapped, below it.
 
 All of the above default to your [Data folder](#files-and-directories),
 with a timestamped suggested filename (`Screenshot_yyyyMMdd-hhmmss.png`

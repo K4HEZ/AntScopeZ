@@ -5,7 +5,9 @@
 #include <QApplication>
 #include <QDir>
 #include <QPdfWriter>
+#include <QPainter>
 #include <QPrinter>
+#include <tuple>
 #include <QPrintPreviewWidget>
 #include <QtMath>
 #include <cstdio>
@@ -111,6 +113,32 @@ int main(int argc, char** argv)
         {"letter-portrait-square-comment", QPageSize::Letter, QPageLayout::Portrait, 0, 0, "A typed comment under a square (Smith-like) chart."},
         {"letter-landscape-square-comment", QPageSize::Letter, QPageLayout::Landscape, 0, 0, "A typed comment under a square (Smith-like) chart."},
     };
+    // A device-screenshot-like picture: fit to the page, at most 2x its size.
+    for (const auto& shot : {std::make_tuple("screenshot-480x480-portrait", QSize(480, 480), QPageLayout::Portrait),
+                             std::make_tuple("screenshot-320x240-portrait", QSize(320, 240), QPageLayout::Portrait),
+                             std::make_tuple("screenshot-480x480-landscape", QSize(480, 480), QPageLayout::Landscape)}) {
+        QImage lcd(std::get<1>(shot), QImage::Format_RGB32);
+        lcd.fill(QColor(30, 60, 120));
+        QPainter lp(&lcd);
+        lp.setPen(Qt::white);
+        lp.drawRect(lcd.rect().adjusted(2, 2, -3, -3));
+        lp.drawText(lcd.rect(), Qt::AlignCenter, "LCD");
+        lp.end();
+        PrintReport report;
+        report.setTitle(QString("Match, 09.10.2026-10:15, analyzer screen (%1)").arg(std::get<0>(shot)));
+        report.setComment("A comment under the picture, long enough that it has to wrap onto a second line on the page, to check wrapping.");
+        report.setChart([&lcd](QCPPainter& p, const QSizeF& size) {
+            const double sc = qMin(size.width() / lcd.width(), size.height() / lcd.height());
+            p.drawImage(QRectF((size.width() - lcd.width() * sc) / 2, 0, lcd.width() * sc, lcd.height() * sc), lcd);
+        }, double(lcd.width()) / lcd.height(), 2.0 * lcd.width());
+        QPdfWriter writer(out + "/" + std::get<0>(shot) + ".pdf");
+        writer.setResolution(300);
+        QPageLayout layout(QPageSize(QPageSize::Letter), std::get<2>(shot), QMarginsF(0.5, 0.5, 0.5, 0.5), QPageLayout::Inch);
+        writer.setPageLayout(layout);
+        report.paint(&writer);
+        report.renderImages(layout, 60).first().save(QString("%1/%2-p1.png").arg(out, std::get<0>(shot)));
+    }
+
     for (const Case& c : cases) {
         PrintReport report;
         report.setTitle(QString("Match, 07.10.2026-10:15, SWR graph (%1)").arg(c.name));

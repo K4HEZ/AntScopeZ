@@ -516,9 +516,10 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   image alike. The page size and orientation are therefore taken from Page
   Setup instead of being fixed in code, which replaces the hard-coded
   positions behind the A4/Letter history above for that dialog. The analyzer
-  Screenshot dialog's PDF (`Screenshot::savePDF()`) still has its own code.
-  Not verified on Windows or macOS (Qt's print preview can differ by
-  platform).
+  Screenshot dialog's PDF (`Screenshot::savePDF()`) now goes through the same
+  `PrintReport`, with the layout the Print dialog saved
+  (`PrintUtils::savedPageLayout()`). Not verified on Windows or macOS (Qt's
+  print preview can differ by platform).
 - **`Screenshot::savePDF()`'s device-screenshot image placement was
   off-center or flush against the page edges -- fixed 2026-08-11.** Two
   separate device-size branches, both wrong in different ways: the small/

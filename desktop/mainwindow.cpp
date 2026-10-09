@@ -412,6 +412,14 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_analyzer,SIGNAL(measurementComplete()),this,SLOT(on_measurementComplete()));//, Qt::QueuedConnection);
     connect(m_analyzer,SIGNAL(measurementCompleteNano()),this,SLOT(on_measurementCompleteNano()));//, Qt::QueuedConnection);
     connect(this,SIGNAL(stopMeasure()), m_analyzer, SLOT(on_stopMeasure()));
+    // The device's license (and so its real top frequency) arrives after it's
+    // identified; the TDR and Tuning panels took the model's default before that.
+    connect(m_analyzer, &AnalyzerPro::deviceInfoChanged, this, [this]() {
+        if (m_analyzerConnected) {
+            refreshTdrPanelLimits();
+            refreshTuningLimits();
+        }
+    });
     connect(this, &MainWindow::measureOneFq, m_analyzer, [this](QWidget*, qint64 fq, int dots) {
         m_analyzer->on_measureOneFq(fq, dots);
     });

@@ -147,12 +147,13 @@ PrintReport::Plan PrintReport::plan(const QPageLayout& layout) const
     if (hasComment)
         commentH = commentDocument(p.width, 1e6)->size().height();
 
+    p.chartWidth = (m_chartMaxWidth > 0) ? qMin(p.width, m_chartMaxWidth) : p.width;
     if (m_chart) {
-        const double natural = p.width / m_chartAspect;
+        const double natural = p.chartWidth / m_chartAspect;
         const double minChart = qMin(below, qMax(natural * 0.55, below * 0.30));
-        // A square chart (Smith) gains nothing from extra height: it would only
-        // sit in the middle of a taller box, far from what follows it.
-        const double maxChart = qMin(below, natural * (m_chartAspect <= 1.05 ? 1.0 : 1.4));
+        // A square chart (Smith) or a picture gains nothing from extra height:
+        // it would only sit in the middle of a taller box, far from what follows it.
+        const double maxChart = qMin(below, natural * ((m_chartAspect <= 1.05 || m_chartMaxWidth > 0) ? 1.0 : 1.4));
         double content = 0;
         if (rowCount > 0)
             content += rowsHeight(0, rowCount) + kGap;
@@ -235,9 +236,9 @@ void PrintReport::paintPage(QCPPainter& painter, const Plan& plan, int page) con
         }
         if (m_chart && plan.chartHeight > 0) {
             painter.save();
-            painter.translate(0, plan.chartTop);
-            painter.setClipRect(QRectF(0, 0, plan.width, plan.chartHeight));
-            m_chart(painter, QSizeF(plan.width, plan.chartHeight));
+            painter.translate((plan.width - plan.chartWidth) / 2, plan.chartTop);
+            painter.setClipRect(QRectF(0, 0, plan.chartWidth, plan.chartHeight));
+            m_chart(painter, QSizeF(plan.chartWidth, plan.chartHeight));
             painter.restore();
         }
     }

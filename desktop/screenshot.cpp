@@ -3,6 +3,8 @@
 #include "analyzer/customanalyzer.h"
 #include "filedialog.h"
 #include "printutils.h"
+#include "printreport.h"
+#include "qcustomplot.h"
 #include "settings.h"
 #include "analyzer/ble_analyzer.h"
 #include "style.h"
@@ -146,19 +148,13 @@ void Screenshot::on_clipboardBtn_clicked()
 
 void Screenshot::savePDF(QString path, QString comment)
 {
-    // This writes straight to a PDF file, so QPdfWriter (no printer/driver
-    // involved) is used instead of QPrinter+PdfFormat. QPrinter simulates a
-    // physical printer, and its own driver-default resolution logic was
-    // silently overriding this function's previous hardcoded
-    // setPageSize(Letter) with A4 on Linux -- QPdfWriter has no such
-    // default to fight with. Page size itself is no longer hardcoded
-    // either -- see PrintUtils::defaultPageSize().
+    // The same page layout as the Print dialog (paper, orientation and
+    // margins from its Page Setup, see PrintReport), written straight to a
+    // file with QPdfWriter -- no printer or driver involved, which is what
+    // used to turn an explicit page size into A4.
     QPdfWriter writer(path);
-    writer.setResolution(qRound(QGuiApplication::primaryScreen()->logicalDotsPerInch()));
-    QPageLayout layout = writer.pageLayout();
-    layout.setPageSize(PrintUtils::defaultPageSize());
-    layout.setOrientation(QPageLayout::Portrait);
-    writer.setPageLayout(layout);
+    writer.setResolution(300);
+    writer.setPageLayout(PrintUtils::savedPageLayout());
 
     AnalyzerParameters* param = AnalyzerParameters::current();
     QString name = param == nullptr ? "" : param->name();
@@ -166,44 +162,25 @@ void Screenshot::savePDF(QString path, QString comment)
         name = "AA-1500 ZOOM SE";
     QString model = CustomAnalyzer::customized() ?
                 CustomAnalyzer::currentPrototype() : name;
-    bool full = (model == "AA-2000 ZOOM") || (model == "AA-3000 ZOOM") || (model == "AA-1500 ZOOM SE");
+    QString title;
+    if (!model.isEmpty())
+        title += model + ", ";
+    title += QDateTime::currentDateTime().toString("dd.MM.yyyy-hh:mm, ") + tr("analyzer screen");
 
-    QRect rect = writer.pageLayout().fullRectPixels(writer.resolution());
-    // Matches the 50px margin used elsewhere on this page (see the
-    // drawText() calls below).
-    const int margin = 50;
-
-    QPainter painter(&writer);
-    int iwd = m_image->width();
-    int iht = m_image->height();
-    // Scale to fit the page width minus margins on both sides, preserving
-    // aspect ratio, then center horizontally -- previously this stretched
-    // the image flush to all four page edges with 0 margin.
-    int wd = rect.width() - 2*margin;
-    int ht = wd * iht / iwd;
-    QRect rr(rect.left() + margin, rect.top() + margin, wd, ht);
-
-    if (full)
-        painter.drawImage(rr, *m_image);
-    else {
-        // Center horizontally on the page; vertical position (m_lcdWidth/4)
-        // is unchanged from before. Computed from the image's actual
-        // current width rather than a fixed offset, so this stays centered
-        // if the image ends up scaled before drawing here in the future.
-        int x = rect.left() + (rect.width() - iwd) / 2;
-        painter.drawImage(QPoint(x, m_lcdWidth/4), *m_image);
-    }
-
-    QFont font = painter.font() ;
-    font.setPointSize (14);
-    painter.setFont(font);
-    if (full)
-        painter.drawText(QPoint(50, rr.bottom() + 50), comment);
-    else
-        painter.drawText(QPoint(50, m_lcdWidth/4 + m_lcdHeight + 100), comment);
-    painter.end();
-
-    //this->close();
+    const double imageWidth = m_image->width();
+    const double imageHeight = m_image->height();
+    PrintReport report;
+    report.setTitle(title);
+    report.setComment(comment);
+    // Fit the picture to the page, but at most twice the device's own size
+    // (one pixel is one 1/96 inch), so a small screen isn't blown up.
+    report.setChart([this, imageWidth, imageHeight](QCPPainter& painter, const QSizeF& size) {
+        const double scale = qMin(size.width() / imageWidth, size.height() / imageHeight);
+        const QRectF target((size.width() - imageWidth * scale) / 2, 0, imageWidth * scale, imageHeight * scale);
+        painter.setRenderHint(QPainter::SmoothPixmapTransform);
+        painter.drawImage(target, *m_image);
+    }, imageWidth / imageHeight, 2 * imageWidth);
+    report.paint(&writer);
 }
 
 void Screenshot::on_lineEdit_returnPressed()

@@ -1,6 +1,7 @@
 #ifndef PRINTUTILS_H
 #define PRINTUTILS_H
 
+#include <QPageLayout>
 #include <QPageSize>
 
 // Shared helpers for the app's various print/PDF-export paths (print.cpp,
@@ -16,6 +17,11 @@ public:
     // instead of an assumption baked into this app. Falls back to Letter
     // only if no default printer/page size is available to ask.
     static QPageSize defaultPageSize();
+
+    // The paper, orientation and margins last chosen in the Print dialog's
+    // Page Setup (saved in the settings file); until then the default
+    // printer's paper, `orientation`, and half-inch margins.
+    static QPageLayout savedPageLayout(QPageLayout::Orientation orientation = QPageLayout::Portrait);
 };
 
 #endif // PRINTUTILS_H

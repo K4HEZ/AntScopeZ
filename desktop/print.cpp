@@ -875,20 +875,7 @@ void Print::on_pngPrintBtn_clicked()
 // printer's own orientation and half-inch margins.
 void Print::restorePageLayout()
 {
-    m_settings->beginGroup("Print");
-    QPageSize size = PrintUtils::defaultPageSize();
-    QPageLayout::Orientation orientation = m_printer->pageLayout().orientation();
-    QMarginsF margins(0.5, 0.5, 0.5, 0.5);
-    if (m_settings->contains("pageSizeId")) {
-        size = QPageSize(QPageSize::PageSizeId(m_settings->value("pageSizeId").toInt()));
-        orientation = QPageLayout::Orientation(m_settings->value("pageOrientation").toInt());
-        margins = QMarginsF(m_settings->value("marginLeft", 0.5).toDouble(),
-                            m_settings->value("marginTop", 0.5).toDouble(),
-                            m_settings->value("marginRight", 0.5).toDouble(),
-                            m_settings->value("marginBottom", 0.5).toDouble());
-    }
-    m_settings->endGroup();
-    m_printer->setPageLayout(QPageLayout(size, orientation, margins, QPageLayout::Inch));
+    m_printer->setPageLayout(PrintUtils::savedPageLayout(m_printer->pageLayout().orientation()));
 }
 
 void Print::savePageLayout()

@@ -69,6 +69,7 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Changed
 
+- Analyzer Screenshot's PDF uses the Print dialog's paper, orientation and margins, adds a title line, fits the picture to the page (at most twice the device's size) and wraps the comment.
 - Menu bar order is now File, Edit, View, Analyzer, Mode, Tools, Help.
 - Screenshots from the chart (Ctrl+C, File > Save Screenshot) no longer carry the logo in the corner.
 - Print: "Print Band Highlighting" is now "Reduce toner usage" (on by
@@ -103,6 +104,8 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Fixed
 
+- TDR's Top frequency and Tuning's frequency limit now follow the connected device's licensed maximum (500 MHz for a Match with the RFE license) instead of the model's default (750 MHz), which was read before the license arrived.
+- Print: the markers table lists only the checked (visible) measurements.
 - Smith chart print: the legend lists the visible measurements by name
   (it was blank, with an empty entry for every grid arc), and the markers
   table, which had nothing to point at, is no longer printed.

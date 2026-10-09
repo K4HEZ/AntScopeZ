@@ -41,10 +41,13 @@ public:
 
     void setTitle(const QString& title) { m_title = title; }
     // aspect: width/height the chart looks best at (1 for a Smith chart).
-    void setChart(ChartDrawer drawer, double aspect = 1.6)
+    // maxWidth (design pixels, 0 = the full page width): for a picture that
+    // shouldn't be blown up past a size; it is centered.
+    void setChart(ChartDrawer drawer, double aspect = 1.6, double maxWidth = 0)
     {
         m_chart = std::move(drawer);
         m_chartAspect = aspect;
+        m_chartMaxWidth = maxWidth;
     }
     void setTable(const Table& table) { m_table = table; }
     void setComment(const QString& comment) { m_comment = comment; }
@@ -75,6 +78,7 @@ private:
         double height = 0; // without the footer
         double titleHeight = 0;
         double chartTop = 0;
+        double chartWidth = 0;
         double chartHeight = 0;
         QList<PageContent> pages;
         std::shared_ptr<QTextDocument> comment;
@@ -90,6 +94,7 @@ private:
     QString m_title;
     ChartDrawer m_chart;
     double m_chartAspect = 1.6;
+    double m_chartMaxWidth = 0;
     Table m_table;
     QString m_comment;
 };

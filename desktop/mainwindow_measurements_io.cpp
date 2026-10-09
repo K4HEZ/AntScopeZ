@@ -345,8 +345,32 @@ void MainWindow::on_actionPrint_triggered()
     if (name == "tab_smith") {
         m_print->updateMarkers(0, 0, {});
     } else {
-        m_print->updateMarkers(m_markers->getMarkersCount(), m_measurements->getMeasurementLength(),
-                               m_markers->updateInfo(m_markers->markersHint()->getColumns()));
+        // Only the measurements that are checked (drawn on the charts). The
+        // rows come marker by marker, each marker's measurements oldest
+        // first (see Markers::updateInfo()).
+        const int markerCount = m_markers->getMarkersCount();
+        const int count = m_measurements->getMeasurementLength();
+        QList<QList<QVariant>> info = m_markers->updateInfo(m_markers->markersHint()->getColumns());
+        int shown = count;
+        if (count > 0) {
+            shown = 0;
+            QList<QList<QVariant>> visibleRows;
+            for (int n = 0; n < markerCount; ++n) {
+                for (int i = count - 1; i >= 0; --i) {
+                    if (m_measurements->getMeasurement(i)->visible)
+                        visibleRows << info.at(n * count + (count - 1 - i));
+                }
+            }
+            for (int i = 0; i < count; ++i) {
+                if (m_measurements->getMeasurement(i)->visible)
+                    ++shown;
+            }
+            info = visibleRows;
+        }
+        if (count > 0 && shown == 0)
+            m_print->updateMarkers(0, 0, {}); // nothing drawn, nothing to list
+        else
+            m_print->updateMarkers(markerCount, shown, info);
     }
 
     QString band = currentBandRegion();
