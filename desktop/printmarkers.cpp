@@ -54,6 +54,7 @@ void PrintMarkers::createHeader()
 void PrintMarkers::updateMarkers(int markers, int measurements)
 {
     clearTable();
+    m_plainTable = false;
 
     if (markers == 0) {
         setVisible(false);
@@ -94,27 +95,29 @@ void PrintMarkers::setTable(const QStringList& headers, const QList<QStringList>
     clearTable();
     m_markers = 0;
     m_measurements = 0;
-    if (rows.isEmpty()) {
-        setVisible(false);
+    m_plainTable = true;
+    m_plainHeaders = headers;
+    m_plainRows = rows;
+    setVisible(false); // the printout draws it; this widget isn't shown any more
+}
+
+void PrintMarkers::tableText(QStringList& headers, QList<QStringList>& rows) const
+{
+    headers.clear();
+    rows.clear();
+    if (m_plainTable) {
+        headers = m_plainHeaders;
+        rows = m_plainRows;
         return;
     }
-    const QString style = "QLabel {color: black; font: 14pt}";
-    const QString headStyle = "QLabel {color: black; font: bold 14pt}";
-    for (int r = -1; r < rows.size(); ++r) {
-        const QStringList& cells = r < 0 ? headers : rows.at(r);
-        QList<QWidget*> row;
-        for (int c = 0; c < cells.size(); ++c) {
-            QLabel* label = new QLabel(cells.at(c), this);
-            label->setStyleSheet(r < 0 ? headStyle : style);
-            label->setAlignment(Qt::AlignCenter);
-            m_layout.addWidget(label, r + 1, c);
-            label->show();
-            row << label;
-        }
-        m_rows << row;
+    for (const MarkersHeaderColumn& column : m_headerColumns)
+        headers << qobject_cast<QLabel*>(column.button)->text();
+    for (const QList<QWidget*>& row : m_rows) {
+        QStringList cells;
+        for (QWidget* w : row)
+            cells << qobject_cast<QLabel*>(w)->text();
+        rows << cells;
     }
-    setVisible(true);
-    updateTable();
 }
 
 void PrintMarkers::updateInfo(QList<QList<QVariant>>& info)

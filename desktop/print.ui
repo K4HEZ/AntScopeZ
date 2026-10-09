@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>910</width>
-    <height>650</height>
+    <width>1000</width>
+    <height>760</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,143 +17,14 @@
    <iconset resource="res.qrc">
     <normaloff>:/new/prefix1/AntScopeZ.png</normaloff>:/new/prefix1/AntScopeZ.png</iconset>
   </property>
-  <layout class="QHBoxLayout" name="horizontalLayout_2">
+  <layout class="QVBoxLayout" name="mainLayout">
    <item>
-    <widget class="QGroupBox" name="groupBoxGraph">
-     <property name="styleSheet">
-      <string notr="true">background-color: white;</string>
+    <layout class="QHBoxLayout" name="controlsLayout">
+     <property name="spacing">
+      <number>16</number>
      </property>
-     <property name="title">
-      <string>Preview</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_5">
-      <property name="topMargin">
-       <number>20</number>
-      </property>
-      <item>
-       <layout class="QVBoxLayout" name="widgetsLayout">
-        <item>
-         <widget class="QLabel" name="lineEditHead">
-          <property name="font">
-           <font>
-            <pointsize>7</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCustomPlot" name="widgetGraph" native="true">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>500</width>
-            <height>200</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="markersLayout">
-        <item>
-         <widget class="QLabel" name="labelMarkers">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Markers:</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="PrintMarkers" name="markersWidget" native="true">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <item>
-         <widget class="QLabel" name="labelComment">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Comment:</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QTextEdit" name="textEditComment">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>500</width>
-            <height>50</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>175</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <layout class="QVBoxLayout" name="verticalLayout_3">
      <item>
-      <widget class="QGroupBox" name="groupBoxSettings">
-       <property name="minimumSize">
-        <size>
-         <width>190</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>210</width>
-         <height>16777215</height>
-        </size>
-       </property>
-       <property name="title">
-        <string>Settings</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_printSettings">
-       <property name="topMargin">
-        <number>20</number>
-       </property>
+      <layout class="QVBoxLayout" name="verticalLayout_printSettings">
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_4">
          <item>
@@ -165,6 +36,12 @@
          </item>
          <item>
           <widget class="NoScrollSlider" name="lineSlider">
+           <property name="minimumSize">
+            <size>
+             <width>120</width>
+             <height>0</height>
+            </size>
+           </property>
            <property name="minimum">
             <number>1</number>
            </property>
@@ -185,80 +62,157 @@
         </layout>
        </item>
        <item>
-        <widget class="QCheckBox" name="checkBoxPrintBandHighlighting">
+        <widget class="QCheckBox" name="checkBoxReduceToner">
          <property name="toolTip">
-          <string>Toner saver: off by default. Band highlighting is shaded across the full chart height, so leaving this unchecked keeps Print/PDF/Save-as-image output ink-light. The on-screen chart and File &gt; Screenshot are unaffected either way.</string>
+          <string>Leaves out the shaded areas -- band highlighting on the frequency charts, the SWR shading on the Smith chart -- so the printout uses less ink. On by default. The on-screen chart and File &gt; Screenshot are unaffected either way.</string>
          </property>
          <property name="text">
-          <string>Print Band Highlighting</string>
+          <string>Reduce toner usage</string>
          </property>
          <property name="checked">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       </layout>
-      </widget>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <widget class="QPushButton" name="pngPrintBtn">
-         <property name="minimumSize">
-          <size>
-           <width>60</width>
-           <height>60</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Save as
-.png</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="pdfPrintBtn">
-         <property name="minimumSize">
-          <size>
-           <width>60</width>
-           <height>60</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Save as
-.pdf</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="printBtn">
-         <property name="minimumSize">
-          <size>
-           <width>60</width>
-           <height>60</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Print</string>
+          <bool>true</bool>
          </property>
         </widget>
        </item>
       </layout>
      </item>
      <item>
-      <spacer name="verticalSpacer_printSettings">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <layout class="QHBoxLayout" name="titleLayout">
+         <item>
+          <widget class="QLabel" name="labelTitle">
+           <property name="text">
+            <string>Title:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="titleEdit">
+           <property name="minimumSize">
+            <size>
+             <width>240</width>
+             <height>0</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QLabel" name="labelComment">
+         <property name="text">
+          <string>Comment:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTextEdit" name="textEditComment">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>240</width>
+           <height>60</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>60</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QGridLayout" name="buttonsLayout">
+       <item row="0" column="0">
+        <widget class="QPushButton" name="pageSetupBtn">
+         <property name="text">
+          <string>Page Setup...</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QPushButton" name="printBtn">
+         <property name="text">
+          <string>Print...</string>
+         </property>
+         <property name="default">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QPushButton" name="pdfPrintBtn">
+         <property name="text">
+          <string>Save as .pdf</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QPushButton" name="pngPrintBtn">
+         <property name="text">
+          <string>Save as .png</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="previewToolbarLayout"/>
+   </item>
+   <item>
+    <layout class="QVBoxLayout" name="previewLayout">
+     <property name="spacing">
+      <number>0</number>
+     </property>
+    </layout>
+   </item>
+   <item>
+    <widget class="QWidget" name="dataHolder" native="true">
+     <property name="visible">
+      <bool>false</bool>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_5">
+      <item>
+       <layout class="QVBoxLayout" name="widgetsLayout">
+        <item>
+         <widget class="QLabel" name="lineEditHead">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCustomPlot" name="widgetGraph" native="true">
+          <property name="minimumSize">
+           <size>
+            <width>500</width>
+            <height>300</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="markersLayout">
+        <item>
+         <widget class="PrintMarkers" name="markersWidget" native="true"/>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
    </item>
   </layout>
  </widget>

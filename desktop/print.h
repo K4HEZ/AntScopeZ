@@ -8,10 +8,16 @@
 #include <QSettings>
 #include <settings.h>
 #include "printmarkers.h"
+#include "printreport.h"
+#include <QTimer>
 
 namespace Ui {
 class Print;
 }
+
+class QLabel;
+class QPrinter;
+class QPrintPreviewWidget;
 
 class Print : public QDialog
 {
@@ -51,7 +57,10 @@ protected slots:
     void on_printBtn_clicked();
     void on_pdfPrintBtn_clicked();
     void on_pngPrintBtn_clicked();
-    void on_checkBoxPrintBandHighlighting_toggled(bool checked);
+    void on_checkBoxReduceToner_toggled(bool checked);
+    void on_pageSetupBtn_clicked();
+    void on_textEditComment_textChanged();
+    void on_titleEdit_textChanged();
 
 protected:
     Ui::Print *ui;
@@ -63,21 +72,22 @@ protected:
     // empty.
     QString suggestedPath(const QString &ext) const;
 
-    // toPixmap(width,height,...) renders at a fixed canvas size completely
-    // independent of the live dialog's own on-screen size/aspect --
-    // QCustomPlot::toPixmap() internally does its own temporary
-    // setViewport(width,height) + draw() (which correctly resyncs
-    // axisRect() for that size), but our own axis *ranges* (set by
-    // rescale()'s setScaleRatio() call, see its comment) were computed
-    // against whatever axisRect() was on-screen, a different aspect ratio
-    // from the fixed export canvas -- round on screen, wrong (in the worst
-    // case reported, drastically too-zoomed-in) once actually exported.
-    // Sets the same viewport toPixmap() is about to use *before* calling
-    // rescale(), so setScaleRatio() computes against the real export
-    // dimensions instead; toPixmap() itself restores the original
-    // (on-screen) viewport before returning, so a second rescale()
-    // afterward resyncs the on-screen display back to it.
-    QPixmap smithSafePixmap(int width, int height, double scale);
+    // The page, as it will print: title, chart, table, comment, laid out for
+    // the preview printer's page layout (see PrintReport). The preview, Print,
+    // Save as .pdf and Save as .png all paint it.
+    void buildReport();
+    void drawChart(QCPPainter& painter, const QSizeF& size);
+    void applyLineWidth();
+    void refreshPreview(); // soon, once; many changes in a row cost one repaint
+    void updatePageLabel();
+    void restorePageLayout();
+    void savePageLayout();
+
+    PrintReport m_report;
+    QPrinter* m_printer = nullptr; // the preview's; holds the chosen paper, orientation and margins
+    QPrintPreviewWidget* m_preview = nullptr;
+    QLabel* m_pageLabel = nullptr;
+    QTimer m_refreshTimer;
 
     QVector <double> m_mFqList;
     QVector <QCPCurve*> m_curveList;
@@ -86,9 +96,12 @@ protected:
     QVector <QCPCurveDataContainer*> m_curveDataList;
     QVector <QCPItemText*> m_textList;
     // Band-highlight rects/labels drawBands()/addBand() create -- kept so
-    // checkBoxPrintBandHighlighting's toggled() handler can show/hide them
-    // live without redoing the whole drawBands() pass.
+    // checkBoxReduceToner's toggled() handler can show/hide them live
+    // without redoing the whole drawBands() pass.
     QVector <QCPAbstractItem*> m_bandItemList;
+    // The Smith chart's shaded disc (the area outside the 2:1 circle).
+    QCPCurve* m_smithShade = nullptr;
+    void applyTonerSetting();
 
     bool m_isSmithGraph;
     QString m_graphName;

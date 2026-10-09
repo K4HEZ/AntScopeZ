@@ -165,6 +165,7 @@ set(ANTSCOPE_SOURCES
     desktop/print.cpp
     desktop/printmarkers.cpp
     desktop/printmulti.cpp
+    desktop/printreport.cpp
     desktop/printutils.cpp
     desktop/ProgressDlg.cpp
     desktop/qcustomplot.cpp
@@ -218,6 +219,7 @@ set(ANTSCOPE_HEADERS
     desktop/print.h
     desktop/printmarkers.h
     desktop/printmulti.h
+    desktop/printreport.h
     desktop/printutils.h
     desktop/ProgressDlg.h
     desktop/qcustomplot.h

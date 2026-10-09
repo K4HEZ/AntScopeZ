@@ -1359,10 +1359,10 @@ image or document:
   chart), an auto-generated header (e.g.
   "SWR graph") that isn't user-editable in this dialog, a free-text
   Comment box, a Line width slider affecting the printed/exported trace
-  thickness (applied as soon as the dialog opens), and a **Print Band Highlighting** checkbox (a toner saver --
-  band highlighting is shaded across the full height of the chart, so
-  this is off by default; check it if you want bands included in the
-  printed/exported output). From there:
+  thickness (applied as soon as the dialog opens), and a **Reduce toner usage** checkbox (on by default) that
+  leaves out the shaded areas -- band highlighting on the frequency charts,
+  and the shading outside the 2:1 circle on the Smith chart. Uncheck it to
+  include them. From there:
   - **Print** sends it to your system's print dialog.
   - **Export PDF** / **Export PNG** save it directly to a file instead,
     with the same header/chart/markers/comment layout.

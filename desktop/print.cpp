@@ -11,6 +11,12 @@
 #include <QRegularExpression>
 #include <QDateTime>
 #include <QTimer>
+#include <QLabel>
+#include <QPageSetupDialog>
+#include <QPrintDialog>
+#include <QPrinter>
+#include <QPrintPreviewWidget>
+#include <QToolButton>
 
 Print::Print(QWidget *parent) :
     QDialog(parent),
@@ -27,11 +33,8 @@ Print::Print(QWidget *parent) :
     if(rect.x() != 0)
         this->setGeometry(rect);
 
-    // Default false (not printed) -- a fresh Print with bands now actually
-    // drawing (see drawBands()'s own comment) would otherwise silently
-    // start using far more toner/ink than users are used to.
-    ui->checkBoxPrintBandHighlighting->setChecked(
-        m_settings->value("print-band-highlighting", false).toBool());
+    // On by default: shaded areas use far more ink than people expect.
+    ui->checkBoxReduceToner->setChecked(m_settings->value("print-reduce-toner", true).toBool());
 
     m_settings->endGroup();
 
@@ -46,15 +49,60 @@ Print::Print(QWidget *parent) :
     ui->widgetGraph->legend->setVisible(true);
 
     ui->markersLayout->addWidget(ui->markersWidget);
+    ui->widgetGraph->resize(800, 500); // hidden; the report draws it at whatever size the page needs
+
+    // The preview: the page as it will print.
+    m_printer = new QPrinter(QPrinter::HighResolution);
+    restorePageLayout();
+    m_preview = new QPrintPreviewWidget(m_printer, this);
+    ui->previewLayout->addWidget(m_preview, 1);
+    connect(m_preview, &QPrintPreviewWidget::paintRequested, this, [this](QPrinter* printer) {
+        buildReport();
+        m_report.paint(printer);
+    });
+    connect(m_preview, &QPrintPreviewWidget::previewChanged, this, &Print::updatePageLabel);
+
+    auto addButton = [this](const QString& text, const QString& tip, auto slot) {
+        QToolButton* b = new QToolButton(this);
+        b->setText(text);
+        b->setToolTip(tip);
+        connect(b, &QToolButton::clicked, this, slot);
+        ui->previewToolbarLayout->addWidget(b);
+        return b;
+    };
+    addButton(tr("Fit width"), tr("Zoom so the page fills the width"), [this]() { m_preview->fitToWidth(); });
+    addButton(tr("Fit page"), tr("Zoom so the whole page is visible"), [this]() { m_preview->fitInView(); });
+    addButton(QStringLiteral("\u2212"), tr("Zoom out"), [this]() { m_preview->zoomOut(); });
+    addButton(QStringLiteral("+"), tr("Zoom in"), [this]() { m_preview->zoomIn(); });
+    ui->previewToolbarLayout->addSpacing(16);
+    addButton(QStringLiteral("\u25C0"), tr("Previous page"), [this]() {
+        m_preview->setCurrentPage(qMax(1, m_preview->currentPage() - 1));
+    });
+    m_pageLabel = new QLabel(this);
+    ui->previewToolbarLayout->addWidget(m_pageLabel);
+    addButton(QStringLiteral("\u25B6"), tr("Next page"), [this]() {
+        m_preview->setCurrentPage(qMin(m_preview->pageCount(), m_preview->currentPage() + 1));
+    });
+    ui->previewToolbarLayout->addStretch(1);
+    addButton(tr("Portrait"), tr("Portrait orientation"), [this]() { m_preview->setPortraitOrientation(); });
+    addButton(tr("Landscape"), tr("Landscape orientation"), [this]() { m_preview->setLandscapeOrientation(); });
+
+    m_refreshTimer.setSingleShot(true);
+    m_refreshTimer.setInterval(120);
+    connect(&m_refreshTimer, &QTimer::timeout, this, [this]() { m_preview->updatePreview(); });
 }
 
 Print::~Print()
 {
+    savePageLayout();
     m_settings->beginGroup("Print");
     m_settings->setValue("geometry", this->geometry());
-    m_settings->setValue("print-band-highlighting", ui->checkBoxPrintBandHighlighting->isChecked());
+    m_settings->setValue("print-reduce-toner", ui->checkBoxReduceToner->isChecked());
     m_settings->endGroup();
 
+    delete m_preview; // before the printer it paints to
+    m_preview = nullptr;
+    delete m_printer;
     delete ui;
 }
 
@@ -228,7 +276,7 @@ void Print::addBand (double x1, double x2, double y1, double y2, QCustomPlot* pl
     QCPItemRect * xRectItem = new QCPItemRect( plot );
     m_bandItemList.append(xRectItem);
 
-    xRectItem->setVisible          (ui->checkBoxPrintBandHighlighting->isChecked());
+    xRectItem->setVisible          (!ui->checkBoxReduceToner->isChecked());
     xRectItem->setPen              (QPen(Qt::transparent));
     xRectItem->setBrush            (QBrush(QColor(50,50,150,50)));
 
@@ -259,7 +307,7 @@ void Print::addBand (double x1, double x2, double y1, double y2, QString& name)
     QPointF pt = rr.center();
     QCPItemText* textItem = new QCPItemText( ui->widgetGraph );
     m_bandItemList.append(textItem);
-    textItem->setVisible(ui->checkBoxPrintBandHighlighting->isChecked());
+    textItem->setVisible(!ui->checkBoxReduceToner->isChecked());
     textItem->setColor(QColor(50,50,150,150));
     textItem->setPen(Qt::NoPen);
     textItem->setText(name);
@@ -268,20 +316,53 @@ void Print::addBand (double x1, double x2, double y1, double y2, QString& name)
     textItem->setRotation(270);
 }
 
-void Print::on_checkBoxPrintBandHighlighting_toggled(bool checked)
+void Print::on_checkBoxReduceToner_toggled(bool)
 {
-    for (QCPAbstractItem* item : std::as_const(m_bandItemList))
-        item->setVisible(checked);
+    applyTonerSetting();
     ui->widgetGraph->replot();
+    refreshPreview();
 }
 
+// "Reduce toner usage": no band highlighting, and no shading on the Smith chart.
+void Print::applyTonerSetting()
+{
+    const bool reduce = ui->checkBoxReduceToner->isChecked();
+    for (QCPAbstractItem* item : std::as_const(m_bandItemList))
+        item->setVisible(!reduce);
+    if (m_smithShade != nullptr)
+        m_smithShade->setBrush(reduce ? QBrush(Qt::NoBrush) : QBrush(QColor(0, 0, 255, 20)));
+}
+
+// The printed title is the editable field, pre-filled with this.
 void Print::setHead(QString string)
 {
     ui->lineEditHead->setText(string);
+    ui->titleEdit->setText(string);
+    refreshPreview();
 }
 
-void Print::on_lineSlider_valueChanged(int value)
+void Print::on_titleEdit_textChanged()
 {
+    refreshPreview();
+}
+
+void Print::on_lineSlider_valueChanged(int)
+{
+    applyLineWidth();
+    refreshPreview();
+}
+
+void Print::on_textEditComment_textChanged()
+{
+    refreshPreview();
+}
+
+// The slider's value is the trace width in design pixels (1/96 inch before
+// scaling to the page); the traces arrive with the chart's own pen widths,
+// so every repaint brings them in line with the slider.
+void Print::applyLineWidth()
+{
+    const int value = ui->lineSlider->value();
     if (m_isSmithGraph) {
         for(int i=0; i<m_curveList.size(); i++) {
             QCPCurve* curve = m_curveList[i];
@@ -297,74 +378,7 @@ void Print::on_lineSlider_valueChanged(int value)
             ui->widgetGraph->graph(i)->setPen(pen);
         }
     }
-    ui->widgetGraph->replot();
 }
-
-void Print::on_printBtn_clicked()
-{
-    QPixmap map = smithSafePixmap(700,400,10);
-
-    QPixmap markersMap(ui->markersWidget->size());
-    ui->markersWidget->render(&markersMap);
-
-    QPrinter printer;
-
-    // See PrintUtils::defaultPageSize() -- queried from the actual default
-    // printer instead of hardcoded/left to QPrinter's own internal
-    // default-resolution logic, which is what was showing A4 in this
-    // dialog's Properties widget even when the OS's own Printers settings
-    // correctly show Letter. See BUILDINFO.md known issues.
-    QPageSize pageSize = PrintUtils::defaultPageSize();
-    QPageLayout defaultLayout = printer.pageLayout();
-    defaultLayout.setPageSize(pageSize);
-    printer.setPageLayout(defaultLayout);
-
-    QPrintDialog *dlg = new QPrintDialog(&printer,0);
-    if(dlg->exec() == QDialog::Accepted)
-    {
-        // If the user picked "Print to File (PDF)" in the dialog, QPrinter
-        // switches itself to PdfFormat and renders through its own PDF
-        // engine -- the same engine that was silently overriding an
-        // explicit page size with A4 in on_pdfPrintBtn_clicked()/
-        // Screenshot::savePDF() before those were switched to QPdfWriter.
-        // Reroute that case the same way here; a real physical-printer job
-        // (still NativeFormat) is untouched and goes to `printer` as before.
-        // Note: printer.pageLayout() is NOT trusted as the source of the
-        // page size for the rerouted writer -- it's the same QPrinter
-        // state that gets silently reset by the format switch, so it may
-        // already have reverted to the wrong default by this point. The
-        // writer gets our own known-good pageSize instead.
-        QScopedPointer<QPdfWriter> pdfWriter;
-        QPagedPaintDevice *device = &printer;
-        if (printer.outputFormat() == QPrinter::PdfFormat) {
-            pdfWriter.reset(new QPdfWriter(printer.outputFileName()));
-            pdfWriter->setResolution(printer.resolution());
-            QPageLayout writerLayout = pdfWriter->pageLayout();
-            writerLayout.setPageSize(pageSize);
-            writerLayout.setOrientation(QPageLayout::Portrait);
-            pdfWriter->setPageLayout(writerLayout);
-            device = pdfWriter.data();
-        }
-
-        QPainter painter(device);
-        QFont font = painter.font() ;
-        font.setPointSize (10);
-        painter.setFont(font);
-
-        painter.drawText(50, 10, 600, 20, Qt::TextExpandTabs | Qt::AlignLeft | Qt::AlignVCenter , ui->lineEditHead->text());
-
-        QRect rmap(10,50,700,400);
-        painter.drawImage(rmap, map.toImage());
-
-        painter.drawImage(QRect(70, 460, 700, qMin(markersMap.height(), 300)),markersMap.toImage());
-
-        painter.drawText(70, 760, 700, 300, Qt::TextExpandTabs , ui->textEditComment->toPlainText());
-        painter.end();
-    }
-
-    delete dlg;
-}
-
 
 QString Print::suggestedPath(const QString &ext) const
 {
@@ -395,96 +409,6 @@ QString Print::suggestedPath(const QString &ext) const
     // a naive strip-at-the-wrong-dot would mangle. See FileDialog::
     // withExtension()'s own doc comment (issue reported 2026-08-14).
     return FileDialog::withExtension(FileDialog::userDataDir() + "/" + name, ext);
-}
-
-void Print::on_pdfPrintBtn_clicked()
-{
-    QString path = FileDialog::getSaveFileName(this, tr("Export PDF"), suggestedPath("pdf"), "*.pdf");
-    if(path.isEmpty())
-    {
-        return;
-    }
-
-    QPixmap map = smithSafePixmap(700,400,10);
-
-    QPixmap markersMap(ui->markersWidget->size());
-    ui->markersWidget->render(&markersMap);
-
-    if(path.indexOf(".pdf") < 0)
-    {
-        path.append(".pdf");
-    }
-    FileDialog::noteUserDataDirIfEnabled(path);
-
-    // Pure file export, no printer/driver involved -- QPdfWriter writes PDF
-    // directly, so it doesn't inherit QPrinter's driver-default-resolution
-    // behavior (see the A4/Letter known issue in BUILDINFO.md and
-    // Screenshot::savePDF()). Same default-printer-derived page size as
-    // on_printBtn_clicked(), not a hardcoded one -- see
-    // PrintUtils::defaultPageSize().
-    QPdfWriter writer(path);
-    writer.setResolution(qRound(QGuiApplication::primaryScreen()->logicalDotsPerInch()));
-    QPageLayout layout = writer.pageLayout();
-    layout.setPageSize(PrintUtils::defaultPageSize());
-    layout.setOrientation(QPageLayout::Portrait);
-    writer.setPageLayout(layout);
-
-    QPainter painter(&writer);
-    QFont font = ui->widgetGraph->xAxis->tickLabelFont();
-    font.setPointSize (13);
-    painter.setFont(font);
-
-    painter.drawText(50, 10, 600, 30, Qt::TextExpandTabs , ui->lineEditHead->text());
-
-    QRect rmap(10,60,700,400);
-    painter.drawImage(rmap,map.toImage());
-
-    painter.drawImage(QRect(70, 470, markersMap.width(), markersMap.height()),markersMap.toImage());
-
-    painter.drawText(70, 760, 700, 300, Qt::TextExpandTabs , ui->textEditComment->toPlainText());
-    painter.end();
-}
-
-void Print::on_pngPrintBtn_clicked()
-{
-    QString path = FileDialog::getSaveFileName(this, tr("Export PNG"), suggestedPath("png"), "*.png");
-    if(path.isEmpty())
-    {
-        return;
-    }
-
-    QPixmap file(2000,2000);
-    file.fill();
-    QPixmap map = smithSafePixmap(700,400,10);
-
-    //QPixmap markersMap(ui->markersWidget->size());
-    QPixmap markersMap = ui->markersWidget->grab();
-
-    QPainter painter(&file);
-
-    QFont font = ui->widgetGraph->xAxis->tickLabelFont();
-    font.setPointSize (26);
-    painter.setFont(font);
-
-    painter.drawText(100, 20, 1200, 50, Qt::TextExpandTabs , ui->lineEditHead->text());
-
-    QRect rGraph(20,100,1400,800);
-    painter.drawImage(rGraph, map.toImage());
-
-    QRect rMark(0, 0, 1400, 1400*markersMap.height()/markersMap.width());// = markersMap.rect();
-    rMark.moveTo(rGraph.bottomLeft());
-    //painter.drawImage(QRect(70*2, 470*2, markersMap.width(), markersMap.height()),markersMap.toImage());
-    painter.drawImage(rMark, markersMap.toImage());
-
-    painter.drawText(140, 1520, 1400, 600, Qt::TextExpandTabs , ui->textEditComment->toPlainText());
-    painter.end();
-
-    if(path.indexOf(".png") < 0)
-    {
-        path.append(".png");
-    }
-    FileDialog::noteUserDataDirIfEnabled(path);
-    file.save(path,"PNG",80);
 }
 
 void Print::drawSmithImage(void)
@@ -519,6 +443,7 @@ void Print::drawSmithImage(void)
     }
     round1->setData(QSharedPointer<QCPCurveDataContainer>::create(map1));
     round1->setBrush(QBrush(QColor(0, 0, 255, 20)));
+    m_smithShade = round1;
     round7->setData(QSharedPointer<QCPCurveDataContainer>::create(map7));
     round7->setBrush(QBrush(QColor(255, 255, 255, 255)));
     round2->setData(QSharedPointer<QCPCurveDataContainer>::create(map2));
@@ -718,6 +643,13 @@ void Print::drawSmithImage(void)
 
     Measurements::addSmithSwrCircles(ui->widgetGraph);
 
+    // The grid arcs aren't data: keep them out of the legend, which should
+    // list only the measurement curves (added later, with their names).
+    for (int i = 0; i < ui->widgetGraph->plottableCount(); ++i)
+        ui->widgetGraph->plottable(i)->removeFromLegend();
+
+    applyTonerSetting();
+
     ui->widgetGraph->xAxis->setTicks(false);
     ui->widgetGraph->yAxis->setTicks(false);
     ui->widgetGraph->xAxis->setVisible(false);
@@ -725,15 +657,6 @@ void Print::drawSmithImage(void)
 
     m_isSmithGraph = true;
     rescale();
-}
-
-QPixmap Print::smithSafePixmap(int width, int height, double scale)
-{
-    ui->widgetGraph->setViewport(QRect(0, 0, width, height));
-    rescale();
-    QPixmap map = ui->widgetGraph->toPixmap(width, height, scale);
-    rescale(); // resync on-screen display with the viewport toPixmap() just restored
-    return map;
 }
 
 void Print::rescale()
@@ -816,10 +739,8 @@ void Print::showEvent(QShowEvent * e)
     // tick so this runs after the dialog is actually laid out and visible
     // on screen, with widgetGraph at its true final size.
     QTimer::singleShot(0, this, [this]() {
-        // The slider's position is the line width; the traces arrive with the
-        // chart's own pen widths, so bring them in line with it.
-        on_lineSlider_valueChanged(ui->lineSlider->value());
-        rescale();
+        m_preview->updatePreview();
+        m_preview->fitInView();
     });
 }
 
@@ -834,3 +755,154 @@ void Print::updateMarkers(int markers, int measurements, QList<QList<QVariant>> 
     ui->markersWidget->updateInfo(info);
 }
 
+
+void Print::refreshPreview()
+{
+    if (m_preview != nullptr)
+        m_refreshTimer.start();
+}
+
+void Print::updatePageLabel()
+{
+    if (m_pageLabel != nullptr)
+        m_pageLabel->setText(tr("Page %1 of %2").arg(m_preview->currentPage()).arg(m_preview->pageCount()));
+}
+
+void Print::buildReport()
+{
+    PrintReport::useDesignFonts(ui->widgetGraph);
+    applyLineWidth();
+
+    m_report.setTitle(ui->titleEdit->text());
+    m_report.setChart([this](QCPPainter& painter, const QSizeF& size) { drawChart(painter, size); },
+                      m_isSmithGraph ? 1.0 : 1.7);
+    PrintReport::Table table;
+    ui->markersWidget->tableText(table.headers, table.rows);
+    if (table.headers.isEmpty())
+        table.rows.clear();
+    m_report.setTable(table);
+    m_report.setComment(ui->textEditComment->toPlainText());
+}
+
+// Draws the chart `size` design pixels big, at the painter's origin. The
+// Smith chart's scaling depends on the viewport, so it's rescaled for this
+// size first -- the same dance the old fixed-size export did.
+void Print::drawChart(QCPPainter& painter, const QSizeF& size)
+{
+    const int w = qMax(1, qRound(size.width()));
+    const int h = qMax(1, qRound(size.height()));
+    QCustomPlot* plot = ui->widgetGraph;
+    const QRect saved = plot->viewport();
+    plot->setViewport(QRect(0, 0, w, h));
+    rescale();
+    plot->toPainter(&painter, w, h);
+    plot->setViewport(saved);
+}
+
+void Print::on_pageSetupBtn_clicked()
+{
+    QPageSetupDialog dialog(m_printer, this);
+    if (dialog.exec() == QDialog::Accepted)
+        m_preview->updatePreview();
+}
+
+void Print::on_printBtn_clicked()
+{
+    buildReport();
+
+    QPrinter printer(QPrinter::HighResolution);
+    printer.setPageLayout(m_printer->pageLayout());
+    QPrintDialog dialog(&printer, this);
+    if (dialog.exec() != QDialog::Accepted)
+        return;
+
+    // "Print to File (PDF)" makes QPrinter switch to its own PDF engine,
+    // which has silently replaced an explicit page size with A4 before;
+    // write through QPdfWriter with the layout chosen here instead. A real
+    // printer job goes to `printer` as is.
+    if (printer.outputFormat() == QPrinter::PdfFormat) {
+        QPdfWriter writer(printer.outputFileName());
+        writer.setResolution(300);
+        writer.setPageLayout(m_printer->pageLayout());
+        m_report.paint(&writer);
+    } else {
+        m_report.paint(&printer);
+    }
+}
+
+void Print::on_pdfPrintBtn_clicked()
+{
+    QString path = FileDialog::getSaveFileName(this, tr("Export PDF"), suggestedPath("pdf"), "*.pdf");
+    if (path.isEmpty())
+        return;
+    if (!path.endsWith(".pdf", Qt::CaseInsensitive))
+        path.append(".pdf");
+    FileDialog::noteUserDataDirIfEnabled(path);
+
+    buildReport();
+    // Straight to a file, no printer or driver involved; vector, so the
+    // resolution only sets the coordinate precision.
+    QPdfWriter writer(path);
+    writer.setResolution(300);
+    writer.setPageLayout(m_printer->pageLayout());
+    writer.setTitle(ui->titleEdit->text());
+    m_report.paint(&writer);
+}
+
+void Print::on_pngPrintBtn_clicked()
+{
+    QString path = FileDialog::getSaveFileName(this, tr("Export PNG"), suggestedPath("png"), "*.png");
+    if (path.isEmpty())
+        return;
+    if (!path.endsWith(".png", Qt::CaseInsensitive))
+        path.append(".png");
+    FileDialog::noteUserDataDirIfEnabled(path);
+
+    buildReport();
+    // The whole sheet, as large as the paper at 200 dpi (Letter: 1700 x 2200).
+    // A report that runs to more pages saves the rest as name-p2.png, ...
+    const QList<QImage> pages = m_report.renderImages(m_printer->pageLayout(), 200);
+    for (int i = 0; i < pages.size(); ++i) {
+        QString file = path;
+        if (i > 0)
+            file.insert(path.size() - 4, QString("-p%1").arg(i + 1));
+        pages.at(i).save(file, "PNG");
+    }
+}
+
+// Paper, orientation and margins are remembered; the first time, the paper
+// is the default printer's (see PrintUtils::defaultPageSize()), with the
+// printer's own orientation and half-inch margins.
+void Print::restorePageLayout()
+{
+    m_settings->beginGroup("Print");
+    QPageSize size = PrintUtils::defaultPageSize();
+    QPageLayout::Orientation orientation = m_printer->pageLayout().orientation();
+    QMarginsF margins(0.5, 0.5, 0.5, 0.5);
+    if (m_settings->contains("pageSizeId")) {
+        size = QPageSize(QPageSize::PageSizeId(m_settings->value("pageSizeId").toInt()));
+        orientation = QPageLayout::Orientation(m_settings->value("pageOrientation").toInt());
+        margins = QMarginsF(m_settings->value("marginLeft", 0.5).toDouble(),
+                            m_settings->value("marginTop", 0.5).toDouble(),
+                            m_settings->value("marginRight", 0.5).toDouble(),
+                            m_settings->value("marginBottom", 0.5).toDouble());
+    }
+    m_settings->endGroup();
+    m_printer->setPageLayout(QPageLayout(size, orientation, margins, QPageLayout::Inch));
+}
+
+void Print::savePageLayout()
+{
+    if (m_printer == nullptr)
+        return;
+    const QPageLayout layout = m_printer->pageLayout();
+    const QMarginsF margins = layout.margins(QPageLayout::Inch);
+    m_settings->beginGroup("Print");
+    m_settings->setValue("pageSizeId", int(layout.pageSize().id()));
+    m_settings->setValue("pageOrientation", int(layout.orientation()));
+    m_settings->setValue("marginLeft", margins.left());
+    m_settings->setValue("marginTop", margins.top());
+    m_settings->setValue("marginRight", margins.right());
+    m_settings->setValue("marginBottom", margins.bottom());
+    m_settings->endGroup();
+}

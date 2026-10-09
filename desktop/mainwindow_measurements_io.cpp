@@ -337,8 +337,17 @@ void MainWindow::on_actionPrint_triggered()
         m_print = new Print();
     }
     m_print->setAttribute(Qt::WA_DeleteOnClose);
-    m_print->updateMarkers(m_markers->getMarkersCount(), m_measurements->getMeasurementLength(),
-                           m_markers->updateInfo(m_markers->markersHint()->getColumns()));
+    // No markers table on the Smith print for now: the chart has no markers
+    // to point it at. When it comes back, list only the visible measurements,
+    // and draw marker dots only where they fall inside each measurement's
+    // range -- Smith has no way to set markers, so they come from the other
+    // charts.
+    if (name == "tab_smith") {
+        m_print->updateMarkers(0, 0, {});
+    } else {
+        m_print->updateMarkers(m_markers->getMarkersCount(), m_measurements->getMeasurementLength(),
+                               m_markers->updateInfo(m_markers->markersHint()->getColumns()));
+    }
 
     QString band = currentBandRegion();
     QStringList* bands = nullptr;
@@ -498,13 +507,11 @@ void MainWindow::on_actionPrint_triggered()
         // firing two more rescale() calls right after showEvent()'s own.
         for(int i = 0; i < m_measurements->getMeasurementLength(); ++i)
         {
-            QModelIndex myIndex = ui->tableWidget_measurments->model()->
-                                index( m_smithWidget->graphCount()-i-1, COL_NAME, QModelIndex());
             measurement& mm = *m_measurements->getMeasurement(i);
             if (mm.smithCurve->visible()) {
                 QPen pen = m_measurements->getMeasurement(i)->smithCurve->pen();
                 pen.setWidth(INACTIVE_GRAPH_PEN_WIDTH);
-                m_print->setSmithData(QSharedPointer<QCPCurveDataContainer>::create(m_measurements->getMeasurement(i)->smithGraph), pen, myIndex.data().toString());
+                m_print->setSmithData(QSharedPointer<QCPCurveDataContainer>::create(m_measurements->getMeasurement(i)->smithGraph), pen, mm.name);
             }
         }
     }else if(name == "tab_user")

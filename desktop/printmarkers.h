@@ -24,6 +24,8 @@ public slots:
     virtual void updateInfo(QList<QList<QVariant>>& info);
     // Plain text table instead of marker fields (TDR events).
     void setTable(const QStringList& headers, const QList<QStringList>& rows);
+    // The table as text, whichever way it was filled, for the printout.
+    void tableText(QStringList& headers, QList<QStringList>& rows) const;
     void clearTable(void);
     QList<int> getColumns();
 
@@ -33,6 +35,9 @@ signals:
 protected:
     int m_markers=0;
     int m_measurements=0;
+    bool m_plainTable = false; // set by setTable()
+    QStringList m_plainHeaders;
+    QList<QStringList> m_plainRows;
     bool m_menuVisible = false;
     QList<MarkersHeaderColumn> m_headerColumns;
     QList<QList<QWidget*>> m_rows;
