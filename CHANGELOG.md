@@ -69,6 +69,7 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Changed
 
+- Group boxes use the standard look: square frame with the title on the frame line (was rounded, with the title inside). Fixes Qt's own Print and Page Setup dialogs, where titles overlapped the controls, and removes the 20 px top-margin workaround from our Settings and Marker Comparison forms.
 - Analyzer Screenshot's PDF uses the Print dialog's paper, orientation and margins, adds a title line, fits the picture to the page (at most twice the device's size) and wraps the comment.
 - Menu bar order is now File, Edit, View, Analyzer, Mode, Tools, Help.
 - Screenshots from the chart (Ctrl+C, File > Save Screenshot) no longer carry the logo in the corner.

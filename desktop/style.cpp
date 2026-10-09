@@ -304,8 +304,12 @@ QString Style::groupBox(const Theme& t)
 {
     QString style;
 
-    style = "QGroupBox:title {color: " + c(t.text) + "; padding: 3px 0; subcontrol-origin: 1ex;} ";
-    style += "QGroupBox {border: 2px solid " + c(t.border) + "; border-radius: 5px;} ";
+    // The standard look: square frame, title on the frame line. Qt's own
+    // dialogs (Print, Page Setup, ...) are laid out for that, so a title drawn
+    // inside the frame collides with their first row of controls.
+    style = "QGroupBox {border: 1px solid " + c(t.border) + "; border-radius: 0px; margin-top: 1.2ex;} ";
+    style += "QGroupBox::title {color: " + c(t.text) + "; subcontrol-origin: margin; "
+             "subcontrol-position: top left; left: 8px; padding: 0 4px;} ";
     return style;
 }
 

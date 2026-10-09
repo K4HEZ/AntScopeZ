@@ -126,9 +126,6 @@ Warns before Delete/Clear All discards any dirty measurement.</string>
               <property name="fieldGrowthPolicy">
                <enum>QFormLayout::FieldGrowthPolicy::FieldsStayAtSizeHint</enum>
               </property>
-              <property name="topMargin">
-               <number>20</number>
-              </property>
               <item row="0" column="0">
                <widget class="QLabel" name="label_displayMeasurements">
                 <property name="text">
@@ -265,9 +262,6 @@ Warns before Delete/Clear All discards any dirty measurement.</string>
           <string>Data folder</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_dataFolder">
-          <property name="topMargin">
-           <number>20</number>
-          </property>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_dataFolder">
             <item>
@@ -687,9 +681,6 @@ Was computed from Window Background, now directly-editable.</string>
           <string>Example</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_themePreview">
-          <property name="topMargin">
-           <number>20</number>
-          </property>
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_themePreviewButtons">
             <item>
@@ -908,9 +899,6 @@ Was computed from Window Background, now directly-editable.</string>
          <layout class="QVBoxLayout" name="verticalLayout_markerBehavior">
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_maxMarkers">
-            <property name="topMargin">
-             <number>20</number>
-            </property>
             <item>
              <widget class="QLabel" name="label_maxMarkers">
               <property name="toolTip">
@@ -993,9 +981,6 @@ Was computed from Window Background, now directly-editable.</string>
             <string>Calibration Wizard</string>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_18">
-            <property name="topMargin">
-             <number>20</number>
-            </property>
             <item>
              <widget class="QPushButton" name="calibWizard">
               <property name="minimumSize">
@@ -1057,9 +1042,6 @@ Was computed from Window Background, now directly-editable.</string>
             <string>Open</string>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_12">
-            <property name="topMargin">
-             <number>20</number>
-            </property>
             <item>
              <widget class="QLabel" name="labelOpenState">
               <property name="text">
@@ -1118,9 +1100,6 @@ Was computed from Window Background, now directly-editable.</string>
             <string>Short</string>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_13">
-            <property name="topMargin">
-             <number>20</number>
-            </property>
             <item>
              <widget class="QLabel" name="labelShortState">
               <property name="text">
@@ -1176,9 +1155,6 @@ Was computed from Window Background, now directly-editable.</string>
             <string>Load</string>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_16">
-            <property name="topMargin">
-             <number>20</number>
-            </property>
             <item>
              <widget class="QLabel" name="labelLoadState">
               <property name="text">
@@ -1306,9 +1282,6 @@ Was computed from Window Background, now directly-editable.</string>
           <string>Cable specifications</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_4">
-          <property name="topMargin">
-           <number>20</number>
-          </property>
           <item row="2" column="3" rowspan="2">
            <layout class="QVBoxLayout" name="verticalLayout_7">
             <item>
@@ -1531,9 +1504,6 @@ Was computed from Window Background, now directly-editable.</string>
           <string>Transmission line options</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_5">
-          <property name="topMargin">
-           <number>20</number>
-          </property>
           <item row="2" column="1">
            <widget class="QLabel" name="subtractCableExplainLabel">
             <property name="sizePolicy">
@@ -1804,9 +1774,6 @@ discards queued data -- only that AntScopeZ resyncs).</string>
           <string>Scanning</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_scanning">
-          <property name="topMargin">
-           <number>20</number>
-          </property>
           <item>
            <layout class="QFormLayout" name="formLayout_scanningCounts">
             <property name="fieldGrowthPolicy">
@@ -1911,9 +1878,6 @@ discards queued data -- only that AntScopeZ resyncs).</string>
           <property name="fieldGrowthPolicy">
            <enum>QFormLayout::FieldGrowthPolicy::FieldsStayAtSizeHint</enum>
           </property>
-          <property name="topMargin">
-           <number>20</number>
-          </property>
           <item row="0" column="0">
            <layout class="QHBoxLayout" name="horizontalLayout_34">
             <item>
@@ -1986,9 +1950,6 @@ discards queued data -- only that AntScopeZ resyncs).</string>
                      <property name="fieldGrowthPolicy">
                       <enum>QFormLayout::FieldGrowthPolicy::FieldsStayAtSizeHint</enum>
                      </property>
-                     <property name="topMargin">
-                      <number>20</number>
-                     </property>
                      <item row="0" column="0">
                       <widget class="QLabel" name="label_20">
                        <property name="text">
@@ -2023,9 +1984,6 @@ discards queued data -- only that AntScopeZ resyncs).</string>
                     <layout class="QFormLayout" name="formLayout_4">
                      <property name="fieldGrowthPolicy">
                       <enum>QFormLayout::FieldGrowthPolicy::FieldsStayAtSizeHint</enum>
-                     </property>
-                     <property name="topMargin">
-                      <number>20</number>
                      </property>
                      <item row="0" column="0">
                       <widget class="QLabel" name="label_22">
@@ -2120,9 +2078,6 @@ discards queued data -- only that AntScopeZ resyncs).</string>
                <string>Auto calibration</string>
               </property>
               <layout class="QGridLayout" name="gridLayout">
-               <property name="topMargin">
-                <number>20</number>
-               </property>
                <item row="0" column="1">
                 <widget class="QLabel" name="label_28">
                  <property name="text">
@@ -2264,9 +2219,6 @@ discards queued data -- only that AntScopeZ resyncs).</string>
           <string>Debug Logging</string>
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_debugLogging">
-          <property name="topMargin">
-           <number>20</number>
-          </property>
           <item>
            <widget class="QCheckBox" name="debugLogSerialCheckBox">
             <property name="sizePolicy">
@@ -2367,9 +2319,6 @@ discards queued data -- only that AntScopeZ resyncs).</string>
           <string>Zoom &amp; Remote API</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_14">
-          <property name="topMargin">
-           <number>20</number>
-          </property>
           <item>
            <layout class="QFormLayout" name="formLayout_scanning">
             <property name="fieldGrowthPolicy">
@@ -2438,9 +2387,6 @@ discards queued data -- only that AntScopeZ resyncs).</string>
           <string>Chart Y-Axis Ranges</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_chartAxisRanges">
-          <property name="topMargin">
-           <number>20</number>
-          </property>
           <item row="0" column="1">
            <widget class="QLabel" name="label_chartAxisMinHeader">
             <property name="text">
@@ -2695,9 +2641,6 @@ discards queued data -- only that AntScopeZ resyncs).</string>
           <bool>false</bool>
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_11">
-          <property name="topMargin">
-           <number>20</number>
-          </property>
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_3">
             <item>
@@ -2718,9 +2661,6 @@ discards queued data -- only that AntScopeZ resyncs).</string>
                  <string>Info</string>
                 </property>
                 <layout class="QHBoxLayout" name="horizontalLayout_5">
-                 <property name="topMargin">
-                  <number>20</number>
-                 </property>
                  <item>
                   <layout class="QVBoxLayout" name="verticalLayout">
                    <item>
@@ -2797,9 +2737,6 @@ discards queued data -- only that AntScopeZ resyncs).</string>
                  <string>Update from file</string>
                 </property>
                 <layout class="QHBoxLayout" name="horizontalLayout_8">
-                 <property name="topMargin">
-                  <number>20</number>
-                 </property>
                  <item>
                   <layout class="QVBoxLayout" name="verticalLayout_2">
                    <item>
@@ -2873,9 +2810,6 @@ discards queued data -- only that AntScopeZ resyncs).</string>
           <string>Match license</string>
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout">
-          <property name="topMargin">
-           <number>20</number>
-          </property>
           <item>
            <widget class="QPushButton" name="pushButtonUserData">
             <property name="text">
