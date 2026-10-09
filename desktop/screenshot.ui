@@ -26,7 +26,7 @@
    <string>Screenshot</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="res.qrc">
+   <iconset resource="resources/res.qrc">
     <normaloff>:/new/prefix1/AntScopeZ.png</normaloff>:/new/prefix1/AntScopeZ.png</iconset>
   </property>
   <widget class="QWidget" name="layoutWidget">
@@ -139,7 +139,7 @@
   </widget>
  </widget>
  <resources>
-  <include location="res.qrc"/>
+  <include location="resources/res.qrc"/>
  </resources>
  <connections/>
 </ui>

@@ -1447,7 +1447,7 @@
   <tabstop>tableWidget_measurments</tabstop>
  </tabstops>
  <resources>
-  <include location="res.qrc"/>
+  <include location="resources/res.qrc"/>
  </resources>
  <connections/>
 </ui>

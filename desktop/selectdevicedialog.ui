@@ -14,7 +14,7 @@
    <string>Connect Analyzer</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="res.qrc">
+   <iconset resource="resources/res.qrc">
     <normaloff>:/new/prefix1/AntScopeZ.png</normaloff>:/new/prefix1/AntScopeZ.png</iconset>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
@@ -156,7 +156,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="res.qrc"/>
+  <include location="resources/res.qrc"/>
  </resources>
  <connections/>
 </ui>
