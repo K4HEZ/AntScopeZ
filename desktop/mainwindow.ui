@@ -1123,8 +1123,8 @@
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuView"/>
-   <addaction name="menuMode"/>
    <addaction name="menuAnalyzer"/>
+   <addaction name="menuMode"/>
    <addaction name="menuTools"/>
    <addaction name="menuHelp"/>
   </widget>

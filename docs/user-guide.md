@@ -314,7 +314,7 @@ the main window.
 **Menu bar**
 
 There's no toolbar of buttons any more -- everything below lives in the
-menu bar instead (File / Edit / View / Mode / Analyzer / Tools / Help).
+menu bar instead (File / Edit / View / Analyzer / Mode / Tools / Help).
 
 *File*
 
@@ -365,14 +365,6 @@ table's own right-click menu (see [TDR](#events-table)).
 | Language | UI language -- auto-discovered from whatever `QtLanguage_*.qm` files are installed, not a fixed list |
 | Theme | Light or Dark -- see [CHANGELOG.md](../CHANGELOG.md) for what it does and doesn't cover |
 
-*Mode*
-
-| Control | What it does |
-|---|---|
-| Sweep | Frequency sweeps: the Frequency and Presets controls, and the SWR, impedance, Smith and other charts (default). Clicking any chart tab other than TDR or Tuning puts you in this mode |
-| Tuning | Live SWR readout at one frequency, for trimming an antenna -- see [Tuning mode](#tuning-mode-live-single-frequency-readout) |
-| TDR | Time-domain reflectometry: the TDR scan panel replaces Frequency/Presets and the TDR chart is selected. Every chart tab stays available, and clicking the TDR tab puts you in this mode -- see [TDR](#tdr-time-domain-reflectometry). Can't be switched while a scan is running; the choice is remembered |
-
 *Analyzer*
 
 | Control | What it does |
@@ -381,6 +373,14 @@ table's own right-click menu (see [TDR](#events-table)).
 | Screenshot... | Captures the *analyzer's own* on-device screen (not every model supports this -- see [Supported devices](#supported-devices)) -- see [Print and screenshots](#print-and-screenshots) |
 | Data from AA | Loads measurement results already stored in the analyzer's own memory -- see [Data from AA](#data-from-aa) |
 | Disconnect | Ends the current connection without closing AntScopeZ |
+
+*Mode*
+
+| Control | What it does |
+|---|---|
+| Sweep | Frequency sweeps: the Frequency and Presets controls, and the SWR, impedance, Smith and other charts (default). Clicking any chart tab other than TDR or Tuning puts you in this mode |
+| Tuning | Live SWR readout at one frequency, for trimming an antenna -- see [Tuning mode](#tuning-mode-live-single-frequency-readout) |
+| TDR | Time-domain reflectometry: the TDR scan panel replaces Frequency/Presets and the TDR chart is selected. Every chart tab stays available, and clicking the TDR tab puts you in this mode -- see [TDR](#tdr-time-domain-reflectometry). Can't be switched while a scan is running; the choice is remembered |
 
 *Tools*
 
