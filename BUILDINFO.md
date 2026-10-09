@@ -62,6 +62,15 @@ mobile/     phone app (Qt Quick) -- its own CMake project, see below
 shared/     data files installed with the app (cable list, ITU defaults, sample scans)
 ```
 
+**Where shared data files are found** (`cables.txt`, `itu-regions-defaults.txt`,
+the `.qm` translations): `AppPaths::sharedDataFolder()` uses the folder the
+binary is in if `itu-regions-defaults.txt` is there (that's how a build
+directory stages them, and it wins over an older installed copy), otherwise
+the install data directory compiled in as `ANTSCOPE_SHARED_DATA_DIR`
+(`/usr/share/antscopez` for the `.deb`), otherwise the binary's folder.
+User-edited copies (such as `itu-regions.txt`) live in the per-user config
+folder instead.
+
 `core/` is the core's include root, so `#include "analyzer/..."`,
 `"appconfig.h"` etc. resolve from either side; the core's include path has
 no `desktop/` entry, so it can't include app headers.
@@ -77,6 +86,7 @@ What's in the core (`ANTSCOPE_CORE_SOURCES`/`ANTSCOPE_CORE_HEADERS`):
 | Measurement data, list rules, headless scan session | `core/measurementdata.*`, `core/measurementlist.h`, `core/measurementsession.*` |
 | Measurement files (`.asd`, Touchstone, CSV, NWL) | `core/measurementfiles.*` |
 | Marker list | `core/markerlist.h` |
+| Cable list and ITU band data | `core/cablecatalog.*`, `core/itubands.*` |
 | Remote API | `core/remoteapi/` |
 | Helpers | `core/debuglog.*`, `core/crc32.*`, `core/AA55BTPacket.*`, `core/usermessage.h` |
 
@@ -134,6 +144,28 @@ both it and `clang-tidy` itself already ship with Qt Creator's bundled
 clang toolchain. Point it at `build-debug/.qtc_clangd/compile_commands.json`
 (already generated for clangd).
 
+`ANTSCOPEZ_BUILD_TESTS` (off by default) adds the `tests/` programs to the
+build. They link `antscopez_core` only, so no GUI is involved:
+
+```sh
+cmake -B build-tests -DCMAKE_BUILD_TYPE=Debug -DANTSCOPEZ_BUILD_TESTS=ON \
+  -DCMAKE_PREFIX_PATH=/opt/Qt/6.11.2/gcc_64
+cmake --build build-tests --target tdrmath_test tdr_events_dump --parallel
+ctest --test-dir build-tests
+```
+
+- **`tdrmath_test`** (registered with `ctest`) feeds synthetic cable sweeps
+  (open end, short end, matched line, a partial reflection plus an open end)
+  through `TdrMath::compute()` and `TdrMath::findEvents()`, and checks the
+  events found, their kinds and distances, and `TdrMath::roundTripNs()`.
+- **`tdr_events_dump`** is a tool, not a test:
+  `tdr_events_dump scan.asd [vf=0.66] [rect|hamming|hann|blackman|kaiser] [ft|m]`
+  reads a saved TDR `.asd`, prints the trace statistics and the events found
+  with the default thresholds, then a grid of how many events are found at
+  other noise-floor and relative-floor settings. It exists for tuning
+  `TdrMath::EventParams` against real scans; a file that doesn't start near
+  DC is rejected as not a TDR scan.
+
 Otherwise none currently -- `ANTSCOPE_NEW_CONNECTION`, `ANTSCOPE_NEW_ANALYZER`,
 and `ANTSCOPE_OLD_TDR` used to gate old code paths they replaced; all
 three were always `ON`, and the flags and their dead OFF-path code are
@@ -148,7 +180,7 @@ branch (which bundles Qt frameworks into the `.app` via
 `qt_deploy_runtime_dependencies()` -- routes to `macdeployqt` internally
 when given a bundle path, confirmed via Qt's own docs):
 
-- **CMake-native (what CI uses, `.github/workflows/macos-build.yml`):**
+- **CMake-native (what CI uses, `.github/workflows/macos-build.yml`, started manually):**
   ```sh
   cmake -B build -DCMAKE_BUILD_TYPE=Release \
     "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64"
@@ -356,7 +388,9 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   has a `windows-mingw`/`windows-mingw-release` pair (Qt Online Installer's
   Qt 6.11.2 MinGW kit under `C:/Qt`) and `CMakeLists.txt` has an NSIS
   packaging block (`cpack -G NSIS`); `.github/workflows/windows-build.yml`
-  (issue #58) builds it on every push to develop, installs NSIS via
+  (issue #58) builds it (started manually from the Actions tab -- the
+  workflow is `workflow_dispatch` only; running on every push was turned off
+  2026-09-21), installs NSIS via
   Chocolatey (the runner lacks `makensis`), smoke-launches the staged exe,
   and uploads the installer. Released as `AntScopeZ-<version>-win64.exe`
   from 2.2.7. Merged into `develop` 2026-09-06 (PR #11,
@@ -376,7 +410,7 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   and `IOKit` linked -- the latter was a real missing-link bug, found and
   fixed 2026-09-18 while first standing up CI for this platform). Builds
   and packages via GitHub Actions (`.github/workflows/macos-build.yml`,
-  issue #57) as a universal arm64+x86_64 `.app`/`.dmg` -- no local macOS
+  issue #57, started manually -- `workflow_dispatch` only since 2026-09-21) as a universal arm64+x86_64 `.app`/`.dmg` -- no local macOS
   hardware is owned here, so this is the only way this platform gets
   built or tested at all. Confirmed 2026-09-18 via a real CI-captured
   screenshot: the arm64 build compiles, links, bundles Qt, launches, and

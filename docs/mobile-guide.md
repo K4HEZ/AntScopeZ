@@ -160,8 +160,10 @@ for the background; the controls are the same, in a phone layout.
 
 **Scan setup**
 
-- **Cable preset** fills in the velocity factor from the bundled cable list
-  (over 100 cables). You can also type a velocity factor.
+- **Cable preset** opens a searchable list of the bundled cables (over 100)
+  and fills in the velocity factor from the one you pick. Type to narrow the
+  list; with the search box empty, the cables you picked most recently are
+  listed first under "Recent". You can also just type a velocity factor.
 - **Top frequency** is how far up the sweep goes. It always starts near
   DC. A wider sweep resolves closer reflections but covers a shorter
   distance before the trace wraps around.
@@ -173,10 +175,20 @@ Press **TDR Scan**. A progress bar shows while the sweep runs; **Stop**
 cancels it. A cancelled scan is discarded.
 
 **The trace.** Choose **Impulse**, **Step** or **Impedance**. Touch the
-chart to read the distance and value at a point. The **Window** picker
-(Rectangular, Hamming, Hann, Blackman, Kaiser) reshapes the trace
-instantly without a rescan -- see the desktop guide for what each trades
-off. Kaiser also has a **Beta** field.
+chart to read the distance and value at a point; values are shown with their
+unit (amplitude for Impulse, ρ for Step, Ω for Impedance). The selected point
+stays where it is when you switch between the three traces, and is cleared
+by a new scan.
+
+**Zoom and scroll.** A new scan shows the whole trace. Drag the **Zoom**
+slider to magnify it (the factor is shown beside the slider; each step of
+the slider is the same relative change), and drag the scrollbar that
+appears under the chart to move along it. **Fit** returns to the whole
+trace.
+
+**Window.** The **Window** picker (Rectangular, Hamming, Hann, Blackman,
+Kaiser) reshapes the trace instantly without a rescan -- see the desktop
+guide for what each trades off. Kaiser also has a **Beta** field.
 
 **Result**
 

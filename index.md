@@ -26,7 +26,7 @@ other brands) -- built for, and maintained by, the ham radio community.
 - Marker Comparison and Trim Calculator
 - OSL Calibrations and Cable Add/Delete
 - Debug Logging for Analyzer Communications
-- USB Serial/HID, BLE/Bluetooth and NavoVNA
+- USB Serial/HID, BLE/Bluetooth and NanoVNA
 - TDR Analysis 
   - Cable Length <-> Velocity Factor Calculations w/ Over 100 Cable Presets 
   - Adjustable frequency/points with unambiguous range / resolution indication
