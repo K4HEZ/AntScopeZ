@@ -1,4 +1,5 @@
 #include "markers.h"
+#include <QTimer>
 #include "mainwindow.h"
 #include "style.h"
 #include "qcpgraphdatahelpers.h"
@@ -490,9 +491,17 @@ void Markers::autoPlaceAtLowestSwr()
                                                      m_measurements->getZ0()), &bestFq))
         return;
 
-    create(bestFq);
-    setFq(bestFq);
-    add();
+    // Deferred: adding the marker right at scan end (table appears, chart
+    // resizes) left the plot unpainted until a resize. Run it after the
+    // scan's own final replots.
+    QTimer::singleShot(20, this, [this, bestFq]() {
+        if (!m_markersList.canAdd(AppConfig::get().maxMarkers))
+            return;
+        create(bestFq);
+        setFq(bestFq);
+        add();
+        redraw();
+    });
 }
 
 void Markers::setMarkersHintEnabled(bool enabled)

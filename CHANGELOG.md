@@ -69,6 +69,7 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Changed
 
+- Removed the rule above the first heading in the Sweep, TDR and Tuning left panels.
 - Group boxes use the standard look: square frame with the title on the frame line (was rounded, with the title inside). Fixes Qt's own Print and Page Setup dialogs, where titles overlapped the controls, and removes the 20 px top-margin workaround from our Settings and Marker Comparison forms.
 - Analyzer Screenshot's PDF uses the Print dialog's paper, orientation and margins, adds a title line, fits the picture to the page (at most twice the device's size) and wraps the comment.
 - Menu bar order is now File, Edit, View, Analyzer, Mode, Tools, Help.
@@ -105,6 +106,7 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Fixed
 
+- Auto lowest-SWR marker no longer leaves the chart unpainted until a resize.
 - TDR's Top frequency and Tuning's frequency limit now follow the connected device's licensed maximum (500 MHz for a Match with the RFE license) instead of the model's default (750 MHz), which was read before the license arrived.
 - Print: the markers table lists only the checked (visible) measurements.
 - Smith chart print: the legend lists the visible measurements by name
