@@ -5,7 +5,6 @@
 #include <QToolButton>
 #include <QLabel>
 #include <QSlider>
-#include <QFrame>
 #include <QFormLayout>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -15,10 +14,6 @@
 TuningControls::TuningControls(QWidget* parent) :
     QWidget(parent)
 {
-    QFrame* line = new QFrame(this);
-    line->setFrameShape(QFrame::HLine);
-    line->setFrameShadow(QFrame::Sunken);
-
     QLabel* heading = new QLabel(tr("Tuning"), this);
     QFont bold = heading->font();
     bold.setBold(true);
@@ -96,7 +91,6 @@ TuningControls::TuningControls(QWidget* parent) :
     QVBoxLayout* main = new QVBoxLayout(this);
     main->setContentsMargins(0, 0, 0, 0);
     main->setSpacing(4);
-    main->addWidget(line);
     main->addWidget(heading);
     main->addLayout(form);
     main->addSpacing(6);

@@ -18,13 +18,6 @@
     <enum>QLayout::SetMinimumSize</enum>
    </property>
    <item>
-    <widget class="Line" name="scanSetupHeadingLine">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
-   </item>
-   <item>
     <widget class="QLabel" name="scanSetupHeading">
      <property name="font">
       <font>
