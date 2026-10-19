@@ -2,7 +2,7 @@
 #define AA230FIRMWAREUPDATER_H
 
 #include "firmwareupdater.h"
-#include <QSerialPort>
+#include "serialport_compat.h"
 #include <QCoreApplication>
 
 class AA230FirmwareUpdater : public FirmwareUpdater
@@ -29,7 +29,7 @@ public slots:
     virtual void stop();
 
 private:
-    QSerialPort m_port;
+    SerialPort m_port;
     volatile bool m_stop;
 
     bool openDevice(const ReDeviceInfo &dev);

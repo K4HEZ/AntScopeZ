@@ -258,18 +258,4 @@ QString ReDeviceInfo::portName() const
     return m_portName;
 }
 
-QList<QSerialPortInfo> bluetoothPorts()
-{
-    QList<QSerialPortInfo> list;
-    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
-        if (info.description().contains("Bluetooth", Qt::CaseInsensitive)) {
-#ifdef Q_OS_DARWIN
-            if (info.description().contains("tty."))
-                continue;
-#endif
-            list << info;
-        }
-    }
-    return list;
-}
 

@@ -224,10 +224,10 @@ bool AA230FirmwareUpdater::openDevice(const ReDeviceInfo &dev)
     state = m_port.open(QIODevice::ReadWrite);
 
     m_port.setBaudRate(/*1500000*/115200);
-    m_port.setDataBits(QSerialPort::Data8);
-    m_port.setParity(QSerialPort::NoParity);
-    m_port.setStopBits(QSerialPort::OneStop);
-    m_port.setFlowControl(QSerialPort::NoFlowControl);
+    m_port.setDataBits(SerialPort::Data8);
+    m_port.setParity(SerialPort::NoParity);
+    m_port.setStopBits(SerialPort::OneStop);
+    m_port.setFlowControl(SerialPort::NoFlowControl);
     return state;
 }
 

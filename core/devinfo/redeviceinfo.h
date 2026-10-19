@@ -9,9 +9,6 @@
 //#include "hidapi.h"
 #include "ftdi/ftdiinfo.h"
 
-extern QList<QSerialPortInfo> bluetoothPorts();
-
-
 class ReDeviceInfo
 {
 public:

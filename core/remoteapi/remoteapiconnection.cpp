@@ -4,7 +4,6 @@
 #include <QTcpSocket>
 #include <QJsonDocument>
 #include <QJsonArray>
-#include <QSerialPortInfo>
 
 #include "remoteapihost.h"
 #include "appconfig.h"

@@ -3,13 +3,13 @@
 
 #include <QObject>
 #include <QList>
-#include <QSerialPortInfo>
-#include <QSerialPort>
 #include <QDebug>
 
 #include <QLibrary>
 
 #ifdef Q_OS_WIN
+ #include <QSerialPortInfo>
+ #include <QSerialPort>
  #include <windows.h>
  #include <ftdi/ftd2xx.h>
 

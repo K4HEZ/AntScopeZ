@@ -49,10 +49,10 @@ bool AA30ZEROFirmwareUpdater::update(const ReDeviceInfo &dev, QIODevice *fw)
 
     m_port.setPortName(dev.portName());
     m_port.setBaudRate(115200);
-    m_port.setDataBits(QSerialPort::Data8);
-    m_port.setParity(QSerialPort::NoParity);
-    m_port.setStopBits(QSerialPort::OneStop);
-    m_port.setFlowControl(QSerialPort::NoFlowControl);
+    m_port.setDataBits(SerialPort::Data8);
+    m_port.setParity(SerialPort::NoParity);
+    m_port.setStopBits(SerialPort::OneStop);
+    m_port.setFlowControl(SerialPort::NoFlowControl);
     m_port.open(QIODevice::ReadWrite);
     m_port.waitForReadyRead(1000);
 
@@ -136,10 +136,10 @@ AA30ZEROFirmwareUpdater::FirmwareInfo AA30ZEROFirmwareUpdater::firmwareInfo(cons
 
     m_port.setPortName(dev.portName());
     m_port.setBaudRate(115200);
-    m_port.setDataBits(QSerialPort::Data8);
-    m_port.setParity(QSerialPort::NoParity);
-    m_port.setStopBits(QSerialPort::OneStop);
-    m_port.setFlowControl(QSerialPort::NoFlowControl);
+    m_port.setDataBits(SerialPort::Data8);
+    m_port.setParity(SerialPort::NoParity);
+    m_port.setStopBits(SerialPort::OneStop);
+    m_port.setFlowControl(SerialPort::NoFlowControl);
     m_port.open(QIODevice::ReadWrite);
     m_port.waitForReadyRead(1000);
     /******************************/
@@ -330,10 +330,10 @@ bool AA30ZEROFirmwareUpdater::openDevice(const ReDeviceInfo &dev)
     {
         m_port.setBaudRate(38400);
     }
-    m_port.setDataBits(QSerialPort::Data8);
-    m_port.setParity(QSerialPort::NoParity);
-    m_port.setStopBits(QSerialPort::OneStop);
-    m_port.setFlowControl(QSerialPort::NoFlowControl);
+    m_port.setDataBits(SerialPort::Data8);
+    m_port.setParity(SerialPort::NoParity);
+    m_port.setStopBits(SerialPort::OneStop);
+    m_port.setFlowControl(SerialPort::NoFlowControl);
     state = m_port.open(QIODevice::ReadWrite);
     if(!state)
     {

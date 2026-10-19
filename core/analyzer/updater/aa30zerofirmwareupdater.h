@@ -3,7 +3,7 @@
 
 #include "firmwareupdater.h"
 #include <QObject>
-#include <QSerialPort>
+#include "serialport_compat.h"
 #include <QCoreApplication>
 #include <qendian.h>
 #include <QThread>
@@ -27,7 +27,7 @@ public slots:
     virtual void stop();
 
 private:
-    QSerialPort m_port;
+    SerialPort m_port;
     volatile bool m_stop;
 
     bool openDevice(const ReDeviceInfo &dev);
