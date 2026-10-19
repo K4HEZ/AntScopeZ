@@ -616,10 +616,18 @@ void AnalyzerController::refreshDeviceInfo()
 
     m_deviceMinKHz = m_analyzer->getMinFq().toDouble();
     m_deviceMaxKHz = m_analyzer->getMaxFq().toDouble();
-    // A Match's real range comes from its LICx reply, which arrives after
-    // connect; until then the table's 750 MHz default is wrong for the
-    // RFE/U variants, so treat the range as unknown.
-    if (m_deviceLicense.isEmpty() && m_deviceModel.contains("Match", Qt::CaseInsensitive))
+    // A serial/USB-connected Match's real range comes from its LICx reply,
+    // which arrives after connect; until then the table's 750 MHz default
+    // is wrong for the RFE/U variants, so treat the range as unknown. BLE
+    // is excluded: it never sends a LICx-format reply at all (see
+    // BleAnalyzer::parseFullInfo's BLE_FULLINFO_MEASURER case), so
+    // m_deviceLicense can never stop being empty there -- this guard would
+    // otherwise permanently zero out the real range BLE_FULLINFO_MEASURER
+    // already wrote into the device table (found 2026-10-19, on a real
+    // Match connected over BLE: Range stuck on "--" and start/stop not
+    // clamped to the device's actual limits).
+    if (sel.type != ReDeviceInfo::BLE && m_deviceLicense.isEmpty()
+            && m_deviceModel.contains("Match", Qt::CaseInsensitive))
         m_deviceMinKHz = m_deviceMaxKHz = 0;
 
     emit deviceInfoChanged();
