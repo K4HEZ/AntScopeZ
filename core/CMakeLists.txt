@@ -4,7 +4,14 @@
 # dependency creeping in fails the build.
 #
 
-find_package(Qt6 REQUIRED COMPONENTS Core SerialPort Network Xml Concurrent Bluetooth)
+# Qt doesn't ship a SerialPort module for iOS at all (no general-purpose
+# USB/serial device access for an ordinary app there) -- see
+# analyzer/serialport_compat.h's Q_OS_IOS branch, which stands in instead.
+if(IOS)
+    find_package(Qt6 REQUIRED COMPONENTS Core Network Xml Concurrent Bluetooth)
+else()
+    find_package(Qt6 REQUIRED COMPONENTS Core SerialPort Network Xml Concurrent Bluetooth)
+endif()
 include(GNUInstallDirs)
 
 set(ANTSCOPE_CORE_SOURCES
@@ -114,17 +121,30 @@ target_include_directories(antscopez_core PUBLIC
 
 target_link_libraries(antscopez_core PUBLIC
     Qt6::Core
-    Qt6::SerialPort
     Qt6::Network
     Qt6::Xml
     Qt6::Concurrent
     Qt6::Bluetooth
 )
+if(NOT IOS)
+    target_link_libraries(antscopez_core PUBLIC Qt6::SerialPort)
+endif()
 
 if(WIN32)
     target_sources(antscopez_core PRIVATE analyzer/usbhid/hidapi/windows/hid.c)
     target_link_libraries(antscopez_core PRIVATE setupapi)
     target_include_directories(antscopez_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/ftdi)
+elseif(IOS)
+    # BLE-only on iOS, deliberately: no USB HID/serial access at all for an
+    # ordinary app, and MFi certification isn't being pursued (see
+    # BUILDINFO.md's iOS section). This no-op hidapi backend exists only so
+    # HidAnalyzer/HidFirmwareUpdater/ReDeviceInfo link cleanly --
+    # mobile/ConnectionPage.qml hides the USB connection mode on iOS, so
+    # it's never actually reached. NOTE: IOS must be checked before APPLE
+    # below -- CMake's APPLE is true on iOS too.
+    target_sources(antscopez_core PRIVATE
+        analyzer/usbhid/hidapi/ios/hid.c
+        analyzer/ios_serialport.h)
 elseif(APPLE)
     target_sources(antscopez_core PRIVATE analyzer/usbhid/hidapi/mac/hid.c)
     find_library(COREFOUNDATION_FRAMEWORK CoreFoundation REQUIRED)

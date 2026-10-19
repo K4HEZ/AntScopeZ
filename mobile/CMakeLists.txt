@@ -104,3 +104,30 @@ set_target_properties(AntScopeZMobile PROPERTIES
     # and UsbPermissionReceiver.java -- see mobile/android/'s own files.
     QT_ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android"
 )
+
+if(IOS)
+    # mobile/ios/Info.plist.in is Qt's own default iOS Info.plist.app.in
+    # template (lib/cmake/Qt6/ios/Info.plist.app.in) plus one added key:
+    # NSBluetoothAlwaysUsageDescription. iOS refuses Bluetooth access
+    # without that key present (BLE is the only connection mode on iOS --
+    # see ConnectionPage.qml and BUILDINFO.md's iOS section), so Qt's
+    # default template can't be used unmodified.
+    set_target_properties(AntScopeZMobile PROPERTIES
+        MACOSX_BUNDLE_GUI_IDENTIFIER "io.github.k4hez.antscopez"
+        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/ios/Info.plist.in"
+        XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon"
+    )
+    # Without an AppIcon asset catalog, the app installs with no icon at
+    # all and doesn't get pinned to the Home Screen (found 2026-10-19,
+    # installing on a real device for the first time). Source image is the
+    # same desktop/resources/AntScopeZ.png used for the Android icon,
+    # upscaled from its native 64x64 -- soft at 1024x1024, but a real icon
+    # beats none; revisit if a higher-res source ever exists. Single-size
+    # "universal" app icon (Xcode 14+ format, see Contents.json) --
+    # resource processing of .xcassets is handled by the Xcode generator
+    # via MACOSX_PACKAGE_LOCATION, same as the Android .png resource below.
+    target_sources(AntScopeZMobile PRIVATE ios/Assets.xcassets)
+    set_source_files_properties(ios/Assets.xcassets PROPERTIES
+        MACOSX_PACKAGE_LOCATION Resources
+    )
+endif()

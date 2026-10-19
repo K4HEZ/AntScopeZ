@@ -83,11 +83,16 @@ Page {
                     text: qsTr("USB")
                     checked: page.mode === 1
                     onClicked: page.mode = 1
+                    // No USB device access at all for an ordinary app on
+                    // iOS (no MFi certification pursued) -- see
+                    // BUILDINFO.md's iOS section.
+                    visible: Qt.platform.os !== "ios"
                 }
                 RadioButton {
                     text: qsTr("Serial")
                     checked: page.mode === 2
                     onClicked: page.mode = 2
+                    visible: Qt.platform.os !== "ios"
                 }
             }
 
