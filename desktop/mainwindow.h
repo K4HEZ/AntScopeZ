@@ -112,12 +112,12 @@ class MainWindow : public QMainWindow, public RemoteApiHost
     Q_OBJECT
 
 protected:
-    void closeEvent(QCloseEvent *event);
-    void changeEvent(QEvent* event);
+    void closeEvent(QCloseEvent *event) override;
+    void changeEvent(QEvent* event) override;
 
 public:
     explicit MainWindow(QWidget *parent = 0);
-    ~MainWindow();
+    ~MainWindow() override;
 
     void openFile(QString path);
     AnalyzerPro* analyzer() override { return m_analyzer; }
@@ -367,8 +367,8 @@ private:
     void addBand (QCustomPlot * widget, double x1, double x2, double y1, double y2, QString& name);
     void createTabs (QString sequence);
     void createUserTab();
-    void resizeEvent(QResizeEvent *e);
-    bool event(QEvent *event);
+    void resizeEvent(QResizeEvent *e) override;
+    bool event(QEvent *event) override;
     // Lets speedAccuracySlider claim Left/Right/Up/Down for itself while
     // focused, instead of the window-wide chart pan/zoom QShortcuts (see
     // ctor, Qt::Key_Up/Down/Left/Right) intercepting them first -- those

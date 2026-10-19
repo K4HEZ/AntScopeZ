@@ -126,7 +126,7 @@ public:
     static quint8 screenCompression;
 
     explicit BleAnalyzer(QObject *parent = nullptr);
-    virtual ~BleAnalyzer();
+    ~BleAnalyzer() override;
 
     QString error() const;
     void setError(const QString& error);
@@ -144,12 +144,12 @@ public:
     QString bytesToString(QDataStream& stream);
     double shortToDouble(qint16 src);
     void write(QByteArray& arr);
-    virtual bool refreshConnection();
+    bool refreshConnection() override;
     void sendFullInfo();
 
     // analyzer
-    virtual bool connectAnalyzer();
-    virtual void disconnectAnalyzer();
+    bool connectAnalyzer() override;
+    void disconnectAnalyzer() override;
 
 protected:
     //QLowEnergyController
@@ -182,14 +182,14 @@ protected:
     bool stopCommandAbortsDevice() const override { return false; }
 
 public slots:
-    void searchAnalyzer();
+    void searchAnalyzer() override;
     void connectToService(const QString &address);
-    void startMeasure(qint64 from_hz, qint64 to_hz, int dotsNumber, bool frx=true);
-    void startMeasureOneFq(qint64 fqFrom_hz, int dotsNumber, bool frx=true);
-    void getAnalyzerData();
-    void getAnalyzerData(QString number);
-    void makeScreenshot();
-    void stopMeasure();
+    void startMeasure(qint64 from_hz, qint64 to_hz, int dotsNumber, bool frx=true) override;
+    void startMeasureOneFq(qint64 fqFrom_hz, int dotsNumber, bool frx=true) override;
+    void getAnalyzerData() override;
+    void getAnalyzerData(QString number) override;
+    void makeScreenshot() override;
+    void stopMeasure() override;
     void on_measurementComplete() override;
     void on_screenshotComplete() override;
 

@@ -24,7 +24,7 @@ class Settings : public QDialog
 
 public:
     explicit Settings(QWidget *parent = 0);
-    ~Settings();
+    ~Settings() override;
 
     void setAnalyzer(AnalyzerPro * analyzer);
     void setCalibration(Calibration * calibration);
@@ -142,7 +142,7 @@ private:
     int m_editingThemeIndex = 0;
     //vnn_01- for correct close_form---
     bool vnn_FormOn = true;
-    void closeEvent(QCloseEvent *bar);
+    void closeEvent(QCloseEvent *bar) override;
    //--------------
 
     // Esc key -- QDialog::reject() is Qt's own guaranteed entry point for

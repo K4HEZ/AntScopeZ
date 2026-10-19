@@ -1112,7 +1112,7 @@ QColor Measurements::chartBackgroundColor()
 QColor Measurements::inverseChartBackground()
 {
     QColor color = chartBackgroundColor();
-#ifndef Q_OS_MACX
+#ifndef Q_OS_MACOS
     return QColor(255-color.red(), 255-color.green(), 255-color.blue());
 #else
     return color;

@@ -40,14 +40,14 @@ class NanovnaV2Analyzer : public BaseAnalyzer
 
 public:
     explicit NanovnaV2Analyzer(QObject *parent = 0);
-    ~NanovnaV2Analyzer();
+    ~NanovnaV2Analyzer() override;
 
-    bool openComPort(const QString& portName, quint32 portSpeed = 115200);
-    void closeComPort();
+    bool openComPort(const QString& portName, quint32 portSpeed = 115200) override;
+    void closeComPort() override;
 
-    virtual bool refreshConnection();
-    virtual bool connectAnalyzer();
-    virtual void disconnectAnalyzer();
+    bool refreshConnection() override;
+    bool connectAnalyzer() override;
+    void disconnectAnalyzer() override;
     // No real wire-level abort in this protocol -- see BaseAnalyzer's own
     // comment on this method.
     bool stopCommandAbortsDevice() const override { return false; }
@@ -100,9 +100,9 @@ signals:
 
 public slots:
     void dataArrived();
-    void startMeasure(qint64 fqFrom, qint64 fqTo, int dotsNumber, bool frx=true);
-    void stopMeasure();
-    void on_measurementComplete();
+    void startMeasure(qint64 fqFrom, qint64 fqTo, int dotsNumber, bool frx=true) override;
+    void stopMeasure() override;
+    void on_measurementComplete() override;
     void portClosed();
 };
 

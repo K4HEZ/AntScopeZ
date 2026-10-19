@@ -162,7 +162,7 @@ bool FtdiInfo::equalLists(const QList<QSerialPortInfo> &a, const QList<QSerialPo
     return true;
 }
 
-#elif defined(Q_OS_MAC)
+#elif defined(Q_OS_MACOS)
 QList <FtdiInfo::Info> FtdiInfo::info()
 {
     QList<QSerialPortInfo> infoList = QSerialPortInfo::availablePorts();

@@ -52,16 +52,16 @@ class NanovnaAnalyzer : public BaseAnalyzer
 
 public:
     explicit NanovnaAnalyzer(QObject *parent = 0);
-    ~NanovnaAnalyzer();
-    bool openComPort(const QString& portName, quint32 portSpeed=115200);
-    void closeComPort();
+    ~NanovnaAnalyzer() override;
+    bool openComPort(const QString& portName, quint32 portSpeed=115200) override;
+    void closeComPort() override;
 
     qint64 sendData(QString data);
     SerialPort* comport() { return m_comPort; }
     RawData toRawData(QString& s1p);
-    virtual bool refreshConnection();
-    virtual bool connectAnalyzer();
-    virtual void disconnectAnalyzer();
+    bool refreshConnection() override;
+    bool connectAnalyzer() override;
+    void disconnectAnalyzer() override;
     // No real wire-level abort in this protocol -- see BaseAnalyzer's own
     // comment on this method.
     bool stopCommandAbortsDevice() const override { return false; }
@@ -201,13 +201,13 @@ signals:
 
 public slots:
     void dataArrived();
-    void searchAnalyzer();
-    void startMeasure(qint64 fqFrom, qint64 fqTo, int dotsNumber, bool frx=true);
-    void stopMeasure();
+    void searchAnalyzer() override;
+    void startMeasure(qint64 fqFrom, qint64 fqTo, int dotsNumber, bool frx=true) override;
+    void stopMeasure() override;
     void checkAnalyzer();
-    void makeScreenshot();
-    void on_screenshotComplete();
-    void on_measurementComplete();
+    void makeScreenshot() override;
+    void on_screenshotComplete() override;
+    void on_measurementComplete() override;
     void on_changedSerialPort(QString portName, int analyzerIndex);
     void versionRequest();
     void portClosed();
