@@ -6,9 +6,13 @@ on:
   workflow_dispatch:
 
 jobs:
-  # x86_64 only -- matches the local windows-mingw preset's kit (Qt 6.11.2
-  # MinGW 13.1.0). Qt6 already floors at Windows 10, so no deployment-target
-  # tuning is needed the way macOS needed one.
+  # x86_64 only. MinGW 13.1.0 still matches Qt 6.12's own Windows toolchain
+  # (see https://doc.qt.io/qt-6/supported-platforms.html), so only the Qt
+  # version bumped here -- the local windows-mingw CMakePresets.json preset
+  # is intentionally left at 6.11.2 for now (that's the Windows dev
+  # machine's own install; nothing here depends on the preset, this job
+  # configures directly). Qt6 already floors at Windows 10, so no
+  # deployment-target tuning is needed the way macOS needed one.
   build:
     runs-on: windows-latest
 
@@ -26,10 +30,17 @@ jobs:
       # Confirmed fixed on aqtinstall's git main (3.3.1.dev166) but not yet
       # released to PyPI, so install-qt-action's aqtversion pin (PyPI-only)
       # can't reach the fix -- installing aqt straight from git instead.
+      # Kept as-is for the 6.12.0 bump below: the doubled-path bug looks
+      # like it comes from Qt's own folder-code scheme (qt6_<major><2-digit
+      # minor><patch>, e.g. 6112 for 6.11.2) rather than anything specific
+      # to 6.11 itself, so 6.12.0 (folder code 6120, same 2-digit-minor
+      # shape) is likely just as exposed -- not confirmed either way, but
+      # the git-main install is harmless regardless of whether it's still
+      # needed, so there's no upside to dropping it speculatively.
       - name: Install Qt (aqtinstall from git main -- see comment above)
         run: |
           pip install "aqtinstall @ git+https://github.com/miurahr/aqtinstall.git"
-          aqt install-qt windows desktop 6.11.2 win64_mingw --outputdir "${{ github.workspace }}\Qt" --modules qtserialport qtconnectivity
+          aqt install-qt windows desktop 6.12.0 win64_mingw --outputdir "${{ github.workspace }}\Qt" --modules qtserialport qtconnectivity
           aqt install-tool windows desktop tools_mingw1310 qt.tools.win64_mingw1310 --outputdir "${{ github.workspace }}\Qt"
 
       - name: Configure
@@ -38,7 +49,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_C_COMPILER="${{ github.workspace }}\Qt\Tools\mingw1310_64\bin\gcc.exe"
           -DCMAKE_CXX_COMPILER="${{ github.workspace }}\Qt\Tools\mingw1310_64\bin\g++.exe"
-          -DCMAKE_PREFIX_PATH="${{ github.workspace }}\Qt\6.11.2\mingw_64"
+          -DCMAKE_PREFIX_PATH="${{ github.workspace }}\Qt\6.12.0\mingw_64"
 
       - name: Build
         run: cmake --build build --parallel
