@@ -7,9 +7,12 @@
 
 #include <QLibrary>
 
-#ifdef Q_OS_WIN
+#if defined(Q_OS_WIN) || defined(Q_OS_MACOS)
  #include <QSerialPortInfo>
  #include <QSerialPort>
+#endif
+
+#ifdef Q_OS_WIN
  #include <windows.h>
  #include <ftdi/ftd2xx.h>
 
