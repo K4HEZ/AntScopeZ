@@ -538,9 +538,9 @@ endif()
 # deleted rather than wired in here.
 #
 set(ANTSCOPE_TS_FILES
-    locales/QtLanguage_uk.ts
-    locales/QtLanguage_ja.ts
-    locales/QtLanguage_es.ts
+    ${CMAKE_CURRENT_SOURCE_DIR}/locales/QtLanguage_uk.ts
+    ${CMAKE_CURRENT_SOURCE_DIR}/locales/QtLanguage_ja.ts
+    ${CMAKE_CURRENT_SOURCE_DIR}/locales/QtLanguage_es.ts
 )
 qt_add_translations(
     TARGETS AntScopeZ
