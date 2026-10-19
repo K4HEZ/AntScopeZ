@@ -11,6 +11,9 @@ cmake_install.cmake
 pkg-windows/
 pkg-*/
 
+# ---- CI-downloaded release packages staged locally for distribution to testers ----
+packages/
+
 # Per-machine preset overrides (e.g. a Qt installed somewhere other than the
 # /opt path CMakePresets.json pins). CMakePresets.json itself is tracked.
 CMakeUserPresets.json
