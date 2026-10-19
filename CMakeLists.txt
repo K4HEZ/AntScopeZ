@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.21)
 
 # Must be set before project() -- ignored on non-Apple platforms. Matches
-# Qt 6.11's own macOS floor (see https://doc.qt.io/qt-6/macos.html).
+# Qt 6.12's own macOS floor (see https://doc.qt.io/qt-6/supported-platforms.html).
 if(NOT DEFINED CMAKE_OSX_DEPLOYMENT_TARGET)
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "13.0" CACHE STRING "Minimum macOS deployment target")
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "14.4" CACHE STRING "Minimum macOS deployment target")
 endif()
 
 # version.txt is the single source of truth (also fetched from master by the

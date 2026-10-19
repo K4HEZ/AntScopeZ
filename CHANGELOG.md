@@ -69,6 +69,7 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Changed
 
+- macOS now builds against Qt 6.12 (was 6.11) and the deployment floor moved to macOS 14.4 Sonoma (was 13.0 Ventura) to match -- deliberately drops Ventura support. `.dmg` packaging now goes through CPack (`cpack`/`build.sh`) on all paths, matching how the `.deb`/NSIS installer are already built.
 - Removed the rule above the first heading in the Sweep, TDR and Tuning left panels.
 - Group boxes use the standard look: square frame with the title on the frame line (was rounded, with the title inside). Fixes Qt's own Print and Page Setup dialogs, where titles overlapped the controls, and removes the 20 px top-margin workaround from our Settings and Marker Comparison forms.
 - Analyzer Screenshot's PDF uses the Print dialog's paper, orientation and margins, adds a title line, fits the picture to the page (at most twice the device's size) and wraps the comment.

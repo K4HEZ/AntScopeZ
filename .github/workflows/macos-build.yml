@@ -8,7 +8,7 @@ on:
 jobs:
   # Builds a single universal (arm64 + x86_64) .app/.dmg on one Apple Silicon
   # runner -- Qt's own macOS package is already a universal binary (verified
-  # against the actual 6.11.1 QtCore via `file`), so no separate per-arch
+  # against the actual 6.12.0 QtCore via `file`), so no separate per-arch
   # build/lipo step is needed. Unsigned/not notarized: no Apple Developer
   # account. Users will need to right-click > Open, or `xattr -cr`, past
   # Gatekeeper on first launch.
@@ -21,7 +21,7 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
-          version: '6.11.1'
+          version: '6.12.0'
           host: 'mac'
           target: 'desktop'
           arch: 'clang_64'

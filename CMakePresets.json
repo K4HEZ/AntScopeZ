@@ -87,6 +87,39 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
             }
+        },
+        {
+            "name": "qt-6.12-macos",
+            "hidden": true,
+            "description": "Pins the Qt 6.12.0 kit installed by the Qt Online Installer under $env{HOME}/Qt. Mirrors the Linux qt-6.11 and Windows qt-6.11-windows base presets' CMAKE_PREFIX_PATH pinning above, for the same reason: find_package(Qt6 6.2) could otherwise resolve ambiguously if more than one Qt install were ever present. macOS is on a newer Qt line than Linux/Windows (6.12 vs 6.11.2) because CMAKE_OSX_DEPLOYMENT_TARGET (see CMakeLists.txt) follows Qt 6.12's own macOS floor (14.4) -- intentionally dropping Ventura (macOS 13) support, not an oversight.",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Darwin"
+            },
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_PREFIX_PATH": "$env{HOME}/Qt/6.12.0/macos"
+            }
+        },
+        {
+            "name": "macos-debug",
+            "displayName": "macOS Debug (Qt 6.12.0)",
+            "inherits": "qt-6.12-macos",
+            "binaryDir": "${sourceDir}/build-macos-debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "macos-release",
+            "displayName": "macOS Release (Qt 6.12.0)",
+            "description": "This is also the .dmg packaging preset (see build.sh and BUILDINFO.md's macOS packaging section): CMakeLists.txt's APPLE branch bundles this build's own Qt 6.12 frameworks/plugins into the .app via qt_deploy_runtime_dependencies(), rather than linking whatever Qt the end user already has installed.",
+            "inherits": "qt-6.12-macos",
+            "binaryDir": "${sourceDir}/build-macos-release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
         }
     ],
     "buildPresets": [
@@ -109,6 +142,14 @@
         {
             "name": "windows-mingw-release",
             "configurePreset": "windows-mingw-release"
+        },
+        {
+            "name": "macos-debug",
+            "configurePreset": "macos-debug"
+        },
+        {
+            "name": "macos-release",
+            "configurePreset": "macos-release"
         }
     ]
 }

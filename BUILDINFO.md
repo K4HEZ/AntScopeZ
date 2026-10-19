@@ -186,7 +186,12 @@ build option -- uncomment locally when actually debugging Bluetooth.
 Two ways to get a `.dmg`, both driven by the same `CMakeLists.txt` APPLE
 branch (which bundles Qt frameworks into the `.app` via
 `qt_deploy_runtime_dependencies()` -- routes to `macdeployqt` internally
-when given a bundle path, confirmed via Qt's own docs):
+when given a bundle path, confirmed via Qt's own docs) and both going
+through CPack's `DragNDrop` generator -- confirmed 2026-10-19 that the
+installed `.app`'s only remaining `LC_RPATH` is `@executable_path/../Frameworks`
+(the dev machine's own Qt install path is stripped), so a packaged build
+is self-contained regardless of whatever Qt version, if any, the end
+user already has:
 
 - **CMake-native (what CI uses, `.github/workflows/macos-build.yml`, started manually):**
   ```sh
@@ -195,18 +200,33 @@ when given a bundle path, confirmed via Qt's own docs):
   cmake --build build --parallel
   cd build && cpack -G DragNDrop
   ```
-- **`build.sh`, a quicker single-command local shortcut** (skips CPack,
-  calls `macdeployqt -dmg` directly on the build tree's own `.app` --
+- **`build.sh`, a quicker single-command local shortcut** (same
+  configure/build/`cpack --target package` steps as above, one command --
   compiles translations as part of the normal CMake build, see
   [Translations](#translations)):
   ```sh
   ./build.sh [build-dir]
   ```
 
-Deployment floor is macOS 13 Ventura (`CMAKE_OSX_DEPLOYMENT_TARGET`, set
-near the top of `CMakeLists.txt` -- matches Qt 6.11's own floor, see
-https://doc.qt.io/qt-6/macos.html). Earliest Intel Mac that reaches: a
-2017 model; any Apple Silicon Mac works. Unsigned/not notarized (no Apple
+`CMakePresets.json` also has `macos-debug`/`macos-release` (mirrors the
+Linux `debug`/`release` and Windows `windows-mingw`/`windows-mingw-release`
+presets), pinning `CMAKE_PREFIX_PATH` to `$HOME/Qt/6.12.0/macos` so
+`find_package(Qt6 6.2)` can't ambiguously resolve a different Qt install:
+
+```sh
+cmake --preset macos-release
+cmake --build --preset macos-release --parallel
+cd build-macos-release && cpack -G DragNDrop
+```
+
+Deployment floor is macOS 14.4 Sonoma (`CMAKE_OSX_DEPLOYMENT_TARGET`, set
+near the top of `CMakeLists.txt` -- matches Qt 6.12's own floor, see
+https://doc.qt.io/qt-6/supported-platforms.html). Bumped from the previous
+13.0 (Qt 6.11's floor) when the project moved to Qt 6.12 on macOS
+(2026-10-19) -- a deliberate decision, not an oversight: Ventura (macOS 13)
+users are left behind. Apple Silicon only Macs released after the Sonoma
+cutoff are guaranteed to reach; check a given Intel model's actual max OS
+before assuming it still qualifies. Unsigned/not notarized (no Apple
 Developer account) -- see Platform notes below.
 
 ## Build performance
