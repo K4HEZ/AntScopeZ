@@ -6,7 +6,7 @@
     },
     "configurePresets": [
         {
-            "name": "qt-6.11",
+            "name": "qt-6.12",
             "hidden": true,
             "description": "Pins the Qt installed under /opt by the Qt online installer. Without this, find_package(Qt6 6.2) is also satisfied by the distro Qt (6.4.2 in /usr) and the chosen version depends on search order.",
             "condition": {
@@ -15,13 +15,13 @@
                 "rhs": "Linux"
             },
             "cacheVariables": {
-                "CMAKE_PREFIX_PATH": "/opt/Qt/6.11.2/gcc_64"
+                "CMAKE_PREFIX_PATH": "/opt/Qt/6.12.0/gcc_64"
             }
         },
         {
             "name": "debug",
-            "displayName": "Debug (Qt 6.11.2)",
-            "inherits": "qt-6.11",
+            "displayName": "Debug (Qt 6.12.0)",
+            "inherits": "qt-6.12",
             "binaryDir": "${sourceDir}/build-debug",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
@@ -29,9 +29,9 @@
         },
         {
             "name": "release",
-            "displayName": "Release (Qt 6.11.2)",
-            "description": "This is also the .deb packaging preset: CMakeLists.txt bundles this build's own Qt 6.11 libraries/plugins into the package (see the Install rules section), rather than linking whatever Qt6 the distro ships.",
-            "inherits": "qt-6.11",
+            "displayName": "Release (Qt 6.12.0)",
+            "description": "This is also the .deb packaging preset: CMakeLists.txt bundles this build's own Qt 6.12 libraries/plugins into the package (see the Install rules section), rather than linking whatever Qt6 the distro ships.",
+            "inherits": "qt-6.12",
             "binaryDir": "${sourceDir}/build-release",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
@@ -52,9 +52,9 @@
             }
         },
         {
-            "name": "qt-6.11-windows",
+            "name": "qt-6.12-windows",
             "hidden": true,
-            "description": "Pins the Qt 6.11.2 MinGW kit installed by the Qt Online Installer under C:/Qt, and the Ninja/MinGW toolchain installed alongside it under C:/Qt/Tools. Mirrors the Linux qt-6.11 base preset's CMAKE_PREFIX_PATH pinning above, for the same reason: find_package(Qt6 6.2) would otherwise resolve ambiguously if more than one Qt install were ever present. Carried over from the windows-port branch (2026-09) so branches off master can also be configured/verified on the Windows dev machine this project is actively built on -- master itself never had these presets.",
+            "description": "Pins the Qt 6.12.0 MinGW kit installed by the Qt Online Installer under C:/Qt, and the Ninja/MinGW toolchain installed alongside it under C:/Qt/Tools. Mirrors the Linux qt-6.12 base preset's CMAKE_PREFIX_PATH pinning above, for the same reason: find_package(Qt6 6.2) would otherwise resolve ambiguously if more than one Qt install were ever present. Carried over from the windows-port branch (2026-09) so branches off master can also be configured/verified on the Windows dev machine this project is actively built on -- master itself never had these presets.",
             "condition": {
                 "type": "equals",
                 "lhs": "${hostSystemName}",
@@ -62,7 +62,7 @@
             },
             "generator": "Ninja",
             "cacheVariables": {
-                "CMAKE_PREFIX_PATH": "C:/Qt/6.11.2/mingw_64",
+                "CMAKE_PREFIX_PATH": "C:/Qt/6.12.0/mingw_64",
                 "CMAKE_C_COMPILER": "C:/Qt/Tools/mingw1310_64/bin/gcc.exe",
                 "CMAKE_CXX_COMPILER": "C:/Qt/Tools/mingw1310_64/bin/g++.exe",
                 "CMAKE_MAKE_PROGRAM": "C:/Qt/Tools/Ninja/ninja.exe"
@@ -70,9 +70,9 @@
         },
         {
             "name": "windows-mingw",
-            "displayName": "Windows Debug (Qt 6.11.2 MinGW)",
-            "description": "Native Windows build against the Qt Online Installer's Qt 6.11.2 MinGW 13.1.0 kit -- built and run directly on Windows, not cross-compiled.",
-            "inherits": "qt-6.11-windows",
+            "displayName": "Windows Debug (Qt 6.12.0 MinGW)",
+            "description": "Native Windows build against the Qt Online Installer's Qt 6.12.0 MinGW 13.1.0 kit -- built and run directly on Windows, not cross-compiled.",
+            "inherits": "qt-6.12-windows",
             "binaryDir": "${sourceDir}/build-windows-mingw",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
@@ -80,9 +80,9 @@
         },
         {
             "name": "windows-mingw-release",
-            "displayName": "Windows Release (Qt 6.11.2 MinGW)",
+            "displayName": "Windows Release (Qt 6.12.0 MinGW)",
             "description": "Release variant of windows-mingw, for packaging -- same kit/toolchain, mirrors the Linux debug/release preset split above.",
-            "inherits": "qt-6.11-windows",
+            "inherits": "qt-6.12-windows",
             "binaryDir": "${sourceDir}/build-windows-mingw-release",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
@@ -91,7 +91,7 @@
         {
             "name": "qt-6.12-macos",
             "hidden": true,
-            "description": "Pins the Qt 6.12.0 kit installed by the Qt Online Installer under $env{HOME}/Qt. Mirrors the Linux qt-6.11 and Windows qt-6.11-windows base presets' CMAKE_PREFIX_PATH pinning above, for the same reason: find_package(Qt6 6.2) could otherwise resolve ambiguously if more than one Qt install were ever present. macOS is on a newer Qt line than Linux/Windows (6.12 vs 6.11.2) because CMAKE_OSX_DEPLOYMENT_TARGET (see CMakeLists.txt) follows Qt 6.12's own macOS floor (14.4) -- intentionally dropping Ventura (macOS 13) support, not an oversight.",
+            "description": "Pins the Qt 6.12.0 kit installed by the Qt Online Installer under $env{HOME}/Qt. Mirrors the Linux qt-6.12 and Windows qt-6.12-windows base presets' CMAKE_PREFIX_PATH pinning above, for the same reason: find_package(Qt6 6.2) could otherwise resolve ambiguously if more than one Qt install were ever present. macOS requires Qt 6.12 because CMAKE_OSX_DEPLOYMENT_TARGET (see CMakeLists.txt) follows Qt 6.12's own macOS floor (14.4) -- intentionally dropping Ventura (macOS 13) support, not an oversight.",
             "condition": {
                 "type": "equals",
                 "lhs": "${hostSystemName}",

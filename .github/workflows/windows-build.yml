@@ -6,13 +6,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  # x86_64 only. MinGW 13.1.0 still matches Qt 6.12's own Windows toolchain
-  # (see https://doc.qt.io/qt-6/supported-platforms.html), so only the Qt
-  # version bumped here -- the local windows-mingw CMakePresets.json preset
-  # is intentionally left at 6.11.2 for now (that's the Windows dev
-  # machine's own install; nothing here depends on the preset, this job
-  # configures directly). Qt6 already floors at Windows 10, so no
-  # deployment-target tuning is needed the way macOS needed one.
+  # x86_64 only. MinGW 13.1.0 matches Qt 6.12's own Windows toolchain
+  # (see https://doc.qt.io/qt-6/supported-platforms.html). The local
+  # windows-mingw CMakePresets.json presets also use 6.12.0, but this job
+  # doesn't depend on them; it configures directly. Qt6 already floors at
+  # Windows 10, so no deployment-target tuning is needed the way macOS did.
   build:
     runs-on: windows-latest
 
