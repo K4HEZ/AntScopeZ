@@ -117,7 +117,7 @@ very welcome. See `docs/windows-port-audit.md` for the details.
 Download `AntScopeZ-<version>-macOS.dmg` from the
 [latest release](https://github.com/K4HEZ/AntScopeZ/releases/latest),
 open it, and drag AntScopeZ to Applications. It's a universal build
-(Apple Silicon and Intel, macOS 14.4 Sonoma or newer). Both architectures
+(Apple Silicon and Intel, macOS Sonoma (14.4) or newer). Both architectures
 are confirmed to launch, but nothing has been tried against a real
 analyzer yet (USB/HID, BLE) -- CI has none.
 

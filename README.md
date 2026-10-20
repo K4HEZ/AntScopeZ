@@ -1,165 +1,120 @@
 # AntScopeZ
 
-AntScopeZ supports various models of RigExpert antenna analyzers (plus a
-few other brands) across Windows, Linux and macOS -- see the
-[User Guide's Supported Devices section](docs/user-guide.md#supported-devices)
-for the full list. It is a
-fork of RigExpert's own AntScope2 software, renamed to keep this project's
-identity, config files, and installed package clearly separate from the
-vendor's.
+A modern antenna-analyzer application for RigExpert and NanoVNA analyzers
+(plus a few other brands), for Windows, Linux and macOS, with a companion
+app for Android and iOS. Built for, and maintained by, the ham radio
+community.
 
-This project is NOT an official project from RigExpert (see: RigExpert's own
-AntScope2). Do not contact them for support for this project. It is provided
-AS-IS and I do not accept any responsibility for its use. If doing important
-tasks (such as licensing and firmware updates), you should use the vendor's
-code instead -- these talk to RigExpert's own servers, aren't officially
-supported here, and (firmware flashing specifically) stay deliberately
-disabled pending more real-hardware testing. The original AntScope2 software
-may be obtained directly from RigExpert at
-[rigexpert.com/software/antscope2](https://rigexpert.com/software/antscope2/).
+**Website and screenshots: [k4hez.github.io/AntScopeZ](https://k4hez.github.io/AntScopeZ/)**
+&nbsp;·&nbsp;
+[Download the latest release](https://github.com/K4HEZ/AntScopeZ/releases/latest)
+
+![SWR sweep across the 40m band, with the menu bar, Presets, Measurements, Markers and Cursor Details panels, Dark theme](assets/screenshots/AntScopeZ-readme.png)
+
+AntScopeZ is a fork of RigExpert's own AntScope2 software, renamed to keep
+this project's identity, config files and installed package clearly
+separate from the vendor's. **It is not an official RigExpert project.** Do
+not contact them for support for it. It is provided AS-IS and I do not
+accept any responsibility for its use. For important tasks such as
+licensing and firmware updates, use the vendor's own software instead:
+those features talk to RigExpert's servers, aren't officially supported
+here, and firmware flashing specifically stays deliberately disabled
+pending more real-hardware testing. The original AntScope2 is available
+from [rigexpert.com/software/antscope2](https://rigexpert.com/software/antscope2/).
 
 Some of the non-English UI translations are AI-generated and haven't been
-reviewed by a native speaker yet -- expect rough edges until that review
-happens.
+reviewed by a native speaker yet -- expect rough edges until that happens.
 
-## Requirements
+## Features
 
-- CMake 3.21+
-- A C++17 compiler
-- Qt 6.12 (see [Qt version](#qt-version) below; 6.12.0 is the version this
-  project targets and packaged releases ship with. Earlier builds used
-  6.11.2, and the distro's 6.4.2 has been tried)
+- RigExpert analyzers and NanoVNA (classic ASCII and V2/binary), over USB
+  serial/HID and Bluetooth (BLE), auto-detected where possible
+- Sweep, **Tuning** and **TDR** modes: a live single-frequency SWR readout
+  with a big SWR number and a draggable band indicator; and time-domain
+  reflectometry with a live-drawing chart, an events table of every
+  reflection found, your own distance markers, a velocity-factor
+  calculator and over 100 searchable cable presets
+- SWR, Phase, Z (series and parallel), Return Loss, Smith and S21/S12
+  charts, synced across a Multi view, with markers and a marker comparison
+  and trim calculator
+- OSL calibration, and cable add/subtract, applied per measurement
+- Auto-stitched scans of thousands of points
+- Import and export of Touchstone and other files (`.asd`, `.s1p`, `.s2p`,
+  `.csv`, `.nwl`), including full 2-port S-parameters
+- Customizable bands and presets, ITU band highlighting, a built-in theme
+  editor, and a print/PDF layout with a page preview
+- Debug logging for analyzer communications, and an optional local
+  [Remote API](#remote-api) for scripting
+- English, Ukrainian, Japanese and Spanish (AI-generated)
 
-See [BUILDINFO.md](BUILDINFO.md) for the required Qt modules, Linux-only
-dependencies, and other setup details.
+See the [User Guide](docs/user-guide.md) for the full feature list and the
+[supported devices](docs/user-guide.md#supported-devices).
 
-### Qt version
+## Supported platforms
 
-Packaged releases (e.g. the `.deb`) bundle the Qt 6.12 shared libraries the
-app needs, so installing one doesn't require a matching system Qt install.
-If you're building from source, build against Qt 6.12 -- older Qt versions
-(e.g. distro-packaged Qt 6.4.x) have shown real bugs (analyzer connect
-failures on fresh installs, resize/repaint artifacts) that didn't reproduce
-under 6.11. See [BUILDINFO.md](BUILDINFO.md)'s Known issues for detail.
+| Platform | How you get it | Status |
+|---|---|---|
+| Linux (x86-64, Debian/Ubuntu family) | `.deb` package | Developed and used here daily |
+| Windows (64-bit) | Installer (`.exe`) | Builds, packages and launches in CI; not yet exercised against real analyzer hardware on Windows |
+| macOS Sonoma (14.4) or newer (Apple Silicon and Intel) | `.dmg` | Builds and launches; unsigned and not notarized |
+| Android | APK (pre-release) | Developed and working; a pre-release APK is on the Releases page, not on Google Play |
+| iOS | -- | Developed and working (verified on a real iPhone over Bluetooth), **not yet released on the App Store**. Bluetooth analyzers only |
 
-## Building
+## Download and install
 
-CMake is the primary build system.
+Packages are on the
+[Releases page](https://github.com/K4HEZ/AntScopeZ/releases). The
+[User Guide's install section](docs/user-guide.md#installing-and-uninstalling)
+has the full steps for each platform, including upgrading and uninstalling.
+
+- **Linux:** `sudo apt install ./antscopez_<version>_amd64.deb`
+- **Windows:** run `AntScopeZ-<version>-win64.exe`. The installer is
+  unsigned, so SmartScreen may warn: **More info** > **Run anyway**.
+- **macOS:** open `AntScopeZ-<version>-macOS.dmg` and drag the app to
+  Applications. The app is unsigned and not notarized, so on first launch
+  right-click it > **Open** (once), or run `xattr -cr AntScopeZ.app`.
+- **Android:** download the `.apk` from the pre-release on the Releases page
+  and open it (Android will ask you to allow installing from your browser).
+  These builds are debug-signed. See
+  [testing a pre-release](docs/mobile-beta-testing.md).
+- **iOS:** the app is developed and working, but not yet released on the
+  App Store, so there is nothing to install yet.
+
+Packaged releases bundle the Qt libraries they need, so no separate Qt
+install is required.
+
+## Documentation
+
+- **[User Guide](docs/user-guide.md)** -- using AntScopeZ: devices,
+  scanning, calibration, TDR, tuning, files and troubleshooting
+- **[Mobile Guide](docs/mobile-guide.md)** -- the Android and iOS app
+- **[Changelog](CHANGELOG.md)** -- what changed, release by release
+- **[Roadmap](docs/roadmap.md)** -- what's covered, and what's still open
+- **[BUILDINFO.md](BUILDINFO.md)** -- building from source, platform notes
+  and known issues
+- **[Third-party licenses](THIRD-PARTY-LICENSES.md)**
+
+## Building from source
+
+You need CMake 3.21+, a C++17 compiler, and Qt 6.12 including the
+SerialPort and Bluetooth (Connectivity) add-on modules; Linux also needs a
+few system packages. Linux, Windows, macOS, the mobile app and `.deb`
+packaging each have their own steps, and CMake presets for the common
+setups -- all in [BUILDINFO.md](BUILDINFO.md). As a quick start on Linux:
 
 ```sh
-cmake -S . -B build-cmake -DCMAKE_BUILD_TYPE=Release
-cmake --build build-cmake -j$(nproc)
+cmake --preset release      # the Qt path is set in CMakePresets.json
+cmake --build --preset release -j8
 ```
-
-The binary lands in `build-cmake/AntScopeZ`, with the runtime data files
-(`cables.txt`, `itu-regions-defaults.txt`) and the `.qm` translations copied
-next to it. Use `-DCMAKE_BUILD_TYPE=Debug` for a debug build.
-
-For build options, macOS packaging, Qt Creator setup, translations, platform
-notes, and known issues, see [BUILDINFO.md](BUILDINFO.md).
 
 ## Remote API
 
-AntScopeZ can expose a local, in-process control API for whatever analyzer is currently
-connected -- device enumeration, connect/disconnect, sweeps, and live point streaming,
-over a small NDJSON-over-TCP protocol. It's for external tools (scripts, an MCP server, a
-web dashboard) that want to drive AntScopeZ programmatically; the app's own GUI doesn't
-use it.
-
-Off by default. Enable it in Settings > Graphs ("Enable Remote API" + a port field), or
-pass `-remote-api-port <n>` on the command line to force it on for a single run. It binds
-to `127.0.0.1` only -- not reachable from other machines -- unless you reconfigure that
-yourself. `-headless` runs AntScopeZ without showing its window (still a full GUI process
-under the hood, just not displayed), useful when driving it purely through this API.
-
-See [`core/remoteapi/`](core/remoteapi/) for the implementation and protocol details.
-
-## Windows
-
-Windows support is new as of 2.2.7; see
-[BUILDINFO.md](BUILDINFO.md)'s platform notes for what has and hasn't been
-verified against real hardware yet.
-
-### Installing a prebuilt release
-
-Download the `AntScopeZ-<version>-win64.exe` installer from the
-[Releases page](https://github.com/K4HEZ/AntScopeZ/releases) and run it --
-it's a fully self-contained build (Qt DLLs and plugins included), so no
-separate Qt install is required. The installer is unsigned, so SmartScreen
-may warn: **More info** > **Run anyway**.
-
-### Building from source
-
-Requires the Qt 6.12.0 MinGW kit installed via the
-[Qt Online Installer](https://www.qt.io/download-qt-installer) under
-`C:\Qt`, including the SerialPort and Bluetooth (under "Connectivity")
-addon components -- both are optional and not installed by default, so
-check `C:\Qt\6.12.0\mingw_64\lib\cmake\` for `Qt6SerialPort`/
-`Qt6Bluetooth` first.
-
-```
-cmake --preset windows-mingw
-cmake --build --preset windows-mingw --parallel
-```
-
-This is a native build against the Qt Online Installer's bundled
-MinGW-w64 toolchain and Ninja (`C:\Qt\Tools`), not a cross-compile and
-not a system compiler. Use the `windows-mingw-release` preset instead
-for an optimized build.
-
-### Running
-
-Windows builds don't use rpath, so the `AntScopeZ.exe` produced by the
-build above (in `build-windows-mingw\`) won't find its Qt DLLs on its
-own. To produce a complete, runnable copy -- the same layout the
-packaged releases ship, with `windeployqt` run automatically -- install
-into a staging directory instead of running the build output directly:
-
-```
-cmake --install build-windows-mingw --prefix pkg-windows
-```
-
-Then run `pkg-windows\bin\AntScopeZ.exe`.
-
-## macOS
-
-macOS support builds via GitHub Actions (see
-[BUILDINFO.md](BUILDINFO.md)'s platform notes for what has and hasn't
-been verified against real hardware yet). Download
-`AntScopeZ-<version>-macOS.dmg` (universal arm64 + x86_64) from the
-[Releases page](https://github.com/K4HEZ/AntScopeZ/releases); the
-workflow (`.github/workflows/macos-build.yml`) builds it on demand
-(it's started manually from GitHub's Actions tab, not on every push).
-
-There's no Apple Developer account behind these builds, so the `.app` is
-unsigned and not notarized: macOS Gatekeeper will refuse a plain
-double-click on first launch. Right-click the app > Open (once), or run
-`xattr -cr AntScopeZ.app` first, to get past it.
-
-### Building from source
-
-Requires Qt 6.12 with the SerialPort and Bluetooth (Connectivity) addon
-modules -- see [BUILDINFO.md](BUILDINFO.md)'s Qt modules section. The
-project's deployment target is macOS 14.4 Sonoma (following Qt 6.12's own
-floor), which deliberately drops macOS 13 Ventura; see BUILDINFO.md for
-which Macs that excludes.
-
-```sh
-cmake -B build -DCMAKE_BUILD_TYPE=Release \
-  "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64"
-cmake --build build --parallel
-cmake --install build --prefix stage   # produces stage/AntScopeZ.app
-```
-
-Or, for a quick local `.dmg` without CPack: `./build.sh [build-dir]`.
-
-## Mobile app
-
-The `mobile/` directory holds an Android and iOS (and desktop-test) app --
-the iOS build is Bluetooth-only (no USB or serial access for an ordinary
-iOS app). See
-[BUILDINFO.md](BUILDINFO.md)'s "Mobile app" section for how to build it, and
-[docs/mobile-guide.md](docs/mobile-guide.md) for what it does.
+AntScopeZ can expose a local control API (NDJSON over TCP, loopback only)
+for the connected analyzer -- device enumeration, connect/disconnect, sweeps
+and live point streaming -- for scripts, an MCP server or a dashboard. It's
+off by default: enable it in Settings > Graphs, or pass
+`-remote-api-port <n>` for a single run. `-headless` runs without showing
+the window. Protocol details are in [`core/remoteapi/`](core/remoteapi/).
 
 ## Credits
 

@@ -155,6 +155,8 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Documentation
 
+- README rewritten as a product page (features, platforms, downloads); the
+  build steps, including a new Windows build section, live in BUILDINFO.md.
 - README, BUILDINFO, user guide, roadmap and the website refreshed: Qt 6.12,
   macOS 14.4, manual-only CI, iOS, Stop/Sensitivity/live plot in TDR mode,
   BLE draining, the new Markers setting, Tuning and Multi-view details.

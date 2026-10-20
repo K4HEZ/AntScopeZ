@@ -6,6 +6,9 @@ Current set:
   (including the Edit menu), 3-pane layout, docked Cursor Details panel,
   and the Markers table, Dark theme
 
+- `AntScopeZ-readme.png` -- the same screenshot at 50 % size, used by the
+  top-level `README.md`.
+
 To add more, drop the file here and reference it from `/index.md` with a
 short caption underneath, e.g.:
 

@@ -181,6 +181,37 @@ gone. `ANTSCOPE_DEBUG_BLE`'s raw TX/RX `qDebug()` calls are commented
 out at their call sites in `core/analyzer/ble_analyzer.cpp` instead of a
 build option -- uncomment locally when actually debugging Bluetooth.
 
+## Windows build
+
+Native build with the Qt Online Installer's MinGW toolchain -- not a
+cross-compile and not a system compiler. Install the Qt 6.12.0 MinGW kit
+under `C:\Qt`, including the **SerialPort** and **Bluetooth** (under
+"Connectivity") add-on components. Both are optional and not installed by
+default, so check `C:\Qt\6.12.0\mingw_64\lib\cmake\` for `Qt6SerialPort`
+and `Qt6Bluetooth` first. The presets also use the MinGW and Ninja that
+installer puts under `C:\Qt\Tools`.
+
+```
+cmake --preset windows-mingw
+cmake --build --preset windows-mingw --parallel
+```
+
+Use the `windows-mingw-release` preset instead for an optimized build.
+
+Windows builds don't use rpath, so the `AntScopeZ.exe` in
+`build-windows-mingw\` won't find its Qt DLLs on its own. To get a complete,
+runnable copy -- the layout the packaged releases ship, with `windeployqt`
+run automatically -- install into a staging directory rather than running
+the build output directly:
+
+```
+cmake --install build-windows-mingw --prefix pkg-windows
+```
+
+Then run `pkg-windows\bin\AntScopeZ.exe`. The installer package is built by
+CPack's NSIS generator (`cpack -G NSIS`) or by the `windows-build.yml`
+workflow; see Platform notes below.
+
 ## macOS packaging
 
 Two ways to get a `.dmg`, both driven by the same `CMakeLists.txt` APPLE
@@ -440,7 +471,8 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   packaging block (`cpack -G NSIS`); `.github/workflows/windows-build.yml`
   (issue #58) builds it (started manually from the Actions tab -- the
   workflow is `workflow_dispatch` only; running on every push was turned off
-  2026-09-21), installs NSIS via
+  2026-09-21; the run on 2026-10-19 against Qt 6.12.0, commit `b5ae782`,
+  succeeded), installs NSIS via
   Chocolatey (the runner lacks `makensis`), smoke-launches the staged exe,
   and uploads the installer. Released as `AntScopeZ-<version>-win64.exe`
   from 2.2.7. Merged into `develop` 2026-09-06 (PR #11,
@@ -461,8 +493,9 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   fixed 2026-09-18 while first standing up CI for this platform). Builds
   and packages via GitHub Actions (`.github/workflows/macos-build.yml`,
   issue #57, started manually -- `workflow_dispatch` only since 2026-09-21) as a universal arm64+x86_64 `.app`/`.dmg` -- no local macOS
-  hardware is owned here, so this is the only way this platform gets
-  built or tested at all. Confirmed 2026-09-18 via a real CI-captured
+  hardware was owned here at the time (2.2.7), so CI was the only way this
+  platform got built or tested. Since 2026-10-19 the Qt 6.12 move and the
+  iOS bring-up have also been done on a local Mac. Confirmed 2026-09-18 via a real CI-captured
   screenshot: the arm64 build compiles, links, bundles Qt, launches, and
   renders its main window correctly. An `intel-smoketest` CI job
   separately launches that same universal `.dmg` on a real Intel
