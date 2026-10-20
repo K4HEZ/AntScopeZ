@@ -184,6 +184,7 @@ public:
     // captured data with the new window -- no rescan needed.
     TdrWindow tdrWindowType() const { return m_tdrWindowType; }
     void setTdrWindowType(TdrWindow type) { m_tdrWindowType = type; }
+    void setTdrSensitivity(int sensitivity) { m_tdrSensitivity = sensitivity; }
     double tdrKaiserBeta() const { return m_tdrKaiserBeta; }
     void setTdrKaiserBeta(double beta) { m_tdrKaiserBeta = beta; }
 
@@ -271,7 +272,8 @@ public:
     // so resetting there is correct). Added so a window-function change can
     // re-plot in place without undoing whatever the user had zoomed/panned
     // to -- see MainWindow's windowChanged() handler.
-    void redrawTDR(int _index=-1, bool resetRange=true);
+    void redrawTDR(int _index=-1, bool resetRange=true, bool notify=true);
+    void redrawTdrLive();
     void drawSmithImage(void);
     static void addSmithSwrCircles(QCustomPlot* plot);
     void setSmithBackgroundColor(QColor color);
@@ -384,6 +386,7 @@ private:
     double m_tdrRange;
     double m_tdrZRange = 0;
     TdrWindow m_tdrWindowType = TdrWindow::Hamming; // default matches pre-2026-08-21 hardcoded behavior
+    int m_tdrSensitivity = 40; // see TdrMath::EventParams::forSensitivity()
     double m_tdrKaiserBeta = 6.0; // only used when m_tdrWindowType == Kaiser
 
     bool m_tdrScanning = false;
@@ -391,6 +394,8 @@ private:
     ProgressDlg* m_autoCalibrateProgressDlg = nullptr;
     qint32 m_dotsNumber=0;
     quint32 m_tdrDots=0;
+    bool m_tdrLive = false; // partial-data redraw while scanning
+    QElapsedTimer m_tdrLiveTimer;
 
 //    bool m_calibrationEnabled;
     bool m_measureSystemMetric;

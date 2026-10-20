@@ -17,6 +17,7 @@ void AppConfig::load(QSettings& settings)
     maxMarkers = settings.value("maxMarkers", maxMarkers).toInt();
     autoMarkerAtLowestSwr = settings.value("autoMarkerAtLowestSwr", autoMarkerAtLowestSwr).toBool();
     bandMarginPercent = qBound(0, settings.value("bandMarginPercent", bandMarginPercent).toInt(), 100);
+    tdrSensitivity = qBound(0, settings.value("tdrSensitivity", tdrSensitivity).toInt(), 100);
     settings.endGroup();
 
     settings.beginGroup("MainWindow");
@@ -50,6 +51,7 @@ void AppConfig::save(QSettings& settings) const
     settings.setValue("maxMarkers", maxMarkers);
     settings.setValue("autoMarkerAtLowestSwr", autoMarkerAtLowestSwr);
     settings.setValue("bandMarginPercent", bandMarginPercent);
+    settings.setValue("tdrSensitivity", tdrSensitivity);
     settings.endGroup();
 
     settings.beginGroup("MainWindow");

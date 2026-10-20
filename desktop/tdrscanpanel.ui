@@ -308,13 +308,39 @@
        </widget>
       </item>
       <item row="1" column="0">
+       <widget class="QLabel" name="sensitivityNameLabel">
+        <property name="text">
+         <string>Sensitivity:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSlider" name="sensitivitySlider">
+        <property name="toolTip">
+         <string>How small a reflection counts as an event. Higher lists more events, including minor ripple; lower keeps only the strong ones. Applies to the current scan right away.</string>
+        </property>
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>40</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
        <widget class="QLabel" name="kaiserBetaNameLabel">
         <property name="text">
          <string>Kaiser beta:</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="2" column="1">
        <widget class="NoScrollDoubleSpinBox" name="kaiserBetaSpin">
         <property name="minimum">
          <double>0.000000000000000</double>
@@ -327,7 +353,7 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="0" colspan="2">
+      <item row="3" column="0" colspan="2">
        <spacer name="resultGap1">
         <property name="orientation">
          <enum>Qt::Vertical</enum>
@@ -343,14 +369,14 @@
         </property>
        </spacer>
       </item>
-      <item row="3" column="0">
+      <item row="4" column="0">
        <widget class="QLabel" name="cableLengthNameLabel">
         <property name="text">
          <string>Distance to strongest reflection:</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
+      <item row="4" column="1">
        <widget class="QLabel" name="cableLengthLabel">
         <property name="font">
          <font>
@@ -362,21 +388,21 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
+      <item row="5" column="0">
        <widget class="QLabel" name="reflectionNameLabel">
         <property name="text">
          <string>Reflection:</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
+      <item row="5" column="1">
        <widget class="QLabel" name="reflectionLabel">
         <property name="text">
          <string notr="true">-- (run a TDR scan first)</string>
         </property>
        </widget>
       </item>
-      <item row="5" column="0">
+      <item row="6" column="0">
        <widget class="QLabel" name="rangeNoteNameLabel">
         <property name="alignment">
          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -386,7 +412,7 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="1">
+      <item row="6" column="1">
        <widget class="QLabel" name="rangeNoteLabel">
         <property name="wordWrap">
          <bool>true</bool>
@@ -396,7 +422,7 @@
         </property>
        </widget>
       </item>
-      <item row="6" column="0" colspan="2">
+      <item row="7" column="0" colspan="2">
        <spacer name="resultGap2">
         <property name="orientation">
          <enum>Qt::Vertical</enum>
@@ -412,14 +438,14 @@
         </property>
        </spacer>
       </item>
-      <item row="7" column="0">
+      <item row="8" column="0">
        <widget class="QLabel" name="knownLengthNameLabel">
         <property name="text">
          <string>Known cable length:</string>
         </property>
        </widget>
       </item>
-      <item row="7" column="1">
+      <item row="8" column="1">
        <layout class="QHBoxLayout" name="knownLengthLayout">
         <item>
          <widget class="QLineEdit" name="knownLengthEdit"/>
@@ -433,14 +459,14 @@
         </item>
        </layout>
       </item>
-      <item row="8" column="0">
+      <item row="9" column="0">
        <widget class="QLabel" name="calculatedVfNameLabel">
         <property name="text">
          <string>Calculated velocity factor:</string>
         </property>
        </widget>
       </item>
-      <item row="8" column="1">
+      <item row="9" column="1">
        <widget class="QLabel" name="calculatedVfLabel">
         <property name="font">
          <font>
@@ -452,7 +478,7 @@
         </property>
        </widget>
       </item>
-      <item row="9" column="1">
+      <item row="10" column="1">
        <widget class="QPushButton" name="applyVfButton">
         <property name="enabled">
          <bool>false</bool>

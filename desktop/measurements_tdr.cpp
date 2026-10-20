@@ -61,7 +61,7 @@ int Measurements::CalcTdr(QVector <RawData> *data)
     // point count (~100) is routinely below the TDR tool's own minimum
     // (TDR_MINPOINTS = 200), regardless of that later data's own frequency
     // range being perfectly valid.
-    if (asize < (int)m_tdrDots)
+    if (asize < (int)m_tdrDots && !m_tdrLive)
     {
         return 0;
     }
@@ -81,6 +81,7 @@ void Measurements::startTDRProgress(int _dots)
 {
     m_tdrDots = _dots;
     m_tdrScanning = true;
+    m_tdrLiveTimer.invalidate();
     emit tdrProgress(0, _dots);
 }
 
@@ -194,7 +195,7 @@ Measurements::TdrEventSet Measurements::tdrEvents()
         if (r.fftSize == 0)
             return set;
         set.valid = true;
-        set.events = TdrMath::findEvents(r);
+        set.events = TdrMath::findEvents(r, TdrMath::EventParams::forSensitivity(m_tdrSensitivity));
         set.userIndex = QVector<int>(set.events.size(), -1);
         double step = r.range / r.fftSize;
         for (int u = 0; u < userMeters.size(); ++u) {
@@ -307,7 +308,7 @@ void Measurements::setTdrEventHighlight(int index)
     m_tdrWidget->replot();
 }
 
-void Measurements::redrawTDR(int _index, bool resetRange)
+void Measurements::redrawTDR(int _index, bool resetRange, bool notify)
 {
     m_tdrZRange = 0;
     int begin = _index < 0 ? 0 : _index;
@@ -393,6 +394,21 @@ void Measurements::redrawTDR(int _index, bool resetRange)
     g_mainWindow->m_tdrZRange = m_tdrZRange;
 
     replot();
-    emit tdrRedrawn();
+    if (notify)
+        emit tdrRedrawn();
+}
+
+// Chart follows the scan: the partial sweep gives a coarser trace that
+// sharpens as points arrive. Throttled; events/Result wait for the end.
+void Measurements::redrawTdrLive()
+{
+    if (!m_tdrScanning || m_measurements.isEmpty() || m_currentTab != "tab_tdr")
+        return;
+    if (m_tdrLiveTimer.isValid() && m_tdrLiveTimer.elapsed() < 250)
+        return;
+    m_tdrLiveTimer.start();
+    m_tdrLive = true;
+    redrawTDR(m_measurements.length() - 1, true, false);
+    m_tdrLive = false;
 }
 

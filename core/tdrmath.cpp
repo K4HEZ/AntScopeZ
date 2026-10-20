@@ -346,6 +346,15 @@ double TdrMath::roundTripNs(double distance, double velFactor, bool metric)
     return 2.0 * meters / (299792458.0 * velFactor) * 1.0e9;
 }
 
+TdrMath::EventParams TdrMath::EventParams::forSensitivity(int sensitivity)
+{
+    double f = qBound(0, sensitivity, 100) / 100.0;
+    EventParams p;
+    p.noiseFloor = 0.03 * pow(0.005 / 0.03, f);
+    p.relativeFloor = 0.5 * pow(0.04 / 0.5, f);
+    return p;
+}
+
 QVector<TdrMath::Event> TdrMath::findEvents(const Result& result, const EventParams& params)
 {
     QVector<Event> events;

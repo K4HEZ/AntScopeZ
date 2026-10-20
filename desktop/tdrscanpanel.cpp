@@ -50,6 +50,12 @@ TdrScanPanel::TdrScanPanel(QWidget* parent) :
             emit windowChanged(TdrWindow::Kaiser, beta);
     });
 
+    ui->sensitivitySlider->setValue(AppConfig::get().tdrSensitivity);
+    connect(ui->sensitivitySlider, &QSlider::valueChanged, this, [this](int value) {
+        AppConfig::get().tdrSensitivity = value;
+        emit sensitivityChanged(value);
+    });
+
     ui->windowCombo->setCurrentIndex(1); // Hamming -- matches Measurements' own default
 
     // Plain tooltips don't wrap; a fixed-width rich-text table does.
@@ -141,9 +147,6 @@ void TdrScanPanel::setScanning(bool scanning)
     if (!scanning)
         m_progressText.clear();
     updateScanButtonEnabled();
-    // windowCombo/kaiserBetaSpin stay enabled while scanning -- changing the
-    // window only re-plots already-captured data, doesn't touch the
-    // in-flight request (see windowChanged()'s comment).
 }
 
 // After Stop the analyzer drains leftover points; no new scan until done.
@@ -176,6 +179,9 @@ void TdrScanPanel::updateScanButtonEnabled()
     ui->dotsEdit->setEnabled(!busy);
     ui->velocityFactorEdit->setEnabled(!busy);
     ui->cableTypeButton->setEnabled(!busy);
+    ui->windowCombo->setEnabled(!busy);
+    ui->kaiserBetaSpin->setEnabled(!busy);
+    ui->sensitivitySlider->setEnabled(!busy);
     QString text = m_idleText;
     if (m_draining)
         text = tr("Stopping...");

@@ -69,6 +69,8 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Changed
 
+- TDR chart now draws as the scan runs, sharpening as points arrive. Window and Sensitivity are locked during a scan.
+- TDR: Sensitivity slider (Result section) sets how small a reflection counts as an event, live on the current scan.
 - TDR scan progress: the popup is gone; the TDR Scan button becomes Stop and shows done/total.
 - macOS now builds against Qt 6.12 (was 6.11) and the deployment floor moved to macOS 14.4 Sonoma (was 13.0 Ventura) to match -- deliberately drops Ventura support. `.dmg` packaging now goes through CPack (`cpack`/`build.sh`) on all paths, matching how the `.deb`/NSIS installer are already built.
 - Removed the rule above the first heading in the Sweep, TDR and Tuning left panels.

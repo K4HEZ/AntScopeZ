@@ -1079,6 +1079,7 @@ void Measurements::on_newData(RawData _rawData, bool _redraw)
     bool haveCalib = m_measurements.addPoint(_rawData, m_Z0, m_calibration, &calibPoint);
 
     updateTDRProgress(m_measurements.last().dataRX.size());
+    redrawTdrLive();
 
     // Stored chart values come from MarkerMath::chartPoint(), the same
     // formulas the markers read. SWR/RL repeat the previous point's when

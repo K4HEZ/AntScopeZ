@@ -82,6 +82,9 @@ struct EventParams {
     double noiseFloor = 0.015; // absolute |impulse| floor
     double relativeFloor = 0.10; // fraction of the strongest peak
     double endStrength = 0.5; // |amplitude| at/above which the last event is a full open/short
+
+    // 0 (strong events only) to 100 (everything above the noise); 40 is the default.
+    static EventParams forSensitivity(int sensitivity);
 };
 
 // Reflections in a Result, nearest first. Empty if nothing is above the

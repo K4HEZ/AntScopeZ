@@ -65,6 +65,11 @@ void MainWindow::setupTdrPanel()
             m_measurements, &Measurements::measurementCanceled);
     connect(m_measurements, &Measurements::tdrProgress,
             m_tdrPanel, &TdrScanPanel::setProgress);
+    m_measurements->setTdrSensitivity(AppConfig::get().tdrSensitivity);
+    connect(m_tdrPanel, &TdrScanPanel::sensitivityChanged, this, [this](int value) {
+        m_measurements->setTdrSensitivity(value);
+        refreshTdrResults();
+    });
     connect(m_tdrPanel, &TdrScanPanel::windowChanged,
             this, [this](TdrWindow window, double beta) {
         m_measurements->setTdrWindowType(window);

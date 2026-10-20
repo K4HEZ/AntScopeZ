@@ -106,6 +106,7 @@ signals:
     // is recomputed from already-captured data (see
     // Measurements::setTdrWindowType()'s comment).
     void windowChanged(TdrWindow window, double beta);
+    void sensitivityChanged(int sensitivity);
     // "Use this velocity factor" (reverse-solve) -- see applyVfButton's
     // tooltip. Never emitted just from editing velocityFactorEdit or
     // picking a cable preset, which stay local to this panel.

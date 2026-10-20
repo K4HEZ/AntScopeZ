@@ -40,6 +40,7 @@ public:
     // https + cert verification for RigExpert requests. Issue #14.
     bool useTls = true;
     int maxMarkers = 5;               // Settings > Markers
+    int tdrSensitivity = 40; // TDR event detection, 0-100
     int bandMarginPercent = 20; // padding per side around a band picked in the band selector
     bool autoMarkerAtLowestSwr = true; // marker at the lowest SWR after a Single scan
 
