@@ -953,6 +953,19 @@ Was computed from Window Background, now directly-editable.</string>
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxClearMarkersWithMeasurements">
+            <property name="toolTip">
+             <string>Edit &gt; Measurements &gt; Clear All also removes every marker.</string>
+            </property>
+            <property name="text">
+             <string>Clearing all measurements also clears markers</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>

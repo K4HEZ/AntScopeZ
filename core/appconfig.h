@@ -42,6 +42,7 @@ public:
     int maxMarkers = 5;               // Settings > Markers
     int tdrSensitivity = 40; // TDR event detection, 0-100
     int bandMarginPercent = 20; // padding per side around a band picked in the band selector
+    bool clearMarkersWithMeasurements = true; // Clear All measurements also clears markers
     bool autoMarkerAtLowestSwr = true; // marker at the lowest SWR after a Single scan
 
     // Persisted, ini [MainWindow] group.

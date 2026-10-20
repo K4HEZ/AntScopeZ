@@ -138,6 +138,7 @@ Settings::Settings(QWidget *parent) :
     ui->spinBoxMaxMarkers->setValue(AppConfig::get().maxMarkers);
     ui->spinBoxBandMargin->setValue(AppConfig::get().bandMarginPercent);
     ui->checkBoxAutoMarkerLowestSwr->setChecked(AppConfig::get().autoMarkerAtLowestSwr);
+    ui->checkBoxClearMarkersWithMeasurements->setChecked(AppConfig::get().clearMarkersWithMeasurements);
     ui->lineEditScanPointsMax->setText(QString::number(g_pointsMax));
     ui->lineEditScanWarnThreshold->setText(QString::number(g_pointsWarnThreshold));
     ui->lineEditAnalyzerMaxPoints->setText(QString::number(AppConfig::get().analyzerMaxPoints));
@@ -406,6 +407,7 @@ Settings::~Settings()
     AppConfig::get().maxMarkers = ui->spinBoxMaxMarkers->value();
     AppConfig::get().bandMarginPercent = ui->spinBoxBandMargin->value();
     AppConfig::get().autoMarkerAtLowestSwr = ui->checkBoxAutoMarkerLowestSwr->isChecked();
+    AppConfig::get().clearMarkersWithMeasurements = ui->checkBoxClearMarkersWithMeasurements->isChecked();
     // Re-read (not just trust the editingFinished handlers) in case the
     // dialog's being closed with one of these still focused/unconfirmed --
     // same reasoning as lineEdit_systemImpedance's own direct read above.

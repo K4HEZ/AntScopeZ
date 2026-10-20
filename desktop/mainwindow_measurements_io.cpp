@@ -133,6 +133,9 @@ void MainWindow::clearAllMeasurements()
         m_measurements->deleteRow(rowNumber);
     }
 
+    if (AppConfig::get().clearMarkersWithMeasurements && m_markers)
+        m_markers->on_removeAllMarkers();
+
     //{ Antonov's request: keep user's values
     //onFullRange(true);
     double from = m_lastEnteredFqFrom;

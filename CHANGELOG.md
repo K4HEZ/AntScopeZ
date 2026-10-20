@@ -13,6 +13,7 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Added
 
+- Settings > Markers: "Clearing all measurements also clears markers" (on by default).
 - Print dialog redone around a real page preview: paper size, orientation
   and margins from Page Setup (remembered), zoom and page controls, an
   editable title, and one layout shared by Print, Save as .pdf and Save as
