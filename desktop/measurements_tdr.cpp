@@ -1,5 +1,4 @@
 #include "measurements.h"
-#include "ProgressDlg.h"
 #include "export.h"
 #include "mainwindow.h"
 #include "CustomPlot.h"
@@ -78,29 +77,23 @@ int Measurements::CalcTdr(QVector <RawData> *data)
     return tdr.fftSize;
 }
 
-void Measurements::startTDRProgress(QWidget* _parent, int _dots)
+void Measurements::startTDRProgress(int _dots)
 {
     m_tdrDots = _dots;
-    delete m_tdrProgressDlg;
-
-    m_tdrProgressDlg = new ProgressDlg(_parent);
-    m_tdrProgressDlg->setWindowModality(Qt::WindowModal);
-    m_tdrProgressDlg->setValue(0);
-    m_tdrProgressDlg->setProgressData(0, _dots, 1);
-    m_tdrProgressDlg->updateActionInfo(tr("TDR measuring"));
-    m_tdrProgressDlg->updateStatusInfo(tr("please wait ...."));
-    m_tdrProgressDlg->setCancelable();
-    connect(m_tdrProgressDlg, &ProgressDlg::canceled, this, &Measurements::measurementCanceled);
-    m_tdrProgressDlg->show();
+    m_tdrScanning = true;
+    emit tdrProgress(0, _dots);
 }
 
 void Measurements::stopTDRProgress()
 {
-    if (m_tdrProgressDlg != nullptr)
-    {
-        m_tdrProgressDlg->hide();
-        delete m_tdrProgressDlg;
-        m_tdrProgressDlg = nullptr;
+    // A stopped scan is no TDR trace: drop its partial row instead of
+    // listing events computed from a fraction of the sweep.
+    const bool cut = m_tdrScanning && !m_measurements.isEmpty()
+                     && m_measurements.last().dataRX.size() < m_tdrDots;
+    m_tdrScanning = false;
+    if (cut) {
+        deleteRow(m_measurements.length() - 1);
+        m_tdrDots = 0;
     }
     on_redrawGraphs();
     // on_redrawGraphs() only redraws whichever tab is currently visible
@@ -133,13 +126,8 @@ void Measurements::stopTDRProgress()
 
 void Measurements::updateTDRProgress(int dots)
 {
-    if (m_tdrProgressDlg != nullptr) {
-        //if ((dots%10) == 0)
-        {
-            m_tdrProgressDlg->setValue(dots);
-            m_tdrProgressDlg->updateStatusInfo(QString(tr("processed %1 dots, from %2")).arg(dots).arg(m_tdrDots));
-        }
-    }
+    if (m_tdrScanning)
+        emit tdrProgress(dots, m_tdrDots);
 }
 
 int Measurements::selectedRow() const

@@ -368,7 +368,7 @@ void MainWindow::on_startOneFq(quint64 _fqHz, int _dots, bool _continuous)
 // to remember what to re-request later.
 void MainWindow::on_tdrScanRequested(qint64 topFreqKHz, int dots, TdrWindow window, double beta, double velFactor)
 {
-    if (isMeasuring())
+    if (isMeasuring() || m_analyzer->isDraining())
         return; // shouldn't happen -- TdrScanPanel::setScanning() disables the button/re-entry, but don't rely on that alone
 
     dots = qBound((int)TDR_MINPOINTS, dots, (int)TDR_MAXPOINTS);
@@ -422,7 +422,7 @@ void MainWindow::on_tdrScanRequested(qint64 topFreqKHz, int dots, TdrWindow wind
     // 2026-08-21 (had to kill the process; Cancel/Esc did nothing because
     // m_isMeasuring was already false by the time either fired). Doing the
     // setup first means the reentrant case finalizes it correctly instead.
-    m_measurements->startTDRProgress(this, dots);
+    m_measurements->startTDRProgress(dots);
     m_tdrPanel->setScanning(true);
 
     ui->actionExport->setEnabled(false);
@@ -441,7 +441,7 @@ void MainWindow::onAnalyzerDrainingChanged(bool draining)
     ui->singleStart->setEnabled(!draining);
     ui->continuousStartBtn->setEnabled(!draining);
     ui->fullBtn->setEnabled(!draining);
-    m_tdrPanel->setScanning(draining);
+    m_tdrPanel->setDraining(draining);
 }
 
 void MainWindow::onAnalyzerStatusMessageChanged(const QString& text)

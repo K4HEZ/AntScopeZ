@@ -178,6 +178,14 @@ void MainWindow::on_deviceDisconnected()
     ui->fullBtn->setEnabled(false);
     ui->fullBtn->setChecked(false);
     m_tdrPanel->setConnected(false);
+    // A drop mid-TDR-scan never reaches measurementComplete(): finalize here.
+    if (m_isTdrScanning) {
+        m_isTdrScanning = false;
+        m_measurements->stopTDRProgress();
+        m_measurements->setCableVelFactor(m_tdrSavedVelFactor);
+        ui->actionExport->setEnabled(true);
+    }
+    m_tdrPanel->setScanning(false);
     m_tuningTimer.stop();
     m_tuningControls->setRunning(false);
     m_tuningControls->setConnected(false);

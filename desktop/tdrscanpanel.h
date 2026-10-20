@@ -61,6 +61,9 @@ public:
     // Disables the controls that would build an inconsistent request
     // mid-scan.
     void setScanning(bool scanning);
+    // Scan button doubles as Stop, showing done/total while scanning.
+    void setProgress(int done, int total);
+    void setDraining(bool draining);
 
     // No analyzer connection -> a scan request would just sit there (or, if
     // the app's own reentrant no-device short-circuit fires -- see
@@ -89,6 +92,7 @@ public slots:
 
 signals:
     void knownLengthChanged();
+    void stopRequested();
     // topFreqKHz/dots/window/beta/velFactor: whatever the controls
     // currently hold. Matches the rest of the app's kHz convention for
     // frequency fields (see mainwindow.ui's "Frequency, kHz" label) -- the
@@ -132,6 +136,9 @@ private:
     // re-enable it out from under the other.
     bool m_scanning = false;
     bool m_connected = false;
+    bool m_draining = false;
+    QString m_idleText;
+    QString m_progressText;
     // Last value refreshResult() solved for in the reverse-VF calculator --
     // onApplyVfClicked() copies this into velocityFactorEdit rather than
     // re-parsing calculatedVfLabel's formatted text. 0 when nothing valid

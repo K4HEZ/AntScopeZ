@@ -43,6 +43,7 @@ TdrScanPanel::TdrScanPanel(QWidget* parent) :
     connect(ui->applyVfButton, &QPushButton::clicked, this, &TdrScanPanel::onApplyVfClicked);
     connect(ui->windowCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &TdrScanPanel::onWindowComboChanged);
+    m_idleText = ui->tdrSingleButton->text();
     connect(ui->tdrSingleButton, &QPushButton::clicked, this, &TdrScanPanel::onScanClicked);
     connect(ui->kaiserBetaSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [this](double beta) {
         if (windowForComboIndex(ui->windowCombo->currentIndex()) == TdrWindow::Kaiser)
@@ -137,16 +138,27 @@ void TdrScanPanel::setMeasurements(Measurements* measurements)
 void TdrScanPanel::setScanning(bool scanning)
 {
     m_scanning = scanning;
-    ui->topFreqSlider->setEnabled(!scanning);
-    ui->topFreqEdit->setEnabled(!scanning);
-    ui->dotsSlider->setEnabled(!scanning);
-    ui->dotsEdit->setEnabled(!scanning);
-    ui->velocityFactorEdit->setEnabled(!scanning);
-    ui->cableTypeButton->setEnabled(!scanning);
+    if (!scanning)
+        m_progressText.clear();
     updateScanButtonEnabled();
     // windowCombo/kaiserBetaSpin stay enabled while scanning -- changing the
     // window only re-plots already-captured data, doesn't touch the
     // in-flight request (see windowChanged()'s comment).
+}
+
+// After Stop the analyzer drains leftover points; no new scan until done.
+void TdrScanPanel::setDraining(bool draining)
+{
+    m_draining = draining;
+    updateScanButtonEnabled();
+}
+
+void TdrScanPanel::setProgress(int done, int total)
+{
+    if (!m_scanning)
+        return;
+    m_progressText = tr("Stop (%1/%2)").arg(done).arg(total);
+    updateScanButtonEnabled();
 }
 
 void TdrScanPanel::setConnected(bool connected)
@@ -157,7 +169,20 @@ void TdrScanPanel::setConnected(bool connected)
 
 void TdrScanPanel::updateScanButtonEnabled()
 {
-    ui->tdrSingleButton->setEnabled(m_connected && !m_scanning);
+    const bool busy = m_scanning || m_draining;
+    ui->topFreqSlider->setEnabled(!busy);
+    ui->topFreqEdit->setEnabled(!busy);
+    ui->dotsSlider->setEnabled(!busy);
+    ui->dotsEdit->setEnabled(!busy);
+    ui->velocityFactorEdit->setEnabled(!busy);
+    ui->cableTypeButton->setEnabled(!busy);
+    QString text = m_idleText;
+    if (m_draining)
+        text = tr("Stopping...");
+    else if (m_scanning)
+        text = m_progressText.isEmpty() ? tr("Stop") : m_progressText;
+    ui->tdrSingleButton->setText(text);
+    ui->tdrSingleButton->setEnabled(m_connected && !m_draining);
 }
 
 void TdrScanPanel::onTopFreqSliderChanged(int value)
@@ -426,6 +451,10 @@ void TdrScanPanel::onApplyVfClicked()
 
 void TdrScanPanel::onScanClicked()
 {
+    if (m_scanning) {
+        emit stopRequested();
+        return;
+    }
     bool ok = false;
     qint64 topFreqKHz = ui->topFreqEdit->text().toLongLong(&ok);
     if (!ok)

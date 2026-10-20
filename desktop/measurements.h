@@ -250,7 +250,7 @@ public:
     void setCableFarEndMeasurement(int value);
     void on_translate();
     int getBaseUserGraphIndex(int row);
-    void startTDRProgress(QWidget* _parent, int _dots);
+    void startTDRProgress(int _dots);
     void updateTDRProgress(int _dots);
     void stopTDRProgress();
     void startAutocalibrateProgress(QWidget* _parent, int _dots);
@@ -261,7 +261,7 @@ public:
     int  getAutoCalibration() { return m_autoCalibration; }
     QPair<double, double> autoCalibrate();
     void interrupt() { m_measurements.interrupt(); }
-    bool isTDRMode() { return m_tdrProgressDlg != nullptr; }
+    bool isTDRMode() { return m_tdrScanning; }
     void setContinuous(bool _state) { m_measurements.setContinuous(_state); }
     ProgressDlg* progressDlg() { return m_autoCalibrateProgressDlg; }
     // resetRange=false skips resetting the X axis's upper bound to the
@@ -386,7 +386,7 @@ private:
     TdrWindow m_tdrWindowType = TdrWindow::Hamming; // default matches pre-2026-08-21 hardcoded behavior
     double m_tdrKaiserBeta = 6.0; // only used when m_tdrWindowType == Kaiser
 
-    ProgressDlg* m_tdrProgressDlg = nullptr;
+    bool m_tdrScanning = false;
 
     ProgressDlg* m_autoCalibrateProgressDlg = nullptr;
     qint32 m_dotsNumber=0;
@@ -476,6 +476,7 @@ signals:
     void calibrationChanged();
     void import_finished(double _fqMin_khz, double _fqMax_khz);
     void measurementCanceled();
+    void tdrProgress(int done, int total);
     void oneFqCanceled();
     // One live reading in Tuning mode (calibration/cable already applied).
     void oneFqData(const GraphData& data);

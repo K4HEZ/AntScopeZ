@@ -61,6 +61,10 @@ void MainWindow::setupTdrPanel()
     connect(m_tdrPanel, &TdrScanPanel::scanRequested,
             this, &MainWindow::on_tdrScanRequested);
     // Live re-plot from already-captured data, no rescan.
+    connect(m_tdrPanel, &TdrScanPanel::stopRequested,
+            m_measurements, &Measurements::measurementCanceled);
+    connect(m_measurements, &Measurements::tdrProgress,
+            m_tdrPanel, &TdrScanPanel::setProgress);
     connect(m_tdrPanel, &TdrScanPanel::windowChanged,
             this, [this](TdrWindow window, double beta) {
         m_measurements->setTdrWindowType(window);
