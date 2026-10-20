@@ -2,6 +2,7 @@
 #include "appconfig.h"
 #include "ui_settings.h"
 #include <QPointer>
+#include <QSerialPortInfo>
 #include "popupindicator.h"
 #include "analyzer/customanalyzer.h"
 #include "mainwindow.h"
