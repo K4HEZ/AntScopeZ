@@ -117,7 +117,7 @@ very welcome. See `docs/windows-port-audit.md` for the details.
 Download `AntScopeZ-<version>-macOS.dmg` from the
 [latest release](https://github.com/K4HEZ/AntScopeZ/releases/latest),
 open it, and drag AntScopeZ to Applications. It's a universal build
-(Apple Silicon and Intel, macOS 13 Ventura or newer). Both architectures
+(Apple Silicon and Intel, macOS 14.4 Sonoma or newer). Both architectures
 are confirmed to launch, but nothing has been tried against a real
 analyzer yet (USB/HID, BLE) -- CI has none.
 
@@ -511,6 +511,7 @@ theme's colors, see the new [Themes tab](#themes-tab) below.
 | Control | What it does |
 |---|---|
 | System impedance | The reference impedance (default 50Ω) everything -- SWR, Smith chart center, RL -- is calculated against |
+| Band margin (%) | Default 20. Extra range added on each side of a band picked in the band selector, as a percentage of the band's width, so the scan covers a little beyond the band edges. Presets are never padded |
 | Report Detailed Errors | Off by default. AntScopeZ always shows a small set of analyzer error messages regardless of this setting (busy/unreachable device, see [Connecting to your analyzer](#connecting-to-your-analyzer)); turning this on additionally surfaces BLE's own, more technical connection/protocol errors in that same dialog -- useful when chasing a flaky BLE connection, more detail than most day-to-day use needs otherwise |
 | Warn before deleting or clearing dirty measurements | On by default. A confirmation before the Measurements panel's Delete/Clear All discards a measurement that's *dirty* (scanned or renamed since it was last saved -- see [Measurements panel](#controls-reference)) |
 
@@ -546,6 +547,7 @@ moved to the [Analyzer tab](#analyzer-tab) below.
 |---|---|
 | Maximum number of markers | Cap on how many markers can be placed at once (1–5) |
 | Automatically set a marker at the lowest SWR | On by default. Right after a single/full scan finishes (never during Continuous), places a marker at the swept trace's lowest-SWR point -- only if a marker slot is still free, otherwise it's a silent no-op. It's an ordinary marker once placed; deleting it later doesn't change this setting or stop it firing again next scan. |
+| Clearing all measurements also clears markers | On by default. Edit → Measurements → Clear All (and the measurements list's right-click Clear All) also removes every marker. Turn it off to keep your markers when you clear the list. |
 
 **Columns**
 
@@ -649,7 +651,7 @@ hit Save.
 | Control | What it does |
 |---|---|
 | Analyzer timeout (seconds) | Seconds a scan can go without receiving a single data point before AntScopeZ treats it as failed and shows an error, instead of leaving the busy indicator/wait cursor stuck forever (device unreachable, or busy -- already held open by another program or another AntScopeZ window). Default 8 |
-| Use reconnect to drain unwanted data | Off by default. Neither NanoVNA protocol (classic ASCII or V2/binary) has a wire-level "abort a scan in progress" command -- once asked for N points, the device is going to send all of them. By default, stopping a scan early just waits out whatever's still outstanding and quietly discards it (see [Scan modes](#scan-modes-single-vs-continuous)). Checking this instead closes and reopens the connection right away, often faster for a large scan, but not guaranteed to make every device actually discard what it already queued internally |
+| Use reconnect to drain unwanted data (USB only) | Off by default. Neither NanoVNA protocol (classic ASCII or V2/binary) has a wire-level "abort a scan in progress" command -- once asked for N points, the device is going to send all of them. By default, stopping a scan early just waits out whatever's still outstanding and quietly discards it (see [Scan modes](#scan-modes-single-vs-continuous)). Checking this instead closes and reopens the connection right away, often faster for a large scan, but not guaranteed to make every device actually discard what it already queued internally. Applies to USB/serial connections only: over Bluetooth, reconnecting is slow and gives no progress, so a Bluetooth device always drains by waiting regardless of this setting |
 
 **Scanning**
 
@@ -934,17 +936,21 @@ scan) does the result settle as one finished entry in the Measurements
 list.
 
 **Stopping a scan early** (Esc, or re-clicking Single/Continuous mid-scan)
-usually stops immediately. The one exception is a NanoVNA-family device
-(classic ASCII or V2/binary) mid-way through a large point count: neither
-protocol has a wire-level "abort," so once asked for N points the device
-is sending all of them regardless. In that case, the status bar shows
+usually stops immediately. The exception is a device with no working
+abort: a NanoVNA-family device (classic ASCII or V2/binary) mid-way through
+a large point count, or any device connected over Bluetooth. Neither NanoVNA
+protocol has a wire-level "abort," and a Match over Bluetooth was observed
+to keep sending its sweep after Stop (about 20 more seconds for a 200-point
+scan), so once asked for N points the device is sending all of them
+regardless. In that case, the status bar shows
 "draining" progress while AntScopeZ quietly waits out and discards
 whatever's still incoming, and scan-triggering controls stay disabled
 until it's genuinely done (bounded by Analyzer timeout, so a device that
-goes silent mid-drain doesn't wait forever). Settings → General → "Use
-reconnect to drain unwanted data" switches to closing and reopening the
-connection instead, often faster for a large scan, though not guaranteed
-to make every device actually discard what it already queued internally.
+goes silent mid-drain doesn't wait forever). Settings → Analyzer → "Use
+reconnect to drain unwanted data (USB only)" switches USB/serial devices to
+closing and reopening the connection instead, often faster for a large scan,
+though not guaranteed to make every device actually discard what it already
+queued internally. Bluetooth devices always wait.
 
 ## Tuning mode: live single-frequency readout
 
@@ -956,7 +962,8 @@ and the chart area shows a single **Tuning** tab.
 **Left column**
 
 - **Band** -- jumps to the middle of a band from the active region's band
-  list (View → Band Highlighting).
+  list (View → Band Highlighting). Each entry shows the band's center
+  frequency, e.g. `40m (7150 kHz)`.
 - **Frequency, kHz** -- type a frequency. **Step** sets how far the ▲/▼
   buttons (hold to repeat) or the Up/Down arrow keys move it. The frequency
   and step are remembered.
@@ -972,7 +979,9 @@ and the chart area shows a single **Tuning** tab.
 **Tuning tab**
 
 - A large **SWR** number centered in the tab: green up to 2.0, amber up to
-  3.0, red above.
+  3.0, red above. The current frequency is shown above it, and a caution
+  line above that reminds you to consider EMI exposure and electrical risks
+  when tuning antennas, even with low-powered VNAs.
 - A **band indicator** along the bottom: the area around the current
   frequency, centered on it, with bands in view shaded as on the charts and a
   dot at the frequency in the SWR color. Its width follows the band you're in
@@ -1214,7 +1223,8 @@ to it -- drag the splitter above it to resize. Columns auto-widen to fit
 whatever's actually in them, re-checked on every refresh, so a column that
 needs more room than its header label doesn't require a manual resize.
 Which columns it shows, and in what order, is set from
-[Settings → Markers](#markers-tab).
+[Settings → Markers](#markers-tab). Double-click a marker's row to center the
+charts on that marker's frequency (in Tuning mode, to tune to it).
 
 For a 2-port measurement (a `.s2p` import), the Markers table also gains
 **S21, dB** / **S21 Phase°** / **S12, dB** / **S12 Phase°** columns -- see
@@ -1226,6 +1236,11 @@ point automatically (never during Continuous, and only if a slot is
 free) -- turn this off at
 [Settings → Markers → "Automatically set a marker at the lowest
 SWR"](#markers-tab).
+
+Clearing all measurements (Edit → Measurements → Clear All) also removes all
+markers by default; turn that off at
+[Settings → Markers → "Clearing all measurements also clears
+markers"](#markers-tab) to keep them.
 
 ### Tools > Marker Comparison
 
@@ -1253,6 +1268,8 @@ flipping between tabs. Right-click a chart's tab and choose "Move chart
 to the tab Multi" (or "Add multi-charts") to populate it.
 
 You can add and remove tabs to Multi View using the "+" button to join charts.
+The "+" button is only there in Sweep mode, and the TDR and Tuning charts can't
+be joined.
 
 ## Data from AA
 
@@ -1506,13 +1523,14 @@ reading the results afterward, in two sections.
 | Top frequency | How far up to sweep -- floored at a few MHz, capped at your analyzer's real maximum. Wider bandwidth gives finer resolution (can tell two close reflections apart) but a *shorter* maximum unambiguous distance before the trace wraps on itself; narrower bandwidth is the opposite. Pick based on your cable run: long cable needing full-length coverage → narrower; short run where you need to separate two close reflections → wider |
 | Points | 200–1000. More points raise both range and resolution somewhat, though not by a simple straight-line relationship |
 | Unambiguous range / Resolution (estimate) | Computed live from Top frequency/Points/Velocity factor above, before you've scanned anything -- lets you check the numbers make sense for your cable *before* spending time on a scan |
-| TDR Scan | Runs the sweep. No Continuous option -- TDR is one scan at a time |
+| TDR Scan | Runs the sweep. No Continuous option -- TDR is one scan at a time. While it runs, the button becomes **Stop** and shows progress (`Stop (92/200)`); the other Scan setup controls and the Result controls are locked until it finishes. The chart redraws as points arrive -- a coarse trace at first that sharpens as the sweep reaches higher frequencies -- while the events table and Result readout fill in when the scan completes. **Stop** discards the unfinished scan (it isn't listed or analyzed, since a partial sweep isn't a usable TDR trace). After Stop, the button shows "Stopping..." and stays disabled until the device has finished sending, which can take a while over Bluetooth (see [Scan modes](#scan-modes-single-vs-continuous)) |
 
 #### Result (after scanning)
 
 | Control | What it shows |
 |---|---|
 | Window (function) | Reshapes the already-captured trace, live, with no rescan needed -- see the table below for what each choice trades off |
+| Sensitivity | How small a reflection counts as an event in the events table and on the chart. Higher lists more events, including minor ripple; lower keeps only the strong ones. Applies to the current scan right away, no rescan, and is remembered between sessions. The default (40) lists a reflection only if it reaches roughly 18 % of the strongest one |
 | Distance to strongest reflection | The single biggest reflection in the scan shown in the events table (the selected TDR scan, otherwise the latest one), at whatever velocity factor is currently set in Scan setup above -- recalculates live as you change it, no re-scan needed (distance is exactly linear in velocity factor) |
 | Reflection | Open or Short, with an approximate impedance in Ohms, based on the sign and size of that reflection -- or "None detected" if nothing crosses the noise floor. The Ohms figure is a rough estimate, not a precision measurement -- real cable loss and the window function you've picked both affect it, so don't treat small differences between scans as meaningful |
 | (automatic note) | If you've entered a known cable length below, the peak is compared against it automatically -- a peak noticeably short of that length is flagged as a possible fault partway along the cable rather than just the far end |
@@ -1570,8 +1588,9 @@ Kinds:
 
 Detection ignores anything below the noise floor and anything much weaker
 than the strongest reflection, and merges peaks closer together than the
-scan's resolution. The thresholds are fixed starting values; if a scan shows
-spurious extra events, a softer window (Hann, Blackman) usually calms them.
+scan's resolution. How weak is "much weaker" is the **Sensitivity** setting in
+the Result section; if a scan shows spurious extra events, lower it, or pick a
+softer window (Hann, Blackman).
 
 Each event also gets a numbered line on the TDR chart. Click a row to
 highlight its line; double-click a row to pan the chart to center on it.
@@ -1678,7 +1697,7 @@ session's own testing.
 | `/usr/bin/AntScopeZ` | A thin wrapper script -- sets `LD_LIBRARY_PATH` to the bundled Qt below, then execs the real binary |
 | `/usr/lib/x86_64-linux-gnu/antscopez/AntScopeZ.bin` | The actual executable (deliberately placed in libdir instead of bindir to scope qt.conf to this app only) |
 | `/usr/lib/x86_64-linux-gnu/antscopez/qt.conf` | Points Qt's own plugin/library lookup at the bundled copies instead of any system Qt (placed next to the executable so it only affects AntScopeZ, not other Qt applications in /usr/bin) |
-| `/usr/lib/x86_64-linux-gnu/antscopez/` | AntScopeZ's own private copy of the Qt 6.11 libraries and plugins it was built/packaged against -- see [Qt version](https://github.com/K4HEZ/AntScopeZ#qt-version) for why it's bundled rather than linked against whatever Qt the system has |
+| `/usr/lib/x86_64-linux-gnu/antscopez/` | AntScopeZ's own private copy of the Qt 6.12 libraries and plugins it was built/packaged against -- see [Qt version](https://github.com/K4HEZ/AntScopeZ#qt-version) for why it's bundled rather than linked against whatever Qt the system has |
 | `/usr/share/antscopez/` | Read-only shared data: `cables.txt`, `itu-regions-defaults.txt`, and every `QtLanguage_<code>.qm` / `qtbase_<code>.qm` translation file |
 | `/usr/share/applications/antscopez.desktop` | The desktop entry (app menu listing) |
 | `/usr/share/icons/hicolor/64x64/apps/antscopez.png` | The app icon |

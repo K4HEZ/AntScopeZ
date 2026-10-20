@@ -42,6 +42,9 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 - `.asd` and `.s1p` record the corrections a measurement was saved with
   (`.s1p` including the cable model); `.asd` also keeps the analyzer's
   original points.
+- iOS build of the mobile app (`mobile/`), Bluetooth only: an ordinary iOS app
+  can't reach USB or serial devices. Verified in the Simulator and on an
+  iPhone with a RigExpert Match over BLE.
 - Early mobile app (`mobile/`, Qt Quick): Bluetooth connect and scan, an
   SWR chart, a Smith chart, an All Parameters live view, range/points/
   Z0/band settings (persisted), and a Share button (Touchstone .s1p via
@@ -73,6 +76,8 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 - TDR chart now draws as the scan runs, sharpening as points arrive. Window and Sensitivity are locked during a scan.
 - TDR: Sensitivity slider (Result section) sets how small a reflection counts as an event, live on the current scan.
 - TDR scan progress: the popup is gone; the TDR Scan button becomes Stop and shows done/total.
+- Linux and Windows builds, their CMake presets and the Windows CI now use
+  Qt 6.12.0 (was 6.11.x); the Linux base preset is `qt-6.12`.
 - macOS now builds against Qt 6.12 (was 6.11) and the deployment floor moved to macOS 14.4 Sonoma (was 13.0 Ventura) to match -- deliberately drops Ventura support. `.dmg` packaging now goes through CPack (`cpack`/`build.sh`) on all paths, matching how the `.deb`/NSIS installer are already built.
 - Removed the rule above the first heading in the Sweep, TDR and Tuning left panels.
 - Group boxes use the standard look: square frame with the title on the frame line (was rounded, with the title inside). Fixes Qt's own Print and Page Setup dialogs, where titles overlapped the controls, and removes the 20 px top-margin workaround from our Settings and Marker Comparison forms.
@@ -150,6 +155,9 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Documentation
 
+- README, BUILDINFO, user guide, roadmap and the website refreshed: Qt 6.12,
+  macOS 14.4, manual-only CI, iOS, Stop/Sensitivity/live plot in TDR mode,
+  BLE draining, the new Markers setting, Tuning and Multi-view details.
 - User guide: new "Calibration and cable correction" section -- device
   vs. AntScopeZ calibration, how corrections work per measurement, what's
   saved and how reloading works.

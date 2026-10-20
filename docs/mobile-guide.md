@@ -9,7 +9,10 @@ The AntScopeZ mobile app is a pocket-sized companion to the desktop
 program: connect an analyzer, run a scan, read SWR and impedance, look at
 the Smith chart, watch a live single-frequency reading, find cable faults
 with TDR, and share the result as a Touchstone file. It targets Android
-phones; the same code also runs on a Linux desktop for testing.
+phones; the same code also runs on a Linux desktop for testing, and builds
+for iOS. The iOS build supports Bluetooth analyzers only (iOS gives an
+ordinary app no USB or serial access), so the USB and Serial connection
+modes don't appear there.
 
 It is deliberately smaller than the desktop app -- there are no markers,
 calibration, saved measurement lists, multi-view or printing. For those,
@@ -140,7 +143,9 @@ the screen, the chart shows a section and a scrollbar appears under it.
 Drag the scrollbar, or drag along the frequency labels under the plot, to
 move along the sweep. Dragging the cursor towards either edge of the plot
 scrolls the chart smoothly under it. How much room each point gets is the
-"SWR chart density" setting.
+**Density** slider under the chart, from 0.5 to 30 pixels per point (shown
+beside it). Scans with more points than fit at that density scroll instead of
+crowding together; larger values scroll sooner.
 
 ## Smith
 
@@ -233,9 +238,6 @@ file and reports where.)
 - **Add margin to scans** -- 0 to 100%. When you pick a band on the Scan
   page, the scan range is widened on each side by this percentage of the
   band's own width. 0% scans exactly the band.
-- **SWR chart density** -- the minimum number of pixels between points on
-  the SWR chart, 1 to 30. Scans with more points than fit at this density
-  scroll instead of crowding together. Larger values scroll sooner.
 - **Distance units** -- metric (metres) or feet, for TDR.
 - **Frequency limits** -- see below.
 

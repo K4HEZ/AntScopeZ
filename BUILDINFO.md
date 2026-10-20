@@ -128,7 +128,7 @@ instead of the one under `/opt/Qt`):
 
 ```sh
 cmake -B build-debug-asan -DCMAKE_BUILD_TYPE=Debug -DANTSCOPEZ_SANITIZE=ON \
-  -DCMAKE_PREFIX_PATH=/opt/Qt/6.11.2/gcc_64
+  -DCMAKE_PREFIX_PATH=/opt/Qt/6.12.0/gcc_64
 cmake --build build-debug-asan --target AntScopeZ --parallel
 ```
 
@@ -149,7 +149,7 @@ build. They link `antscopez_core` only, so no GUI is involved:
 
 ```sh
 cmake -B build-tests -DCMAKE_BUILD_TYPE=Debug -DANTSCOPEZ_BUILD_TESTS=ON \
-  -DCMAKE_PREFIX_PATH=/opt/Qt/6.11.2/gcc_64
+  -DCMAKE_PREFIX_PATH=/opt/Qt/6.12.0/gcc_64
 cmake --build build-tests --target tdrmath_test tdr_events_dump --parallel
 ctest --test-dir build-tests
 ```
@@ -257,9 +257,9 @@ cd build-release && cpack
 
 Produces `antscopez_<version>_amd64.deb`. The `fix-deb-self-dependency.sh`
 step is required, not optional -- see "Known issues" below (self-dependency
-bug). Uses the `release` preset (Qt 6.11
+bug). Uses the `release` preset (Qt 6.12
 from `/opt/Qt`), not `system-qt` -- the CMake install rules bundle that
-build's own Qt 6.11 libraries and plugins into
+build's own Qt 6.12 libraries and plugins into
 `/usr/lib/x86_64-linux-gnu/antscopez/` rather than linking whatever Qt6 the
 target's distro ships, so the package doesn't depend on a system Qt install
 at all (see "Known issues" below for why). The `system-qt` preset still
@@ -359,14 +359,14 @@ Uses the same Qt kit as the main build. Bluetooth and USB-HID work on a
 Linux desktop, so this is the quickest way to try changes:
 
 ```
-cmake -S mobile -B mobile/build-desktop -DCMAKE_PREFIX_PATH=/opt/Qt/6.11.2/gcc_64
+cmake -S mobile -B mobile/build-desktop -DCMAKE_PREFIX_PATH=/opt/Qt/6.12.0/gcc_64
 cmake --build mobile/build-desktop -j8
 mobile/build-desktop/AntScopeZMobile
 ```
 
 ### Android build
 
-Needs Qt's Android kit for the target ABI (e.g. `/opt/Qt/6.11.2/android_arm64_v8a`),
+Needs Qt's Android kit for the target ABI (e.g. `/opt/Qt/6.12.0/android_arm64_v8a`),
 a full JDK (a JRE-only install is rejected), the Android SDK (platform
 android-36, build-tools 36.0.0) and NDK 27.2.12479018. The first build
 downloads the Android Gradle Plugin and AndroidX libraries (network
@@ -374,7 +374,7 @@ needed; they are cached afterwards).
 
 ```
 export JAVA_HOME=/usr/lib/jvm/zulu21-ca-amd64
-/opt/Qt/6.11.2/android_arm64_v8a/bin/qt-cmake -S mobile -B mobile/build-android-arm64_v8a \
+/opt/Qt/6.12.0/android_arm64_v8a/bin/qt-cmake -S mobile -B mobile/build-android-arm64_v8a \
     -DANDROID_SDK_ROOT=~/Android/Sdk -DANDROID_NDK_ROOT=~/Android/Sdk/ndk/27.2.12479018
 cmake --build mobile/build-android-arm64_v8a -j8
 ```
@@ -401,6 +401,28 @@ has no real Bluetooth or USB passthrough for the analyzers.
   (USB host feature, USB permission receiver, the FileProvider used by Share).
   XML comments in it can't contain two consecutive hyphens.
 
+### iOS build
+
+The same `mobile/` project builds for iOS with Qt's iOS kits (Qt 6.12's
+`ios` for a device, `ios_simulator_arm64` for the Simulator), on a Mac. It is
+**Bluetooth-only**: an ordinary (non-MFi) iOS app can't reach USB HID or
+serial devices, so USB-only analyzers (most NanoVNAs) aren't supported there
+and aren't planned. Verified in the iOS Simulator and on a real iPhone 11 Pro
+Max with a live BLE connection to a RigExpert Match (see commit `7eebd2e`).
+
+- `core/CMakeLists.txt` leaves out Qt SerialPort on iOS (Qt ships no such
+  module) and compiles a no-op hidapi backend
+  (`core/analyzer/usbhid/hidapi/ios/hid.c`) so the HID classes still link.
+- `core/analyzer/serialport_compat.h` aliases `SerialPort` to
+  `core/analyzer/ios_serialport.h` on iOS: a stand-in with an always-empty
+  port list whose `open()` always fails (same shape as the Android one).
+- `mobile/ios/Info.plist.in` is Qt's default iOS template plus
+  `NSBluetoothAlwaysUsageDescription` (iOS refuses Bluetooth access without
+  it); `mobile/ios/Assets.xcassets` supplies the app icon (without one the
+  app has no icon and can't be pinned to the Home Screen).
+- `mobile/ConnectionPage.qml` hides the USB and Serial connection modes on
+  iOS.
+
 ## Platform notes
 
 Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
@@ -414,7 +436,7 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   default and has no OpenSSL 3.x runtime to fall back to, so the one live
   HTTPS caller (`desktop/licenseagent.cpp`) works with no extra linkage. `CMakePresets.json`
   has a `windows-mingw`/`windows-mingw-release` pair (Qt Online Installer's
-  Qt 6.11.2 MinGW kit under `C:/Qt`) and `CMakeLists.txt` has an NSIS
+  Qt 6.12.0 MinGW kit under `C:/Qt`) and `CMakeLists.txt` has an NSIS
   packaging block (`cpack -G NSIS`); `.github/workflows/windows-build.yml`
   (issue #58) builds it (started manually from the Actions tab -- the
   workflow is `workflow_dispatch` only; running on every push was turned off
@@ -454,6 +476,23 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
 
 ## Known issues
 
+- **A RigExpert Match over BLE ignores Stop mid-sweep.** Logged 2026-10-20
+  (Settings → Analyzer → BLE debug logging): after the app sent the BLE break
+  command (`0x69`) partway through a 200-point sweep, the device sent no
+  reply and kept streaming every remaining point (about 20 more seconds)
+  before pings were answered again. When idle, the same command is echoed
+  back. So a BLE Stop is handled by draining: the status bar counts the
+  leftover points and the scan controls stay disabled until they're done.
+  "Use reconnect to drain" doesn't apply to BLE (reconnecting over BLE was
+  slow, silent and unreliable), only to USB/serial. A full sweep over BLE is
+  also slow: about 8 points/second, so a 200-point TDR scan takes roughly 26
+  seconds.
+- **Intermittent stale repaints, seen only over BLE.** The window sometimes
+  shows leftover or doubled chart pixels (a garbled strip over the TDR chart,
+  a doubled SWR chart after a resize) or freezes for about a second before
+  redrawing on its own. Observed with a Match over BLE on Qt 6.11 and 6.12
+  (Linux); not seen over USB. Not reproducible on demand and the cause has
+  not been determined.
 - **`.deb` self-dependency bug in `dpkg-shlibdeps`.** On build machines that
   also have distro Qt6 packages installed alongside `/opt/Qt` (e.g. this
   project's own dev box, kept that way on purpose for the `system-qt` preset
@@ -476,7 +515,7 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   attribute bundled Qt libraries to *those* real packages (e.g.
   `libqt6core6t64`) instead of treating them as private -- extra, unneeded
   `Depends:` entries rather than a missing/broken one, since the app still
-  loads the bundled Qt 6.11 at runtime via RPATH regardless. Not fixed here.
+  loads the bundled Qt 6.12 at runtime via RPATH regardless. Not fixed here.
 - `core/analyzer/updater/downloader.cpp` uses `QDomDocument::ParseResult`, which is
   Qt 6.5+. A version guard keeps it building on 6.2–6.4.
 - ~~`mainwindow.cpp` (~234 KB) and `measurements.cpp` (~192 KB) are very
@@ -491,16 +530,16 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   `/* */`-commented and `#if 0`'d implementations, found interleaved with
   live code during the split) removed at the same time. `mainwindow.cpp`
   itself is down to ~1,200 lines, `measurements.cpp` to ~1,600.
-- **Build/run against Qt 6.11, not an older system Qt (e.g. distro-packaged
-  6.4.x).** A `.deb` built and run against system Qt 6.4.2 showed real bugs
-  that don't reproduce under Qt 6.11: the analyzer sometimes refuses to
+- **Build/run against the bundled Qt (6.12), not an older system Qt (e.g.
+  distro-packaged 6.4.x).** A `.deb` built and run against system Qt 6.4.2
+  showed real bugs that didn't reproduce under Qt 6.11: the analyzer sometimes refuses to
   connect on a fresh install even after several manual attempts (works again
   after restarting the app once its ini file exists, not yet root-caused),
   the main window doesn't fully repaint after being resized larger, and
   plot/paint redraws leave stale artifacts behind until something forces a
   repaint (e.g. minimize/restore). All three were confirmed to be Qt-version
   differences, not something wrong with the packaging/install path itself.
-  Packaged releases bundle the Qt 6.11 shared libraries specifically to
+  Packaged releases bundle the Qt 6.12 shared libraries specifically to
   avoid this.
 - **PDF output (all three paths) was silently coming out as A4 regardless
   of an explicit Letter page size in code -- fixed 2026-08-11.** Affected:
@@ -736,6 +775,11 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
       present in retail units) rather than a documented feature of any
       currently-shipping analyzer -- unconfirmed either way, and not
       discoverable from source alone.
+  - **Historical note:** One Fq is now **Mode → Tuning** (a docked panel,
+    `tuningpanel.*`/`tuningcontrols.*`); the floating `OneFqWidget`
+    (`onefqwidget.*`) described below no longer exists, and Start==Stop in
+    Sweep mode shows a message pointing to Tuning instead of starting a
+    readout. The bugs below were real and fixed at the time.
   - **"One Fq" mode (Start==Stop or Range==0, then Single/Continuous) --
     three real bugs found and fixed 2026-08-20, confirmed working
     end-to-end afterward (floating live readout, updating every few

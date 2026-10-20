@@ -36,6 +36,10 @@ Pick whatever you have; you don't need all of it.
 - **Serial analyzer** (NanoVNA classic or V2/LiteVNA, RigExpert COM units,
   with an OTG adapter) -- Connection > Serial > Search > pick > Connect.
 - **Live Data**, **Smith** and **TDR** against a real antenna or cable.
+- **TDR page**: pick a cable with the searchable preset picker (recent cables
+  on top), and zoom and scroll the chart.
+- **SWR page**: the Density slider and **Fit**.
+- **iPhone** (iOS build): Bluetooth only -- Connection > Bluetooth.
 - **Share Touchstone file** from the Impedance page.
 
 ## What's known to be checked, and what isn't

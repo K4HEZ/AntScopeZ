@@ -26,20 +26,20 @@ happens.
 
 - CMake 3.21+
 - A C++17 compiler
-- Qt 6.11 (see [Qt version](#qt-version) below; built and tested against
-  6.4.2 and 6.11.2, but 6.11 is the version this project targets and
-  packaged releases ship with)
+- Qt 6.12 (see [Qt version](#qt-version) below; 6.12.0 is the version this
+  project targets and packaged releases ship with. Earlier builds used
+  6.11.2, and the distro's 6.4.2 has been tried)
 
 See [BUILDINFO.md](BUILDINFO.md) for the required Qt modules, Linux-only
 dependencies, and other setup details.
 
 ### Qt version
 
-Packaged releases (e.g. the `.deb`) bundle the Qt 6.11 shared libraries the
+Packaged releases (e.g. the `.deb`) bundle the Qt 6.12 shared libraries the
 app needs, so installing one doesn't require a matching system Qt install.
-If you're building from source, build against Qt 6.11 -- older Qt versions
+If you're building from source, build against Qt 6.12 -- older Qt versions
 (e.g. distro-packaged Qt 6.4.x) have shown real bugs (analyzer connect
-failures on fresh installs, resize/repaint artifacts) that don't reproduce
+failures on fresh installs, resize/repaint artifacts) that didn't reproduce
 under 6.11. See [BUILDINFO.md](BUILDINFO.md)'s Known issues for detail.
 
 ## Building
@@ -66,7 +66,7 @@ over a small NDJSON-over-TCP protocol. It's for external tools (scripts, an MCP 
 web dashboard) that want to drive AntScopeZ programmatically; the app's own GUI doesn't
 use it.
 
-Off by default. Enable it in Settings > General ("Enable Remote API" + a port field), or
+Off by default. Enable it in Settings > Graphs ("Enable Remote API" + a port field), or
 pass `-remote-api-port <n>` on the command line to force it on for a single run. It binds
 to `127.0.0.1` only -- not reachable from other machines -- unless you reconfigure that
 yourself. `-headless` runs AntScopeZ without showing its window (still a full GUI process
@@ -90,11 +90,11 @@ may warn: **More info** > **Run anyway**.
 
 ### Building from source
 
-Requires the Qt 6.11.2 MinGW kit installed via the
+Requires the Qt 6.12.0 MinGW kit installed via the
 [Qt Online Installer](https://www.qt.io/download-qt-installer) under
 `C:\Qt`, including the SerialPort and Bluetooth (under "Connectivity")
 addon components -- both are optional and not installed by default, so
-check `C:\Qt\6.11.2\mingw_64\lib\cmake\` for `Qt6SerialPort`/
+check `C:\Qt\6.12.0\mingw_64\lib\cmake\` for `Qt6SerialPort`/
 `Qt6Bluetooth` first.
 
 ```
@@ -128,7 +128,8 @@ macOS support builds via GitHub Actions (see
 been verified against real hardware yet). Download
 `AntScopeZ-<version>-macOS.dmg` (universal arm64 + x86_64) from the
 [Releases page](https://github.com/K4HEZ/AntScopeZ/releases); the
-workflow (`.github/workflows/macos-build.yml`) builds it on every push.
+workflow (`.github/workflows/macos-build.yml`) builds it on demand
+(it's started manually from GitHub's Actions tab, not on every push).
 
 There's no Apple Developer account behind these builds, so the `.app` is
 unsigned and not notarized: macOS Gatekeeper will refuse a plain
@@ -137,10 +138,11 @@ double-click on first launch. Right-click the app > Open (once), or run
 
 ### Building from source
 
-Requires Qt 6.11 with the SerialPort and Bluetooth (Connectivity) addon
-modules -- see [BUILDINFO.md](BUILDINFO.md)'s Qt modules section. Qt 6.11
-itself sets the deployment floor at macOS 13 Ventura or newer; earliest
-supported Intel Mac is a 2017 model, any Apple Silicon Mac works.
+Requires Qt 6.12 with the SerialPort and Bluetooth (Connectivity) addon
+modules -- see [BUILDINFO.md](BUILDINFO.md)'s Qt modules section. The
+project's deployment target is macOS 14.4 Sonoma (following Qt 6.12's own
+floor), which deliberately drops macOS 13 Ventura; see BUILDINFO.md for
+which Macs that excludes.
 
 ```sh
 cmake -B build -DCMAKE_BUILD_TYPE=Release \
@@ -153,7 +155,9 @@ Or, for a quick local `.dmg` without CPack: `./build.sh [build-dir]`.
 
 ## Mobile app
 
-The `mobile/` directory holds an Android (and desktop-test) app -- see
+The `mobile/` directory holds an Android and iOS (and desktop-test) app --
+the iOS build is Bluetooth-only (no USB or serial access for an ordinary
+iOS app). See
 [BUILDINFO.md](BUILDINFO.md)'s "Mobile app" section for how to build it, and
 [docs/mobile-guide.md](docs/mobile-guide.md) for what it does.
 

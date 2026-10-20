@@ -12,7 +12,7 @@ other brands) -- built for, and maintained by, the ham radio community.
 
 ## Features
 
-- Support of RigExport Analyzers and NanoVNA (ASCII & Binary)
+- Support of RigExpert Analyzers and NanoVNA (ASCII & Binary)
 - Autodetect most Analyzers
 - Import/Export of Touchstone Files (.asd/.s1p/.s2p/.csv/.nwl)
 - Full 2-Port S-Parameter Export (S11/S21/S12/S22)
@@ -20,25 +20,29 @@ other brands) -- built for, and maintained by, the ham radio community.
 - Named Measurements, (load/save/conversions)
 - Multiview of plots, synced, ...with markers.
 - Auto Stitch Feature (~10k Points)
-- Dynamic Single Frequency Mode (live SWR/Z monitor)
-- Big-Number SWR Readout for One Fq Mode
+- Tuning mode: live single-frequency readout with a big SWR number, a band
+  indicator you can drag to tune, and the full R/X/Z readings
+- Sweep, Tuning and TDR modes (Mode menu), with every chart always available
 - Built in Color/Theme Editor
 - Marker Comparison and Trim Calculator
 - OSL Calibrations and Cable Add/Delete
 - Debug Logging for Analyzer Communications
 - USB Serial/HID, BLE/Bluetooth and NanoVNA
-- TDR Analysis 
-  - Cable Length <-> Velocity Factor Calculations w/ Over 100 Cable Presets 
+- TDR mode
+  - Chart draws live as the scan runs; events table of every reflection found
+    (distance, time, Z, reflection), with numbered lines on the chart, your own
+    distance markers, and an adjustable Sensitivity
+  - Cable Length <-> Velocity Factor Calculations w/ Over 100 Searchable Cable Presets
   - Adjustable frequency/points with unambiguous range / resolution indication
-  - Selectable windows (Rectangular, Hamming, Hamm, Blackman, Kaiser)
+  - Selectable windows (Rectangular, Hamming, Hann, Blackman, Kaiser)
 - Language Support: English, Ukrainian, Japanese, Spanish (AI generated)
 - ...and much more.
 
-## Mobile app (Android)
+## Mobile app (Android and iOS)
 
 A companion Android app is in development: connect over Bluetooth, USB or
 serial, scan, read SWR/Smith/impedance, run TDR, and share Touchstone
-files. See the [mobile guide](docs/mobile-guide.md); to try a pre-release
+files. An iOS build (Bluetooth only) also exists. See the [mobile guide](docs/mobile-guide.md); to try a pre-release
 build, see [testing a pre-release](docs/mobile-beta-testing.md).
 
 ## Download
