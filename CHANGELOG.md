@@ -110,6 +110,8 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 
 ### Fixed
 
+- Stopping a scan on a device with no abort command (BLE) no longer gives up draining after the timeout while data is still arriving.
+- BLE now always drains by waiting after Stop; "reconnect to drain" applies to USB/serial only (reconnecting over BLE was slow, silent and unreliable).
 - Auto lowest-SWR marker no longer leaves the chart unpainted until a resize.
 - TDR's Top frequency and Tuning's frequency limit now follow the connected device's licensed maximum (500 MHz for a Match with the RFE license) instead of the model's default (750 MHz), which was read before the license arrived.
 - Mobile (Android and iOS, `mobile/analyzercontroller.cpp`): a Match connected over BLE now shows its real frequency range (Connection page's "Range" field) and Scan's start/stop are clamped to it. Previously stuck at "--"/unclamped: `AnalyzerPro::slotFullInfo()` only recognizes the ASCII "LICx" reply serial/USB-connected Matches send, so `getLicense()` never stops being empty for a BLE Match (BLE's own range reply, `BLE_FULLINFO_MEASURER`, carries no such string) -- and the "range unknown until license arrives" guard, written for the serial/USB case, had nothing to make it ever turn false on BLE, so the real range `BLE_FULLINFO_MEASURER` already wrote into the device table got zeroed back out on every refresh. Desktop never had this guard (`settings.cpp`/`mainwindow_frequency.cpp` read the device table directly, ungated), so macOS/Linux/Windows weren't affected -- found and fixed 2026-10-19 testing a real Match over BLE on iOS.

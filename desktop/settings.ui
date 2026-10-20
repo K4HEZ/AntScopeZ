@@ -1755,10 +1755,12 @@ Once asked for N points, the device sends all of them.
 By default: stops listening and discards outstanding data.
 Checked: closes/reopens connection immediately (faster
 for large scans, but doesn't guarantee the device
-discards queued data -- only that AntScopeZ resyncs).</string>
+discards queued data -- only that AntScopeZ resyncs).
+
+USB/serial only. Bluetooth always drains by waiting.</string>
          </property>
          <property name="text">
-          <string>Use reconnect to drain unwanted data</string>
+          <string>Use reconnect to drain unwanted data (USB only)</string>
          </property>
         </widget>
        </item>

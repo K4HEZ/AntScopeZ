@@ -53,6 +53,9 @@ public:
     // clean "Ready". Confirmed live 2026-09-04 against a real Match
     // device.
     virtual bool stopCommandAbortsDevice() const { return true; }
+    // Whether "reconnect to drain" is usable: false where a reconnect is slow
+    // or unreliable (BLE), which always drains by counting points instead.
+    virtual bool supportsReconnectDrain() const { return true; }
     virtual void disconnectAnalyzer() = 0;
     ReDeviceInfo::InterfaceType connectionType() { return m_type; }
 

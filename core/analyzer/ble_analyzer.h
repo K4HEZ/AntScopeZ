@@ -180,6 +180,9 @@ protected:
     // drain/reconnect behavior (see BaseAnalyzer's own comment on this
     // method) as the safe default until that's actually verified.
     bool stopCommandAbortsDevice() const override { return false; }
+    // Reconnecting takes seconds with no progress and is unreliable; BLE
+    // always counts leftover points instead.
+    bool supportsReconnectDrain() const override { return false; }
 
 public slots:
     void searchAnalyzer() override;

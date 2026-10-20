@@ -432,6 +432,7 @@ void AnalyzerPro::advanceDraining()
         finishDraining(tr("Ready"));
         return;
     }
+    kickWatchdog(); // a leftover point arrived: still alive, restart the silence timeout
     emit statusMessageChanged(tr("Stopping — draining remaining data (%1/%2 points)...")
                                    .arg(m_drainReceived)
                                    .arg(m_drainTotal));
@@ -679,7 +680,7 @@ void AnalyzerPro::on_stopMeasure()
     // all. Confirmed live 2026-09-04: a real Match device (HID) timed out
     // every time here before this check existed.
     if (wasMeasuring && m_baseAnalyzer != nullptr && !m_baseAnalyzer->stopCommandAbortsDevice()) {
-        if (AppConfig::get().reconnectToDrain) {
+        if (AppConfig::get().reconnectToDrain && m_baseAnalyzer->supportsReconnectDrain()) {
             beginReconnectDrain();
         } else {
             beginDraining(remainingPoints);
