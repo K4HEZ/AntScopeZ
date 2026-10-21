@@ -103,6 +103,16 @@ set_target_properties(AntScopeZMobile PROPERTIES
     # Custom AndroidManifest.xml (USB host support, USB permission receiver)
     # and UsbPermissionReceiver.java -- see mobile/android/'s own files.
     QT_ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android"
+    # Without this, androiddeployqt drops the android:icon attribute from
+    # the manifest entirely (found 2026-10-21) rather than defaulting to
+    # anything -- it does NOT auto-detect res/mipmap-*/ic_launcher.png on
+    # its own, no matter how standard that filename is. The actual icon
+    # art lives at mobile/android/res/mipmap-*/ic_launcher.png (legacy,
+    # pre-API26) and mipmap-anydpi-v26/ic_launcher.xml + the
+    # ic_launcher_foreground.png layers (adaptive icon) -- see
+    # desktop/resources/AntScopeZ-source.png and BUILDINFO.md's "App icon
+    # source" note for where all of these are regenerated from.
+    QT_ANDROID_APP_ICON "@mipmap/ic_launcher"
 )
 
 if(IOS)
@@ -119,10 +129,12 @@ if(IOS)
     )
     # Without an AppIcon asset catalog, the app installs with no icon at
     # all and doesn't get pinned to the Home Screen (found 2026-10-19,
-    # installing on a real device for the first time). Source image is the
-    # same desktop/resources/AntScopeZ.png used for the Android icon,
-    # upscaled from its native 64x64 -- soft at 1024x1024, but a real icon
-    # beats none; revisit if a higher-res source ever exists. Single-size
+    # installing on a real device for the first time). icon-1024.png is
+    # rendered natively at 1024x1024 (regenerated 2026-10-21 from a new
+    # source image, not upscaled from desktop/resources/AntScopeZ.png's
+    # 64x64 like the original placeholder was), flattened onto opaque
+    # white -- the App Store icon slot must not carry an alpha channel,
+    # unlike every other icon derived from the same source. Single-size
     # "universal" app icon (Xcode 14+ format, see Contents.json) --
     # resource processing of .xcassets is handled by the Xcode generator
     # via MACOSX_PACKAGE_LOCATION, same as the Android .png resource below.

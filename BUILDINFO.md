@@ -454,6 +454,39 @@ Max with a live BLE connection to a RigExpert Match (see commit `7eebd2e`).
 - `mobile/ConnectionPage.qml` hides the USB and Serial connection modes on
   iOS.
 
+### App icon source (all platforms)
+
+`desktop/resources/AntScopeZ-source.png` (1024x1024, true alpha
+transparency, 2026-10-21) is the master art for every app icon in the
+project -- regenerate from *this* file, not from any of its
+derivatives. Every other icon file is produced from it:
+
+- `desktop/resources/AntScopeZ.png` -- 64x64, alpha kept (`sips -z 64
+  64`). Installed as the Linux hicolor/64x64/apps icon and embedded as
+  a Qt resource for the mobile `qt_add_resources(... "icon" ...)`
+  block.
+- `desktop/resources/AntScopeZ.icns` -- built via a `.iconset` folder
+  (`icon_16x16.png` through `icon_512x512@2x.png`, alpha kept) and
+  Apple's own `iconutil -c icns`.
+- `desktop/resources/AntScopeZ.ico` -- a hand-assembled modern
+  PNG-frame `.ico` (sizes 16/24/32/48/64/128/256, alpha kept in every
+  frame; Windows has supported PNG-compressed ICO frames since Vista,
+  so there's no need for the older raw-BMP+AND-mask encoding `sips`
+  can't produce anyway).
+- `mobile/ios/Assets.xcassets/AppIcon.appiconset/icon-1024.png` -- the
+  one exception: flattened onto **opaque white, alpha channel
+  stripped**. The App Store/Home Screen icon slot must not carry
+  transparency -- Apple's icon validation rejects it outright, and
+  Qt's default `.xcassets` template doesn't do this flattening for
+  you.
+
+The previous `AntScopeZ.png`/`.ico`/`.icns`/`icon-1024.png` were all
+ultimately upscaled from a 64x64 original with no higher-res source
+ever checked in -- when that got lost there was nothing to regenerate
+from. Don't let that happen again: if the art changes, replace
+`AntScopeZ-source.png` itself and regenerate every derivative above
+from it, in the same commit.
+
 ## Platform notes
 
 Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
@@ -665,6 +698,16 @@ Developed on Linuxmint. Using a RigExpert Match RFE (BLE and hidusb):
   repeat: confirm the real live string via `strings` against
   `libQt6Widgets.so.6` (or wherever it actually lives), then add one
   `<message>` per affected language here.
+  **Confirmed still present in Qt 6.12.0 (2026-10-21), override still
+  required.** Checked directly against the real macOS 6.12.0 install:
+  `strings` against `QtWidgets.framework/Versions/A/QtWidgets` shows
+  the live source strings are unchanged (`"Files of &type:"` /
+  `"&Look in:"`), and `lconvert -if qm -of ts` on the shipped
+  `qtbase_es.qm`/`qtbase_ja.qm`/`qtbase_uk.qm` shows Qt's own catalog
+  is still keyed to the mnemonic-less `"Files of type:"` / `"Look
+  in:"` for all three languages -- same mismatch as before, not
+  resynced upstream. Don't drop `qtbase_override_*.ts` on a 6.12
+  upgrade.
 - **On RigExpert-family analyzers the S21 tab is import-only -- there's
   still no live S21/S12 capture from real hardware.** (NanoVNA-family
   hardware does capture S11+S21 live on every sweep, since 2026-08-31;
