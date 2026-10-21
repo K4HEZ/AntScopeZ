@@ -8,6 +8,7 @@
 #include "Notification.h"
 #include "glwidget.h"
 #include "CustomPlot.h"
+#include "tooltiputils.h"
 #include "selectdevicedialog.h"
 #include "printmulti.h"
 #include "style.h"
@@ -124,7 +125,8 @@ void MainWindow::updateCorrectionsStatusLabel()
         return;
     Corrections next = m_measurements->scanCorrections();
     m_correctionsStatusLabel->setText(tr("Corrections: %1").arg(next.summary(AppConfig::get().measureSystemMetric)));
-    m_correctionsStatusLabel->setToolTip(tr("Applied to new scans:") + "\n" + next.details(AppConfig::get().measureSystemMetric));
+    m_correctionsStatusLabel->setToolTip(ToolTipUtils::wrapToolTip(
+        tr("Applied to new scans:") + "\n" + next.details(AppConfig::get().measureSystemMetric)));
 }
 
 void MainWindow::updateConnectionStatusLabel()

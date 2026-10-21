@@ -10,6 +10,7 @@
 #include "appregistrationdialog.h"
 #include "inforequestdialog.h"
 #include "style.h"
+#include "tooltiputils.h"
 #include "filedialog.h"
 #include "debuglog.h"
 #include "apppaths.h"
@@ -388,6 +389,12 @@ Settings::Settings(QWidget *parent) :
     // unreadable/overlapping instead of actually stopping there.
     if (layout())
         setMinimumSize(layout()->minimumSize());
+
+    // Run last, once every child widget (including the promoted
+    // DualListWidget embedded in settings.ui) already has its real
+    // tooltip set -- see ToolTipUtils for why this is a post-translation
+    // wrap, not a change to any tr() source string.
+    ToolTipUtils::wrapLongToolTips(this);
 }
 
 Settings::~Settings()

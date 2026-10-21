@@ -2,6 +2,7 @@
 #include "ui_tdrscanpanel.h"
 #include "settings.h"
 #include "cablepickerdialog.h"
+#include "tooltiputils.h"
 
 // Same "no real reflection" noise floor CalcTdr() itself uses to zero out
 // m_pdTdrImp[]/tdrImpGraph samples (see measurements_tdr.cpp) -- reusing it
@@ -58,12 +59,10 @@ TdrScanPanel::TdrScanPanel(QWidget* parent) :
 
     ui->windowCombo->setCurrentIndex(1); // Hamming -- matches Measurements' own default
 
-    // Plain tooltips don't wrap; a fixed-width rich-text table does.
-    for (QWidget* w : findChildren<QWidget*>()) {
-        QString tip = w->toolTip();
-        if (tip.length() > 50 && !tip.startsWith('<'))
-            w->setToolTip(QString("<table width='300'><tr><td>%1</td></tr></table>").arg(tip.toHtmlEscaped()));
-    }
+    // Plain tooltips don't wrap; a fixed-width rich-text table does -- see
+    // ToolTipUtils for why this is a post-translation wrap, not a change
+    // to any tr() source string.
+    ToolTipUtils::wrapLongToolTips(this);
     setWindowToolTip();
     updateEstimateLabels();
     refreshResult();

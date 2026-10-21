@@ -85,6 +85,17 @@ void Measurements::replot()
     // the whole time -- not a difference Harold expects or wants. Removed the
     // special case so single scans redraw for real on every point too, same
     // as continuous. See todo #25.
+    // Each branch below null-checks its widget before calling replot() --
+    // same reason, and same fix, as the tab_multi branch's plotForTab()
+    // null check just below: m_currentTab can transiently name a tab whose
+    // widget isn't valid in the current context, in particular during
+    // MainWindow::setAppMode()'s tab-visibility loop when switching to/from
+    // Tuning mode, which hides tabs one at a time and lets Qt's own
+    // QTabBar auto-reselect a *different*, not-yet-processed tab mid-loop,
+    // firing currentChanged() (and so this replot()) for a tab that isn't
+    // the one actually being switched to. Found 2026-10-21: switching to
+    // Tuning mode with no analyzer connected crashed here (EXC_BAD_ACCESS,
+    // null QCustomPlot*), confirmed via the real macOS crash report.
     if(m_currentTab == "tab_swr")
     {
         // Used to replot twice here -- once normally, then read back the
@@ -95,31 +106,31 @@ void Measurements::replot()
         // SwrAxisTicker (CustomPlot.h, assigned to this axis in
         // MainWindow::setWidgetsSettings()), which blanks the same labels
         // as part of the ticker's own single pass -- see its comment.
-        m_swrWidget->replot();
+        if (m_swrWidget) m_swrWidget->replot();
     }else if(m_currentTab == "tab_phase")
     {
-        m_phaseWidget->replot();
+        if (m_phaseWidget) m_phaseWidget->replot();
     }else if(m_currentTab == "tab_rs")
     {
-        m_rsWidget->replot();
+        if (m_rsWidget) m_rsWidget->replot();
     }else if(m_currentTab == "tab_rp")
     {
-        m_rpWidget->replot();
+        if (m_rpWidget) m_rpWidget->replot();
     }else if(m_currentTab == "tab_rl")
     {
-        m_rlWidget->replot();
+        if (m_rlWidget) m_rlWidget->replot();
     }else if(m_currentTab == "tab_s21")
     {
-        m_s21Widget->replot();
+        if (m_s21Widget) m_s21Widget->replot();
     }else if(m_currentTab == "tab_tdr")
     {
-        m_tdrWidget->replot();
+        if (m_tdrWidget) m_tdrWidget->replot();
     }else if(m_currentTab == "tab_smith")
     {
-        m_smithWidget->replot();
+        if (m_smithWidget) m_smithWidget->replot();
     }else if(m_currentTab == "tab_user")
     {
-        m_userWidget->replot();
+        if (m_userWidget) m_userWidget->replot();
     }
 #ifndef NO_MULTITAB
     else if(m_currentTab == "tab_multi")
@@ -143,8 +154,12 @@ void Measurements::replot()
 
     MainWindow* mainWindow = qobject_cast<MainWindow*>(parent());
     QTabWidget* tabWidget = mainWindow->tabWidget();
+    // currentWidget() can transiently be null during the same tab-visibility
+    // churn described above (e.g. between the old current tab being hidden
+    // and a new one actually becoming current) -- same fix as every branch
+    // above, same reason.
     QWidget* tab = tabWidget->currentWidget();
-    tab->repaint();
+    if (tab) tab->repaint();
 }
 
 // Constant-SWR circles: radius = 6 * (S - 1) / (S + 1) on the Smith chart's

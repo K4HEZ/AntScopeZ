@@ -3,6 +3,7 @@
 #include "filedialog.h"
 #include "printutils.h"
 #include "measurements.h"
+#include "tooltiputils.h"
 #include <QPdfWriter>
 #include <QPagedPaintDevice>
 #include <QScopedPointer>
@@ -90,6 +91,10 @@ Print::Print(QWidget *parent) :
     m_refreshTimer.setSingleShot(true);
     m_refreshTimer.setInterval(120);
     connect(&m_refreshTimer, &QTimer::timeout, this, [this]() { m_preview->updatePreview(); });
+
+    // See ToolTipUtils for why this is a post-translation wrap, not a
+    // change to any tr() source string.
+    ToolTipUtils::wrapLongToolTips(this);
 }
 
 Print::~Print()

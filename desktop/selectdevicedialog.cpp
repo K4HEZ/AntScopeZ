@@ -5,6 +5,7 @@
 #include "nanovna_v2_analyzer.h"
 #include "ble_analyzer.h"
 #include "style.h"
+#include "tooltiputils.h"
 
 #include <QFileInfo>
 #include <QMessageBox>
@@ -178,6 +179,10 @@ SelectDeviceDialog::SelectDeviceDialog(bool silent, QWidget *parent) :
     } else {
         ui->labelSupported->hide();
     }
+
+    // See ToolTipUtils for why this is a post-translation wrap, not a
+    // change to any tr() source string.
+    ToolTipUtils::wrapLongToolTips(this);
 }
 
 SelectDeviceDialog::~SelectDeviceDialog()

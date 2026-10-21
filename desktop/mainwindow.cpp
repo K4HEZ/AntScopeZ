@@ -12,6 +12,7 @@
 #include "filedialog.h"
 #include "remoteapi/remoteapiserver.h"
 #include "debuglog.h"
+#include "tooltiputils.h"
 #include <QWindow>
 #include <QActionGroup>
 
@@ -1000,6 +1001,13 @@ MainWindow::MainWindow(QWidget *parent) :
     // one). That's the opposite of what the checkbox promises. Both
     // branches are startup analyzer activity and both belong under the same
     // gate.
+
+    // Run last, once every child widget (including embedded panels like
+    // TuningControls/TdrScanPanel) already has its real tooltip set --
+    // see ToolTipUtils for why this is a post-translation wrap, not a
+    // change to any tr() source string.
+    ToolTipUtils::wrapLongToolTips(this);
+
     if (openAtLaunch) {
         if (start && SelectionParameters::selected.valid() && !device_name.isEmpty() && !device_address.isEmpty()) {
     //        SelectDeviceDialog dlg(true, this);
