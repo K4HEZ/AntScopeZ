@@ -9,7 +9,11 @@ Page {
         spacing: 12
 
         Image {
-            source: "qrc:/AntScopeZ.png"
+            source: "qrc:/AntScopeZ-source.png"
+            width: 96
+            height: 96
+            sourceSize: Qt.size(288, 288)
+            fillMode: Image.PreserveAspectFit
             Layout.alignment: Qt.AlignHCenter
         }
         Label {

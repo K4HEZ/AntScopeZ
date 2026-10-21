@@ -69,10 +69,16 @@ qt_add_resources(AntScopeZMobile "itu_bands"
           ${CMAKE_CURRENT_SOURCE_DIR}/../shared/cables.txt
 )
 
+# The 1024x1024 master, not the 64x64 desktop/Linux-hicolor derivative --
+# AboutPage.qml is the only consumer, displayed small with
+# Image.PreserveAspectFit, so it benefits from downsampling a much larger
+# source rather than upsampling a 64px one (soft on Retina displays,
+# found 2026-10-21). See desktop/resources/AntScopeZ-source.png and
+# BUILDINFO.md's "App icon source" note.
 qt_add_resources(AntScopeZMobile "icon"
     PREFIX "/"
     BASE ${CMAKE_CURRENT_SOURCE_DIR}/../desktop/resources
-    FILES ${CMAKE_CURRENT_SOURCE_DIR}/../desktop/resources/AntScopeZ.png
+    FILES ${CMAKE_CURRENT_SOURCE_DIR}/../desktop/resources/AntScopeZ-source.png
 )
 
 # Same per-build timestamp header the desktop About box uses (see the root
