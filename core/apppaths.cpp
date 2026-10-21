@@ -138,12 +138,36 @@ QString AppPaths::localDataFolder()
 // correct even if someone installs to a different prefix). Prefer that if
 // it's there, otherwise fall back to sitting next to the binary, which is
 // how an un-installed dev build (build-debug/build-release) stages them.
+//
+// That absolute path only matches reality for a genuine install at the
+// compile-time prefix, though -- an AppImage self-mounts its whole tree at
+// a temporary path (e.g. /tmp/.mount_AntScoXXXXXX/usr/...) chosen at
+// runtime, so ANTSCOPE_SHARED_DATA_DIR can never point at anything real
+// there, and the app would silently come up with no ITU band data, no
+// cable presets. ANTSCOPE_SHARED_DATA_DIR_RELATIVE (found 2026-10-21,
+// fixed same day) is the relocation-safe answer: a relative offset from
+// the real binary's own directory to the data dir, computed by CMake at
+// configure time (see CMakeLists.txt) rather than guessed as a fixed
+// number of "../" here, so it's correct for a normal /usr install, an
+// AppImage mounted anywhere, or the tree just copied somewhere else
+// wholesale -- the relative relationship between the two directories
+// survives relocation even though neither absolute path does. Tried
+// before the absolute path for that reason: it's correct in strictly more
+// situations.
 QString AppPaths::sharedDataFolder()
 {
     // A dev build stages its own copies beside the binary; those win over an
     // older installed copy in the data dir.
     if (QFile::exists(QCoreApplication::applicationDirPath() + "/itu-regions-defaults.txt"))
         return QCoreApplication::applicationDirPath();
+#ifdef ANTSCOPE_SHARED_DATA_DIR_RELATIVE
+    {
+        QDir relativeDataDir(QCoreApplication::applicationDirPath());
+        if (relativeDataDir.cd(ANTSCOPE_SHARED_DATA_DIR_RELATIVE)
+            && QFile::exists(relativeDataDir.absoluteFilePath("itu-regions-defaults.txt")))
+            return relativeDataDir.absolutePath();
+    }
+#endif
 #ifdef ANTSCOPE_SHARED_DATA_DIR
     if (QDir(ANTSCOPE_SHARED_DATA_DIR).exists())
         return ANTSCOPE_SHARED_DATA_DIR;

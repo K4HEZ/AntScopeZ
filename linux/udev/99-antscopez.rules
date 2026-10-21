@@ -1,0 +1,27 @@
+# udev rules for AntScopeZ-supported analyzers, so a non-root user can open
+# them without a reboot/relogin on modern (systemd-logind) distros.
+#
+# TAG+="uaccess" grants the active logind seat immediate device access --
+# this is what actually matters on most current desktops. GROUP/MODE are a
+# fallback for older or minimal setups without logind seat management; a
+# user added to the given group still needs to log out and back in once for
+# that membership to take effect.
+#
+# A SUBSYSTEM=="usb" rule alone is not enough for the HID-class devices
+# below: hidapi's Linux backend opens /dev/hidrawN directly, which needs its
+# own matching KERNEL=="hidraw*" rule.
+#
+# Device list (VID:PID from core/analyzer/hid_analyzer.h,
+# core/analyzer/nanovna_analyzer.h, core/analyzer/nanovna_v2_analyzer.h):
+#   RigExpert Match (normal)        0483:a1de  HID
+#   RigExpert Match (DFU/bootloader) 0483:a1da  HID
+#   NanoVNA V2                      04b4:0008  HID
+#   NanoVNA (original)              0483:5740  USB CDC-ACM serial
+
+SUBSYSTEM=="usb", ATTR{idVendor}=="0483", ATTR{idProduct}=="a1de", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="a1de", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+SUBSYSTEM=="usb", ATTR{idVendor}=="0483", ATTR{idProduct}=="a1da", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="a1da", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+SUBSYSTEM=="usb", ATTR{idVendor}=="04b4", ATTR{idProduct}=="0008", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="04b4", ATTRS{idProduct}=="0008", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+SUBSYSTEM=="usb", ATTR{idVendor}=="0483", ATTR{idProduct}=="5740", MODE="0660", GROUP="dialout", TAG+="uaccess"

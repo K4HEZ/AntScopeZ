@@ -1,0 +1,16 @@
+#!/bin/sh
+# Reloads udev so the rules installed at
+# /usr/lib/udev/rules.d/99-antscopez.rules (see CMakeLists.txt's Install
+# rules section) take effect immediately, without a reboot or replug.
+# Guarded rather than required: some build/test environments (containers,
+# chroots) have no working udev at all, and a postinst failure leaves dpkg
+# with the package in a broken half-configured state, which is a much
+# worse outcome than just not reloading udev there.
+set -e
+
+if command -v udevadm >/dev/null 2>&1; then
+    udevadm control --reload-rules || true
+    udevadm trigger --subsystem-match=usb --subsystem-match=hidraw || true
+fi
+
+exit 0

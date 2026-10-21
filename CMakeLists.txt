@@ -490,6 +490,28 @@ else() # Linux and other Unix
         ANTSCOPE_SHARED_DATA_DIR="${CMAKE_INSTALL_FULL_DATADIR}/antscopez"
     )
 
+    # Relocation-safe alternative to the absolute path above: a relative
+    # offset from the real binary's own directory to the shared data dir,
+    # computed here (not guessed as a fixed number of "../" at runtime) so
+    # it's correct regardless of how many path segments the actual libdir
+    # has (e.g. a multiarch lib/x86_64-linux-gnu vs a plain lib). This is
+    # what makes an AppImage work: it self-mounts at a temporary path, so
+    # the compile-time-absolute ANTSCOPE_SHARED_DATA_DIR above can never
+    # match anything real at runtime there -- but the *relative*
+    # relationship between the binary and its data dir survives the move
+    # intact, since the whole tree gets relocated together. Also makes a
+    # plain `.deb` install, or any future "copy this tree anywhere and run
+    # it" scenario, work without needing CMAKE_INSTALL_PREFIX to match
+    # wherever it actually ended up. See AppPaths::sharedDataFolder() for
+    # how this and the absolute path above are tried in order.
+    file(RELATIVE_PATH ANTSCOPE_SHARED_DATA_DIR_RELATIVE
+        "${CMAKE_INSTALL_FULL_LIBDIR}/antscopez"
+        "${CMAKE_INSTALL_FULL_DATADIR}/antscopez"
+    )
+    target_compile_definitions(AntScopeZ PRIVATE
+        ANTSCOPE_SHARED_DATA_DIR_RELATIVE="${ANTSCOPE_SHARED_DATA_DIR_RELATIVE}"
+    )
+
     # qt_standard_project_setup() (above) points CMAKE_INSTALL_RPATH at
     # $ORIGIN/../${CMAKE_INSTALL_LIBDIR} -- the *default* Qt lib location.
     # The Install rules section below bundles Qt into a private
@@ -961,6 +983,20 @@ else() # Linux and other Unix
         RENAME antscopez.png
     )
 
+    # Lets a non-root user open a supported analyzer's USB device without a
+    # reboot/relogin on modern distros (TAG+="uaccess", logind seat-based
+    # access) and without one on older/minimal setups either, once they're a
+    # member of the named group (GROUP/MODE fallback). /usr/lib/udev/rules.d
+    # is the standard location for package-shipped (as opposed to local
+    # admin override) rules -- see linux/udev/99-antscopez.rules for the
+    # actual VID/PID list and more detail. The .deb's postinst (Packaging
+    # section below) reloads udev so this takes effect immediately, without
+    # a reboot; an AppImage has no postinst equivalent, so its install
+    # instructions need to say so explicitly instead.
+    install(FILES linux/udev/99-antscopez.rules
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/udev/rules.d
+    )
+
     # Bundle Qt privately under ${CMAKE_INSTALL_LIBDIR}/antscopez instead of
     # linking whatever Qt6 the distro ships. See the "Known issues" section
     # of BUILDINFO.md: a .deb linked against system Qt 6.4.2 showed real bugs
@@ -1214,6 +1250,11 @@ if(UNIX AND NOT APPLE)
     # already-compiled-in ANTSCOPE_SHARED_DATA_DIR if CPack's own DEB
     # default (also /usr) ever changes.
     set(CPACK_PACKAGING_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
+
+    # Reloads udev after install so the rules file above (99-antscopez.rules)
+    # takes effect immediately -- see linux/debian/postinst for why it's
+    # guarded rather than required.
+    set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/linux/debian/postinst")
 
     include(CPack)
 endif()
