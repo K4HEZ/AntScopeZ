@@ -32,6 +32,9 @@ compile_commands.json
 .vscode/
 .idea/
 
+# ---- Local research/scratch notes, not for distribution ----
+research/
+
 # ---- Editor / OS ----
 *~
 *.swp
