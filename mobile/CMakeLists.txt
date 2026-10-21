@@ -142,4 +142,15 @@ if(IOS)
     set_source_files_properties(ios/Assets.xcassets PROPERTIES
         MACOSX_PACKAGE_LOCATION Resources
     )
+    # Apple has required a privacy manifest since mid-2024 for apps that
+    # touch any "required reason" API, regardless of whether the app's own
+    # code calls it directly -- Qt's frameworks do (confirmed 2026-10-21 via
+    # `nm -u` against the real ios_device Qt 6.12 libs): QtCore references
+    # fstat/statfs (File Timestamp / Disk Space categories), QtGui
+    # references NSUserDefaults (UserDefaults category). Without this file,
+    # App Store Connect flags the upload and can block review outright.
+    target_sources(AntScopeZMobile PRIVATE ios/PrivacyInfo.xcprivacy)
+    set_source_files_properties(ios/PrivacyInfo.xcprivacy PROPERTIES
+        MACOSX_PACKAGE_LOCATION Resources
+    )
 endif()

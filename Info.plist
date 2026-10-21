@@ -5,7 +5,7 @@
         <key>NSBluetoothAlwaysUsageDescription</key>
         <string>This application requires bluetooth in order to connect and transfer data between different devices</string>
         <key>CFBundleDevelopmentRegion</key>
-	<string>Ukraine</string>
+	<string>en</string>
 	<key>CFBundleDisplayName</key>
 	<string>AntScopeZ</string>
 	<key>CFBundleExecutable</key>
