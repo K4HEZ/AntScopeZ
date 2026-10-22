@@ -22,12 +22,14 @@ possible today.
 | # | Use case | How today | Charts/tools | Status |
 |---|---|---|---|---|
 | 18 | Type "6ft"/"1.5M" into a field instead of the field's fixed unit | -- | -- | ❌ planned, not started (see the unit-shorthand-input plan) |
+| 55 | See a measurement's actual stored values (not a chart) without exporting it to a file first, to tell a real data problem from a chart-rendering or export-format one | File > Save dialog, alongside the existing Save button: a new **Preview** button, scoped to the tabular/text formats (Touchstone `.s1p`/`.s2p`, `.asd`) -- hidden/disabled for image/PDF-style exports (screenshot, Print), which don't have the same meaning. Reuses the exact same per-format rendering code Save already runs (Touchstone RI/MA/DB, `.asd`'s own serialization), just renders to an on-screen table instead of writing to disk -- guarantees Preview can never drift out of sync with what Save actually produces, since it's the same code path with a different destination. Doubles as the verification tool for row 54's combine feature (e.g. confirming a synthesized measurement's S22 column is real, not accidentally zero). | File > Save dialog | ❌ designed 2026-10-22, not started |
 
 ## 2-port / transmission measurement (`.s2p` import, plus live NanoVNA-family S11+S21 -- classic ASCII since 2026-08-31, validated against real NanoVNA-H4 hardware 2026-09-02; V2/binary since 2026-09-03, emulator-only so far)
 
 | # | Use case | How today | Charts/tools | Status |
 |---|---|---|---|---|
-| 22 | Full S12/S22 access -- output-port match, S11≈S22 symmetry check, output-side matching network design, and real (not hardcoded-0) S12 on a live NanoVNA scan | -- | -- | ❌ deferred pending hardware to test a full 4-parameter capture with (folded rows 22/23/24 together 2026-09-06) |
+| 22 | Full S12/S22 access -- output-port match, S11≈S22 symmetry check, output-side matching network design, and real (not hardcoded-0) S12 on a live NanoVNA scan | -- | -- | ❌ two genuinely separate paths here, not one blocker (folded rows 22/23/24 together 2026-09-06). **Real dual-source 2-port hardware**: blocked on procurement, not a data-format question -- none of our supported devices have a second RF source/bridge (NanoVNA-family's port 2 is receive-only; RigExpert-family is single-port and doesn't even do S21). **DUT-flip-and-combine**: needs zero new hardware -- reverse a reversible 2-port DUT (filter, attenuator, amp), re-measure S11 from the other end, that *is* its S22; just needs a documented workflow plus UI to pair two separately-captured sweeps into one synthetic 2-port measurement. Either way, S22 is mathematically identical to S11 (reflection coefficient at the other port) -- once either path produces real data, displaying it is mostly reusing the existing S11 chart code (see Notes), not new rendering work. |
+| 54 | Get real (not hardcoded-0) S12/S22 from two 1-port scans of a DUT, taken with it physically reversed between them | **Tools menu, always enabled**: a dialog reads whatever's currently checked in the Measurements panel. Not exactly two matching (same Start/Stop/Points, both plain 1-port) measurements checked -> shows guidance instead of controls. Exactly two valid -> shows both names (with a suggested combined name), a **Swap** button (which is Port 1 vs. Port 2-reversed, defaulting to scan order), and **Create .s2p Measurement** -- synthesizes one new measurement (Port 1's S11/S21 + Port 2's S11->S22/S21->S12) and adds it to the Measurements panel like any normal scan, not straight to a file save. Feeds the rest of the existing 2-port pipeline for free (S21 tab's real S12 trace, Export's real S2P output, the `(s2p)` Points tag, Multi-view, Marker Comparison). Also needs new **Show S11/Show S22** View-menu toggles (mirroring the existing Show S21/Show S12 pattern -- additive, both traces visible at once, not a mode switch) on SWR/Phase/Z=R+jX/Z=R‖jX/RL/Smith, defaulting off; a dashed-variant color convention for a measurement's S22 trace (same precedent as Smith's dashed SWR guide circles); disabled/meaningless for a live-NanoVNA 2-port scan where S22 is still hardcoded zero. TDR needs no new mechanism -- a port-2 view is already just overlaying the original, uncombined reversed scan (row 40's existing mechanism, already closed). | SWR, Phase, Z=R+jX, Z=R‖jX, RL, Smith, S21 tab, Export, Tools menu | ❌ designed 2026-10-22, not started |
 | 25 | Read group delay / phase linearity through a device | -- | -- | ❌ explicitly deferred in the 2-port plan |
 | 28 | Capture 2-port data live from real hardware | NanoVNA-family (classic ASCII *and* V2/binary): `data 1` after the normal S11 pass (classic), or S11+S21 together per FIFO record (V2), plus an opportunistic ASCII/binary `scan` fast path where classic firmware supports it | any 1-port chart + S21 tab (NanoVNA only) | ⚠️ split by device family. **NanoVNA-family: ✅** classic ASCII shipped 2026-08-31, since exercised against real NanoVNA-H4 hardware (two real bugs found and fixed 2026-09-02); V2/binary (`nanovna_v2_analyzer.cpp`) shipped 2026-09-03, so far only tested against the companion NanoVNA emulator, not real V2/LiteVNA64 hardware. Both forward-only: S12/S22 are hardcoded to `(0,0)`, not a full 4-parameter capture. **RigExpert-family: ❌ (closed as a hardware/firmware limitation, 2026-10-21 -- nothing to do on our side).** `FDB` (S21) *and* `EFRX` (User Defined tab) both return "Error.Not recognized" on the only device tested (RigExpert Match RFE, confirmed 2026-08-19/20) -- the device's own firmware simply doesn't implement these commands. Not an AntScopeZ bug and not fixable here short of RigExpert shipping new firmware; accepted as a permanent per-device-family gap rather than an open item. (Segmented/stitched-sweep support still doesn't reach either path -- `on_measureUser()`/EFRX already routes through `startStitchedMeasure()`, `on_measureS21()`/FDB doesn't, and NanoVNA's own scan pipeline is separate again -- moot for RigExpert given the above, still relevant if NanoVNA-family stitching ever needs revisiting.) |
 
@@ -52,7 +54,11 @@ possible today.
 
 Row 22's gap (S22) is the single largest one left: nothing lets a
 user look at a 2-port device's output port at all, not a
-workaround-but-clunky case, a flat ❌. 2-port export and S21-in-Multi-view
+workaround-but-clunky case, a flat ❌. It's purely an acquisition gap,
+not a rendering one -- S22 is the same reflection-coefficient math as
+S11, just at the other port, so it'd reuse existing single-port chart
+code once real data exists via either path described in row 22. 2-port
+export and S21-in-Multi-view
 (both already shipped and working) are worth keeping in view when S22
 does get designed -- whatever data model it uses should stay export- and
 Multi-view-compatible without another rework. The Points-column s1p/s2p
@@ -60,10 +66,11 @@ tag turned out to be a real prerequisite for 2-port export, not just
 adjacent to it -- `Export::updateDetails()` reads that tag to decide
 whether to show the S2P button at all.
 
-Related, still-open design question: whether a truly symmetric 2-port
-device (real dual-source hardware, or a documented DUT-flip-and-combine
-workflow) should get independent Port1(S11)/Port2(S22) toggles on
-*every* chart (SWR/RL/Smith/Rs/Rp), not just the S21 tab. Renaming the
-"S21" tab itself (e.g. to "2Port") was discussed and deliberately not
-done 2026-09-05/06, pending that broader question -- a name change now
-would likely need revisiting anyway once S22 lands.
+Resolved 2026-10-22 (see row 54): yes, independent Show S11/Show S22
+toggles on *every* reflection chart (SWR/Phase/Z=R+jX/Z=R‖jX/RL/Smith),
+not just the S21 tab -- additive (both traces visible together), same
+pattern as the existing Show S21/Show S12 toggles, not a mode switch.
+Renaming the "S21" tab itself (e.g. to "2Port") was discussed and
+deliberately not done 2026-09-05/06 -- still an open question, but a
+smaller one now that the toggle design is settled; a name change would
+still need revisiting once row 54 actually ships.
