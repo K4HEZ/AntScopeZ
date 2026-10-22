@@ -836,7 +836,10 @@ void Measurements::on_newMeasurement(QString name)
         // locked, so a long measurement name (elided to fit) couldn't be
         // widened to actually read it -- user-draggable now.
         m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_NAME, QHeaderView::Interactive);
-        m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_POINTS, QHeaderView::Fixed);
+        // Same reasoning as COL_NAME above: a large point count plus the
+        // "(s1p)"/"(s2p)" tag can outgrow the 75px default below -- was
+        // Fixed (not resizable at all), now user-draggable.
+        m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_POINTS, QHeaderView::Interactive);
         m_tableWidget->horizontalHeader()->setSectionResizeMode(COL_CORR, QHeaderView::Fixed);
         m_tableWidget->horizontalHeader()->resizeSection(COL_CORR, 58);
         m_tableWidget->horizontalHeader()->resizeSection(COL_VISIBLE, cell_side);
