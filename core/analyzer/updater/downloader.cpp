@@ -13,6 +13,22 @@ Downloader::Downloader(QObject *parent) :
     connect(&m_mng, SIGNAL(finished(QNetworkReply*)),
             this, SLOT(fileDownloaded(QNetworkReply*)));
 
+    // Diagnoses certificate-verification failures specifically, rather than
+    // the generic "network error" reply->errorString() gives on its own --
+    // matches RigExpert AntScope2 2.0.4 (commit b5fd463). Does NOT call
+    // ignoreSslErrors(): verification stays on (AppConfig::useTls still
+    // governs VerifyPeer/VerifyNone above), this only captures what went
+    // wrong so fileDownloaded() can show it.
+    connect(&m_mng, &QNetworkAccessManager::sslErrors, this,
+            [this](QNetworkReply* reply, const QList<QSslError>& errors) {
+                Q_UNUSED(reply)
+                for (const QSslError& e : errors) {
+                    qCWarning(DOWNLOADER) << "SSL error:" << int(e.error()) << e.errorString();
+                    if (m_lastSslError.isEmpty())
+                        m_lastSslError = tr("Certificate problem: ") + e.errorString();
+                }
+            });
+
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(timeout()));
     m_timer.setSingleShot(true);
 }
@@ -33,6 +49,7 @@ Downloader::State Downloader::startDownloadInfo(QUrl url)
     if (m_state == InProgress) {
         return m_state;
     }
+    m_lastSslError.clear(); // don't let a previous request's SSL details bleed into this one
 
     QNetworkRequest request(url);
 
@@ -61,6 +78,7 @@ Downloader::State Downloader::startDownloadFw()
     if (m_state == InProgress) {
         return m_state;
     }
+    m_lastSslError.clear(); // don't let a previous request's SSL details bleed into this one
 
     m_isInfo = false;
     m_sendStatisics = false;
@@ -143,6 +161,10 @@ void Downloader::fileDownloaded(QNetworkReply *reply)
 
     if (reply->error() != QNetworkReply::NoError ) {
         m_lastError = reply->errorString();
+        if (!m_lastSslError.isEmpty()) {
+            m_lastError += "\n\n" + m_lastSslError;
+            m_lastSslError.clear();
+        }
         m_info.clear();
         m_link.clear();
     } else if(!m_isInfo && isHTML(m_arr)) {

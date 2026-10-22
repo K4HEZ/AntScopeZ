@@ -146,6 +146,33 @@ below should track `project(VERSION ...)` in `CMakeLists.txt`.
 - Docs: cable preset count said ~150; it's over 100.
 - ITU Region 2's 60m band listed as 5 separate channelized entries
   instead of one 5330.5-5406.4kHz band.
+- RigExpert AntScope2 2.0.3 → 2.0.6 review (2026-10-22): raised
+  `ABSOLUTE_MAX_FQ` 10GHz → 15GHz and the Touch/Touch E-Ink per-device cap
+  1GHz → 15GHz (2.0.4); gated `AnalyzerPro::slotFullInfo()`'s LIC1/LIC2/LIC3
+  parsing to Match-family devices only, so another device family's
+  full-info string can't coincidentally overwrite its maxFq with a
+  Match-specific license tier (2.0.4); `LicenseAgent` now sends its
+  registration payload (name/email/device serial/license code/purchase
+  date) via POST body instead of the URL query string, matching
+  AntScope2's GET → POST change (2.0.4) -- kept switchable via
+  `kLicenseAgentUsePost`, a developer-only flag (not a user setting),
+  since the live backend was confirmed 2026-10-22 to still accept the old
+  GET shape identically, so this is hygiene, not a compatibility
+  requirement; `LicenseAgent` and `Downloader` now surface a specific
+  "Certificate problem: ..." message on a TLS verification failure
+  instead of a generic network error (2.0.4), with no change to
+  verification behavior itself.
+  Already covered before this review, re-confirmed but not re-ported:
+  the BLE ping/keepalive state reset upstream deduplicated in 2.0.4 is
+  functionally identical to our existing fix (from 2.0.3's follow-up
+  commit, #10); HTTPS-by-default and the dead `QNetworkReply::
+  errorOccurred` constructor-time connect bug, which AntScope2 2.0.4 only
+  just fixed, were already fixed here independently and more thoroughly
+  (issue #14). Upstream's own dead-code removal (obsolete `analyzer.cpp`/
+  `comanalyzer.*`/`hidanalyzer.*`) and its telemetry/update-check
+  disabling (2.0.4-2.0.6) don't apply here -- different architecture, and
+  we actively use our own update/firmware-download path, already on
+  HTTPS by default.
 
 ### Removed
 

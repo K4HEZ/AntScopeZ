@@ -1310,22 +1310,28 @@ void AnalyzerPro::slotFullInfo(const QString& _info)
         ~NotifyOnExit() { emit self->deviceInfoChanged(); }
     } notify{this};
 
+    // The license level ("LIC1"/"LIC2"/"LIC3") describes the physically
+    // connected device's own capability, unrelated to CustomAnalyzer's
+    // user-picked "prototype" override -- which is what getModelString()
+    // returns while "Use customized analyzer" is checked (see
+    // AnalyzerPro::getModelString()). That prototype string is never a
+    // real model name (defaults to placeholders like "Custom"), so
+    // byName() reliably returned nullptr here whenever a custom analyzer
+    // was active, crashing on the very next line. The device was already
+    // identified by its serial-number prefix at connection time
+    // (SelectDeviceDialog::onApply() -> AnalyzerParameters::setCurrent()),
+    // so use that directly instead.
+    AnalyzerParameters* par = AnalyzerParameters::current();
+    if (par == nullptr)
+        return;
+    // LIC1/LIC2/LIC3 tokens are only meaningful for the Match family --
+    // matches RigExpert AntScope2 2.0.4 (commit a14302b). Without this,
+    // another device family's full-info string could coincidentally contain
+    // "LIC" and have its maxFq overwritten by a Match-specific license tier.
+    if (!par->name().contains("Match", Qt::CaseSensitive))
+        return;
     int index = _info.indexOf("LIC");
     if (index != -1) {
-        // The license level ("LIC1"/"LIC2"/"LIC3") describes the physically
-        // connected device's own capability, unrelated to CustomAnalyzer's
-        // user-picked "prototype" override -- which is what getModelString()
-        // returns while "Use customized analyzer" is checked (see
-        // AnalyzerPro::getModelString()). That prototype string is never a
-        // real model name (defaults to placeholders like "Custom"), so
-        // byName() reliably returned nullptr here whenever a custom analyzer
-        // was active, crashing on the very next line. The device was already
-        // identified by its serial-number prefix at connection time
-        // (SelectDeviceDialog::onApply() -> AnalyzerParameters::setCurrent()),
-        // so use that directly instead.
-        AnalyzerParameters* par = AnalyzerParameters::current();
-        if (par == nullptr)
-            return;
         QString _name = _info.mid(index, 4);
         qInfo() << "AnalyzerPro::slotFullInfo" << _name;
         if (_name == "LIC1") {

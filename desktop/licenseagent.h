@@ -22,6 +22,20 @@ inline QString licenseServerUrl()
     return QString("%1regdev.rigexpert.com/index.php").arg(AppConfig::get().useTls ? "https://" : "http://");
 }
 
+// Routes the "raw" payload (PII: name/email/device serial/license code/
+// purchase date) via the POST body instead of the URL query string --
+// matches RigExpert AntScope2 2.0.4's GET -> POST change (commit b2f7233),
+// which keeps it out of plain request-URI web-server access logs (nGet/
+// nRaw routing stays in the URL either way; the server reads "raw" via
+// PHP's $_REQUEST, so it isn't method-sensitive).
+//
+// This is a developer escape hatch, not a user setting: flip to false and
+// rebuild if RigExpert's backend ever regresses POST support. Confirmed
+// live 2026-10-22 that the backend currently accepts both shapes
+// identically, so this isn't required for compatibility today -- it's
+// hygiene, kept switchable in case that changes.
+constexpr bool kLicenseAgentUsePost = true;
+
 #define EMAIL_TIMEOUT 180*1000
 #define REQUEST_DELAY 5*1000
 #define REQUEST_ATTEMPTS 5
@@ -186,7 +200,14 @@ protected:
     // errorOccurred against it in the constructor always warned "invalid
     // nullptr parameter"). Also wires up per-request error reporting, moved
     // here from the constructor since it needs a real reply to connect to.
-    QNetworkReply* sendRequest(const QNetworkRequest& request);
+    // A null (not just empty) body means GET; sendRaw() below only passes
+    // a real body when kLicenseAgentUsePost is set.
+    QNetworkReply* sendRequest(const QNetworkRequest& request, const QByteArray& body = QByteArray());
+
+    // Builds the request for one "nGet"/"nRaw" routing pair plus its "raw"
+    // payload and sends it -- see kLicenseAgentUsePost above for where the
+    // payload goes.
+    QNetworkReply* sendRaw(const QString& nGet, const QString& nRaw, const QString& rawPayload);
 
 protected:
     State m_state;
@@ -216,6 +237,7 @@ protected:
     int m_UnitAttempts = 0;
     int m_licenseAttempts = 0;
     bool m_canceled = false;
+    QString m_lastSslError; // text of the last certificate-verification error, if any
 
 };
 

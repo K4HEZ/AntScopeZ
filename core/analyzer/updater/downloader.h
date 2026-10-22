@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QSslError>
 #include <QDomDocument>
 #include <QBuffer>
 #include <QLoggingCategory>
@@ -57,6 +58,7 @@ private:
     QString m_info;
     QString m_ver;
     QString m_lastError;
+    QString m_lastSslError; // text of the last certificate-verification error, if any
     bool m_isInfo;
     bool m_sendStatisics=false;
     QTimer m_timer;
