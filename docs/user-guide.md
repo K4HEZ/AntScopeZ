@@ -1509,6 +1509,14 @@ in mind before treating it like a normal scan of your operating band:
   data, but it's typically just showing genuine out-of-design-range behavior
   (noisy, reactive, not meaningful for tuning) rather than a second usable
   band.
+- The Reflection readout's Ohms figure isn't a true DC resistance. It's
+  derived by inverse-FFT'ing a swept-frequency measurement that starts near,
+  not at, true DC (0 Hz) -- every real analyzer has a nonzero frequency
+  floor. A genuine bench TDR instrument settles to a real DC value because
+  its step includes 0 Hz content; this synthesized version structurally
+  can't, so treat the figure as a rough, qualitative indicator -- most
+  trustworthy for a clean, near-resistive open or short, not a precision
+  measurement.
 
 ### The TDR panel
 
