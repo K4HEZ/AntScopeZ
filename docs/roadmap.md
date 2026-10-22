@@ -22,7 +22,6 @@ possible today.
 | # | Use case | How today | Charts/tools | Status |
 |---|---|---|---|---|
 | 39 | See every significant reflection in a scan, not just the single strongest one (e.g. two connectors plus the far end) | Mode > TDR events table: every reflection above the noise floor, nearest first, with distance, time, impedance, a plain-wording kind (open end, short end, High-Z, Low-Z...) and notes | TDR | ✅ shipped 2026-10-07. ⚠️ the detection thresholds are fixed starting values, not yet tuned against many real scans |
-| 40 | Compare a TDR scan against an earlier one of the same cable (did a repair actually change anything) | Select multiple Measurements rows, eyeball both traces on the same chart | TDR (multi-select already works) | ⚠️ possible today by overlaying rows manually; no dedicated before/after diff (distance/amplitude deltas called out explicitly). Feature suggestion, 2026-08-21, not scoped -- would need a second-measurement picker UI. |
 | 18 | Type "6ft"/"1.5M" into a field instead of the field's fixed unit | -- | -- | ❌ planned, not started (see the unit-shorthand-input plan) |
 
 ## 2-port / transmission measurement (`.s2p` import, plus live NanoVNA-family S11+S21 -- classic ASCII since 2026-08-31, validated against real NanoVNA-H4 hardware 2026-09-02; V2/binary since 2026-09-03, emulator-only so far)
