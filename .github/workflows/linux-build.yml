@@ -1,0 +1,140 @@
+name: Linux build
+
+# Manual only (Actions tab or `gh workflow run <file> --ref develop`):
+# develop gets many small pushes and a build isn't wanted for each.
+on:
+  workflow_dispatch:
+
+jobs:
+  # amd64/x86_64 only -- Qt 6.x doesn't ship 32-bit Linux builds at all.
+  # One build produces both packages below: CMakeLists.txt's Linux install
+  # rules already bundle a private copy of Qt (not system Qt) with a
+  # relocation-safe shared-data path (ANTSCOPE_SHARED_DATA_DIR_RELATIVE,
+  # fixed 2026-10-21 specifically to make this work), so the exact same
+  # staged install tree works for both the .deb and the AppImage -- no
+  # need for two separate builds on two different base images.
+  #
+  # ubuntu-22.04, not ubuntu-latest: an older glibc floor keeps both
+  # outputs more portable -- the .deb for current Debian/Mint users (Mint
+  # currently derives from 22.04 2024 too), and the AppImage for as many
+  # *other* distros as possible, since AppImage's whole value is running on
+  # a machine with a different (often older) glibc than whatever built it.
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.12.0'
+          host: 'linux'
+          target: 'desktop'
+          arch: 'linux_gcc_64'
+          modules: 'qtserialport qtconnectivity'
+          cache: true
+
+      - name: Install system build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libusb-1.0-0-dev
+
+      - name: Configure
+        run: >
+          cmake -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_PREFIX_PATH=${{ env.QT_ROOT_DIR }}
+
+      - name: Build
+        run: cmake --build build -j$(nproc)
+
+      # DESTDIR, not --prefix: CMAKE_INSTALL_PREFIX stays baked as /usr
+      # (matching what a real .deb install uses), DESTDIR just prepends a
+      # staging root on top without changing that compiled-in path -- so
+      # this tree has the same internal structure a real /usr install
+      # would, which both the smoke test below and the AppImage step need.
+      - name: Staged install (for the smoke test and AppImage below)
+        run: DESTDIR="${{ github.workspace }}/AppDir" cmake --install build
+
+      # Confirms the bundled-Qt + wrapper-script setup actually launches
+      # for real, not just that it linked -- same spirit as the macOS/
+      # Windows jobs' own launch-and-screenshot steps.
+      - name: Launch and screenshot (Xvfb)
+        run: |
+          sudo apt-get install -y xvfb imagemagick
+          Xvfb :99 -screen 0 1280x800x24 &
+          sleep 2
+          export DISPLAY=:99
+          "${{ github.workspace }}/AppDir/usr/bin/AntScopeZ" &
+          sleep 5
+          pgrep -f AntScopeZ.bin || { echo "AntScopeZ did not launch"; exit 1; }
+          import -window root linux-screenshot.png
+          pkill -f AntScopeZ.bin || true
+
+      - name: Upload screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-screenshot
+          path: linux-screenshot.png
+
+      # Checks the relocation fix actually works, not just that the binary
+      # ran from its real install location above -- copies the same staged
+      # tree somewhere else entirely and confirms the shared data (ITU
+      # bands, cable presets) is still found via
+      # ANTSCOPE_SHARED_DATA_DIR_RELATIVE rather than the compile-time
+      # absolute path, which would NOT exist at this moved location.
+      - name: Relocation smoke test
+        run: |
+          cp -r "${{ github.workspace }}/AppDir/usr" "${{ github.workspace }}/relocated"
+          export DISPLAY=:99
+          "${{ github.workspace }}/relocated/bin/AntScopeZ" &
+          sleep 5
+          pgrep -f AntScopeZ.bin || { echo "Relocated AntScopeZ did not launch"; exit 1; }
+          pkill -f AntScopeZ.bin || true
+
+      - name: Package .deb
+        working-directory: build
+        run: cpack -G DEB
+
+      - name: Upload .deb
+        uses: actions/upload-artifact@v4
+        with:
+          name: AntScopeZ-linux-deb
+          path: build/*.deb
+
+      # The staged AppDir already has everything an AppImage needs (Qt
+      # bundled, relocation-safe data path) -- just needs the AppImage-
+      # specific entry point and the top-level .desktop/icon copies
+      # appimagetool expects, no linuxdeployqt library-bundling pass
+      # required since there's nothing left to bundle that isn't already
+      # there.
+      - name: Prepare AppDir for AppImage
+        run: |
+          cp AppDir/usr/share/applications/antscopez.desktop AppDir/antscopez.desktop
+          cp AppDir/usr/share/icons/hicolor/64x64/apps/antscopez.png AppDir/antscopez.png
+          cat > AppDir/AppRun << 'EOF'
+          #!/bin/sh
+          HERE="$(dirname "$(readlink -f "${0}")")"
+          exec "$HERE/usr/bin/AntScopeZ" "$@"
+          EOF
+          chmod +x AppDir/AppRun
+
+      # appimagetool is itself distributed as an AppImage; CI runners don't
+      # reliably have FUSE set up for unprivileged AppImage execution, so
+      # --appimage-extract-and-run makes it self-extract instead of trying
+      # to FUSE-mount itself.
+      - name: Download appimagetool
+        run: |
+          wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool-x86_64.AppImage
+
+      - name: Build AppImage
+        run: |
+          ARCH=x86_64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run AppDir AntScopeZ-x86_64.AppImage
+
+      - name: Upload AppImage
+        uses: actions/upload-artifact@v4
+        with:
+          name: AntScopeZ-linux-appimage
+          path: AntScopeZ-x86_64.AppImage
