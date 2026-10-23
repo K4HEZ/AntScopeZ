@@ -22,6 +22,14 @@ SRC_DIR=$(cd "$(dirname "$0")" && pwd)
 BUILD_DIR=${1:-"$SRC_DIR/build-cmake"}
 TARGET=AntScopeZ
 
+# Qt Online Installer kit under $HOME/Qt -- same path CMakePresets.json's
+# qt-6.12-macos preset pins, needed so find_package(Qt6) doesn't resolve
+# ambiguously if more than one Qt install is present. Respects an
+# already-exported CMAKE_PREFIX_PATH (e.g. a different Qt kit) instead of
+# overriding it.
+: "${CMAKE_PREFIX_PATH:=$HOME/Qt/6.12.0/macos}"
+export CMAKE_PREFIX_PATH
+
 VERSION=$(head -1 "$SRC_DIR/version.txt")
 
 if [ -z "$VERSION" ]; then
