@@ -364,6 +364,12 @@ public:
         // support implemented yet, hence 0,0.
         m_analyzers << new AnalyzerParameters(idx++, "NanoVNA V2", "50", "4400000", 0, 0);
         m_analyzers << new AnalyzerParameters(idx++, "LiteVNA64", "50", "6300000", 0, 0);
+        // VNA Air (VnaAirAnalyzer) -- a third-party BLE bridge in front of
+        // a classic-protocol NanoVNA-H/H4/D, not a device family of its
+        // own. Range matches the "NanoVNA" entry above (the vendor's
+        // allow-listed firmware is exactly that device family); 0,0 since
+        // the bridge's BLE protocol has no screenshot request at all.
+        m_analyzers << new AnalyzerParameters(idx++, "VNA Air", "100", "1000000", 0, 0);
 
         // 08.06.2022 - not supported except of Android Antscope
         // 13.09.2024 - supported for all platforms

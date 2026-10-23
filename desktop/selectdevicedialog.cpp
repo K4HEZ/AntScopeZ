@@ -4,6 +4,7 @@
 #include "nanovna_analyzer.h"
 #include "nanovna_v2_analyzer.h"
 #include "ble_analyzer.h"
+#include "vnaair_analyzer.h"
 #include "style.h"
 #include "tooltiputils.h"
 
@@ -65,6 +66,7 @@ SelectDeviceDialog::SelectDeviceDialog(bool silent, QWidget *parent) :
     ui->radioButtonCOM->setChecked(false);
     ui->radioButtonUSB->setChecked(false);
     ui->radioButtonBLE->setChecked(false);
+    ui->radioButtonVnaAir->setChecked(false);
 
     ui->checkBox->setChecked(same);
 
@@ -100,6 +102,9 @@ SelectDeviceDialog::SelectDeviceDialog(bool silent, QWidget *parent) :
     case ReDeviceInfo::BLE:
         ui->radioButtonBLE->setChecked(true);
         break;
+    case ReDeviceInfo::VNAAIR:
+        ui->radioButtonVnaAir->setChecked(true);
+        break;
     default:
         ui->radioButtonUSB->setChecked(true);
         break;
@@ -116,6 +121,10 @@ SelectDeviceDialog::SelectDeviceDialog(bool silent, QWidget *parent) :
     connect(ui->radioButtonBLE, &QRadioButton::toggled, this, [=](bool checked) {
         if (checked)
             onScan(ReDeviceInfo::BLE);
+    });
+    connect(ui->radioButtonVnaAir, &QRadioButton::toggled, this, [=](bool checked) {
+        if (checked)
+            onScan(ReDeviceInfo::VNAAIR);
     });
     connect(ui->tableWidget, &QTableWidget::itemDoubleClicked, this, [=](QTableWidgetItem* _item) {
         if (_item == nullptr)
@@ -240,6 +249,12 @@ void SelectDeviceDialog::onApply(ReDeviceInfo::InterfaceType type,
     } else if (type == (int)ReDeviceInfo::Serial) {
         //name = "COMPORT";
         param = AnalyzerParameters::byName(name);
+    } else if (type == (int)ReDeviceInfo::VNAAIR) {
+        // Single fixed entry, no per-device name variation -- see the
+        // AnalyzerParameters registration's own comment: VNA Air is a
+        // bridge in front of a classic-protocol NanoVNA, not a device
+        // family of its own.
+        param = AnalyzerParameters::byName("VNA Air");
     } else if (type == (int)ReDeviceInfo::BLE) {
         param = AnalyzerParameters::byName(name);
         QStringList args = name.split(' ');
@@ -431,6 +446,44 @@ void SelectDeviceDialog::onScan(ReDeviceInfo::InterfaceType type)
         ble->searchAnalyzer();
     }
     break;
+    case ReDeviceInfo::VNAAIR:
+    {
+        // Scaffold (2026-10-23): mirrors the BLE case above structurally
+        // (scan, populate table as devices show up), but against
+        // VnaAirAnalyzer's own discovery/filtering instead of
+        // BleAnalyzer's -- see vnaair_analyzer.h's class comment for why
+        // this is a separate analyzer rather than reusing BleAnalyzer.
+        // Not yet exercised against real hardware.
+        ui->pushButtonConnect->setEnabled(false);
+        ui->pushButtonScan->setEnabled(false);
+        ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+        ui->tableWidget->horizontalHeaderItem(0)->setText(tr("Name"));
+        ui->tableWidget->horizontalHeaderItem(1)->setText(tr("Address"));
+        ui->tableWidget->setRowCount(0);
+
+        m_analyzer = new VnaAirAnalyzer();
+        VnaAirAnalyzer *vnaAir = static_cast<VnaAirAnalyzer*>(m_analyzer);
+        connect(vnaAir, &VnaAirAnalyzer::devicesChanged, this,
+                [this](const QBluetoothDeviceInfo& info) {
+                    int row = ui->tableWidget->rowCount();
+                    ui->tableWidget->insertRow(row);
+                    auto *nameItem = new QTableWidgetItem(QStringLiteral("VNA Air"));
+                    nameItem->setData(Qt::UserRole + 1, (int)ReDeviceInfo::VNAAIR);
+                    auto *addrItem = new QTableWidgetItem(info.address().toString());
+                    ui->tableWidget->setItem(row, 0, nameItem);
+                    ui->tableWidget->setItem(row, 1, addrItem);
+                    ui->tableWidget->resizeRowsToContents();
+                    ui->pushButtonConnect->setEnabled(true);
+                });
+        connect(vnaAir, &VnaAirAnalyzer::scanningChanged, this,
+                [this](int state) {
+                    if (state == 0)
+                        ui->pushButtonScan->setEnabled(true);
+                });
+        // IMPORTANT: last thing
+        vnaAir->searchAnalyzer();
+    }
+    break;
     default:
     {
         ui->tableWidget->horizontalHeaderItem(1)->setText(tr("Serial number"));
@@ -528,6 +581,8 @@ ReDeviceInfo::InterfaceType SelectDeviceDialog::type()
         type = ReDeviceInfo::Serial;
     else if (ui->radioButtonBLE->isChecked())
         type = ReDeviceInfo::BLE;
+    else if (ui->radioButtonVnaAir->isChecked())
+        type = ReDeviceInfo::VNAAIR;
     return type;
 }
 

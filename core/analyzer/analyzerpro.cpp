@@ -12,6 +12,7 @@
 #include "nanovna_analyzer.h"
 #include "nanovna_v2_analyzer.h"
 #include "ble_analyzer.h"
+#include "vnaair_analyzer.h"
 #include "apppaths.h"
 
 // static member
@@ -1284,6 +1285,11 @@ bool AnalyzerPro::createDevice(const SelectionParameters& param, BaseAnalyzer* a
     case ReDeviceInfo::BLE:
     {
         m_baseAnalyzer = new BleAnalyzer(this);
+    }
+        break;
+    case ReDeviceInfo::VNAAIR:
+    {
+        m_baseAnalyzer = new VnaAirAnalyzer(this);
     }
         break;
     default:

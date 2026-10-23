@@ -12,11 +12,11 @@
 class ReDeviceInfo
 {
 public:
-    // NANOV2 appended after BLE, not inserted earlier -- these values are
-    // persisted verbatim as the ini's Connection/type integer (see
-    // SelectDeviceDialog::onApply()), so renumbering an existing entry
-    // would silently corrupt every already-saved connection.
-    enum InterfaceType { WRONG=-1, HID=0, Serial, NANO, BT, BLE, NANOV2 };
+    // NANOV2/VNAAIR appended at the end, not inserted earlier -- these
+    // values are persisted verbatim as the ini's Connection/type integer
+    // (see SelectDeviceDialog::onApply()), so renumbering an existing
+    // entry would silently corrupt every already-saved connection.
+    enum InterfaceType { WRONG=-1, HID=0, Serial, NANO, BT, BLE, NANOV2, VNAAIR };
     ReDeviceInfo();
     ReDeviceInfo(const ReDeviceInfo& that);
     ~ReDeviceInfo();
