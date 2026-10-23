@@ -19,5 +19,10 @@
 # does not, even though the resolved library files are identical either
 # way. See the comment on the install(CODE) block that installs this file
 # in CMakeLists.txt for more detail.
-export LD_LIBRARY_PATH="@CMAKE_INSTALL_FULL_LIBDIR@/antscopez${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-exec "@CMAKE_INSTALL_FULL_LIBDIR@/antscopez/AntScopeZ.bin" "$@"
+#
+# Self-locating (not CMAKE_INSTALL_FULL_LIBDIR's baked-in absolute path):
+# this same wrapper has to work from a mounted AppImage and a staged
+# DESTDIR tree too, neither of which is really installed at /.
+HERE="$(dirname "$(readlink -f "$0")")"
+export LD_LIBRARY_PATH="$HERE/@ANTSCOPE_WRAPPER_REL_LIBDIR@${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+exec "$HERE/@ANTSCOPE_WRAPPER_REL_LIBDIR@/AntScopeZ.bin" "$@"

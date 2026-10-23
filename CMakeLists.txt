@@ -1182,6 +1182,18 @@ endforeach()
     # thing this package puts in the shared bindir at all, see the
     # qt.conf comment next to GENERATE_QT_CONF for why the real binary
     # itself doesn't live there.
+    # Relative, not CMAKE_INSTALL_FULL_LIBDIR's absolute path: the wrapper
+    # also has to work unmodified from inside the AppImage's mount point
+    # (never actually "installed" at /usr) and from this staged DESTDIR
+    # tree (CI's launch smoke test runs it straight out of AppDir, before
+    # any real .deb install puts it at /). Self-locating via the script's
+    # own path, like the AppImage's own AppRun, works for all three: a
+    # real .deb install, a staged DESTDIR tree, and a mounted AppImage all
+    # preserve the same bindir-to-libdir relative layout.
+    file(RELATIVE_PATH ANTSCOPE_WRAPPER_REL_LIBDIR
+        "${CMAKE_INSTALL_FULL_BINDIR}"
+        "${CMAKE_INSTALL_FULL_LIBDIR}/antscopez"
+    )
     configure_file(
         "${CMAKE_CURRENT_SOURCE_DIR}/cmake/antscopez-wrapper.sh.in"
         "${CMAKE_CURRENT_BINARY_DIR}/AntScopeZ-wrapper.sh"
