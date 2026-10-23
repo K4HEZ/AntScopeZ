@@ -57,6 +57,20 @@ jobs:
       - name: Staged install (for the smoke test and AppImage below)
         run: DESTDIR="${{ github.workspace }}/AppDir" cmake --install build
 
+      # TEMPORARY debug step -- diagnosing why bindir/AntScopeZ's exec
+      # target (libdir/antscopez/AntScopeZ.bin) isn't where CMakeLists.txt's
+      # install(CODE) rename block should have put it. Remove once resolved.
+      - name: DEBUG list staged install tree
+        run: |
+          echo "--- AppDir/usr/bin ---"
+          ls -la "${{ github.workspace }}/AppDir/usr/bin" || true
+          echo "--- AppDir/usr/bin/AntScopeZ contents ---"
+          cat "${{ github.workspace }}/AppDir/usr/bin/AntScopeZ" || true
+          echo "--- AppDir/usr/lib/x86_64-linux-gnu/antscopez ---"
+          ls -la "${{ github.workspace }}/AppDir/usr/lib/x86_64-linux-gnu/antscopez" || true
+          echo "--- full find for AntScopeZ* ---"
+          find "${{ github.workspace }}/AppDir" -iname 'AntScopeZ*' || true
+
       # Confirms the bundled-Qt + wrapper-script setup actually launches
       # for real, not just that it linked -- same spirit as the macOS/
       # Windows jobs' own launch-and-screenshot steps.
