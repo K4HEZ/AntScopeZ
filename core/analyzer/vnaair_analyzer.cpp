@@ -9,13 +9,28 @@
 namespace {
 
 // GATT UUIDs -- see research/vnaair-protocol.md's "BLE protocol (vendor's
-// own spec..." section. Service + Status/Probe/Sweep only; Log
-// (...0004) and Calibration (...0005) UUIDs deliberately omitted until
-// those get implemented, so there's nothing half-wired to forget about.
-const QString kUuidService = QStringLiteral("7fa10000-842f-659f-744c-5bd842937fa1");
-const QString kUuidStatus  = QStringLiteral("7fa10001-842f-659f-744c-5bd842937fa1");
-const QString kUuidProbe   = QStringLiteral("7fa10002-842f-659f-744c-5bd842937fa1");
-const QString kUuidSweep   = QStringLiteral("7fa10003-842f-659f-744c-5bd842937fa1");
+// own spec..." section. Log (...0004) UUID deliberately omitted until
+// that gets implemented, so there's nothing half-wired to forget about.
+const QString kUuidService     = QStringLiteral("7fa10000-842f-659f-744c-5bd842937fa1");
+const QString kUuidStatus      = QStringLiteral("7fa10001-842f-659f-744c-5bd842937fa1");
+const QString kUuidProbe       = QStringLiteral("7fa10002-842f-659f-744c-5bd842937fa1");
+const QString kUuidSweep       = QStringLiteral("7fa10003-842f-659f-744c-5bd842937fa1");
+const QString kUuidCalibration = QStringLiteral("7fa10005-842f-659f-744c-5bd842937fa1");
+
+// Calibration op codes (op table, research/vnaair-protocol.md's
+// Calibration section / the vendor's own emailed spec).
+enum VnaAirCalOp : quint8 {
+    CalOpStatus = 1,
+    CalOpBegin = 2,
+    CalOpStandard = 3,
+    CalOpDone = 4,
+    CalOpVerify = 5,
+    CalOpSave = 6,
+    CalOpOff = 7,
+    CalOpEnd = 8,
+    CalOpRecall = 9,
+    CalOpEngine = 10,
+};
 
 const QBluetoothUuid kClientCharacteristicConfig(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
 
@@ -179,11 +194,25 @@ void VnaAirAnalyzer::serviceStateChanged(QLowEnergyService::ServiceState s)
     if (sweepCCC.isValid())
         m_service->writeDescriptor(sweepCCC, QByteArray::fromHex("0100"));
 
+    // Calibration is optional (older firmware doesn't have it) -- unlike
+    // Status/Probe/Sweep above, its absence doesn't fail the connection.
+    const QLowEnergyCharacteristic calChar = m_service->characteristic(QBluetoothUuid(kUuidCalibration));
+    m_calibrationSupported = calChar.isValid();
+    if (m_calibrationSupported) {
+        const QLowEnergyDescriptor calCCC = calChar.descriptor(kClientCharacteristicConfig);
+        if (calCCC.isValid())
+            m_service->writeDescriptor(calCCC, QByteArray::fromHex("0100"));
+    }
+    emit calibrationSupportedChanged(m_calibrationSupported);
+
     // Kick a fresh USB identity probe -- the bridge may already be
     // "ready" from a previous probe, but there's no harm asking again,
     // and this covers the case where the NanoVNA was plugged in after
     // the bridge last auto-probed.
     m_service->writeCharacteristic(probeChar, QByteArray(1, char(0x01)));
+
+    if (m_calibrationSupported)
+        queryCalibrationStatus();
 
     // GATT-level connection established -- same timing BleAnalyzer uses
     // for its own analyzerFound() (fires on characteristic discovery
@@ -204,8 +233,10 @@ void VnaAirAnalyzer::characteristicChanged(const QLowEnergyCharacteristic &c, co
         handleStatusNotification(value);
     else if (c.uuid() == QBluetoothUuid(kUuidSweep))
         handleSweepNotification(value);
-    // Log/Calibration notifications not subscribed to in this scaffold --
-    // nothing else should arrive here.
+    else if (c.uuid() == QBluetoothUuid(kUuidCalibration))
+        handleCalibrationNotification(value);
+    // Log notifications not subscribed to in this scaffold -- nothing
+    // else should arrive here.
 }
 
 void VnaAirAnalyzer::handleStatusNotification(const QByteArray &value)
@@ -384,4 +415,181 @@ void VnaAirAnalyzer::stopMeasure()
     // just completes and (per the vendor spec) has its result discarded
     // on BLE disconnect; there's no "stop" op to send otherwise.
     setIsMeasuring(false);
+}
+
+QString VnaAirAnalyzer::calibrationOpName(quint8 op)
+{
+    switch (op) {
+    case CalOpStatus:   return QStringLiteral("status");
+    case CalOpBegin:    return QStringLiteral("begin");
+    case CalOpStandard: return QStringLiteral("standard");
+    case CalOpDone:     return QStringLiteral("done");
+    case CalOpVerify:   return QStringLiteral("verify");
+    case CalOpSave:     return QStringLiteral("save");
+    case CalOpOff:      return QStringLiteral("off");
+    case CalOpEnd:      return QStringLiteral("end");
+    case CalOpRecall:   return QStringLiteral("recall");
+    case CalOpEngine:   return QStringLiteral("engine");
+    default:            return QStringLiteral("unknown");
+    }
+}
+
+void VnaAirAnalyzer::sendCalibrationRequest(quint8 op, const QByteArray &body)
+{
+    if (!m_calibrationSupported || !m_service) {
+        emit calibrationOpError(calibrationOpName(op), QStringLiteral("unsupported"));
+        return;
+    }
+    const QLowEnergyCharacteristic calChar = m_service->characteristic(QBluetoothUuid(kUuidCalibration));
+    if (!calChar.isValid()) {
+        emit calibrationOpError(calibrationOpName(op), QStringLiteral("unsupported"));
+        return;
+    }
+
+    // u8 version=1, u8 op, u16 requestId (LE), then the op's own body --
+    // see research/vnaair-protocol.md's Calibration "Byte layouts" example.
+    QByteArray request(4 + body.size(), Qt::Uninitialized);
+    request[0] = char(1);
+    request[1] = char(op);
+    qToLittleEndian<quint16>(++m_calRequestIdCounter, request.data() + 2);
+    if (!body.isEmpty())
+        std::copy(body.constBegin(), body.constEnd(), request.begin() + 4);
+
+    m_service->writeCharacteristic(calChar, request);
+}
+
+void VnaAirAnalyzer::queryCalibrationStatus()
+{
+    sendCalibrationRequest(CalOpStatus, QByteArray());
+}
+
+void VnaAirAnalyzer::recallCalibrationSlot(int slot)
+{
+    QByteArray body;
+    body.append(char(slot));
+    body.append(char(0xA5)); // confirm byte, fixed per spec
+    sendCalibrationRequest(CalOpRecall, body);
+}
+
+void VnaAirAnalyzer::clearCalibration()
+{
+    sendCalibrationRequest(CalOpOff, QByteArray());
+}
+
+void VnaAirAnalyzer::setCalibrationEngine(int engine)
+{
+    QByteArray body;
+    body.append(char(engine));
+    sendCalibrationRequest(CalOpEngine, body);
+}
+
+void VnaAirAnalyzer::handleCalibrationNotification(const QByteArray &value)
+{
+    // Same 8-byte frame header as Sweep (see handleSweepNotification()'s
+    // own comment), ASCII "VC" instead of "VN", request ID standing in
+    // for the "stream id". Separate reassembly buffers from Sweep's own
+    // since the two characteristics' notifications are independent and
+    // can interleave.
+    if (value.size() < 8 || value[0] != 'V' || value[1] != 'C') {
+        emit calibrationOpError(QString(), QStringLiteral("failed"));
+        return;
+    }
+
+    const quint16 streamId = qFromLittleEndian<quint16>(value.constData() + 2);
+    const quint16 chunkIndex = qFromLittleEndian<quint16>(value.constData() + 4);
+    const quint16 chunkCount = qFromLittleEndian<quint16>(value.constData() + 6);
+    if (chunkCount == 0 || chunkIndex >= chunkCount)
+        return;
+
+    if (!m_calStreamIdKnown || streamId != m_calStreamId || chunkCount != m_calChunkCount) {
+        m_calStreamId = streamId;
+        m_calChunkCount = chunkCount;
+        m_calChunks.assign(chunkCount, QByteArray());
+        m_calChunkReceived.assign(chunkCount, false);
+        m_calStreamIdKnown = true;
+    }
+
+    m_calChunks[chunkIndex] = value.mid(8);
+    m_calChunkReceived[chunkIndex] = true;
+
+    if (std::any_of(m_calChunkReceived.cbegin(), m_calChunkReceived.cend(), [](bool b) { return !b; }))
+        return; // still waiting on more chunks
+
+    QByteArray json;
+    for (const QByteArray &chunk : std::as_const(m_calChunks))
+        json += chunk;
+    m_calStreamIdKnown = false; // done with this response either way, running or final
+    parseCalibrationJson(json);
+}
+
+void VnaAirAnalyzer::parseCalibrationJson(const QByteArray &json)
+{
+    QJsonDocument doc = QJsonDocument::fromJson(json);
+    if (!doc.isObject()) {
+        emit calibrationOpError(QString(), QStringLiteral("failed"));
+        return;
+    }
+    const QJsonObject obj = doc.object();
+    const QString op = obj.value(QStringLiteral("op")).toString();
+    const QString state = obj.value(QStringLiteral("state")).toString();
+
+    if (state == QStringLiteral("running")) {
+        emit calibrationOpRunning(op, obj.value(QStringLiteral("deadlineMs")).toInt());
+        return; // not final -- the "ok"/"error" notification for this request follows later
+    }
+    if (state == QStringLiteral("error")) {
+        emit calibrationOpError(op, obj.value(QStringLiteral("error")).toString());
+        return;
+    }
+
+    // state == "ok" -- pull out whichever fields this particular op's
+    // reply carries (not every op returns every field; see
+    // research/vnaair-protocol.md's Calibration "Keys, in emitted order"
+    // table) and update the cached slot/engine state from them.
+    bool slotInfoChanged = false;
+
+    if (obj.contains(QStringLiteral("slotMap"))) {
+        const QJsonArray slotMap = obj.value(QStringLiteral("slotMap")).toArray();
+        m_calSlots.clear();
+        m_calSlots.reserve(slotMap.size());
+        for (const QJsonValue &v : slotMap) {
+            VnaAirCalSlot slot;
+            if (v.isArray()) {
+                const QJsonArray rec = v.toArray();
+                slot.known = true;
+                slot.startHz = rec.size() > 0 ? qint64(rec.at(0).toDouble()) : 0;
+                slot.stopHz = rec.size() > 1 ? qint64(rec.at(1).toDouble()) : 0;
+                slot.points = rec.size() > 2 ? rec.at(2).toInt() : 0;
+                slot.savedAt = rec.size() > 3 ? qint64(rec.at(3).toDouble()) : 0;
+                slot.source = rec.size() > 4 ? rec.at(4).toString() : QString();
+                slot.mask = (rec.size() > 5 && !rec.at(5).isNull()) ? rec.at(5).toInt() : -1;
+            }
+            m_calSlots.append(slot);
+        }
+        slotInfoChanged = true;
+    }
+    if (obj.contains(QStringLiteral("engine"))) {
+        m_calEngine = obj.value(QStringLiteral("engine")).toString();
+        slotInfoChanged = true;
+    }
+    if (obj.contains(QStringLiteral("engines"))) {
+        m_calEngines.clear();
+        for (const QJsonValue &v : obj.value(QStringLiteral("engines")).toArray())
+            m_calEngines.append(v.toString());
+        slotInfoChanged = true;
+    }
+    if (obj.contains(QStringLiteral("cal"))) {
+        const QJsonObject cal = obj.value(QStringLiteral("cal")).toObject();
+        m_calActiveSlot = cal.contains(QStringLiteral("n")) ? cal.value(QStringLiteral("n")).toInt() : -1;
+        slotInfoChanged = true;
+    }
+
+    if (slotInfoChanged)
+        emit calibrationSlotsUpdated(m_calSlots, m_calActiveSlot, m_calEngine, m_calEngines);
+
+    // recall/off change which slot (if any) is active but don't echo the
+    // full slotMap themselves -- re-query so a stale cached slot list
+    // never lingers after either succeeds.
+    if ((op == QStringLiteral("recall") || op == QStringLiteral("off")) && state == QStringLiteral("ok"))
+        queryCalibrationStatus();
 }

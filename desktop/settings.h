@@ -6,6 +6,7 @@
 #include <QTimer>
 #include <analyzer/analyzerpro.h>
 #include <analyzer/analyzerparameters.h>
+#include <analyzer/vnaair_analyzer.h>
 #include <crc32.h>
 #include <QSettings>
 #include <calibration.h>
@@ -88,6 +89,14 @@ private:
     QString m_path;
 
     QTimer * m_generalTimer;
+
+    // Non-null only when m_analyzer's connected backend is actually a
+    // VnaAirAnalyzer (see setAnalyzer()) -- the VNA Air calibration group
+    // box stays visible/enabled regardless (per-device gating is a later
+    // step, see its own .ui comment), but these calls are no-ops without
+    // a live bridge to query.
+    VnaAirAnalyzer * m_vnaAirAnalyzer = nullptr;
+    void resetVnaAirCalibrationCombo();
 
     QSettings * m_settings;
 
@@ -215,6 +224,16 @@ private slots:
     void on_calibWizardBtn_clicked();
     void on_viewTestPlotBtn_clicked();
     void on_oslHelpBtn_clicked();
+    // VNA Air's "select which on-board/bridge calibration slot to use" --
+    // a user pick here, not a capture. See core/analyzer/vnaair_analyzer.h's
+    // Calibration op comments; AntScopeZ never computes or applies this
+    // calibration itself, just tells the bridge which saved slot to use.
+    void on_vnaAirCalibCombo_activated(int index);
+    void on_vnaAirCalibRefreshBtn_clicked();
+    // VnaAirAnalyzer::calibrationSlotsUpdated() -- rebuilds the combo from
+    // whatever the last status/engine/recall/off query returned.
+    void refreshVnaAirCalibrationSlots(const QVector<VnaAirCalSlot>& slotList, int activeSlot,
+                                        const QString& engine, const QStringList& engines);
     void on_checkBoxCalibration_toggled(bool checked);
     void on_measureSystemComboBox_currentIndexChanged(int index);
     void on_doNothingBtn_clicked(bool checked);

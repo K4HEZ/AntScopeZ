@@ -379,6 +379,8 @@ Settings::Settings(QWidget *parent) :
         ui->groupBoxLicense->hide();
     }
 
+    resetVnaAirCalibrationCombo();
+
     // Let the layout compute the real floor from every tab's own minimum
     // size hint instead of the hand-picked 550x320 the .ui shipped with --
     // that static number predates several tabs (Cable rework, Scanning
@@ -602,7 +604,103 @@ void Settings::setAnalyzer(AnalyzerPro * analyzer)
         double maxMHz = m_analyzer->getMaxFq().toDouble() / 1000.0;
         ui->lineEditAnalyzerFqStart->setText(QString("%1 MHz").arg(QString::number(minMHz, 'g', 6)));
         ui->lineEditAnalyzerFqStop->setText(QString("%1 MHz").arg(QString::number(maxMHz, 'g', 6)));
+
+        // VNA Air calibration group box stays enabled regardless (see its
+        // own .ui comment -- gating this on connection state is a later
+        // step), but only actually has a bridge to query when the
+        // connected backend is really a VnaAirAnalyzer.
+        VnaAirAnalyzer* vnaAir = qobject_cast<VnaAirAnalyzer*>(m_analyzer->baseAnalyzer());
+        if (vnaAir != m_vnaAirAnalyzer) {
+            if (m_vnaAirAnalyzer)
+                m_vnaAirAnalyzer->disconnect(this);
+            m_vnaAirAnalyzer = vnaAir;
+            if (m_vnaAirAnalyzer) {
+                connect(m_vnaAirAnalyzer, &VnaAirAnalyzer::calibrationSlotsUpdated,
+                        this, &Settings::refreshVnaAirCalibrationSlots);
+                // Pick up whatever the connect-time query (see
+                // VnaAirAnalyzer::serviceStateChanged()) already cached --
+                // that signal fired before this dialog existed to hear it.
+                refreshVnaAirCalibrationSlots(m_vnaAirAnalyzer->calibrationSlots(),
+                                               m_vnaAirAnalyzer->calibrationActiveSlot(),
+                                               m_vnaAirAnalyzer->calibrationEngine(),
+                                               m_vnaAirAnalyzer->calibrationEngines());
+            } else {
+                resetVnaAirCalibrationCombo();
+            }
+        }
     }
+}
+
+void Settings::resetVnaAirCalibrationCombo()
+{
+    ui->vnaAirCalibCombo->blockSignals(true);
+    ui->vnaAirCalibCombo->clear();
+    ui->vnaAirCalibCombo->addItem(tr("No VNA Air bridge connected"), -2);
+    ui->vnaAirCalibCombo->blockSignals(false);
+}
+
+void Settings::refreshVnaAirCalibrationSlots(const QVector<VnaAirCalSlot>& slotList, int activeSlot,
+                                              const QString& engine, const QStringList& engines)
+{
+    Q_UNUSED(engine)
+    Q_UNUSED(engines)
+
+    ui->vnaAirCalibCombo->blockSignals(true);
+    ui->vnaAirCalibCombo->clear();
+
+    // -1 maps to Calibration op 7 ("off") -- the vendor spec's own "No
+    // calibration" case, see core/analyzer/vnaair_analyzer.h.
+    ui->vnaAirCalibCombo->addItem(tr("No calibration"), -1);
+
+    for (int i = 0; i < slotList.size(); ++i) {
+        const VnaAirCalSlot& slot = slotList.at(i);
+        QString text;
+        if (!slot.known) {
+            // Per the vendor spec, null doesn't just mean "empty" -- it
+            // can also mean "this slot belongs to a different NanoVNA
+            // board than the one currently connected." Either way there's
+            // nothing meaningful to show.
+            text = tr("Slot %1 - Empty").arg(i + 1);
+        } else {
+            const double startMHz = slot.startHz / 1000000.0;
+            const double stopMHz = slot.stopHz / 1000000.0;
+            // Vendor's own suggested display string format (research/
+            // vnaair-protocol.md's Calibration section): "Slot N · start-
+            // stop MHz · N pts · From NanoVNA/Bridge". Presented as a
+            // label, not a verified fact -- a slot can hold a saved range
+            // with no real calibration actually applied.
+            text = tr("Slot %1 - %2-%3 MHz - %4 pts - From %5")
+                       .arg(i + 1)
+                       .arg(QString::number(startMHz, 'g', 6))
+                       .arg(QString::number(stopMHz, 'g', 6))
+                       .arg(slot.points)
+                       .arg(slot.source == QStringLiteral("bridge") ? tr("Bridge") : tr("NanoVNA"));
+        }
+        ui->vnaAirCalibCombo->addItem(text, i);
+    }
+
+    const int comboIndex = ui->vnaAirCalibCombo->findData(activeSlot);
+    ui->vnaAirCalibCombo->setCurrentIndex(comboIndex >= 0 ? comboIndex : 0);
+    ui->vnaAirCalibCombo->blockSignals(false);
+}
+
+void Settings::on_vnaAirCalibCombo_activated(int index)
+{
+    if (!m_vnaAirAnalyzer)
+        return;
+
+    const int slot = ui->vnaAirCalibCombo->itemData(index).toInt();
+    if (slot == -1)
+        m_vnaAirAnalyzer->clearCalibration();
+    else if (slot >= 0)
+        m_vnaAirAnalyzer->recallCalibrationSlot(slot);
+    // slot == -2 ("No VNA Air bridge connected") is inert -- nothing to do.
+}
+
+void Settings::on_vnaAirCalibRefreshBtn_clicked()
+{
+    if (m_vnaAirAnalyzer)
+        m_vnaAirAnalyzer->queryCalibrationStatus();
 }
 
 void Settings::setCalibration(Calibration * calibration)

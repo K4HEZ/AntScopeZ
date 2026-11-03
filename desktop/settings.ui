@@ -1323,6 +1323,9 @@ Was computed from Window Background, now directly-editable.</string>
          <layout class="QHBoxLayout" name="horizontalLayout_vnaAirCalibration">
           <item>
            <widget class="QLabel" name="label_vnaAirCalibSlot">
+            <property name="toolTip">
+             <string>Selects which saved calibration the VNA Air bridge/analyzer applies to the data it sends. AntScopeZ does not compute, verify, or apply this calibration itself.</string>
+            </property>
             <property name="text">
              <string>On-board calibration</string>
             </property>
@@ -1330,53 +1333,24 @@ Was computed from Window Background, now directly-editable.</string>
           </item>
           <item>
            <widget class="QComboBox" name="vnaAirCalibCombo">
-            <!-- Placeholder only, not wired up yet (op 6/9 save/recall,
-                 8 slots for the bridge's own "vnaair" engine per
-                 research/vnaair-protocol.md and research/calibration
-                 redesign.md; slot count for the "device" engine is
-                 unconfirmed, no hardware yet). Real items will need to
-                 come from a live status/engine query, not this static
-                 list, once we have a unit to test against. -->
-            <item>
-             <property name="text">
-              <string>Calibration 1 - Empty</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Calibration 2 - Empty</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Calibration 3 - Empty</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Calibration 4 - Empty</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Calibration 5 - Empty</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Calibration 6 - Empty</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Calibration 7 - Empty</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Calibration 8 - Empty</string>
-             </property>
-            </item>
+            <!-- Empty at design time; populated at runtime by
+                 Settings::resetVnaAirCalibrationCombo() and
+                 refreshVnaAirCalibrationSlots(), from a live
+                 VnaAirAnalyzer::calibrationSlotsUpdated() query once one is
+                 connected. Slot count is backend/firmware dependent (8 for
+                 the bridge's own "vnaair" engine, firmware table dependent
+                 for "device", per research/calibration redesign notes),
+                 never a fixed list here. -->
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="vnaAirCalibRefreshBtn">
+            <property name="toolTip">
+             <string>Re-query the connected VNA Air bridge's calibration slots</string>
+            </property>
+            <property name="text">
+             <string>Refresh</string>
+            </property>
            </widget>
           </item>
           <item>
