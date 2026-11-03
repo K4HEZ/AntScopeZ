@@ -21,7 +21,11 @@ class UserGuideDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit UserGuideDialog(QWidget *parent = nullptr);
+    explicit UserGuideDialog(QWidget *parent = nullptr, const QString& anchor = QString());
+
+    // Jumps an already-open dialog to a different section -- same slug
+    // tagHeadingAnchors() already generated at load time.
+    void navigateTo(const QString& anchor);
 
 private slots:
     void onAnchorClicked(const QUrl& link);

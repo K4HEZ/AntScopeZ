@@ -15,6 +15,8 @@
 #include "debuglog.h"
 #include "apppaths.h"
 #include "cablepickerdialog.h"
+#include "calibrationwizarddialog.h"
+#include "testresultdialog.h"
 #include <QAbstractButton>
 #include <QFile>
 #include <QFileInfo>
@@ -97,27 +99,23 @@ Settings::Settings(QWidget *parent) :
     m_licenseAgent(this),
     m_isComplete(false),
     m_generalTimer(NULL),
-    m_onlyOneCalib(false),
     m_metricChecked(false),
     m_farEndMeasurement(0)
 {
     ui->setupUi(this);
+
+    // Shown non-modally (show(), not exec() -- see on_actionSettings_triggered())
+    // but still app-modal: otherwise it's a plain top-level window that can
+    // get buried behind MainWindow with no indication it's still open.
+    setWindowModality(Qt::ApplicationModal);
 
     connect(&m_licenseAgent, &LicenseAgent::registered, this, [=](){
         ui->pushButtonAntscope->setText(tr("Change application registration"));
     });
     PopUpIndicator::setIndicatorVisible(false);
 
-    ui->openOpenFileBtn->setVisible(false);
-    ui->shortOpenFileBtn->setVisible(false);
-    ui->loadOpenFileBtn->setVisible(false);
-
     ui->browseLine->setText(tr("Choose file"));
     ui->updateProgressBar->hide();
-
-    ui->openProgressBar->hide();
-    ui->shortProgressBar->hide();
-    ui->loadProgressBar->hide();
 
     QString path = Settings::setIniFile();
     m_settings = new QSettings(path, QSettings::IniFormat);
@@ -595,6 +593,15 @@ void Settings::setAnalyzer(AnalyzerPro * analyzer)
             m_analyzer->on_disconnectDevice();
             findBootloader();
         }
+
+        // OSL tab's Start/Stop fields are read-only and always reflect the
+        // analyzer's own hardware range -- on_measureCalib() always sweeps
+        // that full range regardless of what the Sweep tab is set to, so
+        // these display it rather than let the user (mis)configure it.
+        double minMHz = m_analyzer->getMinFq().toDouble() / 1000.0;
+        double maxMHz = m_analyzer->getMaxFq().toDouble() / 1000.0;
+        ui->lineEditAnalyzerFqStart->setText(QString("%1 MHz").arg(QString::number(minMHz, 'g', 6)));
+        ui->lineEditAnalyzerFqStop->setText(QString("%1 MHz").arg(QString::number(maxMHz, 'g', 6)));
     }
 }
 
@@ -611,29 +618,59 @@ void Settings::setCalibration(Calibration * calibration)
         ui->tabWidget->setTabEnabled(ui->tabWidget->indexOf(ui->Calibration), false);
         return;
     }
-    if(calibration)
-    {
-        calibration->init(calibration->getSerial());
-        ui->tabWidget->setTabEnabled(ui->tabWidget->indexOf(ui->Calibration), true);
-        m_calibration = calibration;
-        ui->labelCalibrationPath->setText(m_calibration->getCalibrationPath());
-        ui->labelOpenState->setText(m_calibration->getOpenFileName());
-        ui->labelShortState->setText(m_calibration->getShortFileName());
-        ui->labelLoadState->setText(m_calibration->getLoadFileName());
-        ui->lineEditPoints->setText(QString::number(m_calibration->dotsNumber()));
+    calibration->init(calibration->getSerial());
+    ui->tabWidget->setTabEnabled(ui->tabWidget->indexOf(ui->Calibration), true);
+    m_calibration = calibration;
+    ui->lineEditPoints->setText(QString::number(m_calibration->dotsNumber()));
+    refreshCalibrationStatus();
+}
 
-        if(m_calibration->getCalibrationPerformed())
-        {
-            if(m_calibration->getCalibrationEnabled())
-            {
-                emit calibrationEnabled(true);
-            }
-            else
-            {
-                emit calibrationEnabled(false);
-            }
-        }
+void Settings::refreshCalibrationStatus()
+{
+    if (!m_calibration)
+        return;
+
+    ui->labelCalibrationPath->setText(m_calibration->getCalibrationPath());
+
+    if (m_calibration->getCalibrationPerformed()) {
+        ui->labelCalibSummary->setText(tr("Z0: %1 Ω    Range: %2 - %3 MHz    Points: %4")
+                                        .arg(QString::number(m_calibration->calibZ0(), 'g', 4))
+                                        .arg(QString::number(m_calibration->calibStartFqMHz(), 'g', 6))
+                                        .arg(QString::number(m_calibration->calibStopFqMHz(), 'g', 6))
+                                        .arg(m_calibration->calibDotsNumber()));
+    } else {
+        ui->labelCalibSummary->setText(tr("No calibration captured yet."));
     }
+
+    auto completedText = [](const QDateTime& ts) {
+        return ts.isValid() ? tr("Completed %1").arg(ts.toString("yyyy-MM-dd HH:mm"))
+                             : tr("Not Performed");
+    };
+
+    ui->labelOpenFilename->setText(m_calibration->openFileExists()
+                                    ? m_calibration->getOpenFileName() : tr("—"));
+    ui->labelOpenStatus->setText(completedText(m_calibration->openTimestamp()));
+
+    ui->labelShortFilename->setText(m_calibration->shortFileExists()
+                                     ? m_calibration->getShortFileName() : tr("—"));
+    ui->labelShortStatus->setText(completedText(m_calibration->shortTimestamp()));
+
+    ui->labelLoadFilename->setText(m_calibration->loadFileExists()
+                                    ? m_calibration->getLoadFileName() : tr("—"));
+    ui->labelLoadStatus->setText(completedText(m_calibration->loadTimestamp()));
+
+    // No pass/fail -- the wizard shows the per-point error plot and the
+    // user judges it themselves, so this is purely "was it run."
+    ui->labelTestStatus->setText(completedText(m_calibration->testTimestamp()));
+    ui->viewTestPlotBtn->setEnabled(m_calibration->hasTestResult());
+
+    // Mirror the model's current enabled state into the checkbox without
+    // re-triggering on_checkBoxCalibration_toggled()'s own "not calibrated
+    // yet" warning/revert logic.
+    ui->checkBoxCalibration->blockSignals(true);
+    ui->checkBoxCalibration->setChecked(m_calibration->getCalibrationPerformed()
+                                         && m_calibration->getCalibrationEnabled());
+    ui->checkBoxCalibration->blockSignals(false);
 }
 
 void Settings::findBootloader (void)
@@ -711,164 +748,43 @@ void Settings::on_fqRestrictCheckBox_clicked(bool checked)
     m_settings->setValue("restrictFq", m_restrictFq);
 }
 
-void Settings::on_calibWizard_clicked()
+void Settings::on_calibWizardBtn_clicked()
 {
-    enableButtons(false);
-    g_showMessageBox(this, QMessageBox::Information, tr("Open"),
-                         tr("Please connect OPEN standard and press OK."));
-    emit startCalibration();
-}
-
-void Settings::on_percentCalibrationChanged(qint32 state, qint32 percent)
-{
-    switch (state) {
-    case 1:
-        ui->openProgressBar->setValue(percent);
-        if(percent == 100)
-        {
-            if(m_onlyOneCalib)
-            {
-                ui->openProgressBar->hide();
-                ui->labelOpenState->setText("cal_open.s1p");
-                m_onlyOneCalib = false;
-                enableButtons(true);
-            }
-        }else
-        {
-            ui->openProgressBar->show();
-        }
-        break;
-    case 2:
-        ui->shortProgressBar->show();
-        ui->shortProgressBar->setValue(percent);
-        if(percent == 100)
-        {
-            if(m_onlyOneCalib)
-            {
-                ui->shortProgressBar->hide();
-                ui->labelShortState->setText("cal_short.s1p");
-                m_onlyOneCalib = false;
-                enableButtons(true);
-            }
-        }
-        break;
-    case 3:
-        ui->loadProgressBar->show();
-        ui->loadProgressBar->setValue(percent);
-        if(percent == 100)
-        {
-            if(m_onlyOneCalib)
-            {
-                ui->loadProgressBar->hide();
-                ui->labelLoadState->setText("cal_load.s1p");
-                m_onlyOneCalib = false;
-            }else
-            {
-                ui->openProgressBar->hide();
-                ui->shortProgressBar->hide();
-                ui->loadProgressBar->hide();
-                ui->labelOpenState->setText("cal_open.s1p");
-                ui->labelShortState->setText("cal_short.s1p");
-                ui->labelLoadState->setText("cal_load.s1p");
-            }
-            enableButtons(true);
-        }
-        break;
-    default:
-        break;
-    }
-}
-
-void Settings::on_openCalibBtn_clicked()
-{
-    enableButtons(false);
-    m_onlyOneCalib = true;
+    // The wizard owns Calibration directly (its own connects to
+    // progress()/testCaptureFinished() in its constructor) -- Settings
+    // just opens it modally and re-reads the status display once it's
+    // closed, whether Finish or Cancel ended it. See
+    // CalibrationWizardDialog.
     PopUpIndicator::hideIndicator();
-    if (g_showMessageBox(NULL, QMessageBox::Information, tr("Open"),
-                         tr("Please connect OPEN standard and press OK.")) == QMessageBox::Ok)
-        emit startCalibrationOpen();
+    CalibrationWizardDialog wizard(m_calibration, this);
+    wizard.exec();
+    refreshCalibrationStatus();
 }
 
-void Settings::on_shortCalibBtn_clicked()
+void Settings::on_viewTestPlotBtn_clicked()
 {
-    enableButtons(false);
-    m_onlyOneCalib = true;
-    PopUpIndicator::hideIndicator();
-    g_showMessageBox(NULL, QMessageBox::Information, tr("Short"),
-                         tr("Please connect SHORT standard and press OK."));
-    emit startCalibrationShort();
+    TestResultDialog dlg(m_calibration, this);
+    dlg.exec();
 }
 
-void Settings::on_loadCalibBtn_clicked()
+void Settings::on_oslHelpBtn_clicked()
 {
-    enableButtons(false);
-    m_onlyOneCalib = true;
-    PopUpIndicator::hideIndicator();
-    g_showMessageBox(NULL, QMessageBox::Information, tr("Load"),
-                         tr("Please connect LOAD standard and press OK."));
-    emit startCalibrationLoad();
+    emit openUserGuideSection(QStringLiteral("antscopez-osl-calibration"));
 }
 
-
-void Settings::enableButtons(bool enabled)
+void Settings::on_checkBoxCalibration_toggled(bool checked)
 {
-    ui->openOpenFileBtn->setEnabled(enabled);
-    ui->openCalibBtn->setEnabled(enabled);
-    ui->shortOpenFileBtn->setEnabled(enabled);
-    ui->shortCalibBtn->setEnabled(enabled);
-    ui->loadOpenFileBtn->setEnabled(enabled);
-    ui->loadCalibBtn->setEnabled(enabled);
-
-    ui->calibWizard->setEnabled(enabled);
-}
-
-void Settings::on_openOpenFileBtn_clicked()
-{
-    QString dir = localDataPath("Calibration");
-    QString path = FileDialog::getOpenFileName(this, tr("Open 'open calibration' file"),
-                                                dir,"*.s1p");
-    QStringList list;
-    list = path.split("/");
-    if(list.length() == 1)
+    if (!m_calibration->getCalibrationPerformed())
     {
-        list.clear();
-        list = path.split("\\");
+        g_showMessageBox(NULL, QMessageBox::Warning, tr("Calibration Required"),
+                              tr("This analyzer hasn't been calibrated yet.\n\n"
+                                 "Run the Calibration Wizard first."));
+        ui->checkBoxCalibration->blockSignals(true);
+        ui->checkBoxCalibration->setCheckState(Qt::Unchecked);
+        ui->checkBoxCalibration->blockSignals(false);
+        return;
     }
-    ui->labelOpenState->setText(list.last());
-    emit openOpenFile(path);
-}
-
-void Settings::on_shortOpenFileBtn_clicked()
-{
-    QString dir = localDataPath("Calibration");
-    QString path = FileDialog::getOpenFileName(this, tr("Open 'short calibration' file"),
-                                             dir,"*.s1p");
-    QStringList list;
-    list = path.split("/");
-    if(list.length() == 1)
-    {
-        list.clear();
-        list = path.split("\\");
-    }
-    ui->labelShortState->setText(list.last());
-
-    emit shortOpenFile(path);
-}
-
-void Settings::on_loadOpenFileBtn_clicked()
-{
-    QString dir = localDataPath("Calibration");
-    QString path = FileDialog::getOpenFileName(this, tr("Open 'load calibration' file"),
-                                                dir,"*.s1p");
-    QStringList list;
-    list = path.split("/");
-    if(list.length() == 1)
-    {
-        list.clear();
-        list = path.split("\\");
-    }
-    ui->labelLoadState->setText(list.last());
-    emit loadOpenFile(path);
+    emit calibrationEnabled(checked);
 }
 
 void Settings::setMeasureSystemMetric(bool state)
@@ -1837,8 +1753,10 @@ void Settings::on_fqMaxFinished()
 
 void Settings::on_PointsFinished()
 {
-    QString str = ui->lineEditPoints->text();
-    m_calibration->setDotsNumber(str.toInt());
+    int value = ui->lineEditPoints->text().toInt();
+    value = qBound(1, value, 2000);
+    ui->lineEditPoints->setText(QString::number(value));
+    m_calibration->setDotsNumber(value);
 }
 
 // Text boxes with range guards rather than spin boxes -- clamp to

@@ -93,8 +93,6 @@ private:
 
     bool m_restrictFq = true;
 
-    bool m_onlyOneCalib;
-
     bool m_metricChecked;
     int  m_maxMeasurements = 5;
 
@@ -112,7 +110,11 @@ private:
 
     static int m_serialIndex;
 
-    void enableButtons(bool enabled);
+    // Pathname/summary line + per-row filename/status labels on the OSL
+    // tab -- called on dialog setup and again after the wizard closes
+    // (whether finished or cancelled, since even a cancelled run can't
+    // hurt to re-read).
+    void refreshCalibrationStatus();
     void openCablesFile(QString path);
     void updateCableEditability();
     void updateCableLengthUnit(bool metric);
@@ -162,14 +164,9 @@ signals:
 
     void fqRestrictChecked(bool);
 
-    void startCalibration();
-    void startCalibrationOpen();
-    void startCalibrationShort();
-    void startCalibrationLoad();
-
-    void openOpenFile(QString);
-    void shortOpenFile(QString);
-    void loadOpenFile(QString);
+    // "?" button on the Software Calibration group box -- anchor is a
+    // docs/user-guide.md heading slug (see UserGuideDialog::slugify()).
+    void openUserGuideSection(QString anchor);
 
     void calibrationEnabled(bool);
     void changeMeasureSystemMetric(bool);
@@ -215,14 +212,10 @@ private slots:
     void findBootloader (void);
     void on_generalTimerTick();
     void on_fqRestrictCheckBox_clicked(bool checked);
-    void on_calibWizard_clicked();
-    void on_percentCalibrationChanged(qint32 state, qint32 percent);
-    void on_openCalibBtn_clicked();
-    void on_shortCalibBtn_clicked();
-    void on_loadCalibBtn_clicked();
-    void on_openOpenFileBtn_clicked();
-    void on_shortOpenFileBtn_clicked();
-    void on_loadOpenFileBtn_clicked();
+    void on_calibWizardBtn_clicked();
+    void on_viewTestPlotBtn_clicked();
+    void on_oslHelpBtn_clicked();
+    void on_checkBoxCalibration_toggled(bool checked);
     void on_measureSystemComboBox_currentIndexChanged(int index);
     void on_doNothingBtn_clicked(bool checked);
     void on_subtractCableBtn_clicked(bool checked);

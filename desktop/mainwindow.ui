@@ -231,18 +231,6 @@
                 </item>
                </layout>
               </item>
-              <item row="3" column="0">
-               <widget class="QCheckBox" name="checkBoxCalibration">
-                <property name="toolTip">
-                 <string>Enable calibration OSL. Attention!
-        You must perform the calibration 
-        process in the settings menu!</string>
-                </property>
-                <property name="text">
-                 <string>Calibration</string>
-                </property>
-               </widget>
-              </item>
               <item row="3" column="1">
                <widget class="QPushButton" name="fullBtn">
                 <property name="toolTip">
@@ -1428,7 +1416,6 @@
   <tabstop>lineEdit_fqTo</tabstop>
   <tabstop>lineEdit_points</tabstop>
   <tabstop>speedAccuracySlider</tabstop>
-  <tabstop>checkBoxCalibration</tabstop>
   <tabstop>fullBtn</tabstop>
   <tabstop>singleStart</tabstop>
   <tabstop>continuousStartBtn</tabstop>

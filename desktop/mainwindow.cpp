@@ -716,20 +716,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_analyzer, &AnalyzerPro::crcError, m_calibration, &Calibration::on_crcError);
     connect(m_calibration, &Calibration::indicatorVisibleChanged, this, &PopUpIndicator::setIndicatorVisible);
     connect(m_calibration, &Calibration::userMessage, this, &MainWindow::onUserMessage);
-    connect(m_calibration, &Calibration::standardPromptRequested, this, &MainWindow::onCalibrationPrompt);
     m_measurements->setCalibration(m_calibration);
-
-    ui->checkBoxCalibration->blockSignals(true);
-    ui->checkBoxCalibration->setEnabled(true);//m_calibration->isCalibrationPerformed());
-    ui->checkBoxCalibration->setChecked(false);//m_calibration->getCalibrationEnabled());
-    connect(ui->checkBoxCalibration, &QCheckBox::toggled, this, &MainWindow::calibrationToggled);
-
-//    QWidget* w = ui->checkBoxCalibration;
-//    QTimer::singleShot(1000, [w]() {
-//        // to avoid calibration message due to ui->checkBoxCalibration->setChecked
-//        // at load time
-//        w->blockSignals(false);
-//    });
 
 #ifdef Q_OS_WIN
     // Registers .asd as a AntScopeZ-associated file type via the real
@@ -955,13 +942,6 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
     PopUpIndicator::hideIndicator(m_swrWidget);
-
-    QWidget* w = ui->checkBoxCalibration;
-    QTimer::singleShot(1000, [w]() {
-        // to avoid calibration message due to ui->checkBoxCalibration->setChecked
-        // at load time
-        w->blockSignals(false);
-    });
 
     QTimer::singleShot(100, [this]() {
         // force labels' text changing -- retranslateUi() from

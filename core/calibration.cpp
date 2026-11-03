@@ -1,12 +1,12 @@
 #include "calibration.h"
 #include "apppaths.h"
 #include <QDir>
+#include <QFileInfo>
 
 Calibration::Calibration(QObject *parent) : QObject(parent),
     m_state(CALIB_NONE),
     m_dotsCount(0),
     m_dotsNumber(500),
-    m_onlyOneCalib(false),
     m_Z0(50),
     m_OSLCalibrationEnabled(false),
     m_OSLCalibrationPerformed(false),
@@ -44,22 +44,30 @@ void Calibration::init(const QString& _serial)
     }
 
     //QDir().mkdir(m_calibrationPath);
+    // Only "Enabled" lives in the shared app ini now -- Z0/range/points/
+    // test result used to live here too, but that meant two analyzers used
+    // from the same install clobbered each other's values. See
+    // calibration.ini below.
     m_settings = new QSettings(iniFilePath, QSettings::IniFormat);
-    m_settings->beginGroup("Calibration");
-    m_Z0 = m_settings->value("Z0", m_Z0).toDouble();
-    setDotsNumber(m_settings->value("DotsNumber", 500).toInt());
-    m_settings->endGroup();
 
     QDir dir = m_calibrationPath;
     m_openCalibFilePath = dir.absoluteFilePath("cal_open.s1p");
     m_shortCalibFilePath = dir.absoluteFilePath("cal_short.s1p");
     m_loadCalibFilePath = dir.absoluteFilePath("cal_load.s1p");
-//    bool performed = QFile::exists(m_openCalibFilePath)
-//        && QFile::exists(m_shortCalibFilePath)
-//        && QFile::exists(m_loadCalibFilePath);
+    m_testCalibFilePath = dir.absoluteFilePath("cal_test.s1p");
+    m_calibrationIniPath = dir.absoluteFilePath("calibration.ini");
 
-//    m_OSLCalibrationPerformed = performed;
+    QSettings calSettings(m_calibrationIniPath, QSettings::IniFormat);
+    m_calibZ0 = calSettings.value("Z0", 50).toDouble();
+    m_calibStartFqMHz = calSettings.value("StartFqMHz", 0).toDouble();
+    m_calibStopFqMHz = calSettings.value("StopFqMHz", 0).toDouble();
+    m_calibDotsNumber = calSettings.value("DotsNumber", 0).toInt();
+    // Points field defaults to whatever the last committed calibration
+    // used, so re-running the wizard without touching the field repeats it.
+    setDotsNumber(m_calibDotsNumber > 0 ? m_calibDotsNumber : 500);
+
     start(true);
+    reloadTestResult();
     m_OSLCalibrationEnabled = false;
 }
 
@@ -67,18 +75,9 @@ Calibration::~Calibration()
 {
     if (m_settings != nullptr) {
         m_settings->beginGroup("Calibration");
-
-        m_settings->setValue("Z0", m_Z0);
-        m_settings->setValue("Performed", m_OSLCalibrationPerformed);
         m_settings->setValue("Enabled", m_OSLCalibrationEnabled);
-        m_settings->setValue("OpenPath", m_openCalibFilePath);
-        m_settings->setValue("ShortPath", m_shortCalibFilePath);
-        m_settings->setValue("LoadPath", m_loadCalibFilePath);
-        m_settings->setValue("DotsNumber", dotsNumber());
-
         m_settings->endGroup();
         m_settings->sync();
-        //QString file = m_settings->fileName();
     }
 }
 
@@ -90,19 +89,15 @@ void Calibration::start(bool force)
     m_OSLCalibrationPerformed = false;
     if(force) // || m_OSLCalibrationPerformed)
     {
-        if(!QFile::exists(m_openCalibFilePath) || !m_openData.loadData(m_openCalibFilePath,&m_Z0))
-        {
-            return;
-        }
-        if(!QFile::exists(m_shortCalibFilePath) || !m_shortData.loadData(m_shortCalibFilePath,&m_Z0))
-        {
-            return;
-        }
-        if(!QFile::exists(m_loadCalibFilePath) || !m_loadData.loadData(m_loadCalibFilePath,&m_Z0))
-        {
-            return;
-        }
-        m_OSLCalibrationPerformed = true;
+        // Load each standard independently -- previously this returned as
+        // soon as the first missing/unloadable standard was hit, leaving
+        // the other two never loaded into memory even if their files
+        // existed on their own. That broke per-row filename/range display
+        // for whichever standards came after the first gap.
+        bool openOk = QFile::exists(m_openCalibFilePath) && m_openData.loadData(m_openCalibFilePath,&m_Z0);
+        bool shortOk = QFile::exists(m_shortCalibFilePath) && m_shortData.loadData(m_shortCalibFilePath,&m_Z0);
+        bool loadOk = QFile::exists(m_loadCalibFilePath) && m_loadData.loadData(m_loadCalibFilePath,&m_Z0);
+        m_OSLCalibrationPerformed = openOk && shortOk && loadOk;
     }
 }
 
@@ -161,6 +156,98 @@ QString Calibration::getLoadFileName()
     return list.last();
 }
 
+bool Calibration::openFileExists()
+{
+    return QFile::exists(m_openCalibFilePath);
+}
+
+bool Calibration::shortFileExists()
+{
+    return QFile::exists(m_shortCalibFilePath);
+}
+
+bool Calibration::loadFileExists()
+{
+    return QFile::exists(m_loadCalibFilePath);
+}
+
+static QDateTime fileTimestamp(const QString& path)
+{
+    QFileInfo fi(path);
+    return fi.exists() ? fi.lastModified() : QDateTime();
+}
+
+QDateTime Calibration::openTimestamp()
+{
+    return fileTimestamp(m_openCalibFilePath);
+}
+
+QDateTime Calibration::shortTimestamp()
+{
+    return fileTimestamp(m_shortCalibFilePath);
+}
+
+QDateTime Calibration::loadTimestamp()
+{
+    return fileTimestamp(m_loadCalibFilePath);
+}
+
+QDateTime Calibration::testTimestamp()
+{
+    return fileTimestamp(m_testCalibFilePath);
+}
+
+double Calibration::calibZ0()
+{
+    return m_calibZ0;
+}
+
+double Calibration::calibStartFqMHz()
+{
+    return m_calibStartFqMHz;
+}
+
+double Calibration::calibStopFqMHz()
+{
+    return m_calibStopFqMHz;
+}
+
+int Calibration::calibDotsNumber()
+{
+    return m_calibDotsNumber;
+}
+
+bool Calibration::hasTestResult()
+{
+    return QFile::exists(m_testCalibFilePath);
+}
+
+int Calibration::testResultCount()
+{
+    return m_testData.getSize();
+}
+
+double Calibration::testResultFqMHz(int i)
+{
+    return m_testData.getFq(i);
+}
+
+double Calibration::testResultR(int i)
+{
+    return m_testData.getR(i);
+}
+
+double Calibration::testResultX(int i)
+{
+    return m_testData.getX(i);
+}
+
+bool Calibration::reloadTestResult()
+{
+    double unusedZ0 = m_Z0;
+    return QFile::exists(m_testCalibFilePath) && m_testData.loadData(m_testCalibFilePath, &unusedZ0);
+}
+
 void Calibration::on_newData(RawData _rawData)
 {
     double R = _rawData.r;
@@ -172,13 +259,16 @@ void Calibration::on_newData(RawData _rawData)
     switch (m_state)
     {
     case CALIB_OPEN:
-        m_openData.setData(_rawData.fq, Gre, Gim, R, X);
+        m_wizardOpenData.setData(_rawData.fq, Gre, Gim, R, X);
         break;
     case CALIB_SHORT:
-        m_shortData.setData(_rawData.fq, Gre, Gim, R, X);
+        m_wizardShortData.setData(_rawData.fq, Gre, Gim, R, X);
         break;
     case CALIB_LOAD:
-        m_loadData.setData(_rawData.fq, Gre, Gim, R, X);
+        m_wizardLoadData.setData(_rawData.fq, Gre, Gim, R, X);
+        break;
+    case CALIB_TEST:
+        m_testData.setData(_rawData.fq, Gre, Gim, R, X);
         break;
     default:
         break;
@@ -198,43 +288,24 @@ void Calibration::on_newData(RawData _rawData)
         emit indicatorVisibleChanged(false);
 
         emit setCalibrationMode(false);
-        QDir dir = m_calibrationPath;
         switch (m_state)
         {
         case CALIB_OPEN:
-            m_openData.saveData(m_openCalibFilePath,m_Z0);
-            if(!m_onlyOneCalib)
-            {
-                emit indicatorVisibleChanged(false);
-                m_pendingState = CALIB_SHORT;
-                emit standardPromptRequested(tr("Short"),
-                                             tr("Please connect SHORT standard and press OK."));
-            }else
-            {
-                cancel();            }
-            break;
         case CALIB_SHORT:
-            m_shortData.saveData(m_shortCalibFilePath,m_Z0);
-            if(!m_onlyOneCalib)
-            {
-                emit indicatorVisibleChanged(false);
-                m_pendingState = CALIB_LOAD;
-                emit standardPromptRequested(tr("Load"),
-                                             tr("Please connect LOAD standard and press OK."));
-            }else
-            {
-                cancel();
-            }
-            break;
         case CALIB_LOAD:
-            m_loadData.saveData(m_loadCalibFilePath,m_Z0);
-            if(!m_onlyOneCalib)
-            {
-                m_OSLCalibrationPerformed = true;
-                emit indicatorVisibleChanged(false);
-                emit userMessage(UserMessageLevel::Information, tr("Finish"),
-                                 tr("Calibration finished!"));
-            }
+            // Captured data already lives in the matching m_wizardXData
+            // buffer -- nothing is saved or made live until
+            // on_wizardCommit().
+            cancel();
+            break;
+        case CALIB_TEST:
+            // m_testData is left intact (not cleared here) -- the wizard
+            // reads its raw per-point R/X via testResultCount()/etc. and
+            // plots the error against Z0/0 itself. No pass/fail is
+            // computed: the user judges the plot, software doesn't gate
+            // on it. Not written to cal_test.s1p until on_wizardCommit().
+            emit indicatorVisibleChanged(false);
+            emit testCaptureFinished();
             cancel();
             break;
         default:
@@ -244,30 +315,17 @@ void Calibration::on_newData(RawData _rawData)
     }
 }
 
-void Calibration::on_standardPromptAnswered(bool ok)
-{
-    int next = m_pendingState;
-    m_pendingState = CALIB_NONE;
-    if (!ok || next == CALIB_NONE)
-        return;
-    emit indicatorVisibleChanged(true);
-    m_state = next;
-    on_startCalibration();
-}
-
 void Calibration::cancel()
 {
     emit indicatorVisibleChanged(false);
     m_state = CALIB_NONE;
-    m_onlyOneCalib = false;
     // Was: disconnect(m_analyzer, SIGNAL(newData(rawData)), this,
     // SLOT(on_newData(rawData))) -- a complete no-op, always. The type name
     // is wrong (AnalyzerPro's real signal is newData(RawData), capital R --
     // this old-style string signature can never match it, hence "No such
     // signal AnalyzerPro::newData(rawData)"), and even the correctly-spelled
-    // signature was never connected here in the current architecture: the
-    // only matching connect() in this file lives inside the commented-out
-    // Calibration::on_startCalibration(). Live data delivery instead goes
+    // signature was never connected here in the current architecture.
+    // Live data delivery instead goes
     // AnalyzerPro::newData -> Measurements::on_newDataRedraw (mainwindow.cpp)
     // -> a direct Calibration::on_newData() call (measurements.cpp), not a
     // signal/slot connection at all. See issue #38.
@@ -279,28 +337,11 @@ void Calibration::clearCalibration(void)
     m_shortData.clear();
     m_loadData.clear();
 }
-void Calibration::on_startCalibration()
-{
-    m_dotsCount = 0;
-    if((m_state <= CALIB_OPEN)||(m_state >=CALIB_NUM))
-    {
-        clearCalibration();
-        m_state = CALIB_OPEN;
-    }
-
-    if(m_analyzer != NULL)
-    {
-        emit setCalibrationMode(true);
-        m_analyzer->on_measureCalib(dotsNumber());
-    }
-}
-
 void Calibration::on_startCalibrationOpen()
 {
     m_state = CALIB_OPEN;
     m_dotsCount = 0;
-    m_onlyOneCalib = true;
-    m_openData.clear();
+    m_wizardOpenData.clear();
     emit indicatorVisibleChanged(true);
     if(m_analyzer != NULL)
     {
@@ -313,13 +354,7 @@ void Calibration::on_startCalibrationShort()
 {
     m_state = CALIB_SHORT;
     m_dotsCount = 0;
-    m_onlyOneCalib = true;
-    m_shortData.clear();
-    // Was missing -- on_startCalibrationOpen() (the only one of the 3
-    // "Calibrate X" buttons that had it) shows the busy indicator right
-    // before starting its capture; this one silently never did, so
-    // calibrating Short alone never lit the indicator for its whole
-    // capture (see todo.txt).
+    m_wizardShortData.clear();
     emit indicatorVisibleChanged(true);
     if(m_analyzer != NULL)
     {
@@ -332,15 +367,86 @@ void Calibration::on_startCalibrationLoad()
 {
     m_state = CALIB_LOAD;
     m_dotsCount = 0;
-    m_onlyOneCalib = true;
-    m_loadData.clear();
-    // Was missing -- see on_startCalibrationShort()'s comment just above.
+    m_wizardLoadData.clear();
     emit indicatorVisibleChanged(true);
     if(m_analyzer != NULL)
     {
         emit setCalibrationMode(true);
         m_analyzer->on_measureCalib(dotsNumber());
     }
+}
+
+void Calibration::on_testCalibration()
+{
+    m_state = CALIB_TEST;
+    m_dotsCount = 0;
+    m_testData.clear();
+    emit indicatorVisibleChanged(true);
+    if(m_analyzer != NULL)
+    {
+        emit setCalibrationMode(true);
+        m_analyzer->on_measureCalib(dotsNumber());
+    }
+}
+
+void Calibration::on_cancelCalibration()
+{
+    if (m_analyzer != NULL)
+    {
+        // Best-effort: several backends can't truly abort a sweep already
+        // in flight (see BaseAnalyzer::stopCommandAbortsDevice()) and just
+        // drain the stray points instead. Either way m_state is about to go
+        // back to CALIB_NONE, so on_newData() ignores whatever still
+        // trickles in.
+        m_analyzer->on_stopMeasure();
+    }
+    // The wizard's Cancel button always discards the whole run, whichever
+    // page it's on -- clear every staging buffer unconditionally rather
+    // than just the one currently capturing.
+    m_wizardOpenData.clear();
+    m_wizardShortData.clear();
+    m_wizardLoadData.clear();
+    m_testData.clear();
+    cancel();
+}
+
+void Calibration::on_wizardCommit()
+{
+    m_openData = m_wizardOpenData;
+    m_shortData = m_wizardShortData;
+    m_loadData = m_wizardLoadData;
+
+    m_openData.saveData(m_openCalibFilePath, m_Z0);
+    m_shortData.saveData(m_shortCalibFilePath, m_Z0);
+    m_loadData.saveData(m_loadCalibFilePath, m_Z0);
+    // m_testData already holds this run's Test sweep (see on_newData()'s
+    // CALIB_TEST branch) -- saving it here, same as the three standards,
+    // is what lets the OSL tab's "View Plot" button redisplay it later
+    // without re-running the wizard.
+    m_testData.saveData(m_testCalibFilePath, m_Z0);
+
+    m_OSLCalibrationPerformed = true;
+
+    m_calibZ0 = m_Z0;
+    m_calibStartFqMHz = m_analyzer != nullptr ? m_analyzer->getMinFq().toDouble() / 1000.0 : 0.0;
+    m_calibStopFqMHz = m_analyzer != nullptr ? m_analyzer->getMaxFq().toDouble() / 1000.0 : 0.0;
+    m_calibDotsNumber = dotsNumber();
+
+    // Everything this calibration run used, colocated with the three .s1p
+    // files in the same per-serial folder -- see m_calibrationIniPath in
+    // init() for why this isn't in the shared app ini.
+    QSettings calSettings(m_calibrationIniPath, QSettings::IniFormat);
+    calSettings.setValue("Z0", m_calibZ0);
+    calSettings.setValue("StartFqMHz", m_calibStartFqMHz);
+    calSettings.setValue("StopFqMHz", m_calibStopFqMHz);
+    calSettings.setValue("DotsNumber", m_calibDotsNumber);
+    calSettings.sync();
+
+    m_wizardOpenData.clear();
+    m_wizardShortData.clear();
+    m_wizardLoadData.clear();
+
+    emit wizardCommitted();
 }
 
 bool Calibration::interpolateS(double fq, double &reO, double &imO, double &reS, double &imS, double &reL, double &imL)
@@ -467,7 +573,6 @@ void Calibration::on_crcError()
         return;
     emit indicatorVisibleChanged(false);
     m_state = CALIB_NONE;
-    m_onlyOneCalib = false;
     emit setCalibrationMode(false);
     if (m_analyzer != nullptr) {
         // Was: disconnect(m_analyzer, SIGNAL(newData(rawData)), this,

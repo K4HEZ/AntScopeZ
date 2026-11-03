@@ -40,8 +40,8 @@ void MainWindow::on_analyzerNameFound(QString name)
     m_connectedDeviceName = name;
     refreshWindowTitle();
 
-    ui->checkBoxCalibration->setCheckState(Qt::Unchecked);
-    updateCorrectionsStatusLabel(); // calibration is per analyzer
+    m_calibration->on_enableOSLCalibration(false); // calibration is per analyzer
+    updateCorrectionsStatusLabel();
     bool zeroII = name.contains("Zero II");
     ui->singleStart->setEnabled(true);
     ui->continuousStartBtn->setEnabled(true);
@@ -425,12 +425,6 @@ void MainWindow::onUserMessage(UserMessageLevel level, const QString& title, con
     else if (level == UserMessageLevel::Critical)
         icon = QMessageBox::Critical;
     g_showMessageBox(nullptr, icon, title, text);
-}
-
-void MainWindow::onCalibrationPrompt(const QString& title, const QString& text)
-{
-    bool ok = g_showMessageBox(nullptr, QMessageBox::Information, title, text) == QMessageBox::Ok;
-    m_calibration->on_standardPromptAnswered(ok);
 }
 
 bool MainWindow::connectDevice(int type, const QString& name)

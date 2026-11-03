@@ -10,7 +10,7 @@
 #include <QRegularExpression>
 #include <QSet>
 
-UserGuideDialog::UserGuideDialog(QWidget *parent) : QDialog(parent)
+UserGuideDialog::UserGuideDialog(QWidget *parent, const QString& anchor) : QDialog(parent)
 {
     setWindowTitle(tr("User Guide"));
     resize(900, 700);
@@ -28,6 +28,13 @@ UserGuideDialog::UserGuideDialog(QWidget *parent) : QDialog(parent)
     layout->addWidget(m_browser);
 
     loadGuide();
+    if (!anchor.isEmpty())
+        navigateTo(anchor);
+}
+
+void UserGuideDialog::navigateTo(const QString& anchor)
+{
+    m_browser->scrollToAnchor(anchor);
 }
 
 void UserGuideDialog::loadGuide()

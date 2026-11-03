@@ -179,6 +179,9 @@ set(ANTSCOPE_SOURCES
     desktop/tuningpanel.cpp
     desktop/bandindicator.cpp
     desktop/cablepickerdialog.cpp
+    desktop/calibrationwizarddialog.cpp
+    desktop/testresultplot.cpp
+    desktop/testresultdialog.cpp
     desktop/unitrequestdialog.cpp
     desktop/updatedialog.cpp
     desktop/userguidedialog.cpp
@@ -234,6 +237,9 @@ set(ANTSCOPE_HEADERS
     desktop/tuningpanel.h
     desktop/bandindicator.h
     desktop/cablepickerdialog.h
+    desktop/calibrationwizarddialog.h
+    desktop/testresultplot.h
+    desktop/testresultdialog.h
     desktop/unitrequestdialog.h
     desktop/updatedialog.h
     desktop/userguidedialog.h

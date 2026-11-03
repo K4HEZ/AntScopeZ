@@ -111,27 +111,18 @@ void MainWindow::on_actionSettings_triggered()
     connect(m_settingsDialog, &Settings::disconnectDevice,
             m_analyzer, &AnalyzerPro::on_disconnectDevice);
 
-    connect(m_settingsDialog,SIGNAL(startCalibration()),
-            m_calibration,SLOT(on_startCalibration()));
-    connect(m_settingsDialog,SIGNAL(startCalibrationOpen()),
-            m_calibration,SLOT(on_startCalibrationOpen()));
-    connect(m_settingsDialog,SIGNAL(startCalibrationShort()),
-            m_calibration,SLOT(on_startCalibrationShort()));
-    connect(m_settingsDialog,SIGNAL(startCalibrationLoad()),
-            m_calibration,SLOT(on_startCalibrationLoad()));
-
-//    connect(m_settingsDialog,SIGNAL(openOpenFile(QString)),
-//            m_calibration,SLOT(on_openOpenFile(QString)));
-//    connect(m_settingsDialog,SIGNAL(shortOpenFile(QString)),
-//            m_calibration,SLOT(on_shortOpenFile(QString)));
-//    connect(m_settingsDialog,SIGNAL(loadOpenFile(QString)),
-//            m_calibration,SLOT(on_loadOpenFile(QString)));
+    // Open/Short/Load/Test start, Cancel, and progress are all owned by
+    // CalibrationWizardDialog now (its own connects to m_calibration,
+    // created fresh each time Settings' "Calibration Wizard..." button is
+    // clicked) -- Settings itself no longer drives any of this directly.
+    connect(m_settingsDialog, &Settings::openUserGuideSection,
+            this, &MainWindow::openUserGuideSection);
 
     connect(m_settingsDialog,SIGNAL(calibrationEnabled(bool)),
             m_calibration,SLOT(on_enableOSLCalibration(bool)));
-
-    connect(m_calibration,SIGNAL(progress(int, int)),
-            m_settingsDialog,SLOT(on_percentCalibrationChanged(qint32,qint32)));
+    connect(m_settingsDialog, &Settings::calibrationEnabled, this, [this](bool){
+        updateCorrectionsStatusLabel();
+    });
 
     connect(m_analyzer, SIGNAL(updatePercentChanged(qint32)),
             m_settingsDialog,SLOT(on_percentChanged(qint32)));
@@ -211,8 +202,6 @@ void MainWindow::on_actionSettings_triggered()
 
     bool force = true;
     m_calibration->start(force);
-    //ui->checkBoxCalibration->setEnabled(m_calibration->isCalibrationPerformed());
-    //ui->checkBoxCalibration->setChecked(false);//m_calibration->getCalibrationEnabled());
 
     m_measurements->on_redrawGraphs(false);
     updateGraph();
@@ -234,17 +223,24 @@ void MainWindow::on_actionAbout_triggered()
 
 void MainWindow::on_actionUserGuide_triggered()
 {
+    openUserGuideSection();
+}
+
+void MainWindow::openUserGuideSection(const QString& anchor)
+{
     // Same create-once/reuse/re-null-on-destroy pattern as m_settingsDialog
     // above -- non-modal (show(), not exec()), so re-triggering this while
     // it's already open should just bring the existing window forward
     // instead of stacking a second one.
     if (m_userGuideDialog == nullptr) {
-        m_userGuideDialog = new UserGuideDialog(this);
+        m_userGuideDialog = new UserGuideDialog(this, anchor);
         connect(m_userGuideDialog, &QObject::destroyed, this, [this, dlg = m_userGuideDialog](){
             if (m_userGuideDialog == dlg)
                 m_userGuideDialog = nullptr;
         });
         m_userGuideDialog->setAttribute(Qt::WA_DeleteOnClose);
+    } else if (!anchor.isEmpty()) {
+        m_userGuideDialog->navigateTo(anchor);
     }
     m_userGuideDialog->show();
     m_userGuideDialog->raise();
@@ -486,36 +482,6 @@ void MainWindow::on_calibrationChanged()
     }
 }
 
-void MainWindow::calibrationToggled(bool checked)
-{
-    if (m_settingsDialog != nullptr) {
-        ui->checkBoxCalibration->blockSignals(true);
-        ui->checkBoxCalibration->setCheckState(Qt::Unchecked);
-        ui->checkBoxCalibration->blockSignals(false);
-        updateCorrectionsStatusLabel();
-        return;
-    }
-    if(!m_calibration->getCalibrationPerformed())
-    {
-        g_showMessageBox(NULL, QMessageBox::Warning, tr("Calibration Required"),
-                              tr("This analyzer hasn't been calibrated yet.\n\n"
-                                 "Connect it, then open Settings and go to the \"OSL Calibration\" "
-                                 "tab to run the Calibration Wizard (or Open/Short/Load "
-                                 "individually). That tab also shows the folder AntScopeZ is "
-                                 "using for calibration files, if you're trying to place existing "
-                                 "ones by hand."));
-        ui->checkBoxCalibration->blockSignals(true);
-        ui->checkBoxCalibration->setCheckState(Qt::Unchecked);
-        ui->checkBoxCalibration->blockSignals(false);
-    }
-    else
-    {
-        // Applies to scans from now on; existing measurements keep theirs.
-        m_calibration->on_enableOSLCalibration(checked);
-        updateCorrectionsStatusLabel();
-    }
-}
-
 void MainWindow::closeSettingsDialog()
 {
     if (m_settingsDialog == nullptr)
@@ -534,13 +500,9 @@ void MainWindow::closeSettingsDialog()
     ui->fullBtn->setEnabled(state);
     ui->fullBtn->setChecked(false);
 
-    //---vnn_02_copy--for check_box calibrations unlock-faster--
     bool force = true;
     m_calibration->cancel();
     m_calibration->start(force);
-    //ui->checkBoxCalibration->setEnabled(m_calibration->isCalibrationPerformed());
-    //ui->checkBoxCalibration->setChecked(m_calibration->getCalibrationEnabled());
-    //------
     QTimer::singleShot(1, this, [this]() { on_tabWidget_currentChanged(ui->tabWidget->currentIndex()); });
 }
 

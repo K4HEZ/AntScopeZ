@@ -985,30 +985,24 @@ Was computed from Window Background, now directly-editable.</string>
       <attribute name="title">
        <string>OSL Calibration</string>
       </attribute>
-      <layout class="QFormLayout" name="formLayout_8">
-       <item row="0" column="0">
-        <layout class="QFormLayout" name="formLayout">
-         <item row="0" column="0">
-          <widget class="QGroupBox" name="groupBox_6">
-           <property name="title">
-            <string>Calibration Wizard</string>
-           </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_18">
+      <layout class="QVBoxLayout" name="verticalLayout_osl">
+       <item>
+        <widget class="QGroupBox" name="groupBoxSoftwareCalibration">
+         <property name="title">
+          <string>Software Calibration</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_softwareCalibration">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_calibEnable">
             <item>
-             <widget class="QPushButton" name="calibWizard">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>24</height>
-               </size>
-              </property>
+             <widget class="QCheckBox" name="checkBoxCalibration">
               <property name="text">
-               <string>Start</string>
+               <string>Enable Software Calibration</string>
               </property>
              </widget>
             </item>
             <item>
-             <spacer name="horizontalSpacer_6">
+             <spacer name="horizontalSpacer_calibEnable">
               <property name="orientation">
                <enum>Qt::Orientation::Horizontal</enum>
               </property>
@@ -1020,6 +1014,26 @@ Was computed from Window Background, now directly-editable.</string>
               </property>
              </spacer>
             </item>
+            <item>
+             <widget class="QToolButton" name="oslHelpBtn">
+              <property name="toolTip">
+               <string>Open the User Guide to the Software Calibration section</string>
+              </property>
+              <property name="text">
+               <string>?</string>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>24</width>
+                <height>24</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_analyzerFqRange">
             <item>
              <widget class="QLabel" name="label_3">
               <property name="text">
@@ -1046,185 +1060,353 @@ Was computed from Window Background, now directly-editable.</string>
               </property>
              </widget>
             </item>
-           </layout>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QGroupBox" name="groupBox_3">
-           <property name="title">
-            <string>Open</string>
-           </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_12">
             <item>
-             <widget class="QLabel" name="labelOpenState">
+             <widget class="QLabel" name="label_analyzerFqStart">
               <property name="text">
-               <string>Not chosen</string>
+               <string>Start</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QProgressBar" name="openProgressBar">
-              <property name="enabled">
+             <widget class="QLineEdit" name="lineEditAnalyzerFqStart">
+              <!-- Read-only, hard coded to the connected analyzer's hardware
+                   minimum frequency; see Settings::setAnalyzer(). -->
+              <property name="readOnly">
                <bool>true</bool>
               </property>
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>24</height>
-               </size>
-              </property>
-              <property name="value">
-               <number>0</number>
+              <property name="alignment">
+               <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="openOpenFileBtn">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>24</height>
-               </size>
-              </property>
+             <widget class="QLabel" name="label_analyzerFqStop">
               <property name="text">
-               <string>Open file</string>
+               <string>Stop</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="openCalibBtn">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>24</height>
-               </size>
+             <widget class="QLineEdit" name="lineEditAnalyzerFqStop">
+              <!-- Read-only, hard coded to the connected analyzer's hardware
+                   maximum frequency; see Settings::setAnalyzer(). -->
+              <property name="readOnly">
+               <bool>true</bool>
               </property>
-              <property name="text">
-               <string>Start Open Calibration</string>
+              <property name="alignment">
+               <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
               </property>
              </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_analyzerFqRange">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
             </item>
            </layout>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QGroupBox" name="groupBox_4">
-           <property name="title">
-            <string>Short</string>
-           </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_13">
+          </item>
+          <item>
+           <widget class="QLabel" name="labelCalibrationPath">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="labelCalibSummary">
+            <!-- Z0/range/points the CURRENTLY saved calibration was
+                captured with (Calibration::calibZ0()/calibStartFqMHz()/
+                etc, loaded from the per-serial calibration.ini), not the
+                live Points field above, which only applies to the next
+                wizard run. -->
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_calibWizardBtn">
             <item>
-             <widget class="QLabel" name="labelShortState">
+             <widget class="QPushButton" name="calibWizardBtn">
               <property name="text">
-               <string>Not chosen</string>
+               <string>Calibration Wizard...</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QProgressBar" name="shortProgressBar">
-              <property name="minimumSize">
+             <spacer name="horizontalSpacer_calibWizardBtn">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
                <size>
-                <width>0</width>
-                <height>24</height>
+                <width>40</width>
+                <height>20</height>
                </size>
               </property>
-              <property name="value">
-               <number>0</number>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="shortOpenFileBtn">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>24</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Open file</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="shortCalibBtn">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>24</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Start Short Calibration</string>
-              </property>
-             </widget>
+             </spacer>
             </item>
            </layout>
-          </widget>
-         </item>
-         <item row="4" column="0">
-          <widget class="QGroupBox" name="groupBox_5">
-           <property name="title">
-            <string>Load</string>
-           </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_16">
-            <item>
-             <widget class="QLabel" name="labelLoadState">
-              <property name="text">
-               <string>Not chosen</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QProgressBar" name="loadProgressBar">
-              <property name="minimumSize">
+          </item>
+          <item>
+           <layout class="QGridLayout" name="gridLayout_oslStatus">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_open">
+              <property name="maximumSize">
                <size>
-                <width>0</width>
-                <height>24</height>
-               </size>
-              </property>
-              <property name="value">
-               <number>0</number>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="loadOpenFileBtn">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>24</height>
+                <width>50</width>
+                <height>16777215</height>
                </size>
               </property>
               <property name="text">
-               <string>Open file</string>
+               <string>Open</string>
               </property>
              </widget>
             </item>
-            <item>
-             <widget class="QPushButton" name="loadCalibBtn">
-              <property name="minimumSize">
+            <item row="0" column="1">
+             <widget class="QLabel" name="labelOpenFilename">
+              <property name="maximumSize">
                <size>
-                <width>0</width>
-                <height>24</height>
+                <width>140</width>
+                <height>16777215</height>
                </size>
               </property>
               <property name="text">
-               <string>Start Load Calibration</string>
+               <string>—</string>
               </property>
              </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QLabel" name="labelOpenStatus">
+              <property name="text">
+               <string>Not Performed</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_short">
+              <property name="maximumSize">
+               <size>
+                <width>50</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Short</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLabel" name="labelShortFilename">
+              <property name="maximumSize">
+               <size>
+                <width>140</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>—</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QLabel" name="labelShortStatus">
+              <property name="text">
+               <string>Not Performed</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_load">
+              <property name="maximumSize">
+               <size>
+                <width>50</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Load</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLabel" name="labelLoadFilename">
+              <property name="maximumSize">
+               <size>
+                <width>140</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>—</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QLabel" name="labelLoadStatus">
+              <property name="text">
+               <string>Not Performed</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_test">
+              <property name="maximumSize">
+               <size>
+                <width>50</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Test</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QLabel" name="labelTestFilename">
+              <property name="maximumSize">
+               <size>
+                <width>140</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>—</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <layout class="QHBoxLayout" name="horizontalLayout_testStatus">
+              <item>
+               <widget class="QLabel" name="labelTestStatus">
+                <property name="toolTip">
+                 <string>Measures a connected load and compares it against the system impedance</string>
+                </property>
+                <property name="text">
+                 <string>Not Performed</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="viewTestPlotBtn">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="toolTip">
+                 <string>Show the per-point error plot from the last Test</string>
+                </property>
+                <property name="text">
+                 <string>View Plot...</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </item>
            </layout>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="labelCalibrationPath">
-           <property name="text">
-            <string>TextLabel</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBoxVnaAirCalibration">
+         <property name="title">
+          <string>VNA Air Calibration</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_vnaAirCalibration">
+          <item>
+           <widget class="QLabel" name="label_vnaAirCalibSlot">
+            <property name="text">
+             <string>On-board calibration</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="vnaAirCalibCombo">
+            <!-- Placeholder only, not wired up yet (op 6/9 save/recall,
+                 8 slots for the bridge's own "vnaair" engine per
+                 research/vnaair-protocol.md and research/calibration
+                 redesign.md; slot count for the "device" engine is
+                 unconfirmed, no hardware yet). Real items will need to
+                 come from a live status/engine query, not this static
+                 list, once we have a unit to test against. -->
+            <item>
+             <property name="text">
+              <string>Calibration 1 - Empty</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Calibration 2 - Empty</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Calibration 3 - Empty</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Calibration 4 - Empty</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Calibration 5 - Empty</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Calibration 6 - Empty</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Calibration 7 - Empty</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Calibration 8 - Empty</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_vnaAir">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_osl">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </widget>
@@ -2929,14 +3111,8 @@ USB/serial only. Bluetooth always drains by waiting.</string>
   <tabstop>measureSystemComboBox</tabstop>
   <tabstop>lineEdit_systemImpedance</tabstop>
   <tabstop>lineEdit_analyzerTimeout</tabstop>
-  <tabstop>calibWizard</tabstop>
   <tabstop>lineEditPoints</tabstop>
-  <tabstop>openOpenFileBtn</tabstop>
-  <tabstop>openCalibBtn</tabstop>
-  <tabstop>shortOpenFileBtn</tabstop>
-  <tabstop>shortCalibBtn</tabstop>
-  <tabstop>loadOpenFileBtn</tabstop>
-  <tabstop>loadCalibBtn</tabstop>
+  <tabstop>calibWizardBtn</tabstop>
   <tabstop>velocityFactor</tabstop>
   <tabstop>cableLen</tabstop>
   <tabstop>cableR0</tabstop>

@@ -597,6 +597,10 @@ private slots:
     void on_actionExit_triggered();
     void on_actionAbout_triggered();
     void on_actionUserGuide_triggered();
+    // Shared by on_actionUserGuide_triggered() and the OSL tab's "?" button
+    // -- anchor is a docs/user-guide.md heading slug, empty opens the guide
+    // at the top.
+    void openUserGuideSection(const QString& anchor = QString());
     void on_actionMarkerComparison_triggered();
     void on_actionModeSweep_triggered();
     void on_actionModeTuning_triggered();
@@ -627,7 +631,6 @@ private slots:
     void on_bandChanged(QString);
     void on_lineEdit_points_editingFinished();
     void on_speedAccuracySlider_valueChanged(int value);
-    void calibrationToggled(bool checked);
     void on_dataChanged(qint64 _center_khz, qint64 _range_khz, qint32 _dots);
     void on_importFinished(double _fqMin, double _fqMax);
     void onFullRange(bool);
@@ -645,8 +648,6 @@ private slots:
     void onFirmwareInfoReady(const QString& mainText, const QString& details);
     // Core userMessage() signals (AnalyzerPro, Calibration) -> message box.
     void onUserMessage(UserMessageLevel level, const QString& title, const QString& text);
-    // Calibration::standardPromptRequested() -- "connect the next standard".
-    void onCalibrationPrompt(const QString& title, const QString& text);
 
     // multi-tab
 #ifndef NO_MULTITAB
