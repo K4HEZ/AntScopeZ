@@ -1,7 +1,6 @@
 #include "swrchart.h"
 
 #include <QFontMetricsF>
-#include <QMouseEvent>
 #include <cmath>
 #include <QPainter>
 #include <QVariantMap>
@@ -9,12 +8,26 @@
 namespace {
 const qreal kLeftMargin = 28;
 const qreal kBottomMargin = 20;
+
+// Same bands as LiveDataPage.qml's swrColor() -- four flat bands, not a
+// gradient: <2 green, 2-<3 yellow, 3-4 orange, >4 red, so the trace reads
+// at a glance instead of every SWR value (good match or bad) drawing in
+// the same flat green.
+QColor swrColor(double swr)
+{
+    if (swr < 2.0)
+        return QColor(0x5C, 0xC9, 0x8A); // green
+    if (swr < 3.0)
+        return QColor(0xE8, 0xC5, 0x47); // yellow
+    if (swr <= 4.0)
+        return QColor(0xF2, 0xA3, 0x3A); // orange
+    return QColor(0xF2, 0x6A, 0x6A); // red
+}
 }
 
 SwrChart::SwrChart(QQuickItem* parent)
     : QQuickPaintedItem(parent)
 {
-    setAcceptedMouseButtons(Qt::LeftButton);
     setImplicitHeight(220);
     m_edgeTimer.setInterval(16);
     connect(&m_edgeTimer, &QTimer::timeout, this, &SwrChart::edgeScrollTick);
@@ -94,14 +107,6 @@ double SwrChart::viewPosition() const
     return n < 2 ? 0 : m_first / (n - 1);
 }
 
-double SwrChart::fitPixelsPerPoint() const
-{
-    const int n = m_fq.size();
-    if (n < 2)
-        return 0;
-    return qMax(0.5, std::floor(plotRect().width() / (n - 1) * 10) / 10);
-}
-
 void SwrChart::setViewPosition(double v)
 {
     setFirst(v * (m_fq.size() - 1));
@@ -109,11 +114,67 @@ void SwrChart::setViewPosition(double v)
 
 void SwrChart::setMinPixelsPerPoint(double v)
 {
-    v = qMax(0.5, v);
+    v = qBound(0.5, v, 60.0);
     if (qFuzzyCompare(m_minPx, v))
         return;
     m_minPx = v;
     setFirst(m_first);
+    emit viewChanged();
+    update();
+}
+
+double SwrChart::indexAt(qreal screenX) const
+{
+    const QRectF plot = plotRect();
+    if (m_fq.size() < 2 || plot.width() <= 0)
+        return m_first;
+    return m_first + (screenX - plot.left()) / plot.width() * visibleSpan();
+}
+
+void SwrChart::beginGesture(qreal screenX)
+{
+    if (m_fq.size() < 2)
+        return;
+    m_gestureAnchorIndex = indexAt(screenX);
+    m_gestureBaseMinPx = m_minPx;
+}
+
+void SwrChart::updateGesture(qreal scale, qreal screenX)
+{
+    const QRectF plot = plotRect();
+    if (m_fq.size() < 2 || plot.width() <= 0)
+        return;
+    m_minPx = qBound(0.5, m_gestureBaseMinPx * scale, 60.0);
+    const double frac = (screenX - plot.left()) / plot.width();
+    setFirst(m_gestureAnchorIndex - frac * visibleSpan());
+    emit viewChanged();
+    update();
+}
+
+void SwrChart::wheelZoom(qreal factor, qreal screenX)
+{
+    const QRectF plot = plotRect();
+    if (m_fq.size() < 2 || plot.width() <= 0)
+        return;
+    const double anchorIndex = indexAt(screenX);
+    m_minPx = qBound(0.5, m_minPx * factor, 60.0);
+    const double frac = (screenX - plot.left()) / plot.width();
+    setFirst(anchorIndex - frac * visibleSpan());
+    emit viewChanged();
+    update();
+}
+
+void SwrChart::setViewWindow(qreal position, qreal size)
+{
+    const int n = m_fq.size();
+    if (n < 2)
+        return;
+    const QRectF plot = plotRect();
+    if (plot.width() <= 0)
+        return;
+    const double wantedSpan = qBound(1.0, size * (n - 1), double(n - 1));
+    m_minPx = qBound(0.5, plot.width() / wantedSpan, 60.0);
+    setFirst(position * (n - 1));
     emit viewChanged();
     update();
 }
@@ -156,7 +217,7 @@ void SwrChart::selectAt(qreal x)
     if (plot.width() <= 0)
         return;
     const double span = visibleSpan();
-    const double idx = m_first + (x - plot.left()) / plot.width() * span;
+    const double idx = indexAt(x);
     const int lo = int(std::ceil(m_first - 1e-9));
     const int hi = qMin(int(m_fq.size()) - 1, int(std::floor(m_first + span + 1e-9)));
     m_dragSelecting = true;
@@ -184,55 +245,39 @@ void SwrChart::edgeScrollTick()
     selectAt(m_dragX);
 }
 
-void SwrChart::mousePressEvent(QMouseEvent* event)
+void SwrChart::beginSelect(qreal x, qreal y)
 {
-    // Keep the drag here; otherwise a vertical move hands it to the
-    // enclosing Flickable and horizontal tracking stops.
-    setKeepMouseGrab(true);
-    setKeepTouchGrab(true);
-    const QPointF pos = event->position();
     // A press on the frequency labels pans; on the plot it moves the marker.
-    if (pos.y() > plotRect().bottom() && viewSize() < 1) {
+    if (y > plotRect().bottom() && viewSize() < 1) {
         m_panning = true;
-        m_panStartX = pos.x();
+        m_panStartX = x;
         m_panStartFirst = m_first;
         return;
     }
     m_dragging = true;
-    m_dragX = pos.x();
+    m_dragX = x;
     m_edgeClock.start();
     m_edgeTimer.start();
-    selectAt(pos.x());
+    selectAt(x);
 }
 
-void SwrChart::mouseMoveEvent(QMouseEvent* event)
+void SwrChart::updateSelect(qreal x)
 {
     if (m_panning) {
         const qreal w = plotRect().width();
         if (w > 0)
-            setFirst(m_panStartFirst - (event->position().x() - m_panStartX) / w * visibleSpan());
+            setFirst(m_panStartFirst - (x - m_panStartX) / w * visibleSpan());
         return;
     }
-    m_dragX = event->position().x();
+    m_dragX = x;
     selectAt(m_dragX);
 }
 
-void SwrChart::mouseReleaseEvent(QMouseEvent*)
+void SwrChart::endSelect()
 {
     m_panning = false;
     m_dragging = false;
     m_edgeTimer.stop();
-    setKeepMouseGrab(false);
-    setKeepTouchGrab(false);
-}
-
-void SwrChart::mouseUngrabEvent()
-{
-    m_panning = false;
-    m_dragging = false;
-    m_edgeTimer.stop();
-    setKeepMouseGrab(false);
-    setKeepTouchGrab(false);
 }
 
 void SwrChart::paint(QPainter* painter)
@@ -332,11 +377,17 @@ void SwrChart::paint(QPainter* painter)
         }
     }
 
-    QPen curvePen(QColor(30, 180, 40));
-    curvePen.setWidthF(2.5);
-    curvePen.setJoinStyle(Qt::RoundJoin);
-    painter->setPen(curvePen);
-    painter->drawPolyline(polyline);
+    // Each segment colored by its SWR, not one flat color -- a 10:1 run and
+    // a 1.2:1 run should not look identical.
+    for (int i = 1; i < polyline.size(); ++i) {
+        const double segSwr = (m_swr[firstIdx + i - 1] + m_swr[firstIdx + i]) / 2.0;
+        QPen curvePen(swrColor(segSwr));
+        curvePen.setWidthF(2.5);
+        curvePen.setJoinStyle(Qt::RoundJoin);
+        curvePen.setCapStyle(Qt::RoundCap);
+        painter->setPen(curvePen);
+        painter->drawLine(polyline[i - 1], polyline[i]);
+    }
 
     // Cursor on the selected point; falls back to the min-SWR point of the
     // window when nothing is selected.
@@ -348,7 +399,7 @@ void SwrChart::paint(QPainter* painter)
         painter->setPen(dash);
         painter->drawLine(QPointF(marker.x(), plot.top()), QPointF(marker.x(), plot.bottom()));
         painter->setPen(Qt::NoPen);
-        painter->setBrush(QColor(30, 180, 40));
+        painter->setBrush(swrColor(m_swr[markIdx]));
         painter->drawEllipse(marker, 5, 5);
     }
     painter->setClipping(false);

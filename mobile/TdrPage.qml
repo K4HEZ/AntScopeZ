@@ -157,51 +157,54 @@ Page {
                 valueUnit: page.valueUnit
                 selectedIndex: page.selIndex
                 onPointSelected: (index) => page.selIndex = index
-            }
 
-            ScrollBar {
-                id: panBar
-                orientation: Qt.Horizontal
-                Layout.fillWidth: true
-                visible: chart.viewSize < 1
-                policy: ScrollBar.AlwaysOn
-                size: chart.viewSize
-                onPositionChanged: if (pressed) chart.viewPosition = position
-            }
-            Binding {
-                target: panBar
-                property: "position"
-                value: chart.viewPosition
-                when: !panBar.pressed
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 10
-                enabled: AnalyzerController.tdrHasData
-                Label { text: qsTr("Zoom") }
-                // Logarithmic, so each step feels like the same change.
-                Slider {
-                    from: 0
-                    to: Math.max(0.01, Math.log(chart.maxZoom) / Math.LN2)
-                    value: Math.log(chart.zoom) / Math.LN2
-                    onMoved: chart.zoom = Math.pow(2, value)
-                    Layout.fillWidth: true
+                // See SwrPage.qml's chart for why these handlers exist (and
+                // why there's no PinchHandler here -- touch pan/zoom goes
+                // through the ChartOverview strip below instead), plus the
+                // mouse/trackpad gesture notes for why wheel and
+                // trackpad-glide share one code path.
+                PointHandler {
+                    target: null
+                    acceptedDevices: PointerDevice.TouchScreen | PointerDevice.Mouse | PointerDevice.Stylus
+                    onActiveChanged: {
+                        if (active) chart.beginSelect(point.position.x)
+                        else chart.endSelect()
+                    }
+                    onPointChanged: if (active) chart.updateSelect(point.position.x)
                 }
-                Label {
-                    text: chart.zoom.toFixed(1) + "×"
-                    Layout.preferredWidth: 48
-                    horizontalAlignment: Text.AlignRight
+
+                WheelHandler {
+                    target: null
+                    acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                    onWheel: (event) => {
+                        const delta = event.angleDelta.y !== 0 ? event.angleDelta.y : event.pixelDelta.y * 8
+                        chart.wheelZoom(Math.pow(1.0015, delta), event.x)
+                    }
                 }
-                Button { text: qsTr("Fit"); onClicked: chart.fit() }
             }
 
+            ChartOverview {
+                id: overview
+                Layout.fillWidth: true
+                onRangeChanged: (position, size) => chart.setViewWindow(position, size)
+            }
+            Binding { target: overview; property: "position"; value: chart.viewPosition; when: !overview.dragging }
+            Binding { target: overview; property: "size"; value: chart.viewSize; when: !overview.dragging }
+
+            // wrapMode + fillWidth matter here, not just cosmetics: a Label
+            // left to its unwrapped implicit width becomes the effective
+            // minimum width Qt Quick Layouts enforces for the whole shared
+            // column, which was silently stretching the Scan button (and
+            // chart) past the screen once this text grew past the short
+            // "Run a TDR scan..." placeholder.
             Label {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
                 text: page.selIndex >= 0 && page.selIndex < page.traceValues.length
                       ? qsTr("%1 %2:  %3 %4").arg(fmt(page.selIndex * AnalyzerController.tdrXStep, 2))
                             .arg(AnalyzerController.tdrUnit).arg(fmt(page.traceValues[page.selIndex], 3))
                             .arg(page.valueUnit)
-                      : (AnalyzerController.tdrHasData ? qsTr("Touch the chart to read a point.")
+                      : (AnalyzerController.tdrHasData ? qsTr("Touch the chart to read a point; drag the bar below to pan and zoom.")
                                                         : qsTr("Run a TDR scan to see the trace."))
                 opacity: 0.8
             }

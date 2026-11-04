@@ -20,6 +20,43 @@ Page {
         anchors.margins: 16
         spacing: 16
 
+        Label { text: qsTr("Appearance"); font.bold: true }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 0
+            Button {
+                text: qsTr("Light")
+                highlighted: AppTheme.themeMode === "Light"
+                Layout.fillWidth: true
+                onClicked: AppTheme.themeMode = "Light"
+            }
+            Button {
+                text: qsTr("Dark")
+                highlighted: AppTheme.themeMode === "Dark"
+                Layout.fillWidth: true
+                onClicked: AppTheme.themeMode = "Dark"
+            }
+            Button {
+                text: qsTr("System")
+                highlighted: AppTheme.themeMode === "System"
+                Layout.fillWidth: true
+                onClicked: AppTheme.themeMode = "System"
+            }
+        }
+
+        Label { text: qsTr("Region"); font.bold: true }
+
+        ComboBox {
+            id: regionCombo
+            Layout.fillWidth: true
+            implicitHeight: 56
+            font.pixelSize: 16
+            model: BandPresets.regions
+            currentIndex: model.indexOf(BandPresets.region)
+            onActivated: BandPresets.region = model[currentIndex]
+        }
+
         Label { text: qsTr("Add margin to scans"); font.bold: true }
 
         RowLayout {

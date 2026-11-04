@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Controls.Material
 import QtQuick.Layouts
 
 ApplicationWindow {
@@ -8,6 +9,10 @@ ApplicationWindow {
     height: 800
     visible: true
     title: "AntScopeZ"
+
+    Material.theme: AppTheme.themeMode === "Light" ? Material.Light
+                  : AppTheme.themeMode === "Dark"  ? Material.Dark
+                  : Material.System
 
     readonly property var pages: [
         { title: qsTr("Connection"), source: "ConnectionPage.qml" },

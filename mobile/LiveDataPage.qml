@@ -3,25 +3,15 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 Page {
-    // Dark green at 1:1, yellow 3:1, orange 5:1, red toward 10:1.
-    readonly property var swrStops: [
-        { swr: 1,  r: 0.04, g: 0.48, b: 0.12 },
-        { swr: 3,  r: 0.90, g: 0.78, b: 0.00 },
-        { swr: 5,  r: 1.00, g: 0.55, b: 0.00 },
-        { swr: 10, r: 0.82, g: 0.00, b: 0.00 }
-    ]
+    // Four flat bands, not a gradient: <2 green, 2-<3 yellow, 3-4 orange, >4 red.
     function swrColor(swr) {
-        if (swr <= swrStops[0].swr)
-            return Qt.rgba(swrStops[0].r, swrStops[0].g, swrStops[0].b, 1)
-        for (var i = 1; i < swrStops.length; i++) {
-            if (swr <= swrStops[i].swr) {
-                const a = swrStops[i - 1], b = swrStops[i]
-                const t = (swr - a.swr) / (b.swr - a.swr)
-                return Qt.rgba(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t, a.b + (b.b - a.b) * t, 1)
-            }
-        }
-        const last = swrStops[swrStops.length - 1]
-        return Qt.rgba(last.r, last.g, last.b, 1)
+        if (swr < 2)
+            return "#5CC98A" // green
+        if (swr < 3)
+            return "#E8C547" // yellow
+        if (swr <= 4)
+            return "#F2A33A" // orange
+        return "#F26A6A" // red
     }
 
     Component.onCompleted: fqField.text = ((AnalyzerController.fromKHz + AnalyzerController.toKHz) / 2).toFixed(0)

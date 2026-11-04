@@ -69,15 +69,6 @@ Page {
                 Label { text: qsTr("Band"); font.bold: true }
 
                 ComboBox {
-                    id: regionCombo
-                    Layout.fillWidth: true
-                    implicitHeight: 56
-                    font.pixelSize: 16
-                    model: BandPresets.regions
-                    currentIndex: model.indexOf(BandPresets.region)
-                    onActivated: BandPresets.region = model[currentIndex]
-                }
-                ComboBox {
                     id: bandCombo
                     Layout.fillWidth: true
                     model: [qsTr("Select a band")].concat(BandPresets.bandLabels)

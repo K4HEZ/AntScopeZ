@@ -1,6 +1,5 @@
 #include "tdrchart.h"
 
-#include <QMouseEvent>
 #include <QPainter>
 #include <algorithm>
 
@@ -12,7 +11,6 @@ const qreal kBottomMargin = 20;
 TdrChart::TdrChart(QQuickItem* parent)
     : QQuickPaintedItem(parent)
 {
-    setAcceptedMouseButtons(Qt::LeftButton);
     setImplicitHeight(220);
     m_edgeTimer.setInterval(16);
     connect(&m_edgeTimer, &QTimer::timeout, this, &TdrChart::edgeScrollTick);
@@ -66,6 +64,18 @@ void TdrChart::setFirst(double first)
     if (qFuzzyCompare(m_first + 1, first + 1))
         return;
     m_first = first;
+    emit viewChanged();
+    update();
+}
+
+void TdrChart::setViewWindow(qreal position, qreal size)
+{
+    const int n = m_values.size();
+    if (n < 2)
+        return;
+    const double wantedSpan = qBound(16.0, size * (n - 1), double(n - 1));
+    m_zoom = qBound(1.0, (n - 1) / wantedSpan, maxZoom());
+    setFirst(position * (n - 1));
     emit viewChanged();
     update();
 }
@@ -127,10 +137,54 @@ void TdrChart::selectAt(qreal x)
     const QRectF plot = plotRect();
     if (plot.width() <= 0)
         return;
-    const double idx = m_first + (x - plot.left()) / plot.width() * visibleSpan();
+    const double idx = indexAt(x);
     const int lo = int(std::ceil(m_first - 1e-9));
     const int hi = qMin(int(m_values.size()) - 1, int(std::floor(m_first + visibleSpan() + 1e-9)));
     emit pointSelected(qBound(lo, int(qRound(idx)), hi));
+}
+
+double TdrChart::indexAt(qreal screenX) const
+{
+    const QRectF plot = plotRect();
+    if (m_values.size() < 2 || plot.width() <= 0)
+        return m_first;
+    return m_first + (screenX - plot.left()) / plot.width() * visibleSpan();
+}
+
+// Same anchor-preserving approach as SwrChart::beginGesture()/updateGesture().
+void TdrChart::beginGesture(qreal screenX)
+{
+    if (m_values.size() < 2)
+        return;
+    m_gestureAnchorIndex = indexAt(screenX);
+    m_gestureBaseZoom = m_zoom;
+}
+
+void TdrChart::updateGesture(qreal scale, qreal screenX)
+{
+    const int n = m_values.size();
+    const QRectF plot = plotRect();
+    if (n < 2 || plot.width() <= 0)
+        return;
+    m_zoom = qBound(1.0, m_gestureBaseZoom * scale, maxZoom());
+    const double frac = (screenX - plot.left()) / plot.width();
+    m_first = qBound(0.0, m_gestureAnchorIndex - frac * visibleSpan(), (n - 1) - visibleSpan());
+    emit viewChanged();
+    update();
+}
+
+void TdrChart::wheelZoom(qreal factor, qreal screenX)
+{
+    const int n = m_values.size();
+    const QRectF plot = plotRect();
+    if (n < 2 || plot.width() <= 0)
+        return;
+    const double anchorIndex = indexAt(screenX);
+    m_zoom = qBound(1.0, m_zoom * factor, maxZoom());
+    const double frac = (screenX - plot.left()) / plot.width();
+    m_first = qBound(0.0, anchorIndex - frac * visibleSpan(), (n - 1) - visibleSpan());
+    emit viewChanged();
+    update();
 }
 
 // Dragging near (or past) a plot edge scrolls under the marker, faster the
@@ -153,38 +207,25 @@ void TdrChart::edgeScrollTick()
     selectAt(m_dragX);
 }
 
-void TdrChart::mousePressEvent(QMouseEvent* event)
+void TdrChart::beginSelect(qreal x)
 {
-    // Same reasoning as SwrChart: keep the drag out of the enclosing Flickable.
-    setKeepMouseGrab(true);
-    setKeepTouchGrab(true);
     m_dragging = true;
-    m_dragX = event->position().x();
+    m_dragX = x;
     m_edgeClock.start();
     m_edgeTimer.start();
     selectAt(m_dragX);
 }
 
-void TdrChart::mouseMoveEvent(QMouseEvent* event)
+void TdrChart::updateSelect(qreal x)
 {
-    m_dragX = event->position().x();
+    m_dragX = x;
     selectAt(m_dragX);
 }
 
-void TdrChart::mouseReleaseEvent(QMouseEvent*)
+void TdrChart::endSelect()
 {
     m_dragging = false;
     m_edgeTimer.stop();
-    setKeepMouseGrab(false);
-    setKeepTouchGrab(false);
-}
-
-void TdrChart::mouseUngrabEvent()
-{
-    m_dragging = false;
-    m_edgeTimer.stop();
-    setKeepMouseGrab(false);
-    setKeepTouchGrab(false);
 }
 
 void TdrChart::paint(QPainter* painter)

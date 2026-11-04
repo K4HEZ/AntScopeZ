@@ -37,6 +37,8 @@ qt_add_executable(AntScopeZMobile
     tdranalysis.h
     bandpresets.cpp
     bandpresets.h
+    apptheme.cpp
+    apptheme.h
     mobilesettings.h
 )
 
@@ -56,6 +58,7 @@ qt_add_qml_module(AntScopeZMobile
         SettingsPage.qml
         AboutPage.qml
         ParametersGrid.qml
+        ChartOverview.qml
 )
 
 # The desktop ships shared/itu-regions-defaults.txt next to its binary via

@@ -46,9 +46,36 @@ public:
     double viewSize() const;
     double viewPosition() const;
     void setViewPosition(double v);
-    // Density (px/point) at which the whole scan just fits, rounded down to
-    // 0.1 and floored at the 0.5 minimum; 0 with no scan.
-    Q_INVOKABLE double fitPixelsPerPoint() const;
+    // Wheel/trackpad-glide zoom support (mouse/trackpad only -- see
+    // SwrPage.qml): keeps whatever index was under screenX fixed on screen
+    // while the zoom changes, so it zooms exactly at the cursor. Also used
+    // by a pinch gesture on a non-touch pointer (e.g. a trackpad's native
+    // gesture channel); not used for touch -- see beginSelect()'s comment.
+    Q_INVOKABLE void beginGesture(qreal screenX);
+    Q_INVOKABLE void updateGesture(qreal scale, qreal screenX);
+    Q_INVOKABLE void wheelZoom(qreal factor, qreal screenX);
+    // Marker select/pan, driven by a QML PointHandler rather than the old
+    // mousePressEvent()-style overrides. The intent was for a PinchHandler
+    // to take the point over from this handler when a second finger
+    // arrives, via Qt Quick's grab-negotiation (grabPermissions) -- in
+    // principle this works (and does, for a trackpad's separate gesture
+    // channel), but on a real touchscreen the single-finger grab in
+    // practice still wins and a two-finger pinch never completes. So touch
+    // pan/zoom doesn't go through PinchHandler at all; see SwrPage.qml's
+    // ChartOverview strip and setViewWindow() below instead. This handler
+    // is kept as-is (PointHandler, not the old mouse overrides) because
+    // it's still the right tool for marker select on its own.
+    Q_INVOKABLE void beginSelect(qreal x, qreal y);
+    Q_INVOKABLE void updateSelect(qreal x);
+    Q_INVOKABLE void endSelect();
+    // Overview-strip support: jump straight to an arbitrary window
+    // [position, position+size] (0..1 fractions of the full point range).
+    // Unlike beginGesture()/wheelZoom(), which incrementally adjust from
+    // wherever the view currently is, this is an absolute jump -- needed
+    // because a scan's frequency range can span orders of magnitude (100
+    // kHz to several GHz), where incremental pan/zoom (or edge-autoscroll)
+    // would take many steps to get anywhere.
+    Q_INVOKABLE void setViewWindow(qreal position, qreal size);
 
 signals:
     void pointSelected(int index);
@@ -56,19 +83,18 @@ signals:
 
 protected:
     void geometryChange(const QRectF& newGeometry, const QRectF& oldGeometry) override;
-    void mousePressEvent(QMouseEvent* event) override;
-    void mouseMoveEvent(QMouseEvent* event) override;
-    void mouseReleaseEvent(QMouseEvent* event) override;
-    void mouseUngrabEvent() override;
 
 private:
     QRectF plotRect() const;
     void selectAt(qreal x);
+    double indexAt(qreal screenX) const; // fractional point index under a screen x
     double visibleSpan() const; // in point-index units
     void setFirst(double first);
     double fqAt(double index) const;
     int m_selectedIndex = -1;
     double m_minPx = 5;
+    double m_gestureAnchorIndex = 0; // index held fixed under the gesture's screen position
+    double m_gestureBaseMinPx = 5; // m_minPx at the start of the current pinch
     double m_first = 0; // index of the leftmost visible point
     void edgeScrollTick();
     bool m_panning = false;

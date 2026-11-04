@@ -52,16 +52,23 @@ public:
     double maxZoom() const;
     void setZoom(double zoom);
     Q_INVOKABLE void fit() { setZoom(1); }
+    // Wheel/trackpad-glide zoom support -- see SwrChart's own comment on the
+    // same pair (mouse/trackpad only, not used for touch).
+    Q_INVOKABLE void beginGesture(qreal screenX);
+    Q_INVOKABLE void updateGesture(qreal scale, qreal screenX);
+    Q_INVOKABLE void wheelZoom(qreal factor, qreal screenX);
+    // Marker select, driven by a QML PointHandler -- see SwrChart's own
+    // comment on the same pair for why, and for why touch pan/zoom doesn't
+    // go through PinchHandler at all.
+    Q_INVOKABLE void beginSelect(qreal x);
+    Q_INVOKABLE void updateSelect(qreal x);
+    Q_INVOKABLE void endSelect();
+    // Overview-strip support -- see SwrChart::setViewWindow()'s comment.
+    Q_INVOKABLE void setViewWindow(qreal position, qreal size);
 
 signals:
     void pointSelected(int index);
     void viewChanged();
-
-protected:
-    void mousePressEvent(QMouseEvent* event) override;
-    void mouseMoveEvent(QMouseEvent* event) override;
-    void mouseReleaseEvent(QMouseEvent* event) override;
-    void mouseUngrabEvent() override;
 
 private:
     QRectF plotRect() const;
@@ -69,12 +76,15 @@ private:
     void setFirst(double first);
     void edgeScrollTick();
     void selectAt(qreal x);
+    double indexAt(qreal screenX) const; // fractional sample index under a screen x
     QList<double> m_values;
     double m_xStep = 1;
     QString m_unit;
     QString m_valueUnit;
     int m_selectedIndex = -1;
     double m_zoom = 1;
+    double m_gestureAnchorIndex = 0;
+    double m_gestureBaseZoom = 1;
     double m_first = 0; // index at the left edge
     bool m_dragging = false;
     qreal m_dragX = 0;
