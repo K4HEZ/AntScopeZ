@@ -1003,6 +1003,28 @@ message pointing here.
 
 <!-- SCREENSHOT: Settings dialog, OSL Calibration tab / Calibration Wizard -->
 
+"Calibration" means two different things here, and mixing them up is
+the most common source of confusion:
+
+- **Hardware calibration** -- run on the analyzer itself, from its own
+  menu/CAL slots. The data AntScopeZ receives has already been
+  corrected by the device before AntScopeZ ever sees it; AntScopeZ
+  can't see, change, or switch this off.
+- **Software (AntScopeZ OSL) calibration** -- Open/Short/Load math
+  AntScopeZ itself computes from a scan of three reference standards,
+  applied on top of whatever the analyzer sends.
+
+**Generally, use one or the other, not both.** Hardware calibration is
+simpler to reason about: what AntScopeZ shows is exactly what the
+device already corrected, nothing else layered on top. AntScopeZ's OSL
+calibration exists for the cases hardware calibration doesn't cover
+(see [Recommended approach](#recommended-approach) below) -- it's
+measured *through* whatever hardware calibration happens to be active,
+so the two *can* stack, but every extra correction is one more thing
+that can quietly drift out of sync with reality (recalibrate or switch
+slots on the device and forget to redo AntScopeZ's OSL, for example).
+Don't add it on top without a specific reason to.
+
 Up to three corrections can sit between the raw measurement and what you
 see. They apply in this order:
 
@@ -1035,6 +1057,10 @@ it.
 - **RigExpert:** analyzers ship factory-calibrated, and some models also
   offer their own user calibration from the device menu -- see your
   model's manual. *(Not something AntScopeZ checks or controls.)*
+- **VNA Air:** the bridge/NanoVNA pair handles its own calibration
+  entirely on-device, but unlike the other families above, AntScopeZ
+  *can* read back and select which saved calibration it uses -- see
+  [VNA Air calibration](#vna-air-calibration) below.
 
 **Using both.** AntScopeZ's OSL calibration is measured *through*
 whatever device calibration is active at that moment, so the two stack.
@@ -1094,12 +1120,23 @@ Settings → OSL Calibration has two ways to run it:
 
 - **Calibration Wizard** -- one **Start** button walks you through all
   three standards in order: connect Open and click OK, then Short, then
-  Load, with each step confirmed by a dialog before proceeding.
+  Load, then a final **Test** step -- connect a known load (usually
+  50 Ω/Z0) and the wizard measures it through the calibration you just
+  built, plotting the per-point error so you can judge the result
+  yourself; there's no automatic pass/fail.
 - **Individually** -- each of the Open/Short/Load sections has its own
   "Start _ Calibration" button, for redoing just one standard without
   repeating all three. Each section also has an "Open file" button, to
   load a previously-saved calibration standard from disk instead of
   re-measuring it live.
+
+**Re-verifying later.** The OSL tab's **Test** row remembers the
+wizard's last Test result -- **View Plot...** reopens it without
+re-running anything. Since that plot can be arbitrarily old (whenever
+Test last ran inside a wizard), the same dialog has a **Re-Test**
+button: measure the connected load again right now, on demand, without
+redoing Open/Short/Load. It needs an analyzer connected and overwrites
+the stored Test result (not the calibration itself) when it finishes.
 
 Performing a calibration and applying it are two separate steps. Each
 standard writes its own file (`cal_open.s1p`, `cal_short.s1p`,
@@ -1123,6 +1160,32 @@ Things worth knowing:
 - **Frequency coverage:** the calibration sweep covers the analyzer's
   full frequency range; scans are corrected by interpolating between
   calibration points.
+
+### VNA Air calibration
+
+A VNA Air bridge's calibration is run and stored on the bridge/NanoVNA
+itself -- AntScopeZ doesn't compute, verify, or apply it, since the data
+the bridge sends is already calibrated by the time it arrives. What
+AntScopeZ *can* do is read back whatever's saved there and tell the
+bridge which one to use.
+
+Settings → OSL Calibration → **VNA Air Calibration**:
+
+- The combo lists whatever's on the connected bridge's calibration
+  slots, labeled with each one's frequency range, point count, and
+  source, e.g. `Slot 1 · 400–480 MHz · 101 pts · From NanoVNA` --
+  empty slots show as `Empty`. **No calibration** turns device-side
+  calibration off entirely.
+- Picking an entry tells the bridge which saved calibration to apply;
+  it doesn't change anything AntScopeZ itself draws or computes.
+- **Refresh** re-queries the bridge, e.g. after changing something from
+  the NanoVNA's own menu instead of from here.
+
+This only *selects* among calibrations that already exist on the
+bridge/NanoVNA -- running a new calibration from AntScopeZ isn't
+supported yet. The group is also not yet tied to whether a VNA Air
+device is actually connected (that gating is planned, not done), so
+don't expect it to reflect anything meaningful until one is.
 
 ### Cable add/subtract
 
