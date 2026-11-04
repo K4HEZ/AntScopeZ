@@ -132,8 +132,18 @@ qint32 NanovnaAnalyzer::parse (QByteArray arr)
                 return arr.size();
             } else {
                 if (data.contains("Board:")) {
-                    QString board = data.replace("Board:", "");
-                    AnalyzerParameters* param = AnalyzerParameters::byName("NanoVNA");
+                    QString board = data.replace("Board:", "").trimmed();
+                    // H4 sweeps further than the plain/H/D classic-protocol
+                    // boards this app otherwise lumps under the generic
+                    // "NanoVNA" entry -- see that entry's own comment in
+                    // analyzerparameters.h. Space-insensitive match: the
+                    // real unit this was confirmed against prints
+                    // "NanoVNA-H 4", not "NanoVNA-H4".
+                    const QString boardKey = QString(board).remove(' ');
+                    AnalyzerParameters* param = boardKey.contains("NanoVNA-H4", Qt::CaseInsensitive)
+                            ? AnalyzerParameters::byName("NanoVNA-H4") : nullptr;
+                    if (param == nullptr)
+                        param = AnalyzerParameters::byName("NanoVNA");
                     if (param != nullptr)
                         emit analyzerFound(param->index());
                 }

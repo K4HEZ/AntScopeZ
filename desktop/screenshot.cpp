@@ -403,10 +403,13 @@ void Screenshot::on_newData(QByteArray data)
                 }
             }
         }
-        }else if (model == "NanoVNA") {
+        }else if (model == "NanoVNA" || model == "NanoVNA-H4") {
         // Flat big-endian RGB565 framebuffer dump, no run-length encoding
         // (issue #9) -- standard bit layout (R high 5 bits, G mid 6, B low
-        // 5), same expansion formula as every other branch here.
+        // 5), same expansion formula as every other branch here. H4 is the
+        // same classic-protocol shell/framebuffer format as the generic
+        // entry, just resolved to its own AnalyzerParameters name now (see
+        // analyzerparameters.h) -- needs the same decode path.
         while(m_inputData.length() >= 2)
         {
             int data = (((int)m_inputData.takeFirst())<<8);
@@ -612,7 +615,7 @@ void Screenshot::on_newData(QByteArray data)
             emit screenshotComplete();
             repaint();
         }
-    } else if (model == "NanoVNA") {
+    } else if (model == "NanoVNA" || model == "NanoVNA-H4") {
         if (m_imageVector.length() >= m_lcdHeight*m_lcdWidth)
         {
             int x,y;

@@ -30,8 +30,27 @@ extern int g_showMessageBox(QWidget* parent, QMessageBox::Icon icon,
 
 void MainWindow::on_analyzerFound(int index)
 {
-    QString name = AnalyzerParameters::byIndex(index)->name();
-    on_analyzerNameFound(name);
+    AnalyzerParameters* param = AnalyzerParameters::byIndex(index);
+    // Reconciles AnalyzerParameters::current() with what the device
+    // actually identified itself as during the connection handshake.
+    // SelectDeviceDialog::onApply() already set current() once,
+    // pre-connection, from whatever the user picked/the device list
+    // guessed -- for a bare Serial/COM port that's always the generic
+    // "NanoVNA" entry, since nothing can know it's really an H4 before
+    // the handshake runs. Without this, NanovnaAnalyzer::parse()'s own
+    // "Board:" self-report correctly resolved to a more specific entry
+    // (e.g. "NanoVNA-H4") and even reached this handler via this same
+    // index, but never actually took effect: getMinFq()/getMaxFq() kept
+    // reading the pre-connection guess forever (confirmed 2026-11-03
+    // against a real NanoVNA-H4, stuck reporting the generic 1 GHz
+    // ceiling instead of its own 1.5 GHz one). Other protocols
+    // (ComAnalyzer's FULLINFO parse, BLE) already call setCurrent()
+    // themselves from their own model-detection logic; this shared
+    // handler -- common to every BaseAnalyzer subclass's analyzerFound()
+    // -- was the one path that never did.
+    if (param != nullptr)
+        AnalyzerParameters::setCurrent(param);
+    on_analyzerNameFound(param != nullptr ? param->name() : QString());
 }
 
 void MainWindow::on_analyzerNameFound(QString name)

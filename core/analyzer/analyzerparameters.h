@@ -357,6 +357,20 @@ public:
         // for the classic NanoVNA/NanoVNA-H; this app doesn't yet
         // distinguish that from larger-screen variants like this one.
         m_analyzers << new AnalyzerParameters(idx++, "NanoVNA", "100", "1000000", 320, 480);
+        // H4 variant of the same classic-protocol board family (same ASCII
+        // shell, same 480x320 screen) -- real hardware sweeps further than
+        // the shared entry above: confirmed 2026-11-03 against a real
+        // Aursinc NanoVNA-H4, which accepted and returned data up to 2 GHz
+        // with no firmware-side range error when asked directly over the
+        // shell. The firmware doesn't actually enforce a hard ceiling at
+        // the wire-protocol level -- past the oft-quoted 1.5 GHz spec used
+        // here instead, accuracy is simply unverified, not blocked.
+        // Matched by the device's own "Board:" self-report in
+        // NanovnaAnalyzer::parse(); that unit's exact text is "NanoVNA-H 4"
+        // (note the literal space before the 4, confirmed via a raw shell
+        // "info" query), matched space-insensitively there in case other
+        // units/firmware forks spell it "NanoVNA-H4".
+        m_analyzers << new AnalyzerParameters(idx++, "NanoVNA-H4", "100", "1500000", 320, 480);
         // Binary register+FIFO protocol (NanovnaV2Analyzer), distinct from
         // classic NanoVNA/H/H4's ASCII shell (NanovnaAnalyzer) above --
         // frequency ceilings from the reference clients' own board-revision
