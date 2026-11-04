@@ -1130,14 +1130,6 @@ Settings → OSL Calibration has two ways to run it:
   load a previously-saved calibration standard from disk instead of
   re-measuring it live.
 
-**Re-verifying later.** The OSL tab's **Test** row remembers the
-wizard's last Test result -- **View Plot...** reopens it without
-re-running anything. Since that plot can be arbitrarily old (whenever
-Test last ran inside a wizard), the same dialog has a **Re-Test**
-button: measure the connected load again right now, on demand, without
-redoing Open/Short/Load. It needs an analyzer connected and overwrites
-the stored Test result (not the calibration itself) when it finishes.
-
 Performing a calibration and applying it are two separate steps. Each
 standard writes its own file (`cal_open.s1p`, `cal_short.s1p`,
 `cal_load.s1p`) under that analyzer's calibration folder; the
@@ -1186,6 +1178,25 @@ bridge/NanoVNA -- running a new calibration from AntScopeZ isn't
 supported yet. The group is also not yet tied to whether a VNA Air
 device is actually connected (that gating is planned, not done), so
 don't expect it to reflect anything meaningful until one is.
+
+### Test Calibration
+
+Settings → OSL Calibration → **Test Calibration** is a generic sanity
+check, separate from AntScopeZ's own OSL calibration: connect a known
+50 Ω/Z0 load and click **Test** to measure it and plot the per-point
+error, against *whatever correction is actually in effect right now* --
+AntScopeZ's OSL calibration, a VNA Air selected slot, the analyzer's own
+on-board calibration, or nothing at all. There's no automatic pass/fail;
+you judge the plot.
+
+Nothing here is saved. Re-run Test any time you want to check again --
+the status next to the button only says whether it's been run this
+session, not whether the result is still valid, since that depends on
+things AntScopeZ can't track (did you touch the standards, change
+system Z0, recalibrate the device itself, pick a different VNA Air
+slot). The Calibration Wizard still has its own inline Test page at the
+end of Open → Short → Load, which works the same way but specifically
+verifies the calibration the wizard just built, before you commit it.
 
 ### Cable add/subtract
 
