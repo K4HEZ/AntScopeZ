@@ -712,11 +712,27 @@ void Settings::setCalibration(Calibration * calibration)
     // before Markers was inserted ahead of it); indexOf() instead of a
     // hardcoded index means the next tab insertion/reorder can't do that
     // again either.
-    if (!calibration || !calibration->isAnalyzerConnected()) {
+    //
+    // Used to also grey out the whole tab -- Cable and Open/Short/Load
+    // status/labels -- whenever isAnalyzerConnected() was false, which
+    // meant it was unreachable with nothing connected at all. That's
+    // wrong: Cable add/subtract is global app config, not per-analyzer,
+    // and calibration status/filenames are worth seeing (e.g. deciding
+    // whether a loaded .s1p's corrections make sense) without needing a
+    // live device plugged in. Only actually running a sweep (the wizard,
+    // Test Calibration) genuinely needs one connected -- gated
+    // individually below instead.
+    if (!calibration) {
         ui->tabWidget->setTabEnabled(ui->tabWidget->indexOf(ui->Calibration), false);
         return;
     }
-    calibration->init(calibration->getSerial());
+    // Only re-init from the live serial while actually connected --
+    // Calibration::init() forces m_OSLCalibrationPerformed false and
+    // returns early on an empty serial, which would wipe the last
+    // connected device's status the moment it disconnects, instead of
+    // leaving it visible as "whatever's currently on disk."
+    if (calibration->isAnalyzerConnected())
+        calibration->init(calibration->getSerial());
     ui->tabWidget->setTabEnabled(ui->tabWidget->indexOf(ui->Calibration), true);
     m_calibration = calibration;
     ui->lineEditPoints->setText(QString::number(m_calibration->dotsNumber()));
@@ -762,6 +778,12 @@ void Settings::refreshCalibrationStatus()
     // analyzer always starts this back at "untested," regardless of
     // whatever the previous analyzer's Test showed.
     ui->labelTestCalibrationStatus->setText(tr("Not tested this session"));
+
+    // The tab itself stays enabled with nothing connected (see
+    // setCalibration()'s own comment) -- only these two need a live
+    // analyzer, since both actually run a sweep.
+    ui->calibWizardBtn->setEnabled(m_calibration->isAnalyzerConnected());
+    ui->testCalibrationBtn->setEnabled(m_calibration->isAnalyzerConnected());
 
     // Mirror the model's current enabled state into the checkbox without
     // re-triggering on_checkBoxCalibration_toggled()'s own "not calibrated
