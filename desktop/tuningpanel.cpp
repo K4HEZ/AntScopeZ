@@ -8,8 +8,11 @@
 #include <QFontMetrics>
 #include <cfloat>
 
+// Same bands as mobile's swrColor() (SwrChart, LiveDataPage.qml): <2
+// green, 2-<3 yellow, 3-4 orange, >4 red.
 static const double kSwrGreenMax = 2.0;
-static const double kSwrRedMin = 3.0;
+static const double kSwrYellowMax = 3.0;
+static const double kSwrOrangeMax = 4.0;
 
 static QString number(double v, int decimals = 2)
 {
@@ -20,11 +23,13 @@ QColor TuningPanel::swrColor(double swr)
 {
     if (swr == DBL_MAX)
         return QColor(128, 128, 128);
-    if (swr <= kSwrGreenMax)
-        return QColor(0, 178, 90);
-    if (swr <= kSwrRedMin)
-        return QColor(235, 165, 0);
-    return QColor(215, 55, 55);
+    if (swr < kSwrGreenMax)
+        return QColor(0x5C, 0xC9, 0x8A); // green
+    if (swr < kSwrYellowMax)
+        return QColor(0xE8, 0xC5, 0x47); // yellow
+    if (swr <= kSwrOrangeMax)
+        return QColor(0xF2, 0xA3, 0x3A); // orange
+    return QColor(0xF2, 0x6A, 0x6A); // red
 }
 
 TuningPanel::TuningPanel(QWidget* parent) :
