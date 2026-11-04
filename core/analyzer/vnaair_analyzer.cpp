@@ -103,6 +103,15 @@ void VnaAirAnalyzer::scanFinished()
 bool VnaAirAnalyzer::connectAnalyzer()
 {
     QString address = SelectionParameters::selected.id;
+    // The bridge has no serial-number query of its own in the documented
+    // protocol, but its BLE MAC address is already a stable per-device
+    // identifier (it's literally what the advertised "VNA Air XXXX" name
+    // suffix is derived from) -- without this, Calibration::
+    // isAnalyzerConnected() always read false here, greying out the whole
+    // Calibration tab for every VNA Air connection. Colons stripped --
+    // Calibration::init() uses this directly as a folder name, and ":" is
+    // a reserved path character on Windows.
+    m_serialNumber = QString(address).remove(':');
     connectToDevice(address);
     return true;
 }

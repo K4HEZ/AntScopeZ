@@ -419,6 +419,16 @@ MainWindow::MainWindow(QWidget *parent) :
         if (m_analyzerConnected) {
             refreshTdrPanelLimits();
             refreshTuningLimits();
+            // Same lateness problem as the two refreshes above, for
+            // ComAnalyzer specifically: its real serial number (RigExpert's
+            // own "SN\t..." reply line) isn't guaranteed to have already
+            // been parsed by the time on_analyzerNameFound() first called
+            // Calibration::init() -- if it arrives in a later VER reply
+            // line/chunk, that first init() ran with an empty serial and
+            // nothing re-ran it. Harmless to repeat: init() just re-reads
+            // whatever's on disk for the (possibly now-known) serial.
+            if (m_calibration != nullptr && !m_analyzer->getSerialNumber().isEmpty())
+                m_calibration->init(m_analyzer->getSerialNumber());
         }
     });
     connect(this, &MainWindow::measureOneFq, m_analyzer, [this](QWidget*, qint64 fq, int dots) {

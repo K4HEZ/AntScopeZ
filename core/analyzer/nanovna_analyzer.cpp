@@ -893,6 +893,23 @@ bool NanovnaAnalyzer::connectAnalyzer()
 //       emit measurementCompleteNano();
 //    });
 
+    // Classic NanoVNA firmware has no serial-number command of its own,
+    // but the USB descriptor the OS already enumerated does (the same
+    // SerialPortInfo::serialNumber() searchAnalyzer()/detectPorts() query
+    // and discard) -- without this, Calibration::isAnalyzerConnected()
+    // always read false for every NanoVNA, greying out the whole
+    // Calibration tab regardless of what was connected. Empty if this
+    // particular unit's USB-CDC chip doesn't populate iSerialNumber --
+    // Calibration stays unavailable for that unit either way, same as
+    // today, just now for a real reason instead of unconditionally.
+    m_serialNumber.clear();
+    for (const SerialPortInfo& info : SerialPortInfo::availablePorts()) {
+        if (info.portName() == _serialPortName) {
+            m_serialNumber = info.serialNumber();
+            break;
+        }
+    }
+
     checkAnalyzer();
     return connected;
 }

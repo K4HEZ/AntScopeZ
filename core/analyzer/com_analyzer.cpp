@@ -283,6 +283,15 @@ qint32 ComAnalyzer::parse (QByteArray arr)
                     emit signalFullInfo(str);
                     continue;
                 } else if (str.indexOf("SN\t") == 0) {
+                    // The device's own real factory serial -- was only
+                    // ever forwarded for the on-screen device-info log via
+                    // signalFullInfo(), m_serialNumber (getSerial()) never
+                    // set from it. That's what silently kept
+                    // Calibration::isAnalyzerConnected() false for every
+                    // RigExpert model talking over plain COM/serial (e.g.
+                    // AA-55), greying out the whole Calibration tab
+                    // regardless of device type.
+                    m_serialNumber = str.mid(3).trimmed();
                     emit signalFullInfo(str);
                     continue;
                 }

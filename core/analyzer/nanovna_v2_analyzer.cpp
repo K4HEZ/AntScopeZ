@@ -119,6 +119,17 @@ bool NanovnaV2Analyzer::connectAnalyzer()
     QString _serialPortName = SelectionParameters::selected.id;
     bool connected = openComPort(_serialPortName);
 
+    // Same fix, same reasoning, as NanovnaAnalyzer::connectAnalyzer() --
+    // the V2 binary protocol has no serial-number register of its own
+    // either, but the OS-level USB descriptor does.
+    m_serialNumber.clear();
+    for (const SerialPortInfo& info : SerialPortInfo::availablePorts()) {
+        if (info.portName() == _serialPortName) {
+            m_serialNumber = info.serialNumber();
+            break;
+        }
+    }
+
     // Same "let the device settle after the port opens" delay
     // NanovnaAnalyzer::checkAnalyzer() uses before its own first command --
     // matching that precedent rather than guessing a shorter one, given the
