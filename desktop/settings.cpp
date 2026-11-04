@@ -863,6 +863,9 @@ void Settings::on_viewTestPlotBtn_clicked()
 {
     TestResultDialog dlg(m_calibration, this);
     dlg.exec();
+    // A Re-Test inside the dialog may have moved testTimestamp() --
+    // refresh the OSL tab's "Completed <date/time>" label either way.
+    refreshCalibrationStatus();
 }
 
 void Settings::on_oslHelpBtn_clicked()

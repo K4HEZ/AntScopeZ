@@ -490,6 +490,16 @@ public slots:
     // in the live calibration data has changed, however far the wizard got.
     void on_wizardCommit();
 
+    // Saves whatever on_testCalibration() last captured to cal_test.s1p
+    // on its own, without touching the three OSL standards -- lets the
+    // OSL tab's "View Plot" dialog re-run Test standalone (Settings'
+    // "Re-Test") and persist the fresh result, the same way
+    // on_wizardCommit() does for a full wizard run, but without its
+    // staging-buffer copy (which would stomp the live Open/Short/Load
+    // data with whatever's in m_wizardOpenData/etc. -- empty outside an
+    // actual wizard run).
+    void commitTestResult();
+
     void on_enableOSLCalibration(bool enabled);
     void on_crcError();
 

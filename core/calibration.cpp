@@ -449,6 +449,11 @@ void Calibration::on_wizardCommit()
     emit wizardCommitted();
 }
 
+void Calibration::commitTestResult()
+{
+    m_testData.saveData(m_testCalibFilePath, m_Z0);
+}
+
 bool Calibration::interpolateS(double fq, double &reO, double &imO, double &reS, double &imS, double &reL, double &imL)
 {
     if(m_openData.getSize() == 0)
