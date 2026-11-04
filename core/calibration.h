@@ -357,7 +357,6 @@ public:
     QDateTime openTimestamp();
     QDateTime shortTimestamp();
     QDateTime loadTimestamp();
-    QDateTime testTimestamp();
     // Shared session parameters from the per-device calibration.ini
     // (written by on_wizardCommit()) -- the Z0/range/points every standard
     // in the current calibration was captured with, not the live/pending
@@ -366,27 +365,19 @@ public:
     double calibStartFqMHz();
     double calibStopFqMHz();
     int calibDotsNumber();
-    // True once a Test has ever been committed (cal_test.s1p exists) --
-    // there's no pass/fail, the wizard shows the raw per-point error
-    // against reference bands and leaves it to the user to judge, rather
-    // than the software deciding.
-    bool hasTestResult();
 
-    // Test's raw per-point result -- either the sweep on_testCalibration()
-    // just ran (no second scan needed to plot it), or, after
-    // reloadTestResult(), whatever was committed to cal_test.s1p by a
-    // previous wizard run. testResultR(i)/testResultX(i) are the measured
-    // values in Ohms; callers plot them against Z0/0 themselves.
+    // Test's raw per-point result from whichever on_testCalibration() run
+    // is most recent -- never persisted (see on_testCalibration()'s own
+    // comment for why): correctness depends on whatever correction
+    // happens to be active at the moment it ran (AntScopeZ OSL, a VNA Air
+    // selected slot, the analyzer's own on-board calibration, or none),
+    // which can silently change later. testResultR(i)/testResultX(i) are
+    // the measured values in Ohms; callers plot them against Z0/0
+    // themselves.
     int testResultCount();
     double testResultFqMHz(int i);
     double testResultR(int i);
     double testResultX(int i);
-    // Re-reads cal_test.s1p from disk into the same buffer
-    // testResultCount()/etc. expose -- lets the OSL tab's "View Plot"
-    // button redisplay a past result without re-running the wizard, and
-    // without trusting whatever a since-cancelled wizard run left in
-    // memory.
-    bool reloadTestResult();
 
     double getZ0 () const {return m_Z0;}
     void setZ0 (double _Z0) {m_Z0 = _Z0;}
@@ -408,11 +399,10 @@ private:
     CalibData m_wizardOpenData;
     CalibData m_wizardShortData;
     CalibData m_wizardLoadData;
-    // Raw per-point result of the wizard's Test step -- cleared at the
-    // start of each on_testCalibration() run, held here for the wizard to
-    // plot, and saved to cal_test.s1p by on_wizardCommit() (see
-    // m_testCalibFilePath) so it can be redisplayed later without
-    // re-running the wizard.
+    // Raw per-point result of the wizard's Test step (or the standalone
+    // "Test Calibration" button) -- cleared at the start of each
+    // on_testCalibration() run, held here only long enough for whichever
+    // caller is showing its plot to read it back. Never written to disk.
     CalibData m_testData;
 
     int m_state;
@@ -429,11 +419,6 @@ private:
     QString m_openCalibFilePath;
     QString m_shortCalibFilePath;
     QString m_loadCalibFilePath;
-    // cal_test.s1p -- Test's raw per-point result, written at the same
-    // on_wizardCommit() that writes the three standards. Reuses CalibData's
-    // own touchstone load/save, same as the other three; its own file
-    // mtime is testTimestamp(), same pattern as open/short/loadTimestamp().
-    QString m_testCalibFilePath;
     // Calibration/<serial>/calibration.ini -- Z0/range/points for the
     // currently-committed calibration, scoped per device so two analyzers
     // used from the same install never cross-contaminate each other's
@@ -475,9 +460,16 @@ public slots:
     void on_startCalibrationShort();
     void on_startCalibrationLoad();
     // Quick sanity check: measures whatever standard is connected (meant
-    // for a 50/Z0 load) across the whole sweep, so the wizard can plot
-    // per-point error against reference bands -- no pass/fail, doesn't
-    // touch the three saved standards, and never blocks on_wizardCommit().
+    // for a 50/Z0 load) across the whole sweep, so the wizard's own Test
+    // page, or Settings OSL tab's standalone "Test Calibration" button,
+    // can plot per-point error against reference bands -- no pass/fail,
+    // doesn't touch the three saved standards, and never blocks
+    // on_wizardCommit(). Verifies whatever correction is actually active
+    // right now (AntScopeZ OSL, a VNA Air selected slot, the analyzer's
+    // own on-board calibration, or none) -- not specific to OSL. Never
+    // persisted: the result would silently go stale the moment settings,
+    // the analyzer, or its own active calibration changed, so there's
+    // nothing here to save or reload later -- just re-run it.
     void on_testCalibration();
     // Aborts whichever wizard step (Open/Short/Load/Test) is currently in
     // progress and discards all four staging buffers -- the wizard's
@@ -485,20 +477,12 @@ public slots:
     void on_cancelCalibration();
     // The wizard's Finish button -- the one moment a wizard run actually
     // changes anything: copies the three staging buffers into the live
-    // calibration data, writes the .s1p files, and records Z0/range/points/
-    // test result into calibration.ini. Until this runs, nothing on disk or
-    // in the live calibration data has changed, however far the wizard got.
+    // calibration data, writes the .s1p files, and records Z0/range/points
+    // into calibration.ini. Until this runs, nothing on disk or in the
+    // live calibration data has changed, however far the wizard got. Test
+    // itself is never part of this -- it's never persisted (see
+    // on_testCalibration()).
     void on_wizardCommit();
-
-    // Saves whatever on_testCalibration() last captured to cal_test.s1p
-    // on its own, without touching the three OSL standards -- lets the
-    // OSL tab's "View Plot" dialog re-run Test standalone (Settings'
-    // "Re-Test") and persist the fresh result, the same way
-    // on_wizardCommit() does for a full wizard run, but without its
-    // staging-buffer copy (which would stomp the live Open/Short/Load
-    // data with whatever's in m_wizardOpenData/etc. -- empty outside an
-    // actual wizard run).
-    void commitTestResult();
 
     void on_enableOSLCalibration(bool enabled);
     void on_crcError();

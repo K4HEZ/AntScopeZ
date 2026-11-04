@@ -757,10 +757,11 @@ void Settings::refreshCalibrationStatus()
                                     ? m_calibration->getLoadFileName() : tr("—"));
     ui->labelLoadStatus->setText(completedText(m_calibration->loadTimestamp()));
 
-    // No pass/fail -- the wizard shows the per-point error plot and the
-    // user judges it themselves, so this is purely "was it run."
-    ui->labelTestStatus->setText(completedText(m_calibration->testTimestamp()));
-    ui->viewTestPlotBtn->setEnabled(m_calibration->hasTestResult());
+    // Test Calibration is session-only (never persisted -- see
+    // Calibration::on_testCalibration()'s comment), so a newly connected
+    // analyzer always starts this back at "untested," regardless of
+    // whatever the previous analyzer's Test showed.
+    ui->labelTestCalibrationStatus->setText(tr("Not tested this session"));
 
     // Mirror the model's current enabled state into the checkbox without
     // re-triggering on_checkBoxCalibration_toggled()'s own "not calibrated
@@ -859,13 +860,32 @@ void Settings::on_calibWizardBtn_clicked()
     refreshCalibrationStatus();
 }
 
-void Settings::on_viewTestPlotBtn_clicked()
+void Settings::on_testCalibrationBtn_clicked()
 {
+    if (!m_calibration || !m_calibration->isAnalyzerConnected())
+        return;
+    // Connected only for the duration of this one run, not kept alive in
+    // setCalibration() -- the Calibration Wizard's own Test page connects
+    // to the exact same signal independently (CalibrationWizardDialog's
+    // constructor), and a persistent connection here would pop this
+    // dialog on top of the wizard's own inline plot every time someone
+    // ran Test from inside the wizard instead.
+    connect(m_calibration, &Calibration::testCaptureFinished,
+            this, &Settings::onTestCalibrationCaptureFinished, Qt::UniqueConnection);
+    ui->testCalibrationBtn->setEnabled(false);
+    ui->labelTestCalibrationStatus->setText(tr("Testing..."));
+    m_calibration->on_testCalibration();
+}
+
+void Settings::onTestCalibrationCaptureFinished()
+{
+    disconnect(m_calibration, &Calibration::testCaptureFinished,
+               this, &Settings::onTestCalibrationCaptureFinished);
+    ui->testCalibrationBtn->setEnabled(true);
+    ui->labelTestCalibrationStatus->setText(tr("Completed %1")
+                                             .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm")));
     TestResultDialog dlg(m_calibration, this);
     dlg.exec();
-    // A Re-Test inside the dialog may have moved testTimestamp() --
-    // refresh the OSL tab's "Completed <date/time>" label either way.
-    refreshCalibrationStatus();
 }
 
 void Settings::on_oslHelpBtn_clicked()

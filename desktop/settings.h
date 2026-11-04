@@ -222,7 +222,13 @@ private slots:
     void on_generalTimerTick();
     void on_fqRestrictCheckBox_clicked(bool checked);
     void on_calibWizardBtn_clicked();
-    void on_viewTestPlotBtn_clicked();
+    // Generic "measure a 50 ohm/Z0 load and show the per-point error"
+    // check -- works against whatever correction (if any) is actually
+    // active right now, not tied to AntScopeZ's own OSL math or any one
+    // analyzer family. Session-only: nothing is saved, so there's
+    // nothing to redisplay later -- re-run it instead.
+    void on_testCalibrationBtn_clicked();
+    void onTestCalibrationCaptureFinished();
     void on_oslHelpBtn_clicked();
     // VNA Air's "select which on-board/bridge calibration slot to use" --
     // a user pick here, not a capture. See core/analyzer/vnaair_analyzer.h's

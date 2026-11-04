@@ -54,7 +54,6 @@ void Calibration::init(const QString& _serial)
     m_openCalibFilePath = dir.absoluteFilePath("cal_open.s1p");
     m_shortCalibFilePath = dir.absoluteFilePath("cal_short.s1p");
     m_loadCalibFilePath = dir.absoluteFilePath("cal_load.s1p");
-    m_testCalibFilePath = dir.absoluteFilePath("cal_test.s1p");
     m_calibrationIniPath = dir.absoluteFilePath("calibration.ini");
 
     QSettings calSettings(m_calibrationIniPath, QSettings::IniFormat);
@@ -67,7 +66,6 @@ void Calibration::init(const QString& _serial)
     setDotsNumber(m_calibDotsNumber > 0 ? m_calibDotsNumber : 500);
 
     start(true);
-    reloadTestResult();
     m_OSLCalibrationEnabled = false;
 }
 
@@ -192,11 +190,6 @@ QDateTime Calibration::loadTimestamp()
     return fileTimestamp(m_loadCalibFilePath);
 }
 
-QDateTime Calibration::testTimestamp()
-{
-    return fileTimestamp(m_testCalibFilePath);
-}
-
 double Calibration::calibZ0()
 {
     return m_calibZ0;
@@ -217,11 +210,6 @@ int Calibration::calibDotsNumber()
     return m_calibDotsNumber;
 }
 
-bool Calibration::hasTestResult()
-{
-    return QFile::exists(m_testCalibFilePath);
-}
-
 int Calibration::testResultCount()
 {
     return m_testData.getSize();
@@ -240,12 +228,6 @@ double Calibration::testResultR(int i)
 double Calibration::testResultX(int i)
 {
     return m_testData.getX(i);
-}
-
-bool Calibration::reloadTestResult()
-{
-    double unusedZ0 = m_Z0;
-    return QFile::exists(m_testCalibFilePath) && m_testData.loadData(m_testCalibFilePath, &unusedZ0);
 }
 
 void Calibration::on_newData(RawData _rawData)
@@ -299,11 +281,13 @@ void Calibration::on_newData(RawData _rawData)
             cancel();
             break;
         case CALIB_TEST:
-            // m_testData is left intact (not cleared here) -- the wizard
-            // reads its raw per-point R/X via testResultCount()/etc. and
-            // plots the error against Z0/0 itself. No pass/fail is
-            // computed: the user judges the plot, software doesn't gate
-            // on it. Not written to cal_test.s1p until on_wizardCommit().
+            // m_testData is left intact (not cleared here) -- whichever
+            // caller started this run (the wizard's own Test page, or
+            // Settings' standalone "Test Calibration" button) reads its
+            // raw per-point R/X via testResultCount()/etc. and plots the
+            // error against Z0/0 itself. No pass/fail is computed: the
+            // user judges the plot, software doesn't gate on it. Never
+            // written to disk -- see on_testCalibration()'s comment.
             emit indicatorVisibleChanged(false);
             emit testCaptureFinished();
             cancel();
@@ -419,11 +403,6 @@ void Calibration::on_wizardCommit()
     m_openData.saveData(m_openCalibFilePath, m_Z0);
     m_shortData.saveData(m_shortCalibFilePath, m_Z0);
     m_loadData.saveData(m_loadCalibFilePath, m_Z0);
-    // m_testData already holds this run's Test sweep (see on_newData()'s
-    // CALIB_TEST branch) -- saving it here, same as the three standards,
-    // is what lets the OSL tab's "View Plot" button redisplay it later
-    // without re-running the wizard.
-    m_testData.saveData(m_testCalibFilePath, m_Z0);
 
     m_OSLCalibrationPerformed = true;
 
@@ -447,11 +426,6 @@ void Calibration::on_wizardCommit()
     m_wizardLoadData.clear();
 
     emit wizardCommitted();
-}
-
-void Calibration::commitTestResult()
-{
-    m_testData.saveData(m_testCalibFilePath, m_Z0);
 }
 
 bool Calibration::interpolateS(double fq, double &reO, double &imO, double &reS, double &imS, double &reL, double &imL)
