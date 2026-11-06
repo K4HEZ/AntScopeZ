@@ -19,7 +19,7 @@ header:
 
 ## Features
 
-- Support of RigExpert Analyzers and NanoVNA (ASCII & Binary)
+- Support of RigExpert Analyzers and NanoVNA (USB, ASCII & Binary, plus NanoVNA BLE via VNA Air)
 - Autodetect most Analyzers
 - Import/Export of Touchstone Files (.asd/.s1p/.s2p/.csv/.nwl)
 - Full 2-Port S-Parameter Export (S11/S21/S12/S22)

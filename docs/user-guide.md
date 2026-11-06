@@ -37,6 +37,7 @@ supported analyzer models and brands.
 - [Two-port measurement (S21/S12)](#two-port-measurement-s21s12)
 - [Print and screenshots](#print-and-screenshots)
 - [TDR (Time Domain Reflectometry)](#tdr-time-domain-reflectometry)
+- [Device-specific notes](#device-specific-notes)
 - [Customized analyzer parameters](#customized-analyzer-parameters)
 - [Files and directories](#files-and-directories)
 - [Troubleshooting](#troubleshooting)
@@ -177,7 +178,7 @@ current catalog before relying on them.
 - Touch
 - Touch E-Ink
 
-### NanoVNA
+### NanoVNA [USB & NanoVNA BLE w/ VNA Air]
 
 The open-source/DIY VNA project, and its clones -- entirely separate
 connection/protocol handling from the RigExpert-oriented analyzer classes
@@ -215,6 +216,20 @@ for the V2/LiteVNA64 family.
   RigExpert-manufactured unit sold under WilsonPro's branding
   (OEM/white-label) rather than an independent protocol implementation --
   inferred from the code pattern, not confirmed.
+- **NanoVNA BLE via VNA Air** -- [VNA Air](https://vnaair.com) is a
+  third-party ESP32-S3 USB-host/BLE bridge: plug a USB-only NanoVNA into
+  it, and AntScopeZ connects over Bluetooth LE instead of a cable. It's a
+  separate wire protocol from RigExpert's own BLE units -- JSON over
+  chunked GATT notifications with its own framing, not RigExpert's fixed
+  20-byte binary packets -- and transparently passes through both the
+  classic ASCII and V2/binary NanoVNA protocols above, so a NanoVNA
+  behind it works the same as that same unit connected directly by USB.
+  Status/Probe/Sweep, reading/selecting the NanoVNA's own on-board
+  calibration slots, and running a *new* calibration through the bridge
+  are all supported -- see [VNA Air calibration](#vna-air-calibration)
+  below -- validated against real hardware (a NanoVNA-H4 behind a VNA
+  Air bridge). Not yet in a tagged release -- support is on `develop`,
+  with a release expected shortly.
 - **NanoVNA emulator** -- a companion dev-only tool that emulates a
   NanoVNA (both protocol families) over a local pty, used to test
   AntScopeZ's NanoVNA support without real hardware. Connect Analyzer
@@ -256,10 +271,13 @@ material for a specific feature, not more setup.
 ### Connecting to your analyzer
 
 Click **Analyzer > Connect...** on the menu bar to open the "Connect
-Analyzer" dialog. Pick a connection type (USB, COM, or BLE), click
-**Scan**, select your device from the list, and **Connect**. "Use same
-selection for future connections" saves that choice so AntScopeZ can
-silently reconnect on its own next time, instead of asking again.
+Analyzer" dialog. Pick a connection type -- **USB**, **COM**, **BLE**,
+or **VNA Air** (a NanoVNA over Bluetooth through a
+[VNA Air](https://vnaair.com) bridge -- see
+[NanoVNA](#nanovna-usb--nanovna-ble-w-vna-air) above) -- click **Scan**,
+select your device from the list, and **Connect**. "Use same selection
+for future connections" saves that choice so AntScopeZ can silently
+reconnect on its own next time, instead of asking again.
 
 By default, this dialog also pops up automatically ~500 ms after launch
 if there's no valid saved device to silently reconnect to. If you'd
@@ -280,6 +298,12 @@ If AntScopeZ finds your analyzer but can't actually open it, a dialog
 explains why -- most often, something else already has it open (another
 program, or another AntScopeZ window pointed at the same device). Close
 whatever else is using it and try again.
+
+On an OS/platform where the underlying Qt Bluetooth stack doesn't
+support BLE at all, the **BLE** option itself is hidden from this
+dialog; where support is only partial, BLE stays available but a red
+warning banner says so. Either way, **VNA Air** (BLE under the hood)
+stays selectable regardless.
 
 ### Your first scan
 
@@ -313,8 +337,8 @@ the main window.
 
 **Menu bar**
 
-There's no toolbar of buttons any more -- everything below lives in the
-menu bar instead (File / Edit / View / Analyzer / Mode / Tools / Help).
+Everything below lives in the menu bar (File / Edit / View / Analyzer /
+Mode / Tools / Help) -- there's no separate toolbar of buttons.
 
 *File*
 
@@ -392,6 +416,7 @@ table's own right-click menu (see [TDR](#events-table)).
 
 | Control | What it does |
 |---|---|
+| User Guide | Opens this guide in its own window |
 | About AntScopeZ... | Shows the running app's version number and build timestamp, and the latest released version (see [Updates tab](#updates-tab)) |
 
 **Frequency panel**
@@ -490,8 +515,8 @@ zoom"](#general-tab) to lift those limits.
 
 ## Settings
 
-The Settings dialog has eight tabs: **General**, **Markers**,
-**OSL Calibration**, **Cable**, **Themes**, **Analyzer**, **Graphs**,
+The Settings dialog has nine tabs: **General**, **Themes**, **Markers**,
+**OSL Calibration**, **Cable**, **Analyzer**, **Graphs**, **ITU Bands**,
 and **Updates**.
 
 OSL Calibration has its own section -- see
@@ -501,12 +526,11 @@ OSL Calibration has its own section -- see
 
 <!-- SCREENSHOT: Settings dialog, General tab -->
 
-Language, Band Highlighting, Show Band Name, and Band Selector used to
-live here too -- they moved to the **View** menu (see
-[Menu bar](#controls-reference) above) and aren't duplicated in Settings
-any more. Theme also moved to the **View** menu, but that only picks
-*which* of the 5 built-in themes is active -- to actually edit a
-theme's colors, see the new [Themes tab](#themes-tab) below.
+Language, Band Highlighting, Show Band Name, and Band Selector are on
+the **View** menu (see [Menu bar](#controls-reference) above), not
+here. Theme is there too, but that only picks *which* of the 5 built-in
+themes is active -- to edit a theme's colors, see the
+[Themes tab](#themes-tab) below.
 
 | Control | What it does |
 |---|---|
@@ -530,12 +554,12 @@ theme's colors, see the new [Themes tab](#themes-tab) below.
 | Data folder (with Browse...) | Where save/export/screenshot dialogs across the app default to -- see [Files and directories](#files-and-directories) |
 | Save actions update this folder | Off by default. When on, completing a *save* (not Open) somewhere else moves Data folder there too, so it follows you; when off, Data folder only changes when you set it here yourself |
 
-Register application, Match license, and device/firmware info moved to
+Register application, Match license, and device/firmware info are on
 the [Updates tab](#updates-tab). Connect analyzer and "Open 'Connect
-Analyzer' on launch" moved into the Connect Analyzer dialog itself --
-see [Connecting to your analyzer](#connecting-to-your-analyzer).
-Analyzer timeout, "Use reconnect to drain unwanted data", and Scanning
-moved to the [Analyzer tab](#analyzer-tab) below.
+Analyzer' on launch" are in the Connect Analyzer dialog itself -- see
+[Connecting to your analyzer](#connecting-to-your-analyzer). Analyzer
+timeout, "Use reconnect to drain unwanted data", and Scanning are on
+the [Analyzer tab](#analyzer-tab) below.
 
 ### Markers tab
 
@@ -638,11 +662,12 @@ hit Save.
 |---|---|
 | Theme combo | Which of the 5 slots you're editing -- switching it discards any unsaved edits to the one you were on |
 | Name | Freely renamable; shown as "N: Name" in both this combo and the View → Theme menu |
-| Window Background / Text / Text Muted / Border / Chart Background / Marker | Six color swatches -- click one to open a color picker. The hex value is shown beside each. Chart Background and Marker apply to the plot area and marker lines; the other four are the general window canvas |
-| Example panel | Live preview of the theme as you edit it -- not the saved version, whatever's currently in the form |
+| Window Background / Text / Text Muted / Border / Chart Background / Marker / Base | Seven color swatches -- click one to open a color picker. The hex value is shown beside each. Chart Background and Marker apply to the plot area and marker lines; Base is editable fields' fill (text boxes, spin boxes, combo boxes); the other four are the general window canvas |
+| Example panel | A live preview of the form's current (possibly unsaved) colors -- enabled and disabled buttons/checkboxes/radio buttons, an editable field, a "Locked" field in the same style [Cable](#cable-tab)'s Preset mode uses, and a sample chart with a marker |
 | Default | Restores this slot's original factory colors and name (not whatever's currently saved for it) |
 | Cancel | Discards unsaved edits, reloads the slot as last saved |
 | Save | Persists your edits. If you're editing the currently *active* theme (see View → Theme), the change applies immediately |
+| Apply | Makes the selected slot the app's active theme right now, independent of Save -- the same effect as picking it from View → Theme, without leaving this dialog. Doesn't touch or require saving any unsaved color edits in the form |
 
 ### Analyzer tab
 
@@ -657,7 +682,7 @@ hit Save.
 
 | Control | What it does |
 |---|---|
-| Scanning points maximum | The real practical ceiling for the Points field/slider (50–10000, default 1000) -- replaces what used to be a fixed, recompile-only limit |
+| Scanning points maximum | The practical ceiling for the Points field/slider, user-editable (50–10000, default 1000) |
 | Warn for scans above | Pops a Cancel-able confirmation before starting a scan that requests more points than this, in case a large scan was set up by accident |
 | Analyzer maximum number of points | Caps how many points a single sweep actually sends to the device (default 1000). Requesting more than that via the Points field doesn't fail or get clamped -- it transparently splits the scan into several sequential sweeps ("stitching") and concatenates the results into one continuous dataset, so a 1000-point analyzer can still deliver e.g. a 4000-point scan, just across four sweeps instead of one. Applies to Single/Continuous/User scans; TDR, Calibration, and S21 are unaffected for now. |
 
@@ -727,10 +752,8 @@ A 3-column grid (chart, min, max):
 
 <!-- SCREENSHOT: Settings dialog, ITU Bands tab -->
 
-The band editor, moved here from its own standalone "Edit ITU Bands..."
-dialog (formerly an item on the Edit menu) -- same text box
-and Cancel/Restore Defaults/Save buttons, just living on its own tab
-instead. See [Editing band definitions](#editing-band-definitions) for
+The band editor: a text box and Cancel/Restore Defaults/Save buttons.
+See [Editing band definitions](#editing-band-definitions) for
 the file format and what each button does.
 
 ### Updates tab
@@ -754,11 +777,12 @@ whether that traffic is encrypted and certificate-verified; turn it off
 only if the vendor's server has a certificate problem and you need this
 to keep working anyway, not something to leave off routinely.
 
-**Register application / Match license / Device info / Update license /
-Register device** -- RigExpert's own registration and licensing system.
-Live and working, but talks to RigExpert's servers directly and isn't
-something this fork tests or supports beyond making sure the connection
-itself is sound -- see the disclaimer in
+**Register application**, and a **Match license** group box with
+**Device info / Update license / Register device** buttons --
+RigExpert's own registration and licensing system. Live and working,
+but talks to RigExpert's servers directly and isn't something this
+fork tests or supports beyond making sure the connection itself is
+sound -- see the disclaimer in
 [README.md](https://github.com/K4HEZ/AntScopeZ#readme).
 
 **Check for firmware updates** asks RigExpert's server for the latest
@@ -770,9 +794,9 @@ saves the `.bin` file to your AntScopeZ data folder and shows the path;
 it does not flash anything. **Browse** lets you pick a `.bin` file and
 see its embedded model/version/build info.
 **Update** (actually flashing the chosen file to the connected device)
-stays disabled on purpose: it isn't reliable enough yet across the
-range of devices and OSes this needs to work on, and a bad flash can
-brick the device.
+stays disabled on purpose, with an on-screen warning that it's off due
+to the possible permanent corruption of your analyzer should a flash
+fail -- contact your vendor if you need a firmware update.
 
 **Getting firmware directly from RigExpert.** The check only offers the
 current release. If you want a specific release, including an older
@@ -996,8 +1020,8 @@ antenna changes as you adjust it. The calibration and cable settings apply
 as everywhere else.
 
 Tuning isn't available on NanoVNA-type analyzers. Setting **Start equal to
-Stop** in Sweep mode no longer starts a single-frequency readout; it shows a
-message pointing here.
+Stop** in Sweep mode shows a message pointing here, instead of starting a
+single-frequency readout.
 
 ## Calibration and cable correction
 
@@ -1050,10 +1074,14 @@ AntScopeZ can't see, change, or switch off the analyzer's own
 calibration -- it only receives numbers that have already been through
 it.
 
-- **NanoVNA family:** the NanoVNA applies whichever calibration is active
-  on the device (its own CAL menu and save slots) to everything it sends.
-  Calibrate the NanoVNA itself over the frequency range you plan to scan;
-  AntScopeZ doesn't load or switch calibration slots.
+- **NanoVNA family (direct USB/serial):** the NanoVNA applies whichever
+  calibration is active on the device (its own CAL menu and save slots)
+  to everything it sends. Calibrate the NanoVNA itself over the
+  frequency range you plan to scan; AntScopeZ doesn't load, switch, or
+  even query calibration slots here, because the classic NanoVNA
+  USB/serial protocol has no command for it -- there's nothing to read
+  back. (Over a VNA Air bridge instead, that's a different story -- see
+  below.)
 - **RigExpert:** analyzers ship factory-calibrated, and some models also
   offer their own user calibration from the device menu -- see your
   model's manual. *(Not something AntScopeZ checks or controls.)*
@@ -1116,19 +1144,34 @@ standards. It's per-device -- calibration data is stored under the
 connected analyzer's own serial number, so switching analyzers doesn't
 mix up calibration data between them.
 
-Settings → OSL Calibration has two ways to run it:
+Before running anything, the tab itself shows status: **Enable Software
+Calibration** -- the same on/off toggle as the Frequency panel's own
+**Calibration** checkbox (checking either one checks both) -- next to a
+**?** button that opens this section directly; a Points/Start/Stop row,
+where Points is editable and feeds the *next* wizard run while Start
+and Stop are read-only (the connected analyzer's own hardware frequency
+range); the calibration folder's path; and a summary of whatever
+calibration is *currently saved* (Z0, range, points) -- separate from
+the live Points field above it, which only takes effect once you
+actually run the wizard again.
 
-- **Calibration Wizard** -- one **Start** button walks you through all
-  three standards in order: connect Open and click OK, then Short, then
-  Load, then a final **Test** step -- connect a known load (usually
-  50 Ω/Z0) and the wizard measures it through the calibration you just
-  built, plotting the per-point error so you can judge the result
-  yourself; there's no automatic pass/fail.
-- **Individually** -- each of the Open/Short/Load sections has its own
-  "Start _ Calibration" button, for redoing just one standard without
-  repeating all three. Each section also has an "Open file" button, to
-  load a previously-saved calibration standard from disk instead of
-  re-measuring it live.
+Settings → OSL Calibration runs it one way: click **Calibration
+Wizard...** and it walks you through all three standards in order --
+connect Open and click Continue, then Short, then Load, then a final
+**Test** step -- connect a known load equal to your system impedance
+(50 Ω by default; see [General tab](#general-tab) if you've changed it)
+and the wizard measures it through the calibration you just built, plotting the
+per-point error so you can judge the result yourself; there's no
+automatic pass/fail. Nothing is written to disk until you click
+**Finish** on the Done page -- Cancel on any page discards the whole
+run.
+
+Below that button, three read-only rows -- **Open**, **Short**,
+**Load** -- show each standard's saved file name (or "--" if it's
+never been captured) and either "Not Performed" or a "Completed
+*yyyy-MM-dd hh:mm*" timestamp. They're status display only, not
+separate controls -- there's no way to redo just one standard or load
+a standard from disk outside the wizard.
 
 Performing a calibration and applying it are two separate steps. Each
 standard writes its own file (`cal_open.s1p`, `cal_short.s1p`,
@@ -1139,8 +1182,8 @@ correction to new scans, but only once all three files actually exist.
 If you check that box before all three are present, AntScopeZ shows a
 "Calibration Required" prompt and unchecks it again -- it's literally
 checking for those three files, not tracking calibration status any
-other way. Running the wizard (or the three individual standards) is
-what creates them; once they exist, the checkbox works.
+other way. Running the wizard through to Finish is what creates them;
+once they exist, the checkbox works.
 
 Things worth knowing:
 
@@ -1156,10 +1199,10 @@ Things worth knowing:
 ### VNA Air calibration
 
 A VNA Air bridge's calibration is run and stored on the bridge/NanoVNA
-itself -- AntScopeZ doesn't compute, verify, or apply it, since the data
-the bridge sends is already calibrated by the time it arrives. What
-AntScopeZ *can* do is read back whatever's saved there and tell the
-bridge which one to use.
+itself -- AntScopeZ doesn't compute or verify it, since the data the
+bridge sends is already calibrated by the time it arrives. AntScopeZ can
+read back whatever's saved there, select which slot to use, and run a
+fresh one.
 
 Settings → OSL Calibration → **VNA Air Calibration**:
 
@@ -1170,20 +1213,29 @@ Settings → OSL Calibration → **VNA Air Calibration**:
   calibration off entirely.
 - Picking an entry tells the bridge which saved calibration to apply;
   it doesn't change anything AntScopeZ itself draws or computes.
+- **Calibrate...** opens a wizard that walks through Open/Short/Load the
+  same way the main OSL Calibration Wizard does, but the bridge (or the
+  NanoVNA behind it) does the actual measuring and math itself -- AntScopeZ
+  just sends the BLE commands and waits for its ok/running/error replies
+  -- and saves the result into the slot selected above (slot 0 if "No
+  calibration" is selected). Tested against real hardware (a NanoVNA-H4
+  behind a VNA Air bridge); not yet in a tagged release.
+- **Test** is the same measurement as the [Test Calibration](#test-calibration)
+  group below, scoped to whichever slot is selected here.
 - **Refresh** re-queries the bridge, e.g. after changing something from
   the NanoVNA's own menu instead of from here.
 
-This only *selects* among calibrations that already exist on the
-bridge/NanoVNA -- running a new calibration from AntScopeZ isn't
-supported yet. The group is also not yet tied to whether a VNA Air
-device is actually connected (that gating is planned, not done), so
-don't expect it to reflect anything meaningful until one is.
+The group isn't yet tied to whether a VNA Air device is actually
+connected (that gating is planned, not done), so don't expect it to
+reflect anything meaningful until one is.
 
 ### Test Calibration
 
 Settings → OSL Calibration → **Test Calibration** is a generic sanity
 check, separate from AntScopeZ's own OSL calibration: connect a known
-50 Ω/Z0 load and click **Test** to measure it and plot the per-point
+load equal to your system impedance (50 Ω by default; see
+[General tab](#general-tab) if you've changed it) and click **Test** to
+measure it and plot the per-point
 error, against *whatever correction is actually in effect right now* --
 AntScopeZ's OSL calibration, a VNA Air selected slot, the analyzer's own
 on-board calibration, or nothing at all. There's no automatic pass/fail;
@@ -1335,15 +1387,16 @@ calculated trim at once.
 
 ## Multi view
 
-The **Multi** tab lets you stack two or more charts for the *same* measurement, 
-or compare markers across them, in one 
-view -- useful for eyeballing return loss and SWR together instead of
-flipping between tabs. Right-click a chart's tab and choose "Move chart
-to the tab Multi" (or "Add multi-charts") to populate it.
+The **Multi** tab lets you stack two or more charts for the *same*
+measurement, or compare markers across them, in one view -- useful for
+eyeballing return loss and SWR together instead of flipping between
+tabs. Right-click a chart's tab and choose "Move chart to the tab
+Multi" (or "Add multi-charts") to populate it.
 
 You can add and remove tabs to Multi View using the "+" button to join charts.
-The "+" button is only there in Sweep mode, and the TDR and Tuning charts can't
-be joined.
+It's hidden only in Tuning mode (nothing to join there); it stays available
+in TDR mode, since every other chart tab stays available there too -- but
+the TDR and Tuning charts themselves can never be joined into Multi.
 
 ## Data from AA
 
@@ -1512,8 +1565,16 @@ image or document:
   clicking it does nothing in that case.
 - **Analyzer → Screenshot...** captures the *analyzer's own* on-device
   screen (not every model supports this; NanoVNA classic does, see
-  [Supported devices](#supported-devices)) and opens its own small
-  dialog: add an optional comment, then **Export to PDF**,
+  [Supported devices](#supported-devices)). For NanoVNA, the capture is
+  decoded using a hardcoded default LCD size (480x320) unless a
+  [Custom Analyzer](#analyzer-tab) profile is active, in which case its
+  Width/Height fields take over -- a mismatch between either of those
+  and your actual device's screen doesn't fail outright, it slices the
+  image against the wrong row width, so it comes out visibly scrambled
+  rather than just blank or an error. If your NanoVNA's screenshots look
+  broken up, check that your device's real LCD resolution is what's set
+  there. Opens its own small dialog: add an optional comment, then
+  **Export to PDF**,
   **Export to BMP**, or **To clipboard**. **Refresh** re-captures the
   device's screen again without closing the dialog, in case it's
   changed since it was first captured. The PDF uses the paper size,
@@ -1545,9 +1606,10 @@ for TDR, only a single scan at a time.
 The TDR tab then runs an inverse FFT over that near-DC-to-wideband sweep to
 turn it into a time-domain impulse/step response -- which is what lets you see
 reflections (bad connectors, cable damage, impedance bumps) at a distance
-along the cable, instead of as a function of frequency. That trace only
-appears once the scan finishes -- unlike every other chart, TDR doesn't draw
-progressively while the sweep is running.
+along the cable, instead of as a function of frequency. Whether that trace
+draws progressively while the sweep runs or only appears once it finishes
+depends on the analyzer -- see [Device-specific notes](#device-specific-notes)
+below.
 
 ### Which measurements the TDR chart can show
 
@@ -1605,7 +1667,7 @@ reading the results afterward, in two sections.
 | Top frequency | How far up to sweep -- floored at a few MHz, capped at your analyzer's real maximum. Wider bandwidth gives finer resolution (can tell two close reflections apart) but a *shorter* maximum unambiguous distance before the trace wraps on itself; narrower bandwidth is the opposite. Pick based on your cable run: long cable needing full-length coverage → narrower; short run where you need to separate two close reflections → wider |
 | Points | 200–1000. More points raise both range and resolution somewhat, though not by a simple straight-line relationship |
 | Unambiguous range / Resolution (estimate) | Computed live from Top frequency/Points/Velocity factor above, before you've scanned anything -- lets you check the numbers make sense for your cable *before* spending time on a scan |
-| TDR Scan | Runs the sweep. No Continuous option -- TDR is one scan at a time. While it runs, the button becomes **Stop** and shows progress (`Stop (92/200)`); the other Scan setup controls and the Result controls are locked until it finishes. The chart redraws as points arrive -- a coarse trace at first that sharpens as the sweep reaches higher frequencies -- while the events table and Result readout fill in when the scan completes. **Stop** discards the unfinished scan (it isn't listed or analyzed, since a partial sweep isn't a usable TDR trace). After Stop, the button shows "Stopping..." and stays disabled until the device has finished sending, which can take a while over Bluetooth (see [Scan modes](#scan-modes-single-vs-continuous)) |
+| TDR Scan | Runs the sweep. No Continuous option -- TDR is one scan at a time. While it runs, the button becomes **Stop** and shows progress (`Stop (92/200)`); the other Scan setup controls and the Result controls are locked until it finishes. On RigExpert analyzers, the chart redraws as points arrive -- a coarse trace at first that sharpens as the sweep reaches higher frequencies; on NanoVNA-family devices it instead jumps straight from empty to complete, since the device measures the whole sweep internally before sending any of it -- see [Device-specific notes](#device-specific-notes). Either way, the events table and Result readout fill in once the scan completes. **Stop** discards the unfinished scan (it isn't listed or analyzed, since a partial sweep isn't a usable TDR trace). After Stop, the button shows "Stopping..." and stays disabled until the device has finished sending, which can take a while over Bluetooth (see [Scan modes](#scan-modes-single-vs-continuous)) |
 
 #### Result (after scanning)
 
@@ -1722,6 +1784,25 @@ frequency and point count, see Scan setup above) -- a long run may exceed
 what one scan can resolve; the dialog flags this when the peak sits near
 the edge of that range.
 
+## Device-specific notes
+
+AntScopeZ talks to several unrelated wire protocols behind one UI, and
+not every behavior is the same across them. This section collects the
+differences that are easy to mistake for a bug -- growing as more turn
+up, not a complete list.
+
+**TDR live chart draw.** On RigExpert analyzers, the TDR chart redraws
+as points arrive, sharpening from a coarse trace to the full result as
+the sweep progresses (see [the TDR panel](#the-tdr-panel) above) --
+RigExpert's protocol streams each frequency's result as soon as it's
+actually measured. NanoVNA-family devices (classic ASCII and V2/binary
+alike, including through [VNA Air](#nanovna-usb--nanovna-ble-w-vna-air))
+measure the entire sweep internally first and only then send the result
+back as one block, so the chart has nothing to draw until the scan is
+essentially done -- it jumps from empty to complete instead of
+sharpening. Not a bug on either side, just what each device's own
+protocol actually allows.
+
 ## Customized analyzer parameters
 
 Settings' **Analyzer** tab's **Custom Analyzer** group box lets you
@@ -1732,7 +1813,7 @@ no reason to use it with a RigExpert analyzer, whose range and screen
 are already known. Two things it's for:
 
 - **A different screen size (works today).** A NanoVNA variant whose LCD
-  isn't the default 480x320 (see [NanoVNA](#nanovna)) gets a profile with
+  isn't the default 480x320 (see [NanoVNA](#nanovna-usb--nanovna-ble-w-vna-air)) gets a profile with
   Prototype `NanoVNA` and the unit's real Width/Height; with **Use
   customized analyzer** ticked, Analyzer → Screenshot... reads and
   decodes that size instead.
@@ -1741,8 +1822,7 @@ are already known. Two things it's for:
 
 **Use customized analyzer**, sitting above the group box (see
 [Analyzer tab](#analyzer-tab) above), enables/disables everything in
-it as one unit; the group box itself has no more "under development"
-notice and its controls are live. Name your preset, pick a real model
+it as one unit; its controls are live. Name your preset, pick a real model
 as its Prototype (the group box inherits that model's protocol and
 everything else it needs, only the frequency range and LCD width/height
 are overridden), set Min/Max (kHz) and Width/Height, then New/Remove/Apply
@@ -1788,10 +1868,10 @@ session's own testing.
 follows that prefix instead -- `sharedDataFolder()`/`ANTSCOPE_SHARED_DATA_DIR`
 is computed from it at build time, not hardcoded.)
 
-**Windows/macOS:** this table is the Linux `.deb` only. The Windows
-installer puts the program under Program Files and the shared data in
-`ProgramData\AntScopeZ`; macOS is a plain `.app` bundle (see the next
-section for where *your own* files live on every platform).
+**Windows/macOS:** this table is the Linux `.deb` only -- see
+[Windows](#windows) / [macOS](#macos) above for where the program and
+its shared data land on those platforms instead (the next section
+covers where *your own* files live on every platform).
 
 ### Your own files: `~/.config/AntScopeZ/`
 
@@ -1985,8 +2065,8 @@ delete.
 
 - **"Calibration Required" pops up, or the Calibration checkbox won't
   stay checked.** AntScopeZ can't find `cal_open.s1p`/`cal_short.s1p`/
-  `cal_load.s1p` for this analyzer yet -- run the Calibration Wizard (or
-  all three individually) first. See
+  `cal_load.s1p` for this analyzer yet -- run the Calibration Wizard
+  through to Finish first. See
   [Calibration and cable correction](#calibration-and-cable-correction).
 - **A reopened file looks corrected twice.** It was saved corrected in a
   format that doesn't record that (CSV, NWL, or a file from an older
