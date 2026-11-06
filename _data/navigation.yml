@@ -1,0 +1,13 @@
+main:
+  - title: "Documentation"
+    url: /docs/user-guide/
+  - title: "Mobile Guide"
+    url: /docs/mobile-guide/
+  - title: "Build Instructions"
+    url: /BUILDINFO/
+  - title: "Changelog"
+    url: /CHANGELOG/
+  - title: "Download"
+    url: "https://github.com/K4HEZ/AntScopeZ/releases/latest"
+  - title: "GitHub"
+    url: "https://github.com/K4HEZ/AntScopeZ"

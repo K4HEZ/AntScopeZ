@@ -1,5 +1,5 @@
 ---
-layout: default
+layout: single
 title: Testing a Pre-release Mobile Build
 ---
 

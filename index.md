@@ -1,12 +1,19 @@
 ---
-layout: default
-title: AntScopeZ
+layout: splash
+title: "AntScopeZ"
+excerpt: >-
+  A modern antenna-analyzer application for RigExpert & NanoVNA (and a few
+  other brands) -- built for, and maintained by, the ham radio community.
+header:
+  overlay_color: "#1c3144"
+  actions:
+    - label: "Download"
+      url: "https://github.com/K4HEZ/AntScopeZ/releases/latest"
+    - label: "Documentation"
+      url: "/docs/user-guide/"
+    - label: "Browse Source"
+      url: "https://github.com/K4HEZ/AntScopeZ"
 ---
-
-# AntScopeZ
-
-A modern antenna-analyzer application for RigExpert & NanoVNA (and a few
-other brands) -- built for, and maintained by, the ham radio community.
 
 ### Version 2.2.7 Released for Windows, macOS & Linux Sept. 18, 2026
 

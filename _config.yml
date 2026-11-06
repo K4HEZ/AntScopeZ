@@ -2,17 +2,37 @@ title: AntScopeZ
 description: >-
   A community-maintained fork of RigExpert's AntScope2 antenna-analyzer
   software.
-theme: jekyll-theme-cayman
-show_downloads: false
 
-# Cayman's built-in top-nav: additional pages shown alongside "View on GitHub".
-# Paths are relative to the site root and must match real files below.
-header_pages:
-  - docs/user-guide.md
-  - docs/mobile-guide.md
-  - BUILDINFO.md
-  - CHANGELOG.md
+url: "https://k4hez.github.io"
+baseurl: "/AntScopeZ"
 
-# Markdown files outside these get published as pages too (e.g. README.md,
-# at /README/) since Jekyll converts every .md by default -- harmless, just
-# unlinked from the nav above.
+remote_theme: "mmistakes/minimal-mistakes@4.28.1"
+minimal_mistakes_skin: "default"
+
+plugins:
+  - jekyll-remote-theme
+  - jekyll-include-cache
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+search: true
+
+author:
+  name: "AntScopeZ"
+  uri: "https://github.com/K4HEZ/AntScopeZ"
+
+# Front-matter defaults for every page: no per-post author-bio sidebar
+# (this isn't a blog), and an auto-generated in-page table of contents
+# since several docs pages are long reference material.
+defaults:
+  - scope:
+      path: ""
+    values:
+      author_profile: false
+      toc: true
+      toc_sticky: true
+
+# Main nav (masthead) is data-driven -- see _data/navigation.yml, not a
+# config key here. Markdown files not linked from there (e.g. README.md,
+# at /README/) still get built as pages too, since Jekyll converts every
+# .md by default -- harmless, just unlinked.
