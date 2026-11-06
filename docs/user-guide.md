@@ -387,7 +387,7 @@ table's own right-click menu (see [TDR](#events-table)).
 | Band Selector | Shows/hides the band-selector dropdown above the Presets list -- see [Presets and bands](#presets-and-bands) |
 | Band Highlighting | Submenu picking which region's band data to shade on the charts |
 | Language | UI language -- auto-discovered from whatever `QtLanguage_*.qm` files are installed, not a fixed list |
-| Theme | Light or Dark -- see [CHANGELOG.md](../CHANGELOG.md) for what it does and doesn't cover |
+| Theme | All 5 theme slots (default names Light/Dark/Red/Green/Blue, numbered `1:`-`5:`), not just Light/Dark -- picks which one is active. Rename or edit any of them at [Settings → Themes](#themes-tab) |
 
 *Analyzer*
 
