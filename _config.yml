@@ -6,6 +6,13 @@ description: >-
 url: "https://k4hez.github.io"
 baseurl: "/AntScopeZ"
 
+# Without this, Jekyll builds pages as flat files (/docs/user-guide.html)
+# -- but the nav (_data/navigation.yml) and the home page's hero buttons
+# use trailing-slash paths (/docs/user-guide/), which only resolve to a
+# real page if pages build as directory/index.html. "pretty" makes that
+# true for plain Pages too, not just posts.
+permalink: pretty
+
 remote_theme: "mmistakes/minimal-mistakes@4.28.1"
 minimal_mistakes_skin: "default"
 
