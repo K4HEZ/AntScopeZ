@@ -38,7 +38,8 @@ Pick whatever you have; you don't need all of it.
 - **Live Data**, **Smith** and **TDR** against a real antenna or cable.
 - **TDR page**: pick a cable with the searchable preset picker (recent cables
   on top), and zoom and scroll the chart.
-- **SWR page**: the Density slider and **Fit**.
+- **SWR page**: the pan/zoom strip under the chart (drag the window, drag
+  its ends to zoom, or tap elsewhere on the track).
 - **iPhone** (iOS build): Bluetooth only -- Connection > Bluetooth.
 - **Share Touchstone file** from the Impedance page.
 

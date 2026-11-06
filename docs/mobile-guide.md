@@ -104,13 +104,13 @@ time, as above.
 Everything that defines a scan lives here, with a **Scan** / **Stop**
 button at the top.
 
-**Band.** Pick an **ITU region** (the list is full width), then pick a
-band from the list below it. The band list starts on "Select a band" and
+**Band.** Pick a band from the list, which starts on "Select a band" and
 each entry shows the band's name and its range, for example
 `2m - (144000 - 148000 kHz)`. Picking a band fills in Start/Stop (or
 Center/Span) and the list returns to "Select a band". Only bands that
 overlap the analyzer's usable range are listed (see
-[Frequency limits](#frequency-limits-explained)).
+[Frequency limits](#frequency-limits-explained)). Which ITU region's
+bands show up here is set on the [Settings](#settings) page, not here.
 
 The scan range is the band **plus a margin on each side**, so the SWR dip
 isn't pressed against the edge of the chart. The margin is set in
@@ -139,13 +139,16 @@ phase. After a scan the cursor starts on the lowest-SWR point; if you scan
 again, it stays at the same frequency.
 
 **Dense scans.** If the scan has more points than fit comfortably across
-the screen, the chart shows a section and a scrollbar appears under it.
-Drag the scrollbar, or drag along the frequency labels under the plot, to
-move along the sweep. Dragging the cursor towards either edge of the plot
-scrolls the chart smoothly under it. How much room each point gets is the
-**Density** slider under the chart, from 0.5 to 30 pixels per point (shown
-beside it). Scans with more points than fit at that density scroll instead of
-crowding together; larger values scroll sooner.
+the screen, the chart shows a section at a time. A thin strip under the
+chart shows the full sweep as a track with a window marking what's
+currently visible: drag the window to pan (an instant jump, not a slow
+crawl), drag either end of it to zoom in or out, or tap elsewhere on the
+track to jump straight there. (On a desktop/trackpad test build, the
+mouse wheel also zooms at the cursor.) Touch pan/zoom deliberately goes
+through this strip rather than a two-finger pinch on the chart itself --
+pinch was tried and dropped because, on a real touchscreen, the chart's
+own single-finger marker-select grab won every time and a pinch never
+completed.
 
 ## Smith
 
@@ -185,11 +188,10 @@ unit (amplitude for Impulse, ρ for Step, Ω for Impedance). The selected point
 stays where it is when you switch between the three traces, and is cleared
 by a new scan.
 
-**Zoom and scroll.** A new scan shows the whole trace. Drag the **Zoom**
-slider to magnify it (the factor is shown beside the slider; each step of
-the slider is the same relative change), and drag the scrollbar that
-appears under the chart to move along it. **Fit** returns to the whole
-trace.
+**Zoom and scroll.** A new scan shows the whole trace. The same pan/zoom
+strip described for the [SWR page](#swr) sits under the TDR chart too --
+drag its window to pan, drag either end to zoom, or tap the track to
+jump there.
 
 **Window.** The **Window** picker (Rectangular, Hamming, Hann, Blackman,
 Kaiser) reshapes the trace instantly without a rescan -- see the desktop
@@ -215,9 +217,10 @@ A continuously updating single-frequency reading. Enter a frequency in kHz
 (it starts at the middle of the Scan range) and press **Start**. The page
 shows the frequency, SWR, return loss, series and parallel R + jX, |Z|,
 |Zp| and phase, and a very large **SWR** readout that scales to fill the
-rest of the screen. The number's colour runs from dark green at 1:1,
-through yellow at 3:1 and orange at 5:1, to red toward 10:1 and above --
-readable at a glance while you adjust an antenna.
+rest of the screen. The number's colour is one of four flat bands, not a
+gradient -- green below 2:1, yellow from 2:1 to 3:1, orange from 3:1 to
+4:1, red above 4:1 -- readable at a glance while you adjust an antenna.
+The SWR chart's own trace uses the same four colors per segment.
 
 Live Data uses its own reading, so it does not overwrite the last scan
 shown on SWR, Smith and Impedance. It stops when you leave the page,
@@ -235,6 +238,10 @@ file and reports where.)
 
 ## Settings
 
+- **Appearance** -- **Light**, **Dark**, or **System** (follows the
+  phone's own setting; the default).
+- **Region** -- which ITU region's band list the Scan page's Band
+  picker shows.
 - **Add margin to scans** -- 0 to 100%. When you pick a band on the Scan
   page, the scan range is widened on each side by this percentage of the
   band's own width. 0% scans exactly the band.
