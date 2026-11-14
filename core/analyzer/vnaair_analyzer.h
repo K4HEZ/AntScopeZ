@@ -60,6 +60,14 @@ struct VnaAirCalSlot
 // radio button wired to this class (ReDeviceInfo::VNAAIR, see
 // AnalyzerPro::createDevice()); the connect/Status/Sweep path is wired
 // end to end, just unverified against a real bridge.
+//
+// Screenshot (2026-11-13): build 176+'s Screenshot characteristic
+// (...0006) is now implemented -- makeScreenshot() request, "VS"-framed
+// reassembly, VNS1 header parse, same analyzerScreenshotDataArrived
+// signal every other BaseAnalyzer subclass uses. Optional per the spec,
+// same as Calibration above (m_screenshotSupported gates it; older
+// bridge firmware without the characteristic gets a clean
+// signalAnalyzerError instead of a silent hang).
 class VnaAirAnalyzer : public BaseAnalyzer
 {
     Q_OBJECT
@@ -99,11 +107,19 @@ public:
     QString calibrationEngine() const { return m_calEngine; }
     QStringList calibrationEngines() const { return m_calEngines; }
 
+    // True once the Screenshot characteristic (UUID ...0006, build 176+)
+    // was found during service discovery -- optional per the vendor spec,
+    // absent on older bridge firmware. Same "not wired to any UI gating
+    // yet" status as calibrationSupported() above; makeScreenshot() itself
+    // still fails cleanly (signalAnalyzerError) if this is false.
+    bool screenshotSupported() const { return m_screenshotSupported; }
+
 public slots:
     void searchAnalyzer() override;
     void startMeasure(qint64 fqFrom_hz, qint64 fqTo_hz, int dotsNumber, bool frx = true) override;
     void startMeasureOneFq(qint64 fqFrom_hz, int dotsNumber, bool frx = true) override;
     void stopMeasure() override;
+    void makeScreenshot() override;
 
     // Calibration op 1 ("status") -- refreshes slots/slotMap/cal.n/engine.
     // Called once automatically on connect (see serviceStateChanged()) and
@@ -129,6 +145,30 @@ public slots:
     // so that can't happen through this class today).
     void setCalibrationEngine(int engine);
 
+    // Calibration op 2 ("begin") -- opens a capture session over the given
+    // range/points (points clamped to the Sweep cap, kMaxSweepPoints, same
+    // 3-101 limit the spec gives for a Sweep request). First step of a
+    // fresh on-device/bridge calibration; standard/done/save follow.
+    void beginCalibrationCapture(qint64 startHz, qint64 stopHz, int points);
+    // Calibration op 3 ("standard") -- 0=open, 1=short, 2=load. One call
+    // per standard; the capture wizard drives this strictly open -> short
+    // -> load, though the spec doesn't itself enforce an order.
+    void measureCalibrationStandard(int standard);
+    // Calibration op 4 ("done") -- closes standard capture and has the
+    // bridge compute error terms from what was measured. Must follow all
+    // three standards. Op 5 ("verify") is optional per the spec and not
+    // implemented here -- nothing currently needs it.
+    void finishCalibrationCapture();
+    // Calibration op 6 ("save") -- commits the just-finished capture into
+    // a slot, overwriting whatever was there. confirm byte is fixed per
+    // spec; the optional unixTime field is omitted (spec's "6 or 10 bytes"
+    // request-length table allows the shorter form).
+    void saveCalibrationSlot(int slot);
+    // Calibration op 8 ("end") -- aborts an open begin/standard/done
+    // session without saving. The capture wizard's Cancel button uses
+    // this; harmless to send if no session is actually open.
+    void cancelCalibrationCapture();
+
 signals:
     // 1 = scan started, 0 = scan finished -- same convention as
     // BleAnalyzer::scanningChanged(), so SelectDeviceDialog's existing
@@ -151,6 +191,11 @@ signals:
     // calibration*() accessors at the moment this fires.
     void calibrationSlotsUpdated(const QVector<VnaAirCalSlot>& slotList, int activeSlot,
                                   const QString& engine, const QStringList& engines);
+    // Fires for every "ok" reply, regardless of op -- including
+    // begin/standard/done/save/end, which carry no slot/engine info of
+    // their own and so never trigger calibrationSlotsUpdated(). The
+    // capture wizard drives its step-advance off this.
+    void calibrationOpOk(const QString& op);
     // A standard/verify/done/recall/save "running" notification -- deadlineMs
     // is the vendor spec's own worst-case timeout for this op, for client-
     // side progress animation. Not consumed by any UI yet (no capture-flow
@@ -176,8 +221,21 @@ private slots:
     void controllerError(QLowEnergyController::Error error);
 
 private:
+    // Synchronously severs m_service's signal connections to this object --
+    // see the destructor's own comment for why this has to happen
+    // immediately, not just before m_service/m_control are actually
+    // deleted. Called from every path that means "this link is dead":
+    // the destructor, an explicit disconnectAnalyzer(), the controller's
+    // own disconnected/errorOccurred signals (a hardware-side drop, e.g.
+    // the bridge losing power, goes through the latter -- confirmed as a
+    // real crash 2026-11-13: a Sweep notification already in flight from
+    // the bridge still landed in characteristicChanged() after power loss
+    // and before this guard existed on that path, reaching
+    // emit newSParamPoint() on no longer meaningfully-connected state).
+    void severServiceSignals();
     void connectToDevice(const QString& address);
     void requestSweep(qint64 fqFrom_hz, qint64 fqTo_hz, int points);
+    void requestNextSweepSegment();
     void handleStatusNotification(const QByteArray& value);
     void handleSweepNotification(const QByteArray& value);
     void parseSweepJson(const QByteArray& json);
@@ -188,6 +246,10 @@ private:
     void handleCalibrationNotification(const QByteArray& value);
     void parseCalibrationJson(const QByteArray& json);
     static QString calibrationOpName(quint8 op);
+
+    void handleScreenshotNotification(const QByteArray& value);
+    void parseScreenshotImage(const QByteArray& data);
+    static QString screenshotErrorName(quint8 code);
 
     QBluetoothDeviceDiscoveryAgent* m_deviceDiscoveryAgent;
     QList<QBluetoothDeviceInfo> m_devices;
@@ -215,15 +277,29 @@ private:
     qint64 m_fqTo = 0;
     int m_dotsNumber = 0;
 
-    // TODO (needs real hardware + the 101-point cap confirmed in
-    // practice): a single Sweep request is capped at 101 points per the
-    // vendor spec. AnalyzerPro's existing segmented-scan stitching
-    // (see NanovnaV2Analyzer's own comment on this) handles exceeding
-    // that across *multiple* startMeasure() calls, but a single call
-    // asking for more than 101 points in one go is silently downsampled
-    // to 101 (same range, coarser resolution) rather than rejected --
-    // revisit once there's a concrete case that actually hits this.
+    // A single Sweep request is capped at 101 points per the vendor spec.
+    // startMeasure() tiles a request for more than that into consecutive
+    // Sweep requests via requestNextSweepSegment() -- confirmed necessary,
+    // not theoretical: Calibration's Test flow requests dotsNumber()+1
+    // points (default 500+1), and silently downsampling a single request
+    // to 101 left Calibration::on_newData()'s point-count gate
+    // (m_dotsCount > m_dotsNumber) permanently unsatisfied, so
+    // testCaptureFinished() never fired -- the Test button's wait cursor
+    // never cleared and no plot ever showed, discovered testing against
+    // real hardware 2026-11-05.
     static constexpr int kMaxSweepPoints = 101;
+
+    // Segmented-sweep state for one logical startMeasure() call, reset at
+    // its start -- see requestNextSweepSegment(). Segment k covers point
+    // indices [m_segPointsDone..m_segPointsDone+segPoints-1] of the whole
+    // inclusive-endpoint range; m_segStepHz is the fixed per-point spacing
+    // the *whole* sweep uses, computed once so segment boundaries land on
+    // the same grid a single sub-101-point request would have used, not
+    // recomputed (and rounded) fresh per segment.
+    double m_segStepHz = 0;
+    qint64 m_segBaseHz = 0;
+    int m_segTotalPoints = 0;
+    int m_segPointsDone = 0;
 
     bool m_calibrationSupported = false;
 
@@ -250,6 +326,22 @@ private:
     int m_calActiveSlot = -1;
     QString m_calEngine;
     QStringList m_calEngines;
+
+    bool m_screenshotSupported = false;
+
+    // Screenshot notification reassembly -- same "VS"-framed chunking as
+    // Sweep/Calibration's own buffers, just a separate set since all three
+    // characteristics' notification streams are independent and can
+    // interleave. Keyed by the Screenshot request's own requestId.
+    quint16 m_shotRequestId = 0;
+    quint16 m_shotChunkCount = 0;
+    QVector<QByteArray> m_shotChunks;
+    QVector<bool> m_shotChunkReceived;
+    bool m_shotRequestIdKnown = false;
+
+    // Monotonic requestId for outgoing Screenshot writes, independent of
+    // Calibration's own m_calRequestIdCounter.
+    quint16 m_shotRequestIdCounter = 0;
 };
 
 #endif // VNAAIR_ANALYZER_H

@@ -380,10 +380,13 @@ public:
         m_analyzers << new AnalyzerParameters(idx++, "LiteVNA64", "50", "6300000", 0, 0);
         // VNA Air (VnaAirAnalyzer) -- a third-party BLE bridge in front of
         // a classic-protocol NanoVNA-H/H4/D, not a device family of its
-        // own. Range matches the "NanoVNA" entry above (the vendor's
-        // allow-listed firmware is exactly that device family); 0,0 since
-        // the bridge's BLE protocol has no screenshot request at all.
-        m_analyzers << new AnalyzerParameters(idx++, "VNA Air", "100", "1000000", 0, 0);
+        // own. Range and screen size match the "NanoVNA"/"NanoVNA-H4"
+        // entries above (the vendor's allow-listed firmware is exactly
+        // that device family, same 480x320 screen) -- build 176+'s
+        // Screenshot characteristic relays that same framebuffer over BLE
+        // (VnaAirAnalyzer::makeScreenshot()), so this no longer needs 0,0
+        // the way it did before that characteristic existed.
+        m_analyzers << new AnalyzerParameters(idx++, "VNA Air", "100", "1000000", 320, 480);
 
         // 08.06.2022 - not supported except of Android Antscope
         // 13.09.2024 - supported for all platforms
