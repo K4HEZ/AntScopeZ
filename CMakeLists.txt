@@ -182,6 +182,7 @@ set(ANTSCOPE_SOURCES
     desktop/calibrationwizarddialog.cpp
     desktop/testresultplot.cpp
     desktop/testresultdialog.cpp
+    desktop/vnaaircalibrationwizarddialog.cpp
     desktop/unitrequestdialog.cpp
     desktop/updatedialog.cpp
     desktop/userguidedialog.cpp
@@ -240,6 +241,7 @@ set(ANTSCOPE_HEADERS
     desktop/calibrationwizarddialog.h
     desktop/testresultplot.h
     desktop/testresultdialog.h
+    desktop/vnaaircalibrationwizarddialog.h
     desktop/unitrequestdialog.h
     desktop/updatedialog.h
     desktop/userguidedialog.h
@@ -729,6 +731,22 @@ if(APPLE)
         )
         target_sources(AntScopeZ PRIVATE ${ANTSCOPE_QTBASE_OVERRIDE_QM_FILES})
     endif()
+    # CMake/the linker's own default ad-hoc signature only covers the
+    # Mach-O binary at link time, not the Info.plist/Resources the
+    # MACOSX_PACKAGE_LOCATION rules above stage into the bundle afterward
+    # -- `codesign --verify` then reports "code has no resources but
+    # signature indicates they must be present", and macOS's TCC daemon
+    # refuses to trust the bundled NSBluetoothAlwaysUsageDescription key in
+    # an unsealed bundle, hard SIGABRT'ing on first Bluetooth access
+    # instead of showing the consent prompt ("abend as soon as i scanned",
+    # 2026-11-05). Re-sign the whole bundle, deep, after every build --
+    # ad hoc is enough to seal Info.plist/Resources; swap in a real
+    # Developer ID identity here if/when release builds are notarized.
+    add_custom_command(TARGET AntScopeZ POST_BUILD
+        COMMAND codesign --force --deep --sign - "$<TARGET_BUNDLE_DIR:AntScopeZ>"
+        COMMENT "Re-signing AntScopeZ.app (ad-hoc, deep) to seal Info.plist/Resources"
+        VERBATIM
+    )
 else()
     foreach(_file IN LISTS ANTSCOPE_RUNTIME_FILES)
         add_custom_command(TARGET AntScopeZ POST_BUILD
@@ -963,6 +981,13 @@ elseif(APPLE)
     # are meaningless here (a bundle's internal layout is fixed by Apple, not
     # by us) and are correctly ignored by that same codepath.
     if(COMMAND qt6_generate_deploy_script)
+        # macdeployqt copies the Qt frameworks themselves into the bundle
+        # here, after the POST_BUILD codesign step above already ran --
+        # that re-breaks the same signature (Info.plist/Resources no
+        # longer sealed) all over again, so re-sign once more as
+        # macdeployqt's own last step via -codesign. Ad hoc ("-") is
+        # enough to seal the bundle; swap in a real Developer ID identity
+        # here if/when release builds are notarized.
         qt6_generate_deploy_script(
             TARGET AntScopeZ
             OUTPUT_SCRIPT deploy_script
@@ -971,6 +996,7 @@ qt_deploy_runtime_dependencies(
     EXECUTABLE \"AntScopeZ.app\"
     GENERATE_QT_CONF
     NO_TRANSLATIONS
+    DEPLOY_TOOL_OPTIONS \"-codesign=-\"
 )
 "
         )
