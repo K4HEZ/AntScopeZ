@@ -1287,7 +1287,39 @@ Was computed from Window Background, now directly-editable.</string>
                  connected. Slot count is backend/firmware dependent (8 for
                  the bridge's own "vnaair" engine, firmware table dependent
                  for "device", per research/calibration redesign notes),
-                 never a fixed list here. -->
+                 never a fixed list here. sizeAdjustPolicy/minimumSize below
+                 so a real slot label ("Slot 1 - 1-480 MHz - 101 pts - From
+                 NanoVNA") isn't clipped; default QComboBox sizing only
+                 looks at design-time contents, which is empty here. -->
+            <property name="sizeAdjustPolicy">
+             <enum>QComboBox::AdjustToContents</enum>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>280</width>
+              <height>0</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="vnaAirCalibrateBtn">
+            <property name="toolTip">
+             <string>Run a fresh Open/Short/Load calibration and save it into the slot selected above (or slot 0, if "No calibration" is selected). The bridge/analyzer does the measuring and math itself -- same as running its own on-device/app calibration flow.</string>
+            </property>
+            <property name="text">
+             <string>Calibrate...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="vnaAirCalibTestBtn">
+            <property name="toolTip">
+             <string>Same as the Test Calibration group below -- measure a connected 50 ohm/Z0 load against whichever slot is selected above and plot the per-point error. Nothing is saved.</string>
+            </property>
+            <property name="text">
+             <string>Test</string>
+            </property>
            </widget>
           </item>
           <item>

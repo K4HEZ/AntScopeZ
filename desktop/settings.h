@@ -236,6 +236,17 @@ private slots:
     // calibration itself, just tells the bridge which saved slot to use.
     void on_vnaAirCalibCombo_activated(int index);
     void on_vnaAirCalibRefreshBtn_clicked();
+    // Opens VnaAirCalibrationWizardDialog targeting whichever slot is
+    // currently selected in the combo (slot 0 if "No calibration" is
+    // selected -- there's no "new slot" concept on the bridge, just 0..N
+    // overwritable slots).
+    void on_vnaAirCalibrateBtn_clicked();
+    // Reuses the exact same generic Test Calibration flow as
+    // on_testCalibrationBtn_clicked() -- VNA Air's selected slot is
+    // already "whatever correction is actually in effect right now" as
+    // far as that flow is concerned, so there's no VNA-Air-specific
+    // measuring to do here, just a convenience button next to the combo.
+    void on_vnaAirCalibTestBtn_clicked();
     // VnaAirAnalyzer::calibrationSlotsUpdated() -- rebuilds the combo from
     // whatever the last status/engine/recall/off query returned.
     void refreshVnaAirCalibrationSlots(const QVector<VnaAirCalSlot>& slotList, int activeSlot,

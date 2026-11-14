@@ -17,6 +17,7 @@
 #include "cablepickerdialog.h"
 #include "calibrationwizarddialog.h"
 #include "testresultdialog.h"
+#include "vnaaircalibrationwizarddialog.h"
 #include <QAbstractButton>
 #include <QFile>
 #include <QFileInfo>
@@ -701,6 +702,39 @@ void Settings::on_vnaAirCalibRefreshBtn_clicked()
 {
     if (m_vnaAirAnalyzer)
         m_vnaAirAnalyzer->queryCalibrationStatus();
+}
+
+void Settings::on_vnaAirCalibrateBtn_clicked()
+{
+    if (!m_vnaAirAnalyzer || !m_analyzer)
+        return;
+
+    // The combo's current selection becomes the target slot -- there's no
+    // "new slot" concept on the bridge, just 0..N overwritable slots, so
+    // "No calibration" (-1) targets slot 0 same as picking it explicitly.
+    const int comboSlot = ui->vnaAirCalibCombo->currentData().toInt();
+    if (comboSlot == -2) // "No VNA Air bridge connected"
+        return;
+    const int targetSlot = (comboSlot < 0) ? 0 : comboSlot;
+
+    // Same range source Calibration::on_calibrate() uses for the OSL
+    // wizard's own captures (see setAnalyzer()'s lineEditAnalyzerFqStart/
+    // Stop just above) -- the analyzer's full hardware range, in Hz, not
+    // whatever the Sweep tab happens to be set to.
+    const qint64 startHz = qint64(m_analyzer->getMinFq().toULongLong()) * 1000;
+    const qint64 stopHz = qint64(m_analyzer->getMaxFq().toULongLong()) * 1000;
+    const int points = m_calibration != nullptr ? m_calibration->dotsNumber() : 101;
+
+    VnaAirCalibrationWizardDialog dlg(m_vnaAirAnalyzer, targetSlot, startHz, stopHz, points, this);
+    dlg.exec();
+    // Whether finished, cancelled, or errored out, re-query so the combo
+    // never shows a stale slot list afterward.
+    m_vnaAirAnalyzer->queryCalibrationStatus();
+}
+
+void Settings::on_vnaAirCalibTestBtn_clicked()
+{
+    on_testCalibrationBtn_clicked();
 }
 
 void Settings::setCalibration(Calibration * calibration)
