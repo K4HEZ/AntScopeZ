@@ -146,6 +146,24 @@ void BleAnalyzer::addDevice(const QBluetoothDeviceInfo &device)
     if (device.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration) {
         auto deviceInfo = new BleDeviceInfo(device);
         QString name = deviceInfo->getName();
+        // VNA Air registered itself in AnalyzerParameters' shared name
+        // table for its own reasons (frequency-range lookups), which
+        // AnalyzerParameters::supported() below has no way to know is
+        // irrelevant here -- it just checks "is this any recognized
+        // analyzer name," so a build 176+ bridge advertising "VNA Air
+        // XXXX" passes it and shows up under this generic BLE radio
+        // button too, right alongside RigExpert's own units (confirmed
+        // against real hardware 2026-11-05). That's a real dead end, not
+        // just visual clutter: BleAnalyzer only speaks RigExpert's fixed-
+        // packet binary protocol over RigExpert's own GATT characteristics
+        // -- it has no way to talk to a VNA Air bridge at all. VnaAirAnalyzer
+        // is deliberately a separate class for exactly this reason (see
+        // its own class comment); let its own radio button be the only
+        // way to reach it.
+        if (name.contains(QStringLiteral("VNA Air"), Qt::CaseInsensitive)) {
+            delete deviceInfo;
+            return;
+        }
         if (!AnalyzerParameters::supported(name))
             return;
         qInfo() << "BleAnalyzer::addDevice.name: " << name;

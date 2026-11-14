@@ -467,7 +467,21 @@ void SelectDeviceDialog::onScan(ReDeviceInfo::InterfaceType type)
                 [this](const QBluetoothDeviceInfo& info) {
                     int row = ui->tableWidget->rowCount();
                     ui->tableWidget->insertRow(row);
-                    auto *nameItem = new QTableWidgetItem(QStringLiteral("VNA Air"));
+                    // Build 176+ firmware advertises "VNA Air XXXX" (XXXX =
+                    // last two bytes of the bridge's real BLE MAC, uppercase
+                    // hex) specifically so two bridges can be told apart in
+                    // a picker like this one -- use it when present instead
+                    // of a hardcoded literal. address() can't fill that role
+                    // on macOS/iOS: CoreBluetooth hands back an opaque
+                    // per-app peripheral UUID there, never the real MAC, so
+                    // it's stable but not human-meaningful and won't match
+                    // what a different platform or the bridge's own label
+                    // shows. Older (pre-176) firmware still advertises the
+                    // plain, unsuffixed name, so fall back to that.
+                    const QString displayName = info.name().isEmpty()
+                        ? QStringLiteral("VNA Air")
+                        : info.name();
+                    auto *nameItem = new QTableWidgetItem(displayName);
                     nameItem->setData(Qt::UserRole + 1, (int)ReDeviceInfo::VNAAIR);
                     auto *addrItem = new QTableWidgetItem(info.address().toString());
                     ui->tableWidget->setItem(row, 0, nameItem);

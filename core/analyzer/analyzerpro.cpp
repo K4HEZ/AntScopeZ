@@ -439,7 +439,7 @@ void AnalyzerPro::advanceDraining()
                                    .arg(m_drainTotal));
 }
 
-void AnalyzerPro::finishDraining(const QString& reason)
+void AnalyzerPro::finishDraining(const QString& reason, bool timedOut)
 {
     if (!m_isDraining)
         return; // already finished (or never started) -- see beginReconnectDrain()'s comment
@@ -449,6 +449,21 @@ void AnalyzerPro::finishDraining(const QString& reason)
     m_drainReceived = 0;
     emit drainingChanged(false);
     emit statusMessageChanged(reason);
+
+    // A drain that had to give up by timeout, for a backend that already
+    // says reconnecting is unreliable rather than attempted
+    // (supportsReconnectDrain() == false -- BLE backends), means whatever
+    // connection is left behind is probably half-dead: on_watchdogTimeout()
+    // stopped asking this backend for more data, but nothing ever told the
+    // transport itself to drop the link. For VNA Air specifically, a BLE
+    // peripheral that still thinks a central is connected won't resume
+    // advertising, making it invisible to a fresh scan -- confirmed
+    // against real hardware 2026-11-05 (a stuck Test measurement's drain
+    // timed out, and the bridge then couldn't be found again until the
+    // app was restarted). Force a clean disconnect here so the next
+    // connect attempt starts from a known state instead of a zombie link.
+    if (timedOut && m_baseAnalyzer != nullptr && !m_baseAnalyzer->supportsReconnectDrain())
+        m_baseAnalyzer->disconnectAnalyzer();
 }
 
 void AnalyzerPro::on_watchdogTimeout()
@@ -459,7 +474,7 @@ void AnalyzerPro::on_watchdogTimeout()
     // trying to stop, so give up quietly instead of alarming the user with
     // the same message a brand-new failure would get.
     if (m_isDraining) {
-        finishDraining(tr("Stopped by timeout (device stopped responding)."));
+        finishDraining(tr("Stopped by timeout (device stopped responding)."), true);
         return;
     }
 
@@ -1166,6 +1181,10 @@ void AnalyzerPro::connectSignals()
 {
     connect(m_baseAnalyzer, &BaseAnalyzer::analyzerFound, this, &AnalyzerPro::on_analyzerFound);
     connect(m_baseAnalyzer, &BaseAnalyzer::analyzerDisconnected, this, &AnalyzerPro::on_disconnectDevice);
+    // See BaseAnalyzer::stillAlive()'s own comment -- resets the same
+    // watchdog a point arriving would, for backends with real protocol
+    // progress to report well before/between actual points.
+    connect(m_baseAnalyzer, &BaseAnalyzer::stillAlive, this, &AnalyzerPro::kickWatchdog);
     connect(this, &AnalyzerPro::measurementComplete, m_baseAnalyzer, &BaseAnalyzer::on_measurementComplete);//, Qt::QueuedConnection);
     connect(m_baseAnalyzer, &BaseAnalyzer::signalFullInfo, this, &AnalyzerPro::slotFullInfo);
     connect(m_baseAnalyzer, &BaseAnalyzer::signalMeasurementError, this, &AnalyzerPro::signalMeasurementError);

@@ -92,6 +92,24 @@ public:
 signals:
     void analyzerFound (int analyzerIndex);
     void analyzerDisconnected();
+    // Evidence the device/link is still alive that arrives well before
+    // (or between) actual measurement points -- AnalyzerPro's generic
+    // communications watchdog is otherwise only kicked by a point
+    // actually completing (see its own kickWatchdog() call sites), which
+    // assumes a backend delivers points roughly as fast as it talks to
+    // the device at all. That's wrong for VnaAirAnalyzer: one Sweep
+    // request's response is JSON split across many small chunked BLE
+    // notifications, fully reassembled (and only then turned into
+    // points, all at once) before anything AnalyzerPro-visible happens --
+    // a slow reassembly with real per-notification progress can still
+    // exceed the default 8s watchdog with zero points delivered in that
+    // window, tripping a false "device stopped responding" (confirmed
+    // against real hardware 2026-11-05). Emit this on any sign of
+    // genuine protocol activity (a characteristic notification, a
+    // successful write) to reset the same watchdog without claiming a
+    // point arrived. Harmless if unused -- nothing connects to it unless
+    // AnalyzerPro does.
+    void stillAlive();
     void newData(RawData);
     void newS21Data(S21Data);
     // Real 2-port S-parameter data, per point -- only NanovnaAnalyzer

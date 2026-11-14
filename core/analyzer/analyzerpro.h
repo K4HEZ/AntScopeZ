@@ -132,7 +132,11 @@ class AnalyzerPro : public QObject
     // the same three handlers, on every point, while a scan is actually in
     // progress (not draining -- that's advanceDraining()'s own message).
     void announceScanProgress();
-    void finishDraining(const QString& reason); // "Stopped by user."/"Stopped by timeout..." -- also the idempotency guard for beginReconnectDrain()'s one-shot analyzerFound() connection
+    // "Stopped by user."/"Stopped by timeout..." -- also the idempotency
+    // guard for beginReconnectDrain()'s one-shot analyzerFound()
+    // connection. timedOut: see this method's own comment on the
+    // zombie-BLE-connection disconnect it triggers.
+    void finishDraining(const QString& reason, bool timedOut = false);
     // Kicks off segment 0 (or the single, non-stitched request if
     // buildStitchSegments() left m_stitchSegments empty) and sets
     // m_dotsNumber to whatever total on_newData()'s completion check
